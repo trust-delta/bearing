@@ -76,11 +76,25 @@ neither is complete on its own:
 That the hook can be bypassed is deliberate, not a defect: bending the rule is the
 human's call, and a tool must not take that away. The bypass shows up in CI.
 
-CI fails on two things only: the **123 tests**, and the **carriers being in sync**
+CI fails on two things only: the **tests**, and the **carriers being in sync**
 with their canonical sources. The language measurement (`scripts/lang-report.mjs`)
 reports and never fails — the premise behind
 [`native-language`](docs/aims/native-language.md) has not been measured yet, so
 making it a hard gate would be premature.
+
+### Distribution — pushing alone reaches nobody
+
+There are two gates, one on each side (docs plus measurement, 2026-09-01):
+
+| gate | who clears it |
+| --- | --- |
+| a marketplace clone is never pulled automatically at startup | **the receiving side** — declare `"autoUpdate": true` on the `extraKnownMarketplaces` entry, or run `/plugin marketplace update trust-delta` → `/plugin update bearing` → restart |
+| the cache is not replaced unless `plugin.json` raises `version` | **the publishing side** — bump it on every release. Forget it and nothing the receiver does will help |
+
+The second gate exists only because this repository declares a `version` at all;
+omitting the field falls back to a commit-derived one, and pushing would suffice.
+Keeping the declaration makes the bump *part of* a release — forget it and the
+change lands silently, reaching no one.
 
 ## Status
 

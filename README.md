@@ -73,7 +73,7 @@ CI の `push-policy` workflow の**両方がそれを呼ぶ**（別実装にす�
 ⚠ **hook が破れるのは欠陥ではなく設計である** —— 規則を曲げる判断は人間のものであり、
 道具がそれを奪ってはならない。破った事実は CI に残る。
 
-CI が落とす門は 2 つだけ: **test（123 件）**と、**carrier が正本と同期していること**。
+CI が落とす門は 2 つだけ: **test** と、**carrier が正本と同期していること**。
 言語の測定（`scripts/lang-report.mjs`）は**報告であって門ではない** —— [`native-language`](docs/aims/native-language.md)
 の前提がまだ実測されていない以上、規律を硬い門にするのは早い。
 
@@ -85,6 +85,19 @@ node scripts/lang-report.mjs                          # 言語の測定（落ち
 
 ⚠ **作業ツリーの plugin を走らせるには** `claude --plugin-dir ./carriers/claude/bearing`。
 marketplace は自分自身の remote を指すので、通常のセッションは **push 済みの版**を読む。
+
+### 配布 —— push しただけでは誰にも届かない
+
+⚠ 門は 2 つあり、**受ける側と配る側に 1 つずつ**在る（公式 docs と実測、2026-09-01）:
+
+| 門 | 誰が外すか |
+| --- | --- |
+| marketplace の clone は起動時に自動 pull されない | **受ける側** —— `extraKnownMarketplaces` に `"autoUpdate": true` を宣言すれば起動時に自動。しなければ `/plugin marketplace update trust-delta` → `/plugin update bearing` → 再起動の 3 手 |
+| `plugin.json` の `version` を上げない限り cache は差し替わらない | **配る側** —— 毎リリース bump する。⚠ これを忘れると、受ける側が何をしても届かない |
+
+⚠ **2 つ目が在るのは、この repo が `version` を宣言しているからである** —— 宣言を省けば
+commit 由来の resolved version に落ち、「push すれば届く」挙動になる。宣言を残す以上、
+**bump は release の一部であって、忘れれば変更は静かに、誰にも届かないまま着地する。**
 
 ## 現況
 

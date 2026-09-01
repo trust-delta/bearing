@@ -1,17 +1,18 @@
 {
+  "statusLine": {
+    "type": "command",
+    "command": "node \"$CLAUDE_PROJECT_DIR/carriers/claude/bearing/bin/statusline.mjs\""
+  },
+  "enabledPlugins": {
+    "bearing@trust-delta": true
+  },
   "extraKnownMarketplaces": {
     "trust-delta": {
       "source": {
         "source": "git",
         "url": "https://github.com/trust-delta/bearing.git"
-      }
+      },
+      "autoUpdate": true
     }
-  },
-  "enabledPlugins": {
-    "bearing@trust-delta": true
-  },
-  "statusLine": {
-    "type": "command",
-    "command": "node \"$CLAUDE_PROJECT_DIR/carriers/claude/bearing/bin/statusline.mjs\""
   }
 }
