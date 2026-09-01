@@ -11,8 +11,8 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
-  humanTokens, untilReset, displayWidth, widthUnsafeChars, fit,
-  renderSession, renderBearing,
+  humanTokens, untilReset, displayWidth, widthUnsafeChars, fit, bar, resolveCwd,
+  renderSession, renderBearing, foldRepos,
 } from '../bin/statusline.mjs'
 
 const ESC = String.fromCharCode(27)
@@ -62,6 +62,27 @@ test('widthUnsafeChars —— 桁がずれる文字を名指しで捕らえる',
   assert.deepEqual(widthUnsafeChars(ESC + '[2mabc' + ESC + '[0m'), [])
 })
 
+test('bar —— 塗るのは空白だけで、幅は割合に依らず一定である', () => {
+  // ⚠ **これがバーを空白で描く理由そのものである。** ブロック文字なら環境ごとに
+  // 幅が揺れ、桁がずれる。空白なら揺れない —— 形を作るのは色であって文字ではない。
+  for (const pct of [-5, 0, 11, 50, 84, 100, 150]) {
+    assert.match(strip(bar(pct, 8)), /^ {8}$/)
+    assert.equal(displayWidth(bar(pct, 8)), 8)
+    assert.deepEqual(widthUnsafeChars(bar(pct, 8)), [])
+  }
+})
+
+test('bar —— 塗られた長さが割合を運ぶ', () => {
+  /** 最初の背景色に続く空白が、塗られた部分である。 */
+  const filled = (s) => s.match(/48;5;\d+m( *)/)[1].length
+  assert.equal(filled(bar(0, 8)), 0)
+  assert.equal(filled(bar(50, 8)), 4)
+  assert.equal(filled(bar(100, 8)), 8)
+  // ⚠ 範囲外は畳む —— spend_limit の `used_percentage` は 100 を超えうる。
+  assert.equal(filled(bar(150, 8)), 8)
+  assert.equal(filled(bar(-5, 8)), 0)
+})
+
 test('displayWidth —— ANSI は幅を持たず、日本語は 2 を占める', () => {
   assert.equal(displayWidth('abc'), 3)
   assert.equal(displayWidth(ESC + '[2mabc' + ESC + '[0m'), 3)
@@ -84,14 +105,16 @@ test('renderSession —— 在るものだけを描く', () => {
     context_window: { used_percentage: 11.2, current_usage: 105_300, context_window_size: 1_000_000 },
   }
   // ⚠ 判断に使うのは割合であって token 数ではない ∴ 割合が先、量が後。
-  assert.equal(line(renderSession(input, 'main')), 'Opus 5 high   main   ctx 11% 105.3k/1M')
+  const BAR = ' '.repeat(8)
+  assert.equal(line(renderSession(input, 'main')),
+    `Opus 5 high   git main   ctx ${BAR} 11% 105.3k/1M`)
 })
 
 test('renderSession —— rate_limits の欠落を 0% と偽らない', () => {
   const input = { model: { display_name: 'Opus 5' } }
   // ⚠ Pro / Max 以外、あるいは最初の API 応答より前では `rate_limits` は来ない。
   // そこで「5h 0%」と描けば、使っていないという**嘘**になる。
-  assert.equal(line(renderSession(input, null)), 'Opus 5')
+  assert.equal(line(renderSession(input, 'main')), 'Opus 5   git main')
 })
 
 test('renderSession —— 窓ごとに独立して欠けうる', () => {
@@ -103,12 +126,12 @@ test('renderSession —— 窓ごとに独立して欠けうる', () => {
       spend_limit: { used_percentage: 0 },
     },
   }
-  assert.equal(line(renderSession(input, null, now)), 'Opus 5   7d 24% 1:00   $ 0%')
+  assert.equal(line(renderSession(input, 'main', now)), 'Opus 5   git main   7d 24% 1:00   $ 0%')
 })
 
 test('renderSession —— context の量が無くても割合だけは描く', () => {
   const input = { context_window: { used_percentage: 42 } }
-  assert.equal(line(renderSession(input, null)), 'ctx 42%')
+  assert.equal(line(renderSession(input, 'main')), `git main   ctx ${' '.repeat(8)} 42%`)
 })
 
 test('renderBearing —— 静かなときは静かである', () => {
@@ -116,7 +139,7 @@ test('renderBearing —— 静かなときは静かである', () => {
     aimCount: 5, openTodo: 0, awaiting: 0, batonUnread: false,
     working: 0, unpushed: 0, drift: 0,
   }
-  assert.equal(line(renderBearing(facts)), 'bearing   aim 5')
+  assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5')
 })
 
 test('renderBearing —— 異常だけが現れる', () => {
@@ -125,7 +148,7 @@ test('renderBearing —— 異常だけが現れる', () => {
     working: 2, unpushed: 1, drift: 4,
   }
   assert.equal(
-    line(renderBearing(facts)),
+    line(renderBearing('ok', facts)),
     'bearing   aim 5   todo 2   観測待ち 3   baton 未読   未commit 2   未push 1   drift 4',
   )
 })
@@ -138,12 +161,23 @@ test('renderBearing —— 採れなかったことを 0 と描かない', () =>
     aimCount: 5, openTodo: 0, awaiting: 0, batonUnread: false,
     working: null, unpushed: null, drift: null,
   }
-  assert.equal(line(renderBearing(facts)), 'bearing   aim 5   未commit ?   未push ?   drift ?')
+  assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5   未commit ?   未push ?   drift ?')
 })
 
-test('renderBearing —— corpus が無ければ 2 行目そのものを出さない', () => {
-  // ⚠ `docs/aims/` を持たない repo は構造的に正常であって、欠陥ではない。
-  assert.deepEqual(renderBearing(null), [])
+test('renderBearing —— 行そのものは決して消さない', () => {
+  // ⚠ **これがもう 1 つの中心的な主張である。** 初版は corpus を採れないとき行を黙って
+  // 落としていた —— 読み手はそれを「bearing は何も言っていない ＝ 問題が無い」と読む。
+  // corpus fence が一貫して拒んできた誤読を、statusline でだけ許していた。
+
+  // `docs/aims/` を持たない repo は構造的に正常 ∴ 静かに、しかし在ると述べる。
+  assert.equal(line(renderBearing('no-corpus', null)), 'bearing   corpus 無し')
+
+  // ⚠ 一方これは正常ではない。`resolveUnit` は cwd から*下*を探す ∴ repo の
+  // subdirectory で起動すれば、corpus は在るのに見つからない —— clean ではなく不在である。
+  assert.equal(line(renderBearing('unavailable', null)), 'bearing   corpus 未取得')
+
+  // ⚠ state が ok でも facts が無ければ、事実を持たないことに変わりはない。
+  assert.equal(line(renderBearing('ok', null)), 'bearing   corpus 未取得')
 })
 
 test('描かれる文字はすべて幅が確定している', () => {
@@ -168,4 +202,60 @@ test('描かれる文字はすべて幅が確定している', () => {
   for (const seg of [...renderSession(input, 'feature/x', now), ...renderBearing(facts)]) {
     assert.deepEqual(widthUnsafeChars(seg), [], `幅の確定しない文字: ${strip(seg)}`)
   }
+})
+
+test('resolveCwd —— unit の root は project_dir であって current_dir ではない', () => {
+  // ⚠ **agent が `cd` しても unit は動かない。** `resolveUnit` は与えられた root から
+  // *下*しか探さない ∴ 作業位置を root と読めば、corpus は在るのに見失う。
+  assert.equal(
+    resolveCwd({ workspace: { project_dir: '/p', current_dir: '/p/carriers/claude' } }), '/p')
+  // project_dir が無い場（古い版など）では、在るものへ順に落ちる。
+  assert.equal(resolveCwd({ workspace: { current_dir: '/c' } }), '/c')
+  assert.equal(resolveCwd({ cwd: '/x' }), '/x')
+  assert.equal(resolveCwd({}, '/fallback'), '/fallback')
+})
+
+test('renderSession —— git の項目も決して消さない', () => {
+  const input = { model: { display_name: 'Opus 5' } }
+  // ⚠ repo を読めなかったときに項目ごと消せば、読み手には「branch が無い」のか
+  // 「statusline が壊れた」のか「幅が足りない」のかが区別できない。
+  assert.equal(line(renderSession(input, null)), 'Opus 5   git 未検知')
+  // ⚠ detached HEAD は「読めなかった」ではない —— 読めた上で branch に居ないのである。
+  assert.equal(line(renderSession(input, '')), 'Opus 5   git detached')
+  assert.equal(line(renderSession(input, 'main')), 'Opus 5   git main')
+})
+
+test('foldRepos —— unit の全 repo を畳む（primary は filter ではない）', () => {
+  // ⚠ `lib/unit.mjs` は primary を「表示順であって filter ではない: どの repo も事実を
+  // 運び、どの repo の事実も出力される」と定めている。1 つだけ見れば、unit 横断で合算する
+  // `bin/aim-facts.mjs` と**同じ画面で数が食い違う**。
+  const repo = (n) => ({
+    slugs: Array(n).fill('x'),
+    backlog: { openTodoNodes: n, awaitingNodes: Array(n).fill({}) },
+    working: [], unpushed: [], drift: { intra: [], inter: [] },
+  })
+  const f = foldRepos([repo(2), repo(3)])
+  assert.equal(f.aimCount, 5)
+  assert.equal(f.openTodo, 5)
+  assert.equal(f.awaiting, 5)
+  assert.equal(f.working, 0)
+})
+
+test('foldRepos —— 1 つでも採れなければ合計は null', () => {
+  // ⚠ 「一部は読めた」は「読めた」ではない —— 3 repo のうち 1 つを読み落とした合計を
+  // 数として出せば、それは過少報告である。
+  const ok = {
+    slugs: ['a'], backlog: { openTodoNodes: 1, awaitingNodes: [] },
+    working: [{}], unpushed: [], drift: { intra: [], inter: [] },
+  }
+  const blind = { ...ok, working: null, backlog: null }
+  const f = foldRepos([ok, blind])
+  assert.equal(f.aimCount, 2)      // slug は両方から読めている
+  assert.equal(f.working, null)    // ⚠ 片方が盲であれば合計は不明
+  assert.equal(f.openTodo, null)
+  assert.equal(f.unpushed, 0)      // こちらは両方読めている
+})
+
+test('foldRepos —— corpus を持つ repo が 1 つも無ければ null', () => {
+  assert.equal(foldRepos([]), null)
 })

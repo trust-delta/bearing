@@ -35,16 +35,23 @@ import { readBaton } from '../lib/baton.mjs'
 // ⚠ escape 文字を literal で書かない —— この file は heredoc や diff を通って運ばれる
 // ことがあり、生の制御文字はその途中で失われるか、道具に拒まれる。
 const ESC = String.fromCharCode(27)
+const fg = (n) => ESC + '[38;5;' + n + 'm'
+const bg = (n) => ESC + '[48;5;' + n + 'm'
 const C = {
   reset: ESC + '[0m',
-  dim: ESC + '[2m',
-  red: ESC + '[31m',
-  green: ESC + '[32m',
-  yellow: ESC + '[33m',
-  blue: ESC + '[34m',
-  cyan: ESC + '[36m',
-  bold: ESC + '[1m',
+  // ⚠ 階調で階層を作る —— ラベルは後退し、値が前に出る。`dim` 一段では、ラベルと
+  // 補助情報が同じ重さになり、目が拾う順序が生まれない。
+  label: fg(245),
+  faint: fg(240),
+  green: fg(71),
+  yellow: fg(179),
+  red: fg(167),
+  blue: fg(75),
+  cyan: fg(80),
 }
+
+/** ⚠ 塗るのは**空白**である —— 下の `bar` の理由を見よ。 */
+const BAR = { empty: bg(236), green: bg(65), yellow: bg(136), red: bg(124) }
 
 /**
  * ⚠ **区切りは記号ではなく余白である。**
@@ -54,6 +61,20 @@ const C = {
  * これは環境の不調ではなく、その文字を選んだ側の誤りである。構造は色と余白が作る。
  */
 const SEP = '   '
+
+/**
+ * ⚠ **バーは空白に背景色を塗って描く。**
+ *
+ * ブロック文字（`█` `░`）や罫線は、幅が Ambiguous / Neutral の境で環境ごとに揺れる ——
+ * 一度その事故を起こしている。**空白だけは揺れない** ∴ 見た目の滑らかさと桁の確実さを
+ * 同時に取れる唯一の手である。色が形を作り、文字は形を作らない。
+ */
+export function bar(pct, width = 8) {
+  const p = Math.max(0, Math.min(100, Math.round(pct)))
+  const filled = Math.round((p / 100) * width)
+  const tone = p >= 90 ? BAR.red : p >= 70 ? BAR.yellow : BAR.green
+  return tone + ' '.repeat(filled) + BAR.empty + ' '.repeat(width - filled) + C.reset
+}
 
 /** 色は「読み手が判断を変える閾値」にだけ使う —— 装飾に使うと閾値が意味を失う。 */
 function heat(pct, warn, hot) {
@@ -65,7 +86,7 @@ function heat(pct, warn, hot) {
 
 const paint = (color, s) => `${color}${s}${C.reset}`
 /** ラベルと値は 1 スペース、segment 間は 3 スペース ∴ 階層が余白の量だけで読める。 */
-const field = (label, ...rest) => [paint(C.dim, label), ...rest.filter(Boolean)].join(' ')
+const field = (label, ...rest) => [paint(C.label, label), ...rest.filter(Boolean)].join(' ')
 
 /** `105300` → `105.3k` / `1000000` → `1M`。桁を落とすのは幅のためだけである。 */
 export function humanTokens(n) {
@@ -145,12 +166,22 @@ export function renderSession(input, branch, now = Date.now()) {
   const model = input?.model?.display_name
   if (model) {
     const suffix = [input?.effort?.level, input?.fast_mode === true ? 'fast' : null].filter(Boolean)
-    seg.push([paint(C.bold, model), ...suffix.map((s) => paint(C.dim, s))].join(' '))
+    seg.push([model, ...suffix.map((s) => paint(C.label, s))].join(' '))
   }
 
   // ⚠ branch は statusline の stdin JSON に無い（`worktree.branch` は worktree 専用）
   // ∴ ここだけは git を自分で叩いた結果を受け取る。
-  if (branch) seg.push(paint(C.cyan, branch))
+  //
+  // ⚠ **ラベルを省かない。** 色は「重さ」を伝えるが「種別」は伝えない —— ラベルの無い
+  // 裸の文字列は、読み手にそれが何なのかを推測させる。
+  //
+  // ⚠ **項目ごと消さない。** 2 行目と同じ誤りが、ここにも在った —— repo を見失ったとき
+  // `git` の項目が黙って消えれば、読み手には「branch が無い」のか「statusline が壊れた」
+  // のか「幅が足りない」のかが区別できない。
+  //   `null` = repo を読めなかった / git 管理外   `''` = detached HEAD
+  if (branch === null) seg.push(field('git', paint(C.faint, '未検知')))
+  else if (branch === '') seg.push(field('git', paint(C.faint, 'detached')))
+  else seg.push(field('git', paint(C.cyan, branch)))
 
   const cw = input?.context_window
   if (cw && typeof cw.used_percentage === 'number') {
@@ -158,8 +189,8 @@ export function renderSession(input, branch, now = Date.now()) {
     const used = humanTokens(cw.current_usage)
     const size = humanTokens(cw.context_window_size)
     // ⚠ 判断に使うのは割合であって token 数ではない ∴ 割合を先に置き、量は dim で従える。
-    seg.push(field('ctx', paint(heat(pct, 70, 90), `${pct}%`),
-      used && size ? paint(C.dim, `${used}/${size}`) : null))
+    seg.push(field('ctx', bar(pct), paint(heat(pct, 70, 90), `${pct}%`),
+      used && size ? paint(C.faint, `${used}/${size}`) : null))
   }
 
   // ⚠ `rate_limits` は Pro / Max のみ、かつ最初の API 応答の後にしか現れず、各窓は
@@ -169,7 +200,7 @@ export function renderSession(input, branch, now = Date.now()) {
     if (!w || typeof w.used_percentage !== 'number') continue
     const pct = Math.round(w.used_percentage)
     const left = untilReset(w.resets_at, now)
-    seg.push(field(label, paint(heat(pct, 80, 95), `${pct}%`), left ? paint(C.dim, left) : null))
+    seg.push(field(label, paint(heat(pct, 80, 95), `${pct}%`), left ? paint(C.faint, left) : null))
   }
 
   return seg
@@ -181,24 +212,38 @@ export function renderSession(input, branch, now = Date.now()) {
  * ⚠ **静かなときは静かであること。** 0 件の未 commit を描き続ければ、読み手はやがて
  * 行そのものを見なくなる ∴ 異常だけが現れる。⚠ ただし **`null`（git を読めなかった）は
  * 0 ではない** —— 不在を clean と読ませないため `?` を残す。
+ *
+ * ⚠ **行そのものは消さない。** 初版は corpus を採れないとき 2 行目を黙って落としていたが、
+ * それは読み手に「bearing は何も言っていない ＝ 問題が無い」と読ませる —— **corpus fence が
+ * 一貫して拒んできた誤読を、statusline でだけ許していた**。行は必ず在り、*何が言えないのか*
+ * を述べる。行数が跳ねなくなるのは、その副産物にすぎない。
+ *
+ * @param {'ok'|'no-corpus'|'unavailable'} state
  */
-export function renderBearing(facts) {
-  const seg = []
-  if (!facts) return seg
+export function renderBearing(state, facts) {
+  const seg = [paint(C.label, 'bearing')]
 
-  seg.push(paint(C.dim, 'bearing'))
-  if (facts.aimCount > 0) seg.push(field('aim', String(facts.aimCount)))
-  if (facts.openTodo > 0) seg.push(field('todo', paint(C.blue, facts.openTodo)))
-  if (facts.awaiting > 0) seg.push(field('観測待ち', paint(C.blue, facts.awaiting)))
+  // ⚠ `docs/aims/` を持たない repo は**構造的に正常**である ∴ 警告色を与えない。
+  // この判定が先に来ること —— corpus が無い repo も facts を持たないため、
+  // 順序を違えれば「正常な不在」がすべて警告に化ける。
+  if (state === 'no-corpus') return [...seg, paint(C.faint, 'corpus 無し')]
+  // ⚠ 一方 **repo が見つからない**は clean ではない。`resolveUnit` は cwd から*下*を
+  // 探す ∴ repo の subdirectory で起動すれば、corpus は在るのに見つからない。
+  if (state === 'unavailable' || !facts) return [...seg, paint(C.yellow, 'corpus 未取得')]
+  // ⚠ **どの数も、採れなかったときは `?` になる。** 0 と `null` を同じ「出さない」に
+  // 畳めば、読み手はそこに事実が無いことを知りようがない。
+  const counter = (label, v, color) => {
+    if (v === null || v === undefined) return seg.push(field(label, paint(C.yellow, '?')))
+    if (v > 0) return seg.push(field(label, color ? paint(color, v) : String(v)))
+  }
+  counter('aim', facts.aimCount, null)
+  counter('todo', facts.openTodo, C.blue)
+  counter('観測待ち', facts.awaiting, C.blue)
 
   // ⚠ baton は「未読」だけを鳴らす。読み終えた baton も、baton が無いこと（fresh start）
   // も、構造的に正常な状態であって知らせるべき事実ではない。
   if (facts.batonUnread) seg.push(paint(C.yellow, 'baton 未読'))
 
-  const counter = (label, v, color) => {
-    if (v === null) return seg.push(field(label, paint(C.yellow, '?')))
-    if (v > 0) return seg.push(field(label, paint(color, v)))
-  }
   counter('未commit', facts.working, C.yellow)
   counter('未push', facts.unpushed, C.yellow)
   counter('drift', facts.drift, C.red)
@@ -206,39 +251,97 @@ export function renderBearing(facts) {
   return seg
 }
 
-/** ⚠ どの失敗も「事実が採れなかった」であって「0 だった」ではない ∴ null へ degrade する。 */
-async function gatherFacts(cwd) {
-  const unit = await resolveUnit(cwd)
-  const repo = unit.repos.find((r) => r.primary) ?? unit.repos[0]
-  if (!repo) return { unit, repo: null, facts: null, branch: null }
-
-  const branchRaw = await runGit(repo.root, ['branch', '--show-current'])
-  const branch = branchRaw?.trim() || null
-
-  const slugs = await readAimSlugs(repo.root)
-  if (slugs.length === 0) return { unit, repo, facts: null, branch }
-
-  const [working, unpushed, drift, backlog, baton] = await Promise.all([
-    gatherWorkingDelta(repo.root, slugs).catch(() => null),
-    gatherUnpushed(repo.root, slugs).catch(() => null),
-    gatherDrift(repo.root).catch(() => null),
-    gatherBacklog(repo.root).catch(() => null),
-    readBaton(unit.root).catch(() => null),
-  ])
-
+/**
+ * unit の全 repo の事実を 1 枚に畳む。
+ *
+ * ⚠ **`primary` を filter に使わない。** `lib/unit.mjs` は primary を「**表示順であって
+ * filter ではない**: どの repo も事実を運び、どの repo の事実も出力される」と定めており、
+ * `bin/aim-facts.mjs` も unit を横断して合算する。初版は primary 1 つだけを見ていた ∴
+ * multi-repo unit では**同じ画面で数が食い違っていた**。
+ *
+ * ⚠ **1 つでも採れなければ合計は `null`。** 「一部は読めた」は「読めた」ではない ——
+ * 3 repo のうち 1 つを読み落とした合計を数として出せば、それは過少報告である。
+ */
+export function foldRepos(perRepo) {
+  if (perRepo.length === 0) return null
+  const sum = (pick) => {
+    let total = 0
+    for (const r of perRepo) {
+      const v = pick(r)
+      if (v === null || v === undefined) return null
+      total += v
+    }
+    return total
+  }
   return {
-    unit,
-    repo,
+    aimCount: sum((r) => r.slugs.length),
+    openTodo: sum((r) => r.backlog?.openTodoNodes ?? null),
+    awaiting: sum((r) => r.backlog?.awaitingNodes?.length ?? null),
+    working: sum((r) => (r.working === null ? null : r.working.length)),
+    unpushed: sum((r) => (r.unpushed === null ? null : r.unpushed.length)),
+    drift: sum((r) => (r.drift === null ? null : r.drift.intra.length + r.drift.inter.length)),
+  }
+}
+
+/**
+ * unit の root をどこに取るか。
+ *
+ * ⚠ **`project_dir` を先に見る。** unit とは「このセッションが何を対象にしているか」で
+ * あって「今どの directory に立っているか」ではない —— agent が `cd` した先を root と
+ * 読めば、`resolveUnit` は cwd から*下*しか探さないため **corpus は在るのに見失う**。
+ * これは机上の懸念ではなく、実際に 2 行目が `corpus 未取得` に落ちて発覚した。
+ *
+ * ⚠ この解決順は `bin/aim-facts.mjs`（`process.cwd()`）とも
+ * `boot-ritual` / `corpus-delta` / `precompact`（`input.cwd || process.cwd()`）とも違う。
+ * **`docs/aims/bearing.md` の「hook 間の cwd 解決を一致させる」`[todo]` が指しているのは
+ * この不一致であり、statusline はそこに 3 つ目の解決を持ち込んでいる。**
+ */
+export function resolveCwd(input, fallback = process.cwd()) {
+  return input?.workspace?.project_dir
+    || input?.workspace?.current_dir
+    || input?.cwd
+    || fallback
+}
+
+/**
+ * ⚠ どの失敗も「事実が採れなかった」であって「0 だった」ではない ∴ null へ degrade する。
+ *
+ * ⚠ **branch だけは `current_dir` から取る。** aim は「何を目指しているか」であって
+ * `cd` では動かないが、branch は「**今どこで作業しているか**」である —— 2 つは別の問いで
+ * あり、同じ directory から答えるべきものではない。`git -C` は上向きに `.git` を探す ∴
+ * subdirectory を渡してもその repo に届く。
+ */
+async function gatherFacts(input) {
+  const unit = await resolveUnit(resolveCwd(input))
+  const here = input?.workspace?.current_dir || unit.root
+  const branchRaw = await runGit(here, ['branch', '--show-current'])
+  // ⚠ `''` は detached HEAD、`null` は git を読めなかったこと。**別の事実である。**
+  const branch = branchRaw === null ? null : branchRaw.trim()
+
+  if (unit.repos.length === 0) return { state: 'unavailable', facts: null, branch }
+
+  const perRepo = (await Promise.all(unit.repos.map(async (repo) => {
+    const slugs = await readAimSlugs(repo.root)
+    // corpus を採っていない repo は unit の中に普通に居る ∴ 落とすのであって、
+    // 「読めなかった」とは数えない。
+    if (slugs.length === 0) return null
+    const [working, unpushed, drift, backlog] = await Promise.all([
+      gatherWorkingDelta(repo.root, slugs).catch(() => null),
+      gatherUnpushed(repo.root, slugs).catch(() => null),
+      gatherDrift(repo.root).catch(() => null),
+      gatherBacklog(repo.root).catch(() => null),
+    ])
+    return { slugs, working, unpushed, drift, backlog }
+  }))).filter(Boolean)
+
+  if (perRepo.length === 0) return { state: 'no-corpus', facts: null, branch }
+
+  // ⚠ baton は unit に 1 つである（repo ではなく unit root に置かれる）∴ 畳まない。
+  const baton = await readBaton(unit.root).catch(() => null)
+  return {
+    state: 'ok',
     branch,
-    facts: {
-      aimCount: slugs.length,
-      openTodo: backlog?.openTodoNodes ?? 0,
-      awaiting: backlog?.awaitingNodes?.length ?? 0,
-      batonUnread: Boolean(baton && !baton.readAt),
-      working: working === null ? null : working.length,
-      unpushed: unpushed === null ? null : unpushed.length,
-      drift: drift === null ? null : drift.intra.length + drift.inter.length,
-    },
+    facts: { ...foldRepos(perRepo), batonUnread: Boolean(baton && !baton.readAt) },
   }
 }
 
@@ -265,19 +368,23 @@ async function main() {
     ).catch(() => {})
   }
 
-  const cwd = input?.workspace?.current_dir || input?.cwd || process.cwd()
   const columns = Number.parseInt(process.env.COLUMNS ?? '', 10) || 120
 
-  let gathered = { branch: null, facts: null }
+  let gathered = { state: 'unavailable', branch: null, facts: null }
   try {
-    gathered = await gatherFacts(cwd)
-  } catch {
+    gathered = await gatherFacts(input)
+  } catch (err) {
     // ⚠ corpus を読めなくても 1 行目は出す。statusline が落ちると行ごと消える ——
     // 「bearing が壊れた」ことと「terminal が狭い」ことが、読み手には区別できない。
+    //
+    // ⚠ **ただしこの degrade は、実装の bug をも `corpus 未取得` に化けさせる。**
+    // 実際に `ReferenceError` を丸ごと飲み、事実が採れないのだと読み違えた ∴
+    // debug の穴が開いているときだけは、飲んだものを見せる。
+    if (process.env.BEARING_STATUSLINE_DEBUG) console.error(err)
   }
 
   const first = fit(renderSession(input, gathered.branch), columns)
-  const second = fit(renderBearing(gathered.facts), columns)
+  const second = fit(renderBearing(gathered.state, gathered.facts), columns)
 
   if (first) process.stdout.write(first + '\n')
   if (second) process.stdout.write(second + '\n')
