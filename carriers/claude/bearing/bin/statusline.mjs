@@ -76,9 +76,16 @@ export function bar(pct, width = 8) {
   return tone + ' '.repeat(filled) + BAR.empty + ' '.repeat(width - filled) + C.reset
 }
 
-/** 色は「読み手が判断を変える閾値」にだけ使う —— 装飾に使うと閾値が意味を失う。 */
-function heat(pct, warn, hot) {
-  if (pct === null) return C.dim
+/**
+ * 色は「読み手が判断を変える閾値」にだけ使う —— 装飾に使うと閾値が意味を失う。
+ *
+ * ⚠ **存在しない色名を返してはならない。** `paint()` は受け取ったものをそのまま前置する
+ * ∴ 綴りを誤れば色が落ちるのではなく、画面に文字列 `undefined` が出て**値が汚れる**。
+ * 現在の呼び手 2 つはいずれも数であることを確かめてから渡す ∴ 下の枝は到達しないが、
+ * その保証が外れた日のために在る —— 到達しないことを理由に検査しなければ、罠のまま残る。
+ */
+export function heat(pct, warn, hot) {
+  if (pct === null) return C.faint
   if (pct >= hot) return C.red
   if (pct >= warn) return C.yellow
   return C.green

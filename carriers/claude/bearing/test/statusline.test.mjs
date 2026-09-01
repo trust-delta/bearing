@@ -12,7 +12,7 @@ import assert from 'node:assert/strict'
 
 import {
   humanTokens, untilReset, displayWidth, widthUnsafeChars, fit, bar, resolveCwd,
-  renderSession, renderBearing, foldRepos,
+  renderSession, renderBearing, foldRepos, heat,
 } from '../bin/statusline.mjs'
 
 const ESC = String.fromCharCode(27)
@@ -199,8 +199,32 @@ test('描かれる文字はすべて幅が確定している', () => {
     aimCount: 5, openTodo: 2, awaiting: 3, batonUnread: true,
     working: 2, unpushed: null, drift: 4,
   }
-  for (const seg of [...renderSession(input, 'feature/x', now), ...renderBearing(facts)]) {
+  // ⚠ **`state` を渡し忘れないこと。** 1 引数で呼ぶと `facts` が `state` の位置に入り、
+  // `renderBearing` は `corpus 未取得` の枝へ落ちる ∴ **掃討は 2 segment しか見なくなり、
+  // 数を描く枝を素通りする** —— 実際にそうなっていた。掃討の test が黙って何も掃かなく
+  // なるのは、掃討そのものが無いより悪い。
+  //
+  // ⚠ **痩せの検査は行ごとに置く。** 合計で数えると、片方が 2 segment に落ちても
+  // もう片方の 6 segment が閾値を満たしてしまい、**痩せが合計に隠れる**。
+  const first = renderSession(input, 'feature/x', now)
+  const second = renderBearing('ok', facts)
+  assert.equal(first.length, 6, `1 行目が痩せている: ${first.map(strip).join(' / ')}`)
+  assert.equal(second.length, 8, `2 行目が痩せている: ${second.map(strip).join(' / ')}`)
+  for (const seg of [...first, ...second]) {
     assert.deepEqual(widthUnsafeChars(seg), [], `幅の確定しない文字: ${strip(seg)}`)
+    // ⚠ 色名の綴り誤りは色を落とさず、文字列 `undefined` を値の前に置く（`heat` を見よ）。
+    assert.ok(!seg.includes('undefined'), `色名が解決していない: ${strip(seg)}`)
+  }
+})
+
+test('heat —— 閾値の外でも、存在する色だけを返す', () => {
+  // ⚠ **これは到達しない枝の検査である。** 呼び手が数を保証しているうちは踏まないが、
+  // 踏んだ日に画面へ出るのは色ではなく `undefined` という文字列であり、
+  // **「読めなかった」ではなく「壊れて見える」** ∴ 到達しないうちに固定する。
+  for (const c of [heat(null, 70, 90), heat(0, 70, 90), heat(75, 70, 90), heat(95, 70, 90)]) {
+    assert.equal(typeof c, 'string')
+    assert.notEqual(c, 'undefined')
+    assert.match(c, /^\x1b\[38;5;\d+m$/)
   }
 })
 
