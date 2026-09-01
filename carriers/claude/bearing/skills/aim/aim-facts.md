@@ -16,7 +16,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 各 block の 1 行目は `# fields: …` のヘッダで、以降が 1 行 1 record（` | ` 区切り）。
 
-### 5 枚の fence
+### 6 枚の fence
 
 | fence tag | fields | 何の事実か |
 | :-- | :-- | :-- |
@@ -25,6 +25,9 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
 | `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
+| `bearing-awaiting-observation v1` | `slug \| done_marks \| state` | producer が尽くし（mark が在り、その全てが `[done]`）、operator がまだ `state: done` を宣言していない node |
+
+⚠ **前の 5 枚は git の事実だが、6 枚目だけは corpus の事実である。** git が読めなくても出る。
 
 **drift が 2 枚に割れるのは、2 種の drift が trigger を共有しないため**である。「同一 aim 内」は anchor の*改訂*のみが隙間を開ける（誕生時、body は anchor と共に書かれる）が、「aim 同士」は*作成*も trigger になる（親を動かさずに子を足す形）。∴ 1 枚に畳むと、どちらかの trigger が黙って落ちる。
 
@@ -39,6 +42,8 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 **working-delta は presence のみを述べ、順序を一切含意しない。** working tree の中に順序の事実は無いので、この層は比較を行わない。commit された瞬間にこの node の working fact は消え、drift 側の本物の順序判定が引き継ぐ。∴ **ここに時系列を読み込むな。**
 
 **unpushed は「既に済んだ作業」の frontier。** baton は forward に選択されるため、道中どう aim を触ったかを構造的に過少報告する。ここに挙がった slug は **re-read すること** —— aim を読み直して得られるのは*到達状態*であって*変化*ではないが、この差分だけが変化を運ぶ。
+
+**awaiting-observation は「終わった aim」の一覧ではない。** ここに挙がるのは *producer の側が*尽きた node であり、⚠ **満足したかどうかを述べられるのは operator だけである** —— この fence はそれを一切先取りしない。∴ **surface はせよ。だが「これは done にしてよい」と提案するな。** 逆に、⚠ **ここが空であることは「番が渡っていない」を意味するのであって、「やることが無い」ではない。** `open-todo` と併せて読むこと: **両方 0 なら、producer にも人間にも渡っていない ＝ node が純 IS のままか、すべて解決済みである。**
 
 **checkpoint-stale は verdict ではない。** footprint はまだ node 自身の code へ絞られておらず、repo 全体が動いただけかもしれない。挙がった slug は「**再検証する価値がありうる候補**」として扱う。判断不要な絞り込みは fan-out してよいが、**aim が code から剥離したという宣言は人間の act** である（`state: done` と同じ層）。
 

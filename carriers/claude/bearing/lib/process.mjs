@@ -25,10 +25,25 @@
 //
 // dead の除外は `state: dead` の意味から従う: 追わないと決めた目的に未実装の手段は無く、
 // 在るのは放棄された手段だけである。
+//
+// ═══ mark が尽きた先にあるもの ══════════════════════════════════════════════
+//
+// ⚠ **`[todo]` は producer が自力で完了を確認できる形でのみ書かれる**（正本の「todo の完了
+// 条件」）∴ `open-todo` は **producer の残務**であって、人間待ちを含まない。
+//
+// ∴ **mark が在り、その全てが `[done]` の node には固有の意味がある**: producer が尽くし、
+// 残っているのは**人間の観測と `state:` の宣言だけ**である。これを `open-todo: 0` として
+// 沈黙させると、⚠ **体制が人間へ番を渡した瞬間が、どこにも現れなくなる。**
+// `renderAwaitingFence` はその瞬間を可視化する —— **可視化するだけで、判定はしない。**
+//
+// ⚠ **mark が 1 つも無い純 IS の node はここに入らない。** あちらはまだ何も約束していない
+// のであって、尽くしたのではない。両者を同じ「todo 0 件」として畳んではならない。
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { aimRelPath, parseAimRecord, readAimSlugs } from './corpus.mjs'
+
+export const AWAITING_FENCE_TAG = 'bearing-awaiting-observation v1'
 
 /**
  * corpus が書いているとおりの mark: 行頭・`-` bullet・小文字の語。
@@ -159,6 +174,7 @@ export async function gatherBacklog(repoRoot) {
   const slugs = await readAimSlugs(repoRoot)
   let openTodoNodes = 0
   const unknownNodes = []
+  const awaitingNodes = []
   const anomalies = []
   for (const slug of slugs) {
     let text
@@ -173,6 +189,38 @@ export async function gatherBacklog(repoRoot) {
     if (record.state === 'dead') continue
     if (marks.unknown) unknownNodes.push(slug)
     if (marks.todo > 0) openTodoNodes++
+    // ⚠ all-done かつ未解決 ＝ **人間の番**。mark が在り、その全てが `[done]` で、operator が
+    // まだ `state: done` を宣言していない node。`no-process`（mark が 1 つも無い純 IS）は
+    // 入らない —— あちらはまだ何も約束していない。
+    else if (marks.done > 0 && record.state !== 'done') {
+      awaitingNodes.push({ slug, doneMarks: marks.done, state: record.state ?? 'unset' })
+    }
   }
-  return { openTodoNodes, unknownNodes, anomalies }
+  return { openTodoNodes, unknownNodes, awaitingNodes, anomalies }
+}
+
+/**
+ * `bearing-awaiting-observation v1` —— producer が尽くし、人間の観測を待っている aim。
+ *
+ * ⚠ **これは「終わった aim」の一覧ではない。** producer の側の終点は「目的が満たされたこと」
+ * ではなく「人間が観測できるようになったこと」であり、ここに挙がるのは後者に達した node で
+ * ある。⚠ **満足したかの宣言は operator の act（`state: done`）であって、この fence は
+ * それを一切先取りしない。**
+ *
+ * ⚠ **prose ではなく fence で出す理由**: これは数ではなく **slug を運ぶ record** である。
+ * 正本は「fence を parse せよ、prose を scrape するな」と定めており、行動の対象になる slug を
+ * 言い回しの変わりうる散文に置けば、読み手は scrape を強いられる。
+ */
+export function renderAwaitingFence(items) {
+  const lines = [
+    '```' + AWAITING_FENCE_TAG,
+    '# fields: slug | done_marks | state',
+  ]
+  if (items.length === 0) {
+    lines.push('# none — producer が尽くして観測待ちになっている aim は無い')
+  } else {
+    for (const it of items) lines.push(`${it.slug} | ${it.doneMarks} | ${it.state}`)
+  }
+  lines.push('```', '')
+  return lines.join('\n') + '\n'
 }

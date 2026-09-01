@@ -11,6 +11,7 @@
 // triage を招くからである。**
 
 import { renderWorkingDeltaFence } from './working-delta.mjs'
+import { renderAwaitingFence } from './process.mjs'
 
 /**
  * @param {{
@@ -27,6 +28,7 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   const lines = []
   let openTodo = 0
   const unknown = []
+  const awaiting = []
   const anomalies = []
 
   lines.push('# aim facts —— このセッションが事実を渡されて以降、corpus が動いた', '')
@@ -41,6 +43,8 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   for (const r of repos) {
     openTodo += r.backlog?.openTodoNodes ?? 0
     for (const s of r.backlog?.unknownNodes ?? []) unknown.push(`${r.label}/${s}`)
+    for (const a of r.backlog?.awaitingNodes ?? [])
+      awaiting.push({ ...a, slug: repos.length > 1 ? `${r.label}/${a.slug}` : a.slug })
     for (const a of r.backlog?.anomalies ?? []) anomalies.push({ repo: r.label, ...a })
 
     lines.push(`### ${r.label}`, '')
@@ -63,6 +67,19 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
     'の提案もするな —— 拾うものを選ぶのは operator の act である。**',
     '',
   )
+
+  // ⚠ **セッション途中こそ、この事実が生まれる場所である** —— 最後の `[todo]` を `[done]` に
+  // するのはまさに走っているセッションであり、そのとき番は operator へ渡る。boot 時にしか
+  // 出さなければ、**渡した当のセッションがそれを知らないまま進む。**
+  lines.push(renderAwaitingFence(awaiting).trimEnd(), '')
+  if (awaiting.length > 0) {
+    lines.push(
+      '⚠ **上の node は producer が尽くしている ∴ 残っているのは operator の観測と `state:` の',
+      '宣言だけである。** 「終わった aim」の一覧ではない —— **満足したかを述べられるのは',
+      'operator だけであり、この一覧はそれを先取りしない。**',
+      '',
+    )
+  }
 
   if (unknown.length > 0) {
     lines.push(

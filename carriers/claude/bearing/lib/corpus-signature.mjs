@@ -137,6 +137,14 @@ export function factsDigest(repos) {
               .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)),
       openTodo: r.backlog?.openTodoNodes ?? 0,
       unknown: [...(r.backlog?.unknownNodes ?? [])].sort(),
+      // ⚠ **観測待ちも digest に入れる。** 入れなければ、最後の `[todo]` が `[done]` に
+      // なった瞬間 —— **体制が人間へ番を渡すまさにその瞬間** —— を第 2 の門が「事実は
+      // 変わっていない」と判定して黙る。open-todo の数は 1 減るので実際には気づけるが、
+      // それに依存すると、**数が変わらない経路**（1 つが done になり別の 1 つに todo が
+      // 増える）で黙ることになる。
+      awaiting: [...(r.backlog?.awaitingNodes ?? [])]
+        .map((a) => [a.slug, a.doneMarks, a.state])
+        .sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0)),
       anomalies: (r.backlog?.anomalies ?? [])
         .map((a) => [a.slug, a.kind, a.no, a.line])
         .sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1)),
