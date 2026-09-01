@@ -14,4 +14,4 @@ state: open
 
 # PROCESS
 
-- [todo] plugin の handoff 機構（baton の読み書き・退避・刻印・圧縮直前の介入）を移設する
+- [done] plugin の handoff 機構（baton の読み書き・退避・刻印・圧縮直前の介入）を移設した。読む手順は 2026-09-01 のセッション開始時に端から端まで走っている

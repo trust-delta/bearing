@@ -16,5 +16,5 @@ state: open
 
 # PROCESS
 
-- [todo] plugin の aim 機構（corpus の読み取り・fence 生成・記法検査）を移設する
-- [todo] 目的を書くための canon（`_guide`）を、前身の場所前提を抜いた形で置く
+- [done] plugin の aim 機構（corpus の読み取り・fence 生成・記法検査）を移設した。5 枚の fence が実際に出ており、うち `drift-inter` は 2026-09-01 に実地で発火した
+- [done] 目的を書くための canon（`_guide`）を、前身の場所前提を抜いた形で置いた（4 枚 ＋ README）。carrier への同梱は生成であり、正本との同期は CI が検証する
