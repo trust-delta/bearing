@@ -2,3 +2,8 @@ node_modules/
 .DS_Store
 .claude/settings.local.json
 .handoff/
+
+# 調査ノートは machine-local な作業の記録である —— durable な findings は README と
+# aim corpus が持ち、あちらには drift 機構が効く。ここに二重の正本を置くと、
+# 監視されない側だけが黙って古くなる。
+.claude/research/
