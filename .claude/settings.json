@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "trust-delta": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/trust-delta/bearing.git"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "bearing@trust-delta": true
+  }
+}
