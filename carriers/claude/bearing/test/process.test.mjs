@@ -19,7 +19,12 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
-import { splitProcess, parseProcessMarks, gatherBacklog } from '../lib/process.mjs'
+import {
+  splitProcess,
+  parseProcessMarks,
+  gatherBacklog,
+  renderAwaitingFence,
+} from '../lib/process.mjs'
 
 const body = (...lines) => lines.join('\n')
 
@@ -189,4 +194,75 @@ test('unknown nodes are named so the operator can see what was unreadable', asyn
   assert.equal(r.openTodoNodes, 1)
   assert.deepEqual(r.unknownNodes, ['unreadable'])
   await rm(root, { recursive: true, force: true })
+})
+
+// ── 番が人間へ渡る瞬間 ───────────────────────────────────────────────────────
+//
+// ⚠ `[todo]` は producer が自力で完了を確認できる形でのみ書かれる ∴ mark が尽きた node は
+// 「producer が尽くした ∴ 人間の観測待ち」を意味する。**この瞬間が可視化されなければ、
+// 誰も観測に来ない** —— open-todo が 0 になるだけでは、番が渡ったことは誰にも見えない。
+
+test('a node whose marks are all done is awaiting the human, not finished', async () => {
+  const root = await corpus([
+    ['exhausted', 'open', ['- [done] a', '- [done] b']],
+    ['still-working', 'open', ['- [done] a', '- [todo] b']],
+  ])
+  const r = await gatherBacklog(root)
+  assert.equal(r.openTodoNodes, 1)
+  assert.deepEqual(r.awaitingNodes, [{ slug: 'exhausted', doneMarks: 2, state: 'open' }])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('a node the operator already resolved is not awaiting anything', async () => {
+  const root = await corpus([['settled', 'done', ['- [done] a']]])
+  const r = await gatherBacklog(root)
+  // ⚠ 宣言は済んでいる。ここへ挙げ続けるのは、operator の act を無かったことにする。
+  assert.deepEqual(r.awaitingNodes, [])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('a dead node is awaiting nothing — the purpose was retracted', async () => {
+  const root = await corpus([['abandoned', 'dead', ['- [done] a']]])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.awaitingNodes, [])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('a pure IS node is not awaiting — it promised nothing to exhaust', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-process-'))
+  await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
+  await writeFile(
+    path.join(root, 'docs', 'aims', 'pure.md'),
+    '---\naim: x\nstate: open\n---\n\n# IS\n\nまだ手段を書いていない。\n',
+  )
+  const r = await gatherBacklog(root)
+  // ⚠ `no-process` と `all-done` を同じ「todo 0 件」として畳んではならない。
+  assert.equal(r.openTodoNodes, 0)
+  assert.deepEqual(r.awaitingNodes, [])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('an unreadable PROCESS is not awaiting — `unknown` must not become `all-done`', async () => {
+  const root = await corpus([['unreadable', 'open', ['なにも mark がない']]])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.unknownNodes, ['unreadable'])
+  // ⚠ 読めなかったものを「尽くした」に倒せば、捏造された `[done]` と同じ嘘になる。
+  assert.deepEqual(r.awaitingNodes, [])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('the fence is emitted even with no records, and says which silence it is', () => {
+  const out = renderAwaitingFence([])
+  assert.match(out, /^```bearing-awaiting-observation v1\n/)
+  assert.match(out, /# fields: slug \| done_marks \| state/)
+  assert.match(out, /# none — producer が尽くして観測待ちになっている aim は無い/)
+})
+
+test('records render one per line, in the fixed field order', () => {
+  const out = renderAwaitingFence([
+    { slug: 'a', doneMarks: 3, state: 'open' },
+    { slug: 'b', doneMarks: 1, state: 'open' },
+  ])
+  assert.match(out, /\na \| 3 \| open\n/)
+  assert.match(out, /\nb \| 1 \| open\n/)
 })

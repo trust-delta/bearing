@@ -16,6 +16,8 @@
 //   CHECKPOINT   目的は、それを実装した code から剥離しうる。その剥離は surface できねば
 //                ならない
 //   OPEN-TODO    未実装の手段が backlog である: **数は述べ、triage はしない**
+//   AWAITING     producer が尽くした node は、体制が人間へ番を渡した瞬間である ——
+//                その瞬間が可視化されなければ、誰も観測に来ない
 //   UNIT         project は常に 1 repo とは限らない —— cwd から下方向に解決する
 //   READINESS    git が無いのは新規 project、corpus が無いのは新規の取り付け
 //   GUIDE 検査   canon は実際に在るか、さもなくば不在として報告されねばならない
@@ -36,7 +38,7 @@ import { fileURLToPath } from 'node:url'
 import { readAimGraph, readAimSlugs } from '../lib/corpus.mjs'
 import { runGit } from '../lib/git.mjs'
 import { resolveUnit } from '../lib/unit.mjs'
-import { gatherBacklog } from '../lib/process.mjs'
+import { gatherBacklog, renderAwaitingFence } from '../lib/process.mjs'
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { gatherWorkingDelta, renderWorkingDeltaFence } from '../lib/working-delta.mjs'
 import { gatherUnpushed, renderUnpushedFence } from '../lib/unpushed.mjs'
@@ -114,6 +116,14 @@ async function main() {
   )
   const unknown = withCorpus.flatMap((r) =>
     r.backlog.unknownNodes.map((slug) => `${r.label}/${slug}`),
+  )
+  // ⚠ unit を横断して 1 枚に畳む。repo ごとに割ると、**番が渡っている node の総数**という
+  // 唯一意味のある読み方が失われる —— 観測するのは人間であって、repo ではない。
+  const awaiting = withCorpus.flatMap((r) =>
+    (r.backlog.awaitingNodes ?? []).map((a) => ({
+      ...a,
+      slug: withCorpus.length > 1 ? `${r.label}/${a.slug}` : a.slug,
+    })),
   )
   const baton = await readBatonSafe(unit.root)
 
@@ -194,6 +204,17 @@ async function main() {
       '**拾うものを選ぶのは operator の act である。**',
       '',
     )
+    // ⚠ **open-todo の直後に置く。** 数が 0 でも「番が operator へ渡っている」ことが
+    // 同じ視野に入らねばならない —— 離せば、0 が「何も残っていない」と読まれる。
+    say(renderAwaitingFence(awaiting).trimEnd(), '')
+    if (awaiting.length > 0) {
+      say(
+        '⚠ **上の node は producer が尽くしている ∴ 残っているのは operator の観測と',
+        '`state:` の宣言だけである。** これは「終わった aim」の一覧ではない —— **満足したか',
+        'どうかを述べられるのは operator だけであり、この一覧はそれを一切先取りしない。**',
+        '',
+      )
+    }
     if (anomalies.length > 0) {
       // corpus が、自ら観測された記法から逸脱した。黙って吸収もせず、黙って無視もしない:
       // ⚠ この parser が数えなかった mark は、誰も注意を払っていない todo である。
