@@ -39,9 +39,9 @@ import { aimRelPath, parseAimRecord, readAimSlugs } from './corpus.mjs'
  *
  * ⚠ **No space is required after the bracket.** The first cut of this parser
  * demanded one and dropped 3 real marks — every one of them `- [todo]（…`, a
- * full-width paren butted straight against the bracket. The count came out 41
- * against the engine's 44, and the three surfaced in the anomaly list instead
- * of the backlog. The bracket IS the token; what follows it is prose, and prose
+ * full-width paren butted straight against the bracket. Three real items went
+ * missing from the backlog and surfaced in the anomaly list. The bracket IS the
+ * token; what follows it is prose, and prose
  * in Japanese does not owe an ASCII space.
  */
 const MARK = /^- \[(done|todo)\]/
@@ -63,8 +63,8 @@ const FENCE_LINE = /^ {0,3}(```+|~~~+)/
  * fenced-block pattern matches a ``` appearing mid-line inside an inline span
  * (`` ` ```tmai-aim-drift ` ``, which this corpus writes), so it opened a
  * phantom fence and swallowed everything down to the next ``` anywhere below.
- * Measured: that alone reported a `# PROCESS` mark in `aim-without-tmai` as
- * living outside the section. Same law, applied at the granularity that keeps
+ * Measured: that alone reported a real `# PROCESS` mark as living outside the
+ * section. Same law, applied at the granularity that keeps
  * the structure intact.
  */
 const stripInlineCode = (line) => line.replace(/`[^`]*`/g, '')

@@ -1,36 +1,27 @@
 #!/usr/bin/env node
-// The boot ritual trigger — derived from `producer-boot-continue-or-fresh`.
+// The boot ritual trigger.
 //
-//   producer-boot-continue-or-fresh  Producerの起動時に、直前の会話を継続するか
-//                                    新規で始めるかをoperatorが選べる。これにより、
-//                                    クラッシュからの復帰も日々の再開も、tmai側の
-//                                    手続きだけで済む。
-//   conversation-handoff             セッションを跨ぐコンテキスト伝達のために固有の
-//                                    会話引き継ぎ機能を備える
+// A session that opens on an outstanding baton owes it a reading procedure, and
+// the operator chooses at that moment whether to continue the previous
+// conversation or start fresh. Neither is served by the facts merely sitting in
+// context.
 //
 // ═══ Why UserPromptSubmit and not SessionStart ══════════════════════════════
 //
 // ⚠ **`SessionStart` fires into a void.** Its stdout becomes context; context is
 // not a turn. `_guide/handoff.md` § 読む steps 2-6 are AGENT acts — stamp
 // `read-at`, surface un-pushed aims, read the pointers, report where things
-// stand — and **an agent that is never invoked performs no acts**. So out-tmai
-// an unbounded window opens between "the baton is in context" and "the baton
-// was read": however long it takes a human to type, and if what they type is
+// stand — and **an agent that is never invoked performs no acts**. So an
+// unbounded window opens between "the baton is in context" and "the baton was
+// read": however long it takes a human to type, and if what they type is
 // unrelated the procedure never runs at all while the facts sit there looking
 // delivered.
-//
-// Measured 2026-08-31 on this unit: the engine spawns its Producer as
-//   claude --append-system-prompt <posture> <BOOT>
-// — argc 4, where `argv[3]` is a positional first prompt. THAT is what makes the
-// ritual run at boot with no human input. A plugin has no such element: argc is
-// 1. What the aim statement calls 「tmai側の手続きだけで済む」 was carried by the
-// engine's ability to create a turn, not by the facts it injected.
 //
 // ⚠ **A plugin cannot create a turn — but the ritual never needed one created.**
 // What it needs is to run BEFORE the first turn does anything else, and
 // `UserPromptSubmit` is the only ritual-relevant event whose firing is by
 // definition followed by a turn. Turn *creation* is the premise of unattended
-// operation, which this node delegates to the harness (`# IS`).
+// operation, which is the harness's job and not this plugin's.
 //
 // ═══ 半強制 — the same shape as the threshold trigger ════════════════════════
 //

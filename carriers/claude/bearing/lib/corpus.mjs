@@ -1,11 +1,9 @@
 // Reading a repo's aim corpus.
 //
-// ⚠ **The "Node port" framing this header used to carry is retracted**
-// (`out-tmai-distribution`, operator 2026-08-31). What a corpus IS comes from
-// `aim-file-purpose-and-means` (one file per aim, frontmatter the human's and
-// body the agent's), `aim-tree-pin` (a child names its parent) and
-// `aim-slug-producer-owned` (the slug is the file name). Everything below reads
-// from those.
+// What a corpus IS is settled by `docs/aims/_guide/producer-guide.md`: one file
+// per aim, frontmatter the human's and body the agent's, a child naming its
+// parent, and the slug being the file name. Everything below reads from those
+// and adds nothing of its own.
 
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'

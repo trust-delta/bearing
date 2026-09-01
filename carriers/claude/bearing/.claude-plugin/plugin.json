@@ -1,6 +1,6 @@
 {
   "name": "bearing",
-  "description": "Carries a purpose the human fixed into any Claude Code session, with no build step. A SessionStart hook injects the frame, the outstanding baton, this unit's per-repo corpus fences (drift-intra / drift-inter / working-delta / unpushed / checkpoint-stale) and the open-todo count; a UserPromptSubmit hook states the baton's reading procedure once, before the first turn does anything else; a PostToolBatch hook re-states the facts when the corpus moves under a session; a PreCompact hook stops silent auto-compaction once so a baton can be authored instead. Ships the aim / handoff-r / handoff-w skills. No engine, no server, no Rust.",
+  "description": "Carries a purpose the human fixed into any Claude Code session, with no build step. A SessionStart hook injects the frame, the outstanding baton, this unit's per-repo corpus fences (drift-intra / drift-inter / working-delta / unpushed / checkpoint-stale) and the open-todo count; a UserPromptSubmit hook states the baton's reading procedure once, before the first turn does anything else; a PostToolBatch hook re-states the facts when the corpus moves under a session; a PreCompact hook stops silent auto-compaction once so a baton can be authored instead. Ships the aim / handoff-r / handoff-w skills. No build step, no server, no daemon.",
   "version": "0.4.0",
   "author": {
     "name": "TrustDelta"

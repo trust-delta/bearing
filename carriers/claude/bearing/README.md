@@ -47,18 +47,3 @@ unavailable one are different facts.
 
 **It does not touch `aim:`, `parent:` or `state:`.** Those are the human's. The
 agent maintains the body, proposes changes to any purpose, and escalates.
-
-## Provenance
-
-⚠ **The comments in `lib/` and `bin/` cite aim nodes that are not in this
-repository.** They name the corpus of `tmai`, the predecessor project this
-discipline grew inside, because that is where these mechanisms were actually
-derived — each hook from a specific `aim:` sentence rather than ported from an
-earlier implementation. Those citations are kept because they are true. Pointing
-them at this repository's nodes instead would be a false attribution, and
-deleting them would leave the code unexplained.
-
-`bearing`'s own corpus starts fresh, deliberately: the predecessor's history is
-premised throughout on these mechanisms' role *inside* a place that supplied the
-agent's runtime, and this repository asks a different question — how they fare as
-an external extension to a harness someone else supplies.

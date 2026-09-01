@@ -46,7 +46,7 @@ async function corpusRepo(root, slugs) {
 
 test('the frame is always injected — a session is never left un-framed', async () => {
   // An un-framed agent has nothing stopping it from rewriting an `aim:` line,
-  // which is the violation `aim-without-tmai` separates from mere degradation.
+  // which is a VIOLATION of the ownership split, not a degradation of speed.
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   const outEmpty = compose(root)
   assert.match(outEmpty, /# aim frame/)

@@ -3,20 +3,24 @@
 //
 // ═══ What goes in, and why ══════════════════════════════════════════════════
 //
-// The set is derived from the `aim:` statements, one demand each. Nothing is
-// here because the engine emits it:
+// Each element answers one demand of the discipline. Nothing is here because it
+// happened to be cheap to emit:
 //
-//   artifact-system-prompt   エージェントは、この第一級Artifactをどう読み・編集し・
-//                            取り扱うかを、system-promptに代表される最も強いプロンプト
-//                            挿入にて把握する                        → the FRAME
-//   conversation-handoff     セッションを跨ぐコンテキスト伝達         → the BATON
-//   aim-upkeep / drift-git   安い機械検知によって検査対象を可視化      → DRIFT fences
-//   knowledge-crossing       知識は ... 次に判断する人へ届く           → UNPUSHED
-//   aim-code-drift           aim⊥code driftは ... 表面化できる         → CHECKPOINT
-//   aim-backlog-triage       エージェントはAimの未実装の手段に注意を払う → OPEN-TODO
-//   cwd-git / multi-repo     cwdから下階層へ探索し、各枝で初めて現れたもの → the UNIT
-//   boot-readiness-prompt    git不在=新規、構造物不在=新規アタッチ      → READINESS
-//   guide-provisioning       正本(guide)が手元に実在する               → GUIDE check
+//   the FRAME     the ownership split must reach the agent through the
+//                 strongest insertion available, or it is merely advice
+//   the BATON     context crosses a session boundary by being CHOSEN, never by
+//                 surviving truncation
+//   DRIFT fences  cheap machine detection makes the inspection surface
+//                 visible — it does not judge what is on it
+//   UNPUSHED      work already done but not yet reachable by the next person to
+//                 decide; a baton is chosen forward and under-reports it
+//   CHECKPOINT    a purpose can come apart from the code that implements it,
+//                 and that separation must be surfaceable
+//   OPEN-TODO     unimplemented means are the backlog: the count is stated and
+//                 the triage is not
+//   the UNIT      a project is not always one repo — resolve from cwd downward
+//   READINESS     no git means a new project; no corpus means a fresh attach
+//   GUIDE check   the canon must actually be present, or be reported absent
 //
 // ═══ Two rules this file may never break ════════════════════════════════════
 //

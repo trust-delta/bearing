@@ -29,14 +29,13 @@
 //   3. **It does not judge.** `aim-code-drift` gives the human the verdict, as
 //      with `done`.
 //
-// ⚠ **No threshold.** The Rust control group drops candidates below a floor of
-// 10 commits and orders most-moved-first. Ordering is derivable — more movement
-// is more reason to look. A floor is not: no aim statement names a number, and
-// a tuned constant silently deletes candidates on the strength of nobody's
-// stated judgment. `aim-upkeep` asks for the inspection surface to be made
-// visible, and a filter with no derivation shrinks it by luck. The count is
-// emitted and the reader weighs it. **This is a deliberate divergence from the
-// control group, recorded as a finding rather than reconciled.**
+// ⚠ **No threshold.** Ordering is derivable — more movement is more reason to
+// look. A floor is not: no aim statement names a number, and a tuned constant
+// silently deletes candidates on the strength of nobody's stated judgment. The
+// discipline asks for the inspection surface to be made VISIBLE, and a filter
+// with no derivation shrinks it by luck. The count is emitted and the reader
+// weighs it. **If fewer candidates are wanted, write the threshold down as a
+// purpose first.**
 
 import { runGit } from './git.mjs'
 

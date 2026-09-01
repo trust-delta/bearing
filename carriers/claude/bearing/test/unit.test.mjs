@@ -62,14 +62,14 @@ test('the walk never climbs — a session inside a member repo is about that rep
 
 test('a wrapper named for its repo makes that repo primary', async () => {
   const root = await tree()
-  const wrapper = path.join(root, 'tmai')
+  const wrapper = path.join(root, 'workspace')
   await mkdir(wrapper, { recursive: true })
-  await repo(wrapper, 'tmai')
-  await repo(wrapper, 'tmai-core')
+  await repo(wrapper, 'workspace')
+  await repo(wrapper, 'workspace-core')
   const u = await resolveUnit(wrapper)
-  assert.equal(u.repos[0].label, 'tmai')
+  assert.equal(u.repos[0].label, 'workspace')
   assert.equal(u.repos[0].primary, true)
-  assert.equal(u.repos.find((r) => r.label === 'tmai-core').primary, false)
+  assert.equal(u.repos.find((r) => r.label === 'workspace-core').primary, false)
   await rm(root, { recursive: true, force: true })
 })
 

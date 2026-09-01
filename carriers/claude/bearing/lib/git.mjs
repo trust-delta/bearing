@@ -1,16 +1,14 @@
 // Thin `git` wrapper for the aim plugin.
 //
-// ⚠ **The "ported verbatim" claim this header used to carry is retracted**
-// (`out-tmai-distribution`, operator 2026-08-31): the source of truth is the
-// `aim:` sentence, not the Rust build. The contract below is derived, and it
-// derives from `git-local-fact-source` — local git is the ground truth, so what
-// git cannot tell us is not ours to supply: **a fact we cannot observe is
-// absent, never fabricated.** Every failure mode — spawn failure, non-zero
-// exit, timeout — collapses to `null`, and callers treat `null` as "no facts",
-// never as "no drift".
+// ⚠ **Local git is the ground truth, so what git cannot tell us is not ours to
+// supply: a fact we cannot observe is absent, never fabricated.** Every failure
+// mode — spawn failure, non-zero exit, timeout — collapses to `null`, and
+// callers must treat `null` as "no facts".
 //
-// That the Rust build reached the same contract is unsurprising and is not the
-// warrant for it. The warrant is the aim statement.
+// ⚠ **That holds in BOTH directions.** Reading `null` as "no drift" is the
+// obvious form of the lie; reading it as a positive fact ("nothing is
+// committed", so everything is untracked) is the same lie in the affirmative,
+// and it is the one that actually shipped once.
 //
 // `execFile` is used deliberately instead of `exec`: it does not go through a
 // shell, so the MSYS argument mangling `docs/runbook/windows.md` warns about

@@ -1,13 +1,10 @@
 // The `tmai-aim-working-delta v1` fence — the working-tree presence layer.
 //
-// ⚠ **"The Rust build stays the oracle" is retracted** (`out-tmai-distribution`,
-// operator 2026-08-31). The Rust build is a control group; agreement with it is
-// not the goal, because agreement would be a property of porting rather than
-// evidence that the aim statements determine the mechanism.
+// What this layer states: working-tree changes are one of the two things a
+// cheap mechanical sensor can see without judging anything. It reports presence
+// and nothing else.
 //
-// What this layer states is derived from `drift-git` (working-tree changes are
-// one of the two things a cheap mechanical sensor can see) and
-// `git-local-fact-source`. The two notes marked "kept for the comparison"
+// The two notes below marked "kept for the comparison"
 // below have therefore lost their reason and are now open decisions, flagged
 // where they sit rather than silently acted on — changing what a fence says is
 // a change to the contract, not a cleanup.
@@ -34,9 +31,9 @@ export const WORKING_DELTA_FENCE_TAG = 'tmai-aim-working-delta v1'
  * (`"docs/aims/a b.md"`), and this does not unquote them, so such a node reads
  * as clean rather than as wrong — a silent false negative. Aim slugs are
  * lowercase kebab-case by the guide, so the case does not arise in this corpus.
- * The old reason for leaving it ("fixing it before the Rust side would break
- * the comparison") is gone with the oracle; what remains is that fixing it
- * changes what the fence says, which is an operator-visible contract change.
+ * What keeps it standing is not caution but scope: fixing it changes what the
+ * fence says, which is an operator-visible contract change and not a silent
+ * cleanup.
  *
  * @param {string} out
  * @returns {Set<string>}
@@ -44,7 +41,7 @@ export const WORKING_DELTA_FENCE_TAG = 'tmai-aim-working-delta v1'
 export function parsePorcelainPaths(out) {
   const dirty = new Set()
   for (const line of out.split('\n')) {
-    // `l.get(3..)` in Rust yields None for a shorter line, dropping it.
+    // A line shorter than the status prefix carries no path.
     if (line.length < 3) continue
     const rest = line.slice(3).trim()
     const path = rest.split(' -> ').pop().trim()
@@ -76,12 +73,11 @@ export async function workingAnchorChanged(repoRoot, relPath) {
 /**
  * Every repo-relative path under `docs/aims/` that any commit has ever touched.
  *
- * The Rust original asks this per node, as `git log -1 -- <path>`, which costs
- * one process spawn per aim node — 76 of them on this corpus, ~11s on Windows,
- * well past the hook's 20s timeout. One `git log` over the directory answers
- * the same question for every node at once. ⚠ The two agree because neither
- * follows renames (no `--follow`): a node's history begins at its current path
- * in both forms.
+ * Asking this per node, as `git log -1 -- <path>`, costs one process spawn per
+ * aim node — 76 of them on a corpus that size, ~11s on Windows, well past the
+ * hook's 20s timeout. One `git log` over the directory answers the same
+ * question for every node at once. ⚠ Neither form follows renames (no
+ * `--follow`): a node's history begins at its current path either way.
  *
  * ⚠ **A `null` from git is two different facts wearing one mask**, and telling
  * them apart is the whole job of the failure branch below. `git log` exits
@@ -97,9 +93,8 @@ export async function workingAnchorChanged(repoRoot, relPath) {
  * one tree instead and be far faster, but it answers a subtly different
  * question — "is this path in HEAD?" rather than "did any commit touch it?" —
  * and the two diverge for a node deleted and then recreated without a commit:
- * one calls it committed-and-dirty, the other untracked. The oracle is gone, so
- * the question is no longer "does Rust agree" but "which question does
- * `drift-git` ask". That is an operator call, not a silent optimisation.
+ * one calls it committed-and-dirty, the other untracked. Which question the
+ * fence should ask is an operator call, not a silent optimisation.
  *
  * @param {string} repoRoot
  * @returns {Promise<Set<string>|null>} `null` when git could not be read
@@ -146,10 +141,10 @@ async function committedAimPaths(repoRoot) {
  * @returns {Promise<{slug: string, uncommitted: boolean, uncommittedAnchorChange: boolean, untracked: boolean}[]|null>} `null` when git could not be read
  */
 export async function gatherWorkingDelta(repoRoot, slugs) {
-  // No corpus, no facts — and no git either. The Rust original still runs the
-  // porcelain pass here before finding nothing to iterate, which is harmless
-  // there and expensive in a repo with a large history: a member repo that
-  // keeps no aims was costing ~4.7s of `git log` to say `# none`. Skipping is
+  // No corpus, no facts — and no git either. Running the porcelain pass before
+  // finding nothing to iterate is expensive in a repo with a large history: a
+  // member repo that keeps no aims was costing ~4.7s of `git log` to say
+  // `# none`. Skipping is
   // observationally identical.
   if (slugs.length === 0) return []
 

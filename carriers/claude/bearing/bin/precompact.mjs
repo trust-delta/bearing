@@ -10,7 +10,7 @@
 // ═══ Why this hook, and not a context-percentage watcher ════════════════════
 //
 // The aim statement names 「コンテキスト使用率など」 as an EXAMPLE of the point,
-// not as the mechanism. And out-tmai there is no percentage to watch: a plugin
+// not as the mechanism. And there is no percentage to watch: a plugin
 // has no clock, no polling, no view of the context meter. What it does have is
 // the harness announcing, once, that it is **about to compact** — and that is
 // not a proxy for the threshold, it IS the threshold, chosen by the harness on

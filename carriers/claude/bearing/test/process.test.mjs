@@ -10,7 +10,7 @@
 //   - a mid-line ``` inside an inline code span. The first cut reused the
 //     corpus-wide `stripCodeSpans`, whose global fenced-block regex opened a
 //     phantom fence there and swallowed lines down to the next ``` — reporting
-//     a `# PROCESS` mark in `aim-without-tmai` as living outside the section.
+//     a real `# PROCESS` mark as living outside the section.
 //
 // Both failures were silent under-counting, which is exactly the failure mode
 // `drift-git` names: a bad sensor is worse than no sensor, because the number
@@ -43,7 +43,7 @@ test('regression: a mark needs no ASCII space after the bracket', () => {
 })
 
 test('regression: a mid-line ``` in an inline span does not open a fence', () => {
-  // `aim-without-tmai` writes exactly this shape. A global fenced-block regex
+  // Real corpus nodes write exactly this shape. A global fenced-block regex
   // swallows the mark on the NEXT line; a line-oriented scanner does not.
   const r = parseProcessMarks(
     body(

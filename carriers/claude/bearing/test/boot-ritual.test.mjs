@@ -2,9 +2,9 @@
 //
 // What this hook exists to fix was measured, not imagined: `SessionStart` puts
 // the baton in context but starts no turn, so `_guide/handoff.md` § 読む steps
-// 2-6 — all agent acts — never ran until a human happened to type. The engine's
-// Producer gets a positional first prompt (argc 4); a plugin's session is argc
-// 1. These assert the two halves of 半強制: it states the obligation exactly
+// 2-6 — all agent acts — never ran until a human happened to type, and never at
+// all if what they typed was unrelated. These assert the two halves of 半強制:
+// it states the obligation exactly
 // once, and it never touches what the operator typed.
 
 import { test } from 'node:test'

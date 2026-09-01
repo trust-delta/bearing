@@ -5,7 +5,6 @@
 //
 //   knowledge-crossing     開発で得た知識は、それを得たマシンや会話に閉じず、次に
 //                          判断する人へ届く
-//   source-of-truth-tmai   リモートをsource of truthとして ...
 //   git-local-fact-source  ローカルgitをground-truthとし、その履歴 ... を最大限活用する
 //
 // Those settle both the fact and why it is worth a session's attention. An aim

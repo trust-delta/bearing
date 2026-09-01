@@ -14,12 +14,11 @@
 // conversation between the operator and one session, and a session on another
 // machine is simply a different conversation.
 //
-// ⚠ **The plugin's two halves used to disagree about where the baton lives.**
-// The `handoff-r` / `handoff-w` skills follow the canon; the Rust binary
-// defaulted to the engine's own store under the user data dir, so a baton
-// written through this plugin's skill was invisible to this plugin's hook. This
-// reader follows the canon, which closes that split — the plugin is now
-// self-consistent without the engine.
+// ⚠ **The reader and the writer must agree on where the baton lives.** The
+// `handoff-r` / `handoff-w` skills write to the canonical path, so this reader
+// reads it. A baton written through this plugin's skill that its own hook
+// cannot see is worse than no baton: the ritual reports success and the next
+// session starts blind.
 //
 // ⚠ **This reader does not stamp `read-at`.** That is step 3 of the canon's
 // reading procedure, and steps 4-6 come after it — surfacing unpushed aims,
