@@ -1,4 +1,4 @@
-// The `tmai-aim-checkpoint-stale v1` fence — how far the repo has moved past
+// The `bearing-checkpoint-stale v1` fence — how far the repo has moved past
 // the commit at which an operator last attested an aim's coherence with its
 // code.
 //
@@ -39,7 +39,7 @@
 
 import { runGit } from './git.mjs'
 
-export const CHECKPOINT_FENCE_TAG = 'tmai-aim-checkpoint-stale v1'
+export const CHECKPOINT_FENCE_TAG = 'bearing-checkpoint-stale v1'
 
 /**
  * A plausible commit-ish. Guards against a `last-verified:` holding a date

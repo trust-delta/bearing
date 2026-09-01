@@ -19,5 +19,5 @@ state: open
 - [todo] plugin を移設し、`bearing` として標準ハーネス上で動かす
 - [done] **`_guide` を中立化し、carrier を生成し直した。** 実測すると分布は極端に偏っていた —— `frame.md` は既に完全に中立（0 箇所）、`producer-guide.md` と `handoff.md` は各 1 箇所の書き換えで済み、`README.md` と fence 仕様は書き直し、`producer-posture.md` は**丸ごと削除**した（あれは engine が system-prompt に注入するための doc で、注入経路が無い以上ここでは実体を持たない）。⚠ **方法の核ほど中立だった**という事実そのものが finding である —— 場所への依存は方法ではなく*配置と姿勢*の層に溜まっていた。あわせて plugin の code / test / 生成器からも、解決しない node 名と実装比較の記述を落とした（導出の理由は残した）
 - [todo] **標準ハーネスだけで 1 サイクル回し、足りない点が本当に 3 つかを実測する。** ⚠ テストが通ることは「壊れていない」の証拠であって「足りている」の証拠ではない
-- [todo] **fence tag が `tmai-aim-*` のまま**である（`tmai-aim-drift-intra` 等）。セッションが parse する契約なので改名は破壊的だが、外部の消費者はまだ居らず、**移設の今が最も安い**。⚠ 眠らせる前身の名を、生き残る側の機械契約が名乗り続けている状態である
+- [done] **fence tag を `tmai-aim-*` から `bearing-*` へ改名した。** セッションが parse する契約ゆえ破壊的変更だが、外部の消費者がまだ 0 である今が最も安く、⚠ **眠らせる前身の名を、生き残る側の機械契約が名乗り続ける**状態を残す方が高くつく。5 枚の fence と `bearing-trace`、および prose 中の例示まで揃えた —— 存在しないタグを例に出す doc は、それ自体が読み手を誤らせる
 - [todo] **cwd の解決が hook 間で一致していない。** `bin/aim-facts.mjs` は `process.cwd()` を使い、`boot-ritual` / `corpus-delta` / `precompact` は `input.cwd || process.cwd()` を使う。⚠ 実運用ではハーネスが同じ cwd で spawn するので通常は一致するが、**一致することが保証だと確かめてはいない** —— composer が他 3 hook と違う unit を読む形が原理上ありうる

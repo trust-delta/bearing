@@ -46,7 +46,7 @@ test('parsePorcelainPaths drops lines too short to carry a path', () => {
 test('the fence is emitted even with no records', () => {
   assert.equal(
     renderWorkingDeltaFence([]),
-    '```tmai-aim-working-delta v1\n' +
+    '```bearing-working-delta v1\n' +
       '# fields: slug | uncommitted | uncommitted_anchor_change | untracked\n' +
       '# none — no uncommitted working-tree aim changes for this repo at compose time\n' +
       '```\n\n',

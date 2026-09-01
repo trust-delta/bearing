@@ -113,7 +113,7 @@ async function historyFences(repo) {
   const blocks = []
   if (drift === null) {
     blocks.push(
-      '```tmai-aim-drift-intra v1\n# unavailable — git could not be read for this repo.\n' +
+      '```bearing-drift-intra v1\n# unavailable — git could not be read for this repo.\n' +
         '# ⚠ Absent, NOT clean: do not read this as "no drift".\n```',
     )
   } else {

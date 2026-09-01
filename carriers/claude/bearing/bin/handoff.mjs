@@ -59,7 +59,7 @@ async function trace(unit) {
       rows.push(`${repo.label} | ${u.slug} | unpushed (${u.aheadCommits} commit(s), ${u.latestSha.slice(0, 8)})`)
     }
   }
-  say('```tmai-aim-trace v1', '# fields: repo | slug | state')
+  say('```bearing-trace v1', '# fields: repo | slug | state')
   if (rows.length === 0) {
     say('# none — no uncommitted or un-pushed aim changes in this unit')
   } else {

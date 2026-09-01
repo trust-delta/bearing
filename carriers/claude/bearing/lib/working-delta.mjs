@@ -1,4 +1,4 @@
-// The `tmai-aim-working-delta v1` fence — the working-tree presence layer.
+// The `bearing-working-delta v1` fence — the working-tree presence layer.
 //
 // What this layer states: working-tree changes are one of the two things a
 // cheap mechanical sensor can see without judging anything. It reports presence
@@ -17,7 +17,7 @@
 import { runGit } from './git.mjs'
 import { aimRelPath } from './corpus.mjs'
 
-export const WORKING_DELTA_FENCE_TAG = 'tmai-aim-working-delta v1'
+export const WORKING_DELTA_FENCE_TAG = 'bearing-working-delta v1'
 
 /**
  * Parse `git status --porcelain` output into the set of dirty repo-relative

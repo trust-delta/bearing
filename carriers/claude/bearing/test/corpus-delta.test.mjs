@@ -185,9 +185,9 @@ test('an aim commit moves HEAD and the history fences are recomputed, not just f
     assert.match(body, /HEAD moved over/)
     // Recomputed for real — not a "these are stale, go and refresh" note, which
     // would turn a fact the régime owes the session into an errand.
-    assert.match(body, /tmai-aim-drift-intra v1/)
-    assert.match(body, /tmai-aim-unpushed v1/)
-    assert.match(body, /tmai-aim-checkpoint-stale v1/)
+    assert.match(body, /bearing-drift-intra v1/)
+    assert.match(body, /bearing-unpushed v1/)
+    assert.match(body, /bearing-checkpoint-stale v1/)
   } finally {
     await rm(u.root, { recursive: true, force: true })
   }

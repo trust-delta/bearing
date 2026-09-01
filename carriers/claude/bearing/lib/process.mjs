@@ -61,7 +61,7 @@ const FENCE_LINE = /^ {0,3}(```+|~~~+)/
  * blocks with one global regex over the whole document, so it deletes and
  * merges LINES — and this parser's whole job is line-structured. Worse, its
  * fenced-block pattern matches a ``` appearing mid-line inside an inline span
- * (`` ` ```tmai-aim-drift ` ``, which this corpus writes), so it opened a
+ * (`` ` ```bearing-drift ` ``, which this corpus writes), so it opened a
  * phantom fence and swallowed everything down to the next ``` anywhere below.
  * Measured: that alone reported a real `# PROCESS` mark as living outside the
  * section. Same law, applied at the granularity that keeps

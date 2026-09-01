@@ -89,7 +89,7 @@ function renderRepo(r) {
     return
   }
   if (r.drift === null) {
-    say('```tmai-aim-drift-intra v1', '# unavailable — git could not be read for this repo.',
+    say('```bearing-drift-intra v1', '# unavailable — git could not be read for this repo.',
         '# ⚠ Absent, NOT clean: do not read this as "no drift".', '```', '')
   } else {
     say(renderIntraFence(r.drift.intra).trimEnd(), '')

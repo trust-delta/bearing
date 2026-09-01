@@ -49,7 +49,7 @@ test('regression: a mid-line ``` in an inline span does not open a fence', () =>
     body(
       '# PROCESS',
       '',
-      '- [done] the fence is named ` ```tmai-aim-drift ` in prose',
+      '- [done] the fence is named ` ```bearing-drift ` in prose',
       '- [todo] this line must still be counted',
       '',
       '# HISTORY',

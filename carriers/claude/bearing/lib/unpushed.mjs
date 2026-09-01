@@ -1,4 +1,4 @@
-// The `tmai-aim-unpushed v1` fence — aim changes that are committed but have
+// The `bearing-unpushed v1` fence — aim changes that are committed but have
 // not reached the remote.
 //
 // Derived from:
@@ -25,7 +25,7 @@
 import { runGit } from './git.mjs'
 import { readAimSlugs } from './corpus.mjs'
 
-export const UNPUSHED_FENCE_TAG = 'tmai-aim-unpushed v1'
+export const UNPUSHED_FENCE_TAG = 'bearing-unpushed v1'
 
 const AIMS_DIR = 'docs/aims/'
 

@@ -20,11 +20,11 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 | fence tag | fields | 何の事実か |
 | :-- | :-- | :-- |
-| `tmai-aim-drift-intra v1` | `slug \| anchor_commit \| body_moved` | 自 node の `aim:` が**改訂**され、以後 body がそれに寄せられたかどうか |
-| `tmai-aim-drift-inter v1` | `slug \| anchor_commit \| unreconciled_neighbours` | 隣接 node（親・子・`[[link]]` 先）のうち、その変更と一緒に commit されていないもの |
-| `tmai-aim-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
-| `tmai-aim-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
-| `tmai-aim-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
+| `bearing-drift-intra v1` | `slug \| anchor_commit \| body_moved` | 自 node の `aim:` が**改訂**され、以後 body がそれに寄せられたかどうか |
+| `bearing-drift-inter v1` | `slug \| anchor_commit \| unreconciled_neighbours` | 隣接 node（親・子・`[[link]]` 先）のうち、その変更と一緒に commit されていないもの |
+| `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
+| `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
+| `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
 
 **drift が 2 枚に割れるのは、`drift-git` が名指す 2 種の drift が trigger を共有しないため**である。「同 Aim 内」は anchor の*改訂*のみが隙間を開ける（誕生時、body は anchor と共に書かれる）が、「Aim 同士」は*作成*も trigger になる（親を動かさずに子を足す形）。∴ 1 枚に畳むと、どちらかの trigger が黙って落ちる。
 

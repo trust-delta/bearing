@@ -29,8 +29,8 @@
 import { runGit } from './git.mjs'
 import { aimRelPath, readAimGraph } from './corpus.mjs'
 
-export const INTRA_FENCE_TAG = 'tmai-aim-drift-intra v1'
-export const INTER_FENCE_TAG = 'tmai-aim-drift-inter v1'
+export const INTRA_FENCE_TAG = 'bearing-drift-intra v1'
+export const INTER_FENCE_TAG = 'bearing-drift-inter v1'
 
 const AIMS_DIR = 'docs/aims/'
 const FENCE = '`'.repeat(3)

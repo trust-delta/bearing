@@ -108,7 +108,7 @@ test('stripCodeSpans removes fenced blocks as well as inline spans', () => {
 test('both fences are emitted even with no candidates', () => {
   assert.equal(
     renderIntraFence([]),
-    '```tmai-aim-drift-intra v1\n' +
+    '```bearing-drift-intra v1\n' +
       '# fields: slug | anchor_commit | body_moved\n' +
       '# none — no record has had its anchor modified and been left untouched since\n' +
       '```\n\n',
