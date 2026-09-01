@@ -1,78 +1,71 @@
-// The `bearing-checkpoint-stale v1` fence — how far the repo has moved past
-// the commit at which an operator last attested an aim's coherence with its
-// code.
+// `bearing-checkpoint-stale v1` fence —— operator が「この aim は自らの code と整合して
+// いる」と最後に証言した commit から、repo がどれだけ先へ動いたか。
 //
-// Derived from:
+// 導出元の前提:
 //
-//   aim-code-drift    Aimの主張は、それを実装したコードが後から動くことで、Aim側は
-//                     不変のまま静かに剥離しうる。このaim⊥code driftは検査価値がある
-//                     ものとして表面化でき、剥離したか否かの最終判断は、doneと同様に
-//                     人間が担う。
-//   aim-frontmatter   frontmatterには ... 人間が書く ... 目的が記載される
-//   aim-upkeep        安い機械検知によって検査対象を可視化し ... 判断が必要な部分のみ
-//                     を人間にエスカレーションする
+//   aim⊥code drift   aim の主張は、それを実装した code が後から動くことで、aim 側は
+//                    不変のまま静かに剥離しうる。この剥離は「検査する価値がある」もの
+//                    として表面化でき、剥離したか否かの最終判断は `done` と同様に人間が
+//                    担う
+//   frontmatter の所有  frontmatter には人間が書く目的が載る
+//   層の分割         安い機械検知が検査対象を可視化し、判断を要する部分だけを人間へ
+//                    escalate する
 //
-// Three things follow and they are the whole design:
+// ここから 3 つが従い、それが設計の全てである:
 //
-//   1. **The checkpoint is minted by a human act, never inferred.** `last-
-//      verified` is the operator attesting coherence, the same ownership
-//      `state` has. Absence is a FIRST-CLASS third state — not yet under
-//      aim⊥code watch — and is neither drift nor clean. So the fence is sparse:
-//      a node with no checkpoint contributes nothing, and is never backfilled
-//      with a guess.
-//   2. **What this measures is wall-clock, not footprint.** "実装したコードが
-//      後から動く" is the drift; commits since the checkpoint are only evidence
-//      that the repo moved, and the repo moving is not the aim's code moving.
-//      Narrowing to the aim's own code needs the provenance join that
-//      `aim-provenance-sync` owns and this layer does not have. ∴ this is a
-//      WEAK candidate signal and must say so.
-//   3. **It does not judge.** `aim-code-drift` gives the human the verdict, as
-//      with `done`.
+//   1. **checkpoint は人間の act によって鋳造されるのであって、推論されない。**
+//      `last-verified` は operator が整合を証言したものであり、所有は `state:` と同じ。
+//      ⚠ **不在は一級の第 3 状態である** —— まだ aim⊥code の監視下に無い —— のであって、
+//      drift でも clean でもない。∴ この fence は疎である: checkpoint を持たない node は
+//      何も寄与せず、推測で埋め戻されることも決して無い。
+//   2. **ここが測っているのは経過であって、footprint ではない。** drift は「実装した
+//      code が後から動く」ことだが、checkpoint 以後の commit 数が示すのは *repo が動いた*
+//      ことだけであり、⚠ **repo が動くことは、その aim の code が動くことではない。**
+//      aim 自身の code へ絞るには provenance の join が要り、この層はそれを持たない。
+//      ∴ **これは弱い候補シグナルであり、そう述べなければならない。**
+//   3. **判定しない。** verdict は `done` と同じく人間のものである。
 //
-// ⚠ **No threshold.** Ordering is derivable — more movement is more reason to
-// look. A floor is not: no aim statement names a number, and a tuned constant
-// silently deletes candidates on the strength of nobody's stated judgment. The
-// discipline asks for the inspection surface to be made VISIBLE, and a filter
-// with no derivation shrinks it by luck. The count is emitted and the reader
-// weighs it. **If fewer candidates are wanted, write the threshold down as a
-// purpose first.**
+// ⚠ **閾値を持たない。** 順序は導出できる —— より多く動いたものほど見る理由が強い。
+// **だが下限は導出できない**: 数を名指す目的の文が存在せず、調整された定数は「誰も述べて
+// いない判断」を根拠に候補を黙って削除する。規律が求めているのは検査面を**可視化する**
+// ことであり、導出を持たない filter はそれを運任せで縮める。数は出し、重みづけは読み手が
+// 行う。⚠ **候補を減らしたいなら、まず閾値を目的として書くこと。**
 
 import { runGit } from './git.mjs'
 
 export const CHECKPOINT_FENCE_TAG = 'bearing-checkpoint-stale v1'
 
 /**
- * A plausible commit-ish. Guards against a `last-verified:` holding a date
- * (`2026-05-15`) rather than a SHA — the archived decision records use that
- * field for dates, so the confusion has a real precedent in this repo.
+ * commit-ish として妥当か。`last-verified:` が SHA ではなく日付（`2026-05-15`）を
+ * 持っている場合を弾く —— ⚠ この取り違えには実際の前例がある。
  */
 export function isShaLike(value) {
   return typeof value === 'string' && /^[0-9a-f]{7,40}$/.test(value)
 }
 
 /**
- * Gather checkpoint staleness for one repo.
+ * 1 つの repo について checkpoint の陳腐化を集める。
  *
  * @param {string} repoRoot
- * @param {Map<string, {lastVerified: string|null}>} nodes live records
+ * @param {Map<string, {lastVerified: string|null}>} nodes 生きた record
  * @returns {Promise<{slug: string, checkpointSha: string, commitsSince: number}[]>}
  */
 export async function gatherCheckpointStale(repoRoot, nodes) {
   const items = []
   for (const [slug, record] of nodes) {
     const sha = record.lastVerified
-    // Sparse by design: no checkpoint is the un-minted third state, not a zero.
+    // 設計として疎である: checkpoint 不在は「まだ鋳造されていない」第 3 状態であって 0 ではない。
     if (!sha) continue
     if (!isShaLike(sha)) {
-      // A malformed checkpoint is louder than a missing one — someone minted
-      // something and the sensor cannot read it. Never silently skipped.
+      // ⚠ 壊れた checkpoint は、無い checkpoint よりも声が大きい —— 誰かが何かを鋳造
+      // したのに、センサーがそれを読めない。黙って飛ばしてはならない。
       items.push({ slug, checkpointSha: sha, commitsSince: null })
       continue
     }
     const out = await runGit(repoRoot, ['rev-list', '--count', `${sha}..HEAD`])
     if (out === null) {
-      // The checkpoint names a commit this repo does not have (a rewritten or
-      // never-fetched history). Absent, not zero.
+      // checkpoint が、この repo に無い commit を名指している（rewrite された履歴か、
+      // 一度も fetch されていない履歴）。⚠ 0 ではなく「不在」である。
       items.push({ slug, checkpointSha: sha, commitsSince: null })
       continue
     }
@@ -80,8 +73,8 @@ export async function gatherCheckpointStale(repoRoot, nodes) {
     if (!Number.isFinite(n) || n === 0) continue
     items.push({ slug, checkpointSha: sha, commitsSince: n })
   }
-  // Most-moved-first: the ordering IS derivable — more movement is more reason
-  // to look — unlike the floor this deliberately does not apply.
+  // 動いた順に並べる: 順序は導出できる —— より多く動いたものほど見る理由が強い ——
+  // 一方、この層が意図的に適用しない「下限」の方は導出できない。
   items.sort((a, b) => (b.commitsSince ?? Infinity) - (a.commitsSince ?? Infinity))
   return items
 }
@@ -93,7 +86,7 @@ export function renderCheckpointFence(items) {
   ]
   if (items.length === 0) {
     lines.push(
-      '# none — no aim in this repo carries a `last-verified` checkpoint, or none has moved since',
+      '# none — この repo の aim は `last-verified` checkpoint を持たないか、以後どれも動いていない',
     )
   } else {
     for (const it of items) {

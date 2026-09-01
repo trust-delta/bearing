@@ -1,46 +1,42 @@
 #!/usr/bin/env node
-// The boot ritual trigger.
+// boot 儀式の trigger。
 //
-// A session that opens on an outstanding baton owes it a reading procedure, and
-// the operator chooses at that moment whether to continue the previous
-// conversation or start fresh. Neither is served by the facts merely sitting in
-// context.
+// 未処理の baton の上で開いたセッションは、その baton に読む手順を負っている。そして
+// operator はその瞬間に、前の対話を継続するか fresh に始めるかを選ぶ。⚠ **事実が context に
+// ただ座っているだけでは、そのどちらも果たされない。**
 //
-// ═══ Why UserPromptSubmit and not SessionStart ══════════════════════════════
+// ═══ なぜ SessionStart ではなく UserPromptSubmit なのか ═════════════════════
 //
-// ⚠ **`SessionStart` fires into a void.** Its stdout becomes context; context is
-// not a turn. `_guide/handoff.md` § 読む steps 2-6 are AGENT acts — stamp
-// `read-at`, surface un-pushed aims, read the pointers, report where things
-// stand — and **an agent that is never invoked performs no acts**. So an
-// unbounded window opens between "the baton is in context" and "the baton was
-// read": however long it takes a human to type, and if what they type is
-// unrelated the procedure never runs at all while the facts sit there looking
-// delivered.
+// ⚠ **`SessionStart` は虚空へ向けて発火する。** その stdout は context になるが、
+// **context は turn ではない。** `_guide/handoff.md` § 読む の手順 2〜6 は**エージェントの
+// act** である —— `read-at` を刻む・未 push aim を surface する・pointers を読む・現在地を
+// 報告する —— そして **一度も呼ばれないエージェントは何の act も行わない。** ∴「baton が
+// context に在る」と「baton が読まれた」の間に、際限のない窓が開く: 人間が入力するのに
+// かかるだけの時間、しかも入力が無関係なものであれば、**手順は一度も走らないまま、事実だけが
+// 届いた顔をしてそこに座り続ける。**
 //
-// ⚠ **A plugin cannot create a turn — but the ritual never needed one created.**
-// What it needs is to run BEFORE the first turn does anything else, and
-// `UserPromptSubmit` is the only ritual-relevant event whose firing is by
-// definition followed by a turn. Turn *creation* is the premise of unattended
-// operation, which is the harness's job and not this plugin's.
+// ⚠ **plugin は turn を作れない —— だが、この儀式は turn の作成を必要としたことが無い。**
+// 必要なのは、最初の turn が他の何かをする**前に**走ることであり、`UserPromptSubmit` は、
+// 儀式に関係するイベントのうち**発火が定義上 turn を伴う唯一のもの**である。turn の*作成*は
+// 無人運転の前提であり、それはハーネスの仕事であってこの plugin の仕事ではない。
 //
-// ═══ 半強制 — the same shape as the threshold trigger ════════════════════════
+// ═══ 半強制 —— 閾値 trigger と同じ形 ═══════════════════════════════════════
 //
-// This hook writes nothing and decides nothing. It states an obligation once,
-// at a moment when the agent is definitely running, and hands everything else
-// back.
+// この hook は何も書かず、何も決めない。**エージェントが確実に走っている瞬間に、義務を
+// 一度だけ述べ、それ以外の全てを返す。**
 //
-// ⚠ **It never exits 2.** Exit 2 here would "block processing, erase original
-// prompt" — destroying what the operator typed in order to enforce a ritual
-// meant to serve them, which is the same inversion `precompact.mjs` refuses
-// when it declines to block a human's own `/compact`.
+// ⚠ **決して exit 2 しない。** ここでの exit 2 は「処理を遮断し、元の prompt を消去する」
+// —— **operator が入力したものを、operator に仕えるための儀式を強制するために破壊する**
+// ことであり、これは `precompact.mjs` が人間自身の `/compact` を遮断しないことで拒んで
+// いるのと同じ反転である。
 //
-// ⚠ **It fires once per session.** A standing reminder on every prompt is a
-// cage, and it would keep firing long after the ritual was done.
+// ⚠ **セッションにつき一度だけ発火する。** 毎 prompt に立ち続ける督促は檻であり、儀式が
+// 終わった後もずっと発火し続けることになる。
 //
-// ⚠ **No baton, no fire.** With no baton there is no outstanding *procedure*:
-// `handoff.md` step 1 ends at "report the fresh start", and the boot facts the
-// SessionStart composer already delivered stand on their own. Firing anyway
-// would impose a ritual on a session that has nothing to hand over.
+// ⚠ **baton が無ければ発火しない。** baton が無ければ未処理の*手順*も無い:
+// `handoff.md` の手順 1 は「fresh start である旨を報告して終わり」で終わっており、
+// SessionStart composer が既に届けた boot の事実はそれ自体で立つ。**それでも発火すれば、
+// 引き継ぐものを持たないセッションに儀式を課すことになる。**
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
@@ -55,53 +51,52 @@ function readStdin() {
     process.stdin.on('data', (c) => (buf += c))
     process.stdin.on('end', () => resolve(buf))
     process.stdin.on('error', () => resolve(buf))
-    // A hook whose stdin never closes must not hang the session it serves.
+    // stdin が閉じない hook が、仕えるべきセッションを吊らせてはならない。
     setTimeout(() => resolve(buf), 2000).unref?.()
   })
 }
 
 /**
- * The obligation, stated once.
+ * 義務を、一度だけ述べる。
  *
- * ⚠ It names the CLI rather than restating the procedure. `handoff.md` is the
- * canon and `bin/handoff.mjs read` already owns the four mechanical steps —
- * duplicating either here would put a third account of the ritual in the tree,
- * which is exactly what `neutral-source-vendor-carrier` forbids.
+ * ⚠ **手順を再掲せず、CLI を名指す。** 正本は `handoff.md` であり、機械的な 4 手順は既に
+ * `bin/handoff.mjs read` が持っている —— どちらをここへ複製しても、**儀式についての第 3 の
+ * 記述**が木の中に置かれることになる。それは「正本は 1 つ、vendor への配置はすべて*生成物*」
+ * という規則がまさに禁じているものである。
  */
 function message(baton) {
-  const when = baton.composedAt ? ` composed \`${baton.composedAt}\`` : ''
+  const when = baton.composedAt ? ` composed-at \`${baton.composedAt}\`` : ''
   const seen = baton.readAt
-    ? `\n⚠ This baton carries \`read-at: ${baton.readAt}\` — it has been read before. ` +
-      'State that as a fact in your report; it is not a reason to skip the procedure ' +
-      '(re-reading is legitimate, and `read-at` exists to detect it, not to prevent it).'
+    ? `\n⚠ この baton は \`read-at: ${baton.readAt}\` を持っている —— 過去に読まれている。` +
+      '報告の中で**事実として**述べること。手順を飛ばす理由にはならない' +
+      '（再読は正当であり、`read-at` はそれを検出するために在るのであって、防ぐために在るのではない）。'
     : ''
-  return `⚠ **A baton is outstanding and the reading procedure has not run.**${when}
+  return `⚠ **未処理の baton があり、読む手順がまだ走っていない。**${when}
 
 \`${baton.path}\`
 
-The SessionStart hook surfaced this baton but deliberately did NOT stamp
-\`read-at\`: stamping is step 3 of a procedure whose steps 4-6 come after it, and
-a baton marked read by a session that then died would be read by nobody. Those
-steps are yours, and nothing else in this session will perform them.
+SessionStart hook はこの baton を surface したが、\`read-at\` は**意図して刻んでいない**:
+刻印は手順 3 であり、その後に手順 4〜6 が続く。そして「読まれた」と印の付いた baton を残した
+ままセッションが死ねば、その baton は誰にも読まれない。**これらの手順はあなたのものであり、
+このセッションの他の何もそれを行わない。**
 
-**Do this before answering the operator:**
+**operator に答える前に、これを行うこと:**
 
-  1. Run the bookkeeping half (canon steps 2-4 — returns the previous
-     \`read-at\`, stamps the new one, and emits the aim trace):
+  1. 帳簿の半分を走らせる（canon の手順 2〜4 —— 旧 \`read-at\` を返し、新しいものを刻み、
+     aim の trace を出す）:
 
        node "$CLAUDE_PLUGIN_ROOT"/bin/handoff.mjs read
 
-  2. Re-read every aim slug the trace names. A baton is chosen FORWARD, so it
-     under-reports how the aims were touched along the way — and re-reading an
-     aim yields its *arrived state*, never the *change*. That diff is the only
-     thing carrying the change.
+  2. trace が名指す aim slug をすべて再読すること。⚠ **baton は forward に選ばれる** ∴
+     道中どう aim が触られたかを過少報告する —— そして aim を読み直して得られるのは
+     *到達状態*であって*変化*ではない。**その差分だけが変化を運ぶ。**
 
-  3. Read the \`Pointers\` the baton names (canon step 5).
+  3. baton が名指す \`Pointers\` を読むこと（canon の手順 5）。
 
-  4. Tell the operator where you stand and what you are picking up (step 6),
-     then continue with what they actually asked.
+  4. 今どこに立っていて何を拾うかを operator に伝え（手順 6）、そのうえで operator が
+     実際に頼んだことへ進むこと。
 
-Canon: \`docs/aims/_guide/handoff.md\` § 読む. This fires once per session.${seen}`
+正本: \`docs/aims/_guide/handoff.md\` § 読む。これはセッションにつき一度だけ発火する。${seen}`
 }
 
 const raw = await readStdin()
@@ -109,7 +104,7 @@ let input = {}
 try {
   input = JSON.parse(raw || '{}')
 } catch {
-  // Unparseable input is not a reason to interfere with the session.
+  // parse できない入力は、セッションに干渉してよい理由にならない。
   process.exit(0)
 }
 
@@ -123,10 +118,10 @@ try {
   if (!baton) process.exit(0)
   mkdirSync(path.dirname(marker), { recursive: true })
   writeFileSync(marker, new Date().toISOString(), 'utf8')
-  // Exit 0: stdout is shown to Claude. Never exit 2 — see the header.
+  // exit 0: stdout はエージェントに見せられる。⚠ 決して exit 2 しない —— 冒頭を参照。
   process.stdout.write(message(baton) + '\n')
 } catch (err) {
-  // Rule: never obstruct a session over a bug in this hook.
-  process.stderr.write(`aim plugin: boot-ritual hook failed: ${err?.stack ?? err}\n`)
+  // 規則: この hook の bug でセッションを妨げることは決してしない。
+  process.stderr.write(`bearing: boot-ritual hook が失敗した: ${err?.stack ?? err}\n`)
 }
 process.exit(0)

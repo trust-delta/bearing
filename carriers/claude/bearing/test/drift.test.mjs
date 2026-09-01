@@ -1,11 +1,10 @@
-// Tests for the drift-possibility fences.
+// drift 可能性 fence の test。
 //
-// The gather is checked against a real git repository for the same reason the
-// working-delta tests are: every fact it states is a fact about git, and a mock
-// would only assert that the mock was written to match the code. Several of
-// these cases are regressions taken from the corpus itself rather than
-// imagined — the quoted `parent:`, the `[[…]]` quoted inside a code span, and
-// an anchor that only ever *appeared*.
+// gather は working-delta の test と同じ理由で本物の git repository に対して検査する:
+// ⚠ **それが述べる事実はすべて git についての事実**であり、mock は「mock が code に一致
+// するよう書かれたこと」しか assert しない。以下のいくつかは想像ではなく **corpus 自身から
+// 採った regression** である —— quote された `parent:`、code span の中に引用された
+// `[[…]]`、そして一度*現れた*きりの anchor。
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -50,7 +49,7 @@ const commit = (root, msg) => {
   git(root, ['commit', '-q', '-m', msg])
 }
 
-// ── pure: log parsing ────────────────────────────────────────────────────────
+// ── 純粋関数: log の parse ───────────────────────────────────────────────────
 
 test('parseCommitLog groups files under their commit, newest first', () => {
   const commits = parseCommitLog(
@@ -73,11 +72,11 @@ test('only top-level records under docs/aims are aim paths', () => {
   assert.equal(isAimPath('crates/aim-facts/src/main.rs'), false)
 })
 
-// ── pure: reading a record ───────────────────────────────────────────────────
+// ── 純粋関数: record を読む ──────────────────────────────────────────────────
 
 test('a quoted parent value resolves to the same slug as an unquoted one', () => {
-  // Exactly one node in the 77-node corpus writes it this way, and without the
-  // strip that node drops out of the tree entirely.
+  // 77 node の corpus でちょうど 1 つの node がこう書いており、除去が無ければその node は
+  // 木から**丸ごと脱落する**。
   const quoted = parseAimRecord('---\naim: x\nparent: "operator-single-producer"\nstate: open\n---\n\nbody\n')
   const bare = parseAimRecord('---\naim: x\nparent: operator-single-producer\nstate: open\n---\n\nbody\n')
   assert.equal(quoted.parent, 'operator-single-producer')
@@ -92,8 +91,8 @@ test('a record with no frontmatter yields no fields rather than throwing', () =>
 })
 
 test('a link inside a code span is quoted notation, not a reference', () => {
-  // 24 of the corpus's 564 bare matches are metasyntax like `[[slug]]`, and
-  // every one sits inside backticks.
+  // corpus の素の一致 564 件のうち 24 件は `[[slug]]` のような記法であり、
+  // そのすべてが backtick の中に座っている。
   const r = parseAimRecord('---\naim: x\n---\n\nsee [[real-node]] but `[[slug]]` is notation\n')
   assert.deepEqual(r.links, ['real-node'])
 })
@@ -103,21 +102,21 @@ test('stripCodeSpans removes fenced blocks as well as inline spans', () => {
   assert.equal(stripCodeSpans('x\n```\n[[inside]]\n```\ny').includes('[[inside]]'), false)
 })
 
-// ── pure: fence rendering ────────────────────────────────────────────────────
+// ── 純粋関数: fence の描画 ───────────────────────────────────────────────────
 
 test('both fences are emitted even with no candidates', () => {
   assert.equal(
     renderIntraFence([]),
     '```bearing-drift-intra v1\n' +
       '# fields: slug | anchor_commit | body_moved\n' +
-      '# none — no record has had its anchor modified and been left untouched since\n' +
+      '# none — anchor が変更され、以後そのまま放置された record は無い\n' +
       '```\n\n',
   )
-  assert.match(renderInterFence([]), /# none — every neighbour of a changed anchor has moved since/)
+  assert.match(renderInterFence([]), /# none — 変更された anchor の隣接は、すべてその後に動いている/)
 })
 
 test('an unreadable body diff renders as unknown, never as false', () => {
-  // A fact we cannot observe is absent, not negative.
+  // ⚠ 観測できない事実は「不在」であって「否定」ではない。
   const out = renderIntraFence([{ slug: 'alpha', commit: 'a'.repeat(40), bodyMoved: null }])
   assert.match(out, /^alpha \| aaaaaaaa \| unknown$/m)
 })
@@ -127,12 +126,12 @@ test('inter records list their neighbours comma-separated, in one row per node',
   assert.match(out, /^alpha \| bbbbbbbb \| beta,gamma$/m)
 })
 
-// ── against a real repository ────────────────────────────────────────────────
+// ── 本物の repository に対して ───────────────────────────────────────────────
 
 test('a node still sitting as it was born is not an intra candidate', async (t) => {
-  // The regression this whole fence turns on: `-G` on the anchor matches a file
-  // being CREATED, because creation adds a line that matches. Before excluding
-  // the birth commit this fired for 44 of 77 nodes.
+  // ⚠ **この fence 全体が懸かっている regression**: anchor に対する `-G` は file が
+  // *作成*されたことにも一致する。作成は一致する行を足すからである。誕生 commit を除く前は
+  // 77 node 中 44 件で発火していた。
   const root = await makeRepo()
   t.after(() => rm(root, { recursive: true, force: true }))
   await writeAim(root, 'alpha', 'a purpose never revised')
@@ -211,8 +210,8 @@ test('a neighbour that moved after the anchor change has had its chance', async 
 })
 
 test('a node created without its parent moving is an inter candidate', async (t) => {
-  // Creation IS a trigger here, and the common one — drift-git names it
-  // alongside modification, and only the intra side is exempt.
+  // ⚠ ここでは**作成が trigger であり、しかも最も多い形**である —— 変更と並んで名指され
+  // ており、免除されているのは intra 側だけである。
   const root = await makeRepo()
   t.after(() => rm(root, { recursive: true, force: true }))
   await writeAim(root, 'parent-node', 'the parent purpose')
@@ -225,8 +224,8 @@ test('a node created without its parent moving is an inter candidate', async (t)
 })
 
 test('a deleted node leaves no ghost record behind', async (t) => {
-  // History carries paths the corpus no longer has. Counting them reported 103
-  // nodes with anchor history against the 77 that existed.
+  // 履歴は corpus がもう持たない path を運ぶ。それを数えた結果、実在 77 に対して
+  // 「anchor 履歴を持つ node」が 103 と報告された。
   const root = await makeRepo()
   t.after(() => rm(root, { recursive: true, force: true }))
   await writeAim(root, 'alpha', 'first purpose')

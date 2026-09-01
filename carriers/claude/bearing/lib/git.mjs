@@ -1,38 +1,36 @@
-// Thin `git` wrapper for the aim plugin.
+// この plugin のための薄い `git` wrapper。
 //
-// ⚠ **Local git is the ground truth, so what git cannot tell us is not ours to
-// supply: a fact we cannot observe is absent, never fabricated.** Every failure
-// mode — spawn failure, non-zero exit, timeout — collapses to `null`, and
-// callers must treat `null` as "no facts".
+// ⚠ **ローカル git が ground truth である ∴ git が語れないことを我々が供給してはなら
+// ない —— 観測できなかった事実は「不在」であって、決して捏造しない。** 失敗の様態は
+// すべて（spawn 失敗・非 0 終了・timeout）`null` に潰れ、呼び出し側は `null` を
+// 「事実が無い」と扱わねばならない。
 //
-// ⚠ **That holds in BOTH directions.** Reading `null` as "no drift" is the
-// obvious form of the lie; reading it as a positive fact ("nothing is
-// committed", so everything is untracked) is the same lie in the affirmative,
-// and it is the one that actually shipped once.
+// ⚠ **これは両方向に効く。** `null` を「drift が無い」と読むのは分かりやすい方の嘘だが、
+// 肯定的な事実として読むこと（「何も commit されていない」∴「全部 untracked だ」）は
+// 同じ嘘の肯定形であり、**実際に一度出荷されたのはこちらである**。
 //
-// `execFile` is used deliberately instead of `exec`: it does not go through a
-// shell, so the MSYS argument mangling `docs/runbook/windows.md` warns about
-// (`:` → `;`, `/` → `\`) cannot happen. That is one of the three reasons this
-// port is in Node rather than bash.
+// `exec` ではなく `execFile` を意図して使っている: shell を経由しないので、Windows の
+// MSYS が引数に対して行う変換（`:` → `;`、`/` → `\`）が起こりえない。これがこの実装を
+// bash ではなく Node で書いている理由の 1 つである。
 
 import { execFile } from 'node:child_process'
 
 /**
- * A ceiling on any single git call.
+ * 単一の git 呼び出しに対する上限。
  *
- * Not derived from an aim statement — it is a refusal to hang the SessionStart
- * hook, which has a wall-clock budget it cannot exceed without obstructing the
- * session it exists to inform.
+ * ⚠ これは aim から導出された数ではない —— SessionStart hook を吊らせないという拒否で
+ * ある。あの hook には実時間の予算があり、それを超えれば、情報を与えるべき当のセッション
+ * を妨げることになる。
  */
 export const GIT_TIMEOUT_MS = 5_000
 
 /**
- * Run `git -C <repoRoot> <args...>`.
+ * `git -C <repoRoot> <args...>` を実行する。
  *
  * @param {string} repoRoot
  * @param {string[]} args
- * @returns {Promise<string|null>} stdout on success; `null` on timeout, spawn
- *   failure, or non-zero exit.
+ * @returns {Promise<string|null>} 成功時は stdout。timeout・spawn 失敗・非 0 終了は
+ *   すべて `null`。
  */
 export function runGit(repoRoot, args) {
   return new Promise((resolve) => {
@@ -46,11 +44,11 @@ export function runGit(repoRoot, args) {
 }
 
 /**
- * `runGit`, but an empty stdout is also `null`.
+ * `runGit` と同じだが、空の stdout も `null` にする。
  *
- * `git log -1 -- <path>` exits 0 with empty output when a path has no
- * committed history, and that is an absence of fact, not a fact. Same law as
- * above, at the one place git reports absence through success.
+ * `git log -1 -- <path>` は、その path に commit 履歴が無いとき空出力で 0 終了する。
+ * ⚠ **それは事実ではなく事実の不在である。** 上と同じ法を、git が「成功」を通じて不在を
+ * 報告する唯一の場所に当てている。
  *
  * @param {string} repoRoot
  * @param {string[]} args

@@ -1,42 +1,38 @@
-// The per-session corpus signature — what "the facts have moved" resolves to.
+// セッションごとの corpus signature —— 「事実が動いた」が何に解決されるか。
 //
-// Derived from:
+// 導出元の前提:
 //
-//   aim-upkeep   ...安い機械検知によって検査対象を可視化し...
-//   drift-git    この「drift可能性」は検査価値があるものとして、git履歴から得られる
-//                事実に基づいて機械的に安く表面化できる
-//   aim-backlog-triage  Aimは開発の駆動力であり、エージェントはAimの未実装の手段に
-//                       注意を払う必要がある
+//   可視化        安い機械検知によって検査対象を可視化する
+//   drift の源    「drift の可能性」は検査価値のあるものとして、git 履歴から得られる事実に
+//                 基づいて機械的・安価に表面化できる
+//   backlog       aim は開発の駆動力であり、エージェントは未実装の手段に注意を払う必要がある
 //
-// ⚠ **None of those statements says "at boot".** The SessionStart composer is a
-// snapshot, and a session that edits the corpus then keeps working is carrying
-// numbers that were true when it started. A stale count is not a smaller truth;
-// it is the 「悪センサーは無センサーに劣る」 case `drift-git` names, because a
-// number still looks authoritative after it stops being right.
+// ⚠ **どの前提も「boot 時に」とは言っていない。** SessionStart の composer は snapshot で
+// あり、corpus を編集してから作業を続けるセッションは**開始時点で真だった数**を抱えたまま
+// である。陳腐化した数は「小さくなった真実」ではない —— **数は、正しくなくなった後も権威に
+// 見え続ける**ので、これは「悪いセンサーはセンサーが無いことに劣る」場合そのものである。
 //
-// ═══ Why the signature observes the repo, not the tool calls ════════════════
+// ═══ なぜ signature は tool 呼び出しではなく repo を観測するのか ═══════════════
 //
-// ⚠ **Do not infer "an aim changed" from what the batch did.** The obvious
-// matcher — `Write`/`Edit` with a `docs/aims/` path — misses every edit made
-// through a shell heredoc, a `sed -i`, a `git checkout`, or a script. That is
-// not hypothetical: the session that wrote this file edited an aim node with a
-// python heredoc via Bash, which such a matcher would have skipped in silence.
-// A sensor that reports "nothing changed" because it was watching the wrong
-// door is the same failure as the parser that demanded an ASCII space after
-// `]` and under-counted 41 of 44.
+// ⚠ **batch が何をしたかから「aim が変わった」を推論してはならない。** 素朴な matcher ——
+// `docs/aims/` の path を持つ `Write`/`Edit` —— は、shell の heredoc・`sed -i`・
+// `git checkout`・script を通じて行われた編集を**すべて取り落とす**。これは仮定の話では
+// ない: この file を書いたセッション自身が、Bash 越しの python heredoc で aim node を編集
+// しており、そういう matcher なら黙って飛ばしていた。**間違った扉を見張っていたせいで
+// 「何も変わっていない」と報告するセンサーは、`]` の後に ASCII 空白を要求して 44 件中 41 件
+// を数え落とした parser と同じ失敗である。**
 //
-// ∴ ask git, not the transcript.
+// ∴ **transcript ではなく git に問う。**
 //
-// ═══ Exactness vs. cost ═════════════════════════════════════════════════════
+// ═══ 厳密さとコスト ═════════════════════════════════════════════════════════
 //
-// Measured on this unit (2 repos, 77 nodes): the full compose is ~190ms, of
-// which drift alone is ~169ms and the cheap layer (working-delta + backlog) is
-// ~65ms. This runs before every model request, so it must not pay either.
+// この unit で実測（2 repo・77 node）: compose 全体が約 190ms、うち drift だけで約 169ms、
+// 安い層（working-delta ＋ backlog）が約 65ms。⚠ **これは model への各要求の前に走る**
+// ∴ どちらも払ってはならない。
 //
-// The signature is exact and cheap at once: per repo, `HEAD` + the porcelain
-// path set + a content hash of ONLY the paths porcelain listed. Content that is
-// neither dirty nor moved by a commit cannot have changed, so hashing the rest
-// would buy nothing.
+// signature は厳密であると同時に安い: repo ごとに `HEAD` ＋ porcelain の path 集合 ＋
+// **porcelain が挙げた path だけ**の内容 hash。dirty でもなく commit でも動いていない内容は
+// 変わりようがない ∴ 残りを hash しても何も買えない。
 
 import { createHash } from 'node:crypto'
 import os from 'node:os'
@@ -49,13 +45,13 @@ import { parsePorcelainPaths } from './working-delta.mjs'
 const DELETED = '<deleted-in-working-tree>'
 
 /**
- * A cheap, exact fingerprint of every corpus in the unit.
+ * unit 内の全 corpus に対する、安く厳密な指紋。
  *
  * @param {{repos: {root: string, label: string}[]}} unit
  * @returns {Promise<{sig: string|null, heads: Record<string, string|null>}>}
- *   `sig` is null when no repo in the unit carries a corpus — the structurally
- *   normal state for a unit that has not adopted the discipline, and the signal
- *   for callers to stay silent rather than to report an empty corpus.
+ *   unit のどの repo も corpus を持たないとき `sig` は null —— 規律をまだ採っていない
+ *   unit として構造的に正常な状態であり、⚠ **呼び出し側にとっては「空の corpus を報告
+ *   する」のではなく「黙る」ための信号である。**
  */
 export async function corpusSignature(unit) {
   const parts = []
@@ -78,8 +74,8 @@ export async function corpusSignature(unit) {
       try {
         body = await readFile(path.join(repo.root, rel), 'utf8')
       } catch {
-        // Deleted in the working tree. Its absence is part of the state, and a
-        // distinct token keeps "deleted" from colliding with "empty file".
+        // working tree で削除されている。その不在は状態の一部であり、専用の token が
+        // 「削除された」と「空の file」の衝突を防ぐ。
         body = DELETED
       }
       files.push(`${rel}:${createHash('sha256').update(body).digest('hex').slice(0, 16)}`)
@@ -93,14 +89,14 @@ export async function corpusSignature(unit) {
 }
 
 /**
- * Where a session's baseline signature lives.
+ * セッションの baseline signature の在り処。
  *
- * Keyed on the session id so two sessions in one workspace never read each
- * other's baseline — the boot facts they were each given are different.
+ * session id を key にしている ∴ 1 つの workspace の 2 つのセッションが互いの baseline を
+ * 読むことは決して無い —— それぞれが与えられた boot 時の事実は別物だからである。
  *
- * ⚠ Lives in `lib/`, not in the hook that consumes it: `bin/aim-facts.mjs`
- * seeds the baseline and `bin/corpus-delta.mjs` reads it, and importing one bin
- * from another would execute its top-level hook body.
+ * ⚠ これを消費する hook ではなく `lib/` に置いてある: baseline を播くのは
+ * `bin/aim-facts.mjs`、読むのは `bin/corpus-delta.mjs` であり、**一方の bin を他方から
+ * import すると、その top-level の hook 本体が実行されてしまう。**
  *
  * @param {string|undefined} sessionId
  * @param {string} [tmpdir]
@@ -111,18 +107,17 @@ export function deltaStatePath(sessionId, tmpdir = os.tmpdir()) {
 }
 
 /**
- * A digest of what the working-tree layer would SAY, independent of how it is
- * phrased or of which bytes moved.
+ * working tree の層が**述べるであろうこと**の digest。言い回しにも、どの byte が動いたかにも
+ * 依存しない。
  *
- * ⚠ This is the gate that separates 「corpus が動いた」 from 「事実が変わった」.
- * Editing an aim body moves the signature and changes nothing here: the node is
- * still uncommitted, the count of nodes carrying a `[todo]` is still the same.
- * `aim-upkeep` puts the machine layer at *visibility*, and a surface that
- * re-states itself on every batch stops being visible.
+ * ⚠ **これが「corpus が動いた」と「事実が変わった」を隔てる門である。** aim の body を
+ * 編集すれば signature は動くが、ここでは何も変わらない: node は依然として未 commit で
+ * あり、`[todo]` を持つ node の数も同じままである。機械層が担うのは**可視化**であり、
+ * ⚠ **batch のたびに自分自身を再度述べる面は、可視であることをやめる。**
  *
- * ⚠ HEAD is deliberately absent. Commit movement is a different question with a
- * different cost (the history fences), and folding it in here would make every
- * unrelated code commit look like an aim fact changing.
+ * ⚠ **HEAD は意図して含めていない。** commit の移動は別の問い・別のコスト（履歴 fence）で
+ * あり、ここへ畳み込めば**無関係な code の commit がすべて「aim の事実が変わった」ように
+ * 見える**ことになる。
  *
  * @param {{label: string, working?: object[], backlog?: object}[]} repos
  * @returns {string}
@@ -131,9 +126,9 @@ export function factsDigest(repos) {
   const norm = (repos ?? [])
     .map((r) => ({
       label: r.label,
-      // ⚠ `unavailable` must not hash the same as a clean tree. Gate 2 asks
-      // "would the facts SAY anything different"; losing the ability to look
-      // is a different thing to say, not the absence of one.
+      // ⚠ **`unavailable` は clean な tree と同じ hash になってはならない。** 第 2 の門が
+      // 問うのは「事実が何か違うことを*述べる*か」であり、**見る能力を失ったことは、
+      // 述べるべきことの不在ではなく、別の述べるべきことである。**
       working:
         r.working == null
           ? 'unavailable'

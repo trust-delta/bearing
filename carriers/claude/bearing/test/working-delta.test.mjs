@@ -1,9 +1,9 @@
-// Tests for the working-delta fence port.
+// working-delta fence の test。
 //
-// The pure functions are checked directly; the gather is checked against a real
-// git repository, because every fact it states is a fact about git and a mock
-// would only assert that the mock was written to match the code. This is the
-// layer that drift-git's "a bad sensor is worse than no sensor" is aimed at.
+// 純粋関数は直接検査し、gather は本物の git repository に対して検査する。⚠ **それが述べる
+// 事実はすべて git についての事実**であり、mock は「mock が code に一致するよう書かれた
+// こと」しか assert しないからである。**「悪いセンサーはセンサーが無いことに劣る」が
+// 狙っているのは、この層である。**
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -19,7 +19,7 @@ import {
 } from '../lib/working-delta.mjs'
 import { readAimSlugs, isAimRecord, aimRelPath } from '../lib/corpus.mjs'
 
-// ── pure: porcelain parsing ──────────────────────────────────────────────────
+// ── 純粋関数: porcelain の parse ─────────────────────────────────────────────
 
 test('parsePorcelainPaths takes the working-tree side of a rename', () => {
   const dirty = parsePorcelainPaths(
@@ -41,14 +41,14 @@ test('parsePorcelainPaths drops lines too short to carry a path', () => {
   assert.equal(parsePorcelainPaths('\n\nM\n').size, 0)
 })
 
-// ── pure: fence rendering ────────────────────────────────────────────────────
+// ── 純粋関数: fence の描画 ───────────────────────────────────────────────────
 
 test('the fence is emitted even with no records', () => {
   assert.equal(
     renderWorkingDeltaFence([]),
     '```bearing-working-delta v1\n' +
       '# fields: slug | uncommitted | uncommitted_anchor_change | untracked\n' +
-      '# none — no uncommitted working-tree aim changes for this repo at compose time\n' +
+      '# none — 構成時点で、この repo の working tree に未 commit の aim 変更は無い\n' +
       '```\n\n',
   )
 })
@@ -62,7 +62,7 @@ test('records use the fixed field order, pipe delimited', () => {
   assert.deepEqual(records, ['alpha | true | false | false', 'beta | false | false | true'])
 })
 
-// ── pure: corpus ─────────────────────────────────────────────────────────────
+// ── 純粋関数: corpus ─────────────────────────────────────────────────────────
 
 test('README and non-markdown entries are not aim records', () => {
   assert.equal(isAimRecord('alpha.md'), true)
@@ -74,7 +74,7 @@ test('aimRelPath always uses forward slashes', () => {
   assert.equal(aimRelPath('alpha'), 'docs/aims/alpha.md')
 })
 
-// ── integration: a real repository ───────────────────────────────────────────
+// ── 統合: 本物の repository ──────────────────────────────────────────────────
 
 /** @param {string} cwd @param {string[]} args */
 function git(cwd, args) {
@@ -102,8 +102,8 @@ test('working-delta reports presence facts against a real repo', async (t) => {
   const root = await makeRepo()
   t.after(() => rm(root, { recursive: true, force: true }))
 
-  // Three committed nodes; one stays clean, one gets a body edit, one gets an
-  // anchor edit. A fourth is created but never committed.
+  // commit 済 node が 3 つ。1 つは clean のまま、1 つは body を編集、1 つは anchor を編集。
+  // 4 つ目は作成されるが一度も commit されない。
   await writeAim(root, 'clean', 'stays untouched')
   await writeAim(root, 'body-edit', 'anchor holds still')
   await writeAim(root, 'anchor-edit', 'the original purpose')
@@ -134,8 +134,8 @@ test('a staged-but-never-committed node reads as untracked, not uncommitted', as
   git(root, ['add', '-A'])
   git(root, ['commit', '-q', '-m', 'seed'])
 
-  // Porcelain reports this as `A `, not `??` — the untracked fact comes from the
-  // absence of commit history, not from the porcelain column.
+  // porcelain はこれを `??` ではなく `A ` として報告する —— ⚠ **untracked という事実は
+  // commit 履歴の不在から来るのであって、porcelain の列から来るのではない。**
   await writeAim(root, 'staged', 'staged only')
   git(root, ['add', 'docs/aims/staged.md'])
 
@@ -155,10 +155,10 @@ test('a clean repo yields no records', async (t) => {
 })
 
 test('a directory that is not a git repo reads as unavailable, not as clean', async (t) => {
-  // This assertion used to be `[]`, and that was the bug: `[]` renders `# none`,
-  // which claims the working tree was looked at and found unchanged. Here git
-  // cannot answer at all. `null` is the only honest return, and it is what the
-  // fence needs in order to say so.
+  // ⚠ **この assertion はかつて `[]` であり、それが bug だった**: `[]` は `# none` を
+  // 描画し、それは「working tree を見に行って、変化が無かった」と主張する。ここでは git は
+  // そもそも答えられない。**`null` が唯一正直な返り値**であり、fence がその旨を述べるために
+  // 必要とするものである。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-wd-nogit-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
@@ -167,9 +167,9 @@ test('a directory that is not a git repo reads as unavailable, not as clean', as
 })
 
 test('in a repo with no commits yet, every node reads as untracked', async (t) => {
-  // `git log` exits non-zero here. The batched path lookup must degrade the same
-  // way the per-node original does — no observable history means untracked, not
-  // an error and not a silent "committed".
+  // ここで `git log` は非 0 で終了する。batch 化された path 探索は、node ごとの原型と
+  // 同じように degrade せねばならない —— **観測できる履歴が無いことは untracked を意味する
+  // のであって、error でも、黙った「commit 済」でもない。**
   const root = await makeRepo()
   t.after(() => rm(root, { recursive: true, force: true }))
   await writeAim(root, 'first', 'before any commit')
@@ -185,26 +185,27 @@ test('a repo with no aim corpus yields no slugs', async (t) => {
   assert.deepEqual(await readAimSlugs(root), [])
 })
 
-// ── regression: git that cannot be read must not become a positive claim ─────
+// ── regression: 読めない git が、肯定的な主張に化けてはならない ──────────────
 //
-// Observed 2026-09-01 on Windows. `git log --name-only -- docs/aims/` is 0.25s
-// at rest but 10-29s while an antivirus scanner works through a just-pulled
-// tree, and GIT_TIMEOUT_MS is 5s. The timeout returned null, null became an
-// empty set of committed paths, and the fence published `untracked: true` for
-// all 77 nodes of a clean corpus. drift-intra, hitting the same failure, said
-// "unavailable - Absent, NOT clean". Two fences, one failure, opposite lies.
+// 2026-09-01 に Windows で観測。`git log --name-only -- docs/aims/` は平時 0.25 秒だが、
+// pull 直後の tree をウイルス対策がスキャンしている間は 10〜29 秒かかり、GIT_TIMEOUT_MS は
+// 5 秒である。timeout が null を返し、null が「commit 済 path の空集合」になり、fence は
+// clean な corpus の 77 node すべてを `untracked: true` として出荷した。⚠ **同じ失敗に
+// 当たった drift-intra の方は「unavailable —— clean ではなく不在」と述べた。fence が 2 枚、
+// 失敗は 1 つ、嘘は正反対。**
 
 test('the unavailable fence says so, and never renders as none', () => {
   const out = renderWorkingDeltaFence(null)
   assert.ok(out.includes('unavailable'), 'must name the condition')
-  assert.ok(out.includes('Absent, NOT clean'), 'must refuse the clean reading')
+  assert.ok(out.includes('clean ではなく「不在」である'), 'must refuse the clean reading')
   assert.ok(!out.includes('# none'), 'must not borrow the clean-tree wording')
   assert.ok(!out.includes('# fields:'), 'no field header without records')
 })
 
 test('no-commits and cannot-read are told apart, not collapsed', async (t) => {
-  // These two are why the failure branch probes instead of assuming. Both make
-  // `git log` return null. Only one of them means "nothing is committed".
+  // ⚠ **失敗分岐が仮定せずに probe するのは、この 2 つのためである。** どちらも
+  // `git log` に null を返させる。**だが「何も commit されていない」を意味するのは片方だけ
+  // である。**
   const repo = await makeRepo()
   const bare = await mkdtemp(path.join(tmpdir(), 'aim-wd-bare-'))
   t.after(() => rm(repo, { recursive: true, force: true }))

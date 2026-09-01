@@ -1,20 +1,17 @@
-// Tests for the `# PROCESS` mark parser and the open-todo count.
+// `# PROCESS` の mark parser と open-todo 数の test。
 //
-// The notation cases are REGRESSIONS TAKEN FROM THE CORPUS, not imagined ones.
-// Both of the parser's first two cuts were wrong in ways only the corpus could
-// reveal, and each is pinned below:
+// ⚠ **記法の case は想像ではなく、corpus から採った regression である。** この parser の
+// 最初の 2 版はどちらも、corpus にしか暴けない形で誤っていた。以下はそれぞれを固定している:
 //
-//   - `- [todo]（任意）…` — a full-width paren butted against the bracket. The
-//     first cut demanded an ASCII space and silently dropped 3 real marks; the
-//     count read 41 against the control group's 44.
-//   - a mid-line ``` inside an inline code span. The first cut reused the
-//     corpus-wide `stripCodeSpans`, whose global fenced-block regex opened a
-//     phantom fence there and swallowed lines down to the next ``` — reporting
-//     a real `# PROCESS` mark as living outside the section.
+//   - `- [todo]（任意）…` —— 括弧に直付けされた全角括弧。最初の版は ASCII 空白を要求し、
+//     実在する mark を 3 件黙って落とした。数は対照群の 44 に対して 41 と読めた。
+//   - inline code span の中の、行途中の ```。最初の版は corpus 全体向けの
+//     `stripCodeSpans` を再利用しており、その global な fenced block 正規表現がそこで幻の
+//     fence を開き、次の ``` までの行を飲み込んだ —— 実在する `# PROCESS` の mark を
+//     「節の外に在る」と報告した。
 //
-// Both failures were silent under-counting, which is exactly the failure mode
-// `drift-git` names: a bad sensor is worse than no sensor, because the number
-// still looks authoritative.
+// ⚠ **どちらの失敗も黙った数え落としであり、それはまさに「悪いセンサーはセンサーが無いこと
+// に劣る」という失敗の様態である** —— 数だけは依然として権威に見えるからだ。
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -26,7 +23,7 @@ import { splitProcess, parseProcessMarks, gatherBacklog } from '../lib/process.m
 
 const body = (...lines) => lines.join('\n')
 
-// ── the observed form ────────────────────────────────────────────────────────
+// ── 観測された形 ─────────────────────────────────────────────────────────────
 
 test('counts the form the corpus uses: `-` bullet, lowercase, zero indent', () => {
   const r = parseProcessMarks(body('# PROCESS', '', '- [done] a', '- [todo] b', '- [todo] c'))
@@ -36,15 +33,15 @@ test('counts the form the corpus uses: `-` bullet, lowercase, zero indent', () =
 })
 
 test('regression: a mark needs no ASCII space after the bracket', () => {
-  // Three of these exist in the corpus. Demanding the space cost 3 of 44.
+  // corpus にこれが 3 件在る。空白を要求したことで 44 件中 3 件を失った。
   const r = parseProcessMarks(body('# PROCESS', '', '- [todo]（任意）boot baseline にも件数を surface'))
   assert.equal(r.todo, 1)
   assert.deepEqual(r.anomalies, [])
 })
 
 test('regression: a mid-line ``` in an inline span does not open a fence', () => {
-  // Real corpus nodes write exactly this shape. A global fenced-block regex
-  // swallows the mark on the NEXT line; a line-oriented scanner does not.
+  // 実在の corpus node がまさにこの形を書いている。global な fenced block 正規表現は
+  // **次の行**の mark を飲み込むが、行指向の scanner は飲み込まない。
   const r = parseProcessMarks(
     body(
       '# PROCESS',
@@ -60,7 +57,7 @@ test('regression: a mid-line ``` in an inline span does not open a fence', () =>
   assert.deepEqual(r.anomalies, [])
 })
 
-// ── section scoping ──────────────────────────────────────────────────────────
+// ── 節の scope ───────────────────────────────────────────────────────────────
 
 test('marks are scoped to `# PROCESS`; a later `# ` heading ends it', () => {
   const s = splitProcess(body('# IS', 'x', '# PROCESS', '- [todo] a', '# DAG', 'y'))
@@ -69,8 +66,8 @@ test('marks are scoped to `# PROCESS`; a later `# ` heading ends it', () => {
 })
 
 test('a real fenced block hides its contents from the parser', () => {
-  // A mark inside a fence is quoted, not asserted — the corpus-wide law,
-  // applied where it cannot cost a line.
+  // fence の中の mark は引用であって主張ではない —— corpus 全体に効く法を、行を失わずに
+  // 当てられる場所で当てている。
   const r = parseProcessMarks(
     body('# PROCESS', '', '- [todo] real', '', '```markdown', '- [todo] an example', '```', ''),
   )
@@ -78,7 +75,7 @@ test('a real fenced block hides its contents from the parser', () => {
   assert.deepEqual(r.anomalies, [])
 })
 
-// ── the anomalies: neither silently absorbed nor silently ignored ────────────
+// ── anomaly: 黙って吸収もせず、黙って無視もしない ────────────────────────────
 
 test('a `*` bullet is reported, not counted', () => {
   const r = parseProcessMarks(body('# PROCESS', '', '* [todo] written the other way'))
@@ -117,7 +114,7 @@ test('a deeper heading inside PROCESS is reported — the corpus has none', () =
   assert.equal(r.anomalies[0].kind, 'nested-heading')
 })
 
-// ── the count ────────────────────────────────────────────────────────────────
+// ── 数 ───────────────────────────────────────────────────────────────────────
 
 async function corpus(nodes) {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-process-'))
@@ -148,8 +145,8 @@ test('`state: dead` nodes are excluded — an abandoned purpose has no backlog',
     ['c', 'done', ['- [todo] given up on, but the node is not dead']],
   ])
   const r = await gatherBacklog(root)
-  // `aim-resolution-outcome`: in a `done` node an unimplemented mark reads as
-  // 諦め — but only `dead` retracts the purpose, and only that is excluded here.
+  // `done` の node では未実装の mark は「諦め」と読まれる —— ⚠ **だが目的を撤回するのは
+  // `dead` だけであり、ここで除外されるのもそれだけである。**
   assert.equal(r.openTodoNodes, 2)
   await rm(root, { recursive: true, force: true })
 })
@@ -170,7 +167,7 @@ test('anomalies carry their slug so the operator can find them', async () => {
   await rm(root, { recursive: true, force: true })
 })
 
-// ── the four-value read: `unknown` must not fold into "nothing to do" ────────
+// ── 4 値の読み: `unknown` を「やることが無い」へ畳んではならない ─────────────
 
 test('a PROCESS heading with no readable mark is `unknown`, not zero', () => {
   const r = parseProcessMarks(body('# PROCESS', '', 'まだ手段を書いていない。', ''))

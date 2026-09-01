@@ -26,7 +26,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
 | `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
 
-**drift が 2 枚に割れるのは、`drift-git` が名指す 2 種の drift が trigger を共有しないため**である。「同 Aim 内」は anchor の*改訂*のみが隙間を開ける（誕生時、body は anchor と共に書かれる）が、「Aim 同士」は*作成*も trigger になる（親を動かさずに子を足す形）。∴ 1 枚に畳むと、どちらかの trigger が黙って落ちる。
+**drift が 2 枚に割れるのは、2 種の drift が trigger を共有しないため**である。「同一 aim 内」は anchor の*改訂*のみが隙間を開ける（誕生時、body は anchor と共に書かれる）が、「aim 同士」は*作成*も trigger になる（親を動かさずに子を足す形）。∴ 1 枚に畳むと、どちらかの trigger が黙って落ちる。
 
 ⚠ **checkpoint-stale に閾は無い。** 「N commit 未満は候補から落とす」という数を名指す `aim:` 文が存在しない ∴ 導出を持たない filter は検査面を運任せで削ることになる。少なく出したいなら、まず閾を目的として書くこと。
 

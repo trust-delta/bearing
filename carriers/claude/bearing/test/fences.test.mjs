@@ -1,8 +1,8 @@
-// Tests for the unpushed, checkpoint-stale and baton layers.
+// unpushed・checkpoint-stale・baton の各層の test。
 //
-// The git-facing ones run against real repositories with a real upstream: what
-// `@{upstream}..HEAD` means is a fact about git's ref graph, and asserting it
-// through a mock would only assert the mock.
+// git に面したものは、本物の upstream を持つ本物の repository に対して走る: ⚠
+// `@{upstream}..HEAD` が何を意味するかは **git の ref graph についての事実**であり、
+// mock 越しにそれを assert しても mock を assert するだけである。
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -93,7 +93,7 @@ test('history’s ghosts are filtered against the live corpus', async () => {
   await rm(path.join(work, 'docs', 'aims', 'deleted-later.md'))
   commit(work, 'remove')
 
-  // The path is all over `@{upstream}..HEAD`, but the node no longer exists.
+  // path は `@{upstream}..HEAD` の至る所に在るが、その node はもう存在しない。
   const items = await gatherUnpushed(work, ['seed'])
   assert.deepEqual(items, [])
   await rm(dir, { recursive: true, force: true })
@@ -109,9 +109,9 @@ test('no upstream yields null — "could not look", not "nothing there"', async 
   commit(root, 'only')
 
   assert.equal(await gatherUnpushed(root, ['a']), null)
-  // And the two must not render the same line.
-  assert.match(renderUnpushedFence(null), /no upstream/)
-  assert.match(renderUnpushedFence([]), /no un-pushed aim commits/)
+  // ⚠ そして両者は同じ行を描画してはならない。
+  assert.match(renderUnpushedFence(null), /upstream が無い/)
+  assert.match(renderUnpushedFence([]), /未 push の aim commit は無い/)
   await rm(root, { recursive: true, force: true })
 })
 
@@ -167,8 +167,8 @@ test('a malformed or unknown checkpoint is louder than a missing one', async () 
 })
 
 test('no tuned floor: a single commit of movement is still a candidate', async () => {
-  // The control group drops anything under 10. No aim statement names a number,
-  // and a filter with no derivation shrinks the inspection surface by luck.
+  // 対照群は 10 未満をすべて落とす。⚠ **数を名指す目的の文は存在せず、導出を持たない
+  // filter は検査面を運任せで縮める。**
   const { dir, work } = await makeRepoWithUpstream()
   await writeAim(work, 'a')
   commit(work, 'one')
@@ -197,7 +197,7 @@ test('a baton at the canonical path is read, with its front matter', async () =>
 })
 
 test('a previously-read baton reports its read-at rather than hiding it', async () => {
-  // The canon: state the fact in one line, never refuse to read, never warn.
+  // 正本: 事実を 1 行で述べる。読むことを拒まない。警告もしない。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
   await mkdir(path.join(root, '.handoff'), { recursive: true })
   await writeFile(

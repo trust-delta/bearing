@@ -1,81 +1,73 @@
-// `# PROCESS` — the marks that say which means are implemented, and the count
-// of nodes that still carry an unimplemented one.
+// `# PROCESS` —— どの手段が実装済かを述べる mark と、未実装をなお抱えた node の数。
 //
-// Derived from:
+// 導出元の前提:
 //
-//   phase-producer       「PROCESS」で表現される進捗を可視化された実装手順は ...
-//                        各単位ごとに実装済・未実装をエージェントが事実として安く
-//                        把握し記載、人間が進捗の確認をできる
-//   aim-backlog-triage   Aimは開発の駆動力であり、エージェントはAimの未実装の手段に
-//                        注意を払う必要がある
-//   aim-state-dead       state:deadは、その目的そのものを「やらないことに決めた」場合
+//   進捗の可視化    `# PROCESS` で表現される実装手順は、単位ごとの実装済・未実装を
+//                   エージェントが**事実として安く**把握・記載し、人間が進捗を確認できる
+//   backlog への注意  aim は開発の駆動力であり、エージェントは aim の未実装の手段に注意を
+//                   払う必要がある
+//   dead の意味     `state: dead` は、その目的そのものを「やらないことに決めた」場合
 //
-// ⚠ **No aim statement decides the NOTATION.** "実装済・未実装" names the two
-// states and nothing about how they are written. So the corpus is the only
-// ground there is, and it was measured across all 77 nodes: `-` bullets
-// 296/296, lowercase `done`/`todo` only, zero indent only, every one directly
-// under `# PROCESS`, zero deeper headings inside a PROCESS section.
+// ⚠ **記法を決める目的の文は存在しない。**「実装済・未実装」は 2 つの状態を名指すだけで、
+// それがどう書かれるかについては何も言わない。∴ **拠り所は corpus だけ**であり、77 node
+// 全数で実測した: `-` bullet が 296/296、小文字の `done`/`todo` のみ、字下げ 0 のみ、
+// 全てが `# PROCESS` の直下、PROCESS 節の中の深い見出しは 0 件。
 //
-// ⚠ **Measuring the form does not license enforcing it.** A parser strict
-// enough to match today's corpus will SILENTLY MISS a `* [todo]` written
-// tomorrow, and a silently missed todo is `drift-git`'s bad sensor — worse than
-// no sensor, because the count still looks authoritative. A permissive parser
-// fails the other way: it silently absorbs a deviation and the corpus drifts
-// into two notations with nobody told.
+// ⚠ **形を測ったことは、形を強制する免許にはならない。** 今日の corpus に一致するほど
+// 厳格な parser は、明日書かれる `* [todo]` を**黙って取り落とす**。黙って落とされた todo は
+// 「悪いセンサー」であり、⚠ **数だけは権威に見えるので、センサーが無いことより悪い。**
+// 寛容な parser は逆側で失敗する: 逸脱を黙って吸収し、corpus は誰にも告げられないまま
+// 2 つの記法へ分裂する。
 //
-// ∴ neither silence. The observed form is parsed as the mark; anything that
-// LOOKS like a mark and is not in that form is counted nowhere and REPORTED as
-// an anomaly. The count stays honest and the deviation stays visible.
+// ∴ **どちらの沈黙も採らない。** 観測された形を mark として parse し、mark に**見えて**
+// その形でないものは、どこにも数えずに **anomaly として報告する。** 数は正直なまま、
+// 逸脱は可視なまま保たれる。
 //
-// The dead exclusion is `aim-state-dead`: a purpose someone decided not to
-// pursue has no unimplemented means, only abandoned ones.
+// dead の除外は `state: dead` の意味から従う: 追わないと決めた目的に未実装の手段は無く、
+// 在るのは放棄された手段だけである。
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { aimRelPath, parseAimRecord, readAimSlugs } from './corpus.mjs'
 
 /**
- * The mark, as the corpus writes it: line-start, `-` bullet, lowercase word.
+ * corpus が書いているとおりの mark: 行頭・`-` bullet・小文字の語。
  *
- * ⚠ **No space is required after the bracket.** The first cut of this parser
- * demanded one and dropped 3 real marks — every one of them `- [todo]（…`, a
- * full-width paren butted straight against the bracket. Three real items went
- * missing from the backlog and surfaced in the anomaly list. The bracket IS the
- * token; what follows it is prose, and prose
- * in Japanese does not owe an ASCII space.
+ * ⚠ **括弧の後に空白を要求してはならない。** この parser の最初の版はそれを要求し、
+ * 実在する mark を 3 件取り落とした —— どれも `- [todo]（…` という形で、全角括弧が
+ * 括弧に直付けされていた。3 件の実在項目が backlog から消え、anomaly 一覧に現れた。
+ * **token は括弧そのものであり、その後に続くのは散文である。そして日本語の散文は
+ * ASCII 空白を負う義理がない。**
  */
 const MARK = /^- \[(done|todo)\]/
 /**
- * Anything a reader would call a mark. Deliberately wider than `MARK` — this is
- * the net that catches what the strict form would drop on the floor.
+ * 読み手が mark と呼ぶであろう全て。意図して `MARK` より広い —— これは、厳格な形なら
+ * 床に落としていたものを掬い上げる網である。
  */
 const MARK_ISH = /^(\s*)([-*+])\s+\[([A-Za-z]+)\]/
 
-/** A fence opener/closer: line-start, at most 3 spaces of indent (CommonMark). */
+/** fence の開閉: 行頭、字下げは最大 3 空白（CommonMark）。 */
 const FENCE_LINE = /^ {0,3}(```+|~~~+)/
 
 /**
- * Strip inline code spans WITHIN one line.
+ * 1 行の**中で**の inline code span を剥ぐ。
  *
- * ⚠ The corpus-wide `stripCodeSpans` must not be used here. It removes fenced
- * blocks with one global regex over the whole document, so it deletes and
- * merges LINES — and this parser's whole job is line-structured. Worse, its
- * fenced-block pattern matches a ``` appearing mid-line inside an inline span
- * (`` ` ```bearing-drift ` ``, which this corpus writes), so it opened a
- * phantom fence and swallowed everything down to the next ``` anywhere below.
- * Measured: that alone reported a real `# PROCESS` mark as living outside the
- * section. Same law, applied at the granularity that keeps
- * the structure intact.
+ * ⚠ **corpus 全体向けの `stripCodeSpans` をここで使ってはならない。** あれは document
+ * 全体に対する 1 つの global 正規表現で fenced block を除くため、**行を削除し併合する** ——
+ * そしてこの parser の仕事は丸ごと行構造である。さらに悪いことに、あの fenced block の
+ * pattern は inline span の中の行途中に現れる ``` に一致する（`` ` ```bearing-drift ` ``、
+ * この corpus が実際に書いている形）ので、幻の fence を開き、下方のどこかにある次の ```
+ * までを丸呑みした。実測: それだけで、実在する `# PROCESS` の mark が節の外に在ると報告
+ * された。同じ法を、構造を壊さない粒度で当てている。
  */
 const stripInlineCode = (line) => line.replace(/`[^`]*`/g, '')
 
 /**
- * Split a record body into its `# PROCESS` section and everything else.
+ * record の body を `# PROCESS` 節とそれ以外に分ける。
  *
- * A section runs from its `# ` heading to the next `# ` heading. `producer-
- * guide.md` gives the body top-level sections (`# IS`, `# PROCESS`, `# HISTORY`,
- * `# DAG`), so a `## ` inside PROCESS is a deeper level the corpus does not use
- * — reported as an anomaly rather than guessed at.
+ * 節は `# ` 見出しから次の `# ` 見出しまで走る。`producer-guide.md` は body の section を
+ * top-level で与えている（`# IS`・`# PROCESS`・`# HISTORY`・`# DAG`）∴ PROCESS 内の `## `
+ * は corpus が使っていない深い level である —— **推測せず anomaly として報告する。**
  *
  * @param {string} body
  * @returns {{process: {line: string, no: number}[], outside: {line: string, no: number}[], nestedHeading: string|null}}
@@ -88,9 +80,8 @@ export function splitProcess(body) {
   let hasHeading = false
   let nestedHeading = null
   body.split(/\r?\n/).forEach((raw, i) => {
-    // Fence state first: a heading or a mark inside a fenced block is quoted,
-    // not asserted — the same law `stripCodeSpans` carries, tracked here where
-    // applying it cannot cost a line.
+    // まず fence の状態: fenced block の中の見出しや mark は引用であって主張ではない
+    // —— `stripCodeSpans` が運ぶのと同じ法を、行を失わずに当てられる場所で追っている。
     if (FENCE_LINE.test(raw)) {
       inFence = !inFence
       return
@@ -109,7 +100,7 @@ export function splitProcess(body) {
 }
 
 /**
- * Parse one record body's marks.
+ * 1 つの record body の mark を parse する。
  *
  * @param {string} body
  * @returns {{done: number, todo: number, anomalies: {kind: string, line: string, no: number}[]}}
@@ -139,28 +130,27 @@ export function parseProcessMarks(body) {
       : 'unknown-mark'
     anomalies.push({ kind, line: line.trim(), no })
   }
-  // A mark outside `# PROCESS` is the third silence: it is written as progress
-  // and read by nothing.
+  // `# PROCESS` の外にある mark は第 3 の沈黙である: 進捗として書かれ、何にも読まれない。
   for (const { line, no } of outside) {
     if (MARK_ISH.test(line)) {
       anomalies.push({ kind: 'outside-process', line: line.trim(), no })
     }
   }
-  // ⚠ A `# PROCESS` heading with no readable mark is `unknown`, and `unknown`
-  // must never be folded into "nothing to do". This is a soft prose parse, not
-  // a hard git computation, so when it cannot read it says so — an honest
-  // `unknown` beats a fabricated `done`. That asymmetry is the whole of the
-  // authority this layer is granted.
+  // ⚠ **読める mark を 1 つも持たない `# PROCESS` 見出しは `unknown` であり、`unknown` を
+  // 「やることが無い」へ畳んではならない。** これは drift のような硬い git 計算ではなく
+  // 柔らかい散文の parse である ∴ **読めなかったときは読めなかったと述べる** ——
+  // 捏造された `done` より正直な `unknown` が勝つ。この非対称が、この層に与えられている
+  // 権限の全てである。
   const unknown = hasHeading && done === 0 && todo === 0
   return { done, todo, unknown, anomalies }
 }
 
 /**
- * The backlog facts for one repo.
+ * 1 つの repo の backlog 事実。
  *
- * `openTodoNodes` counts NODES, not marks — `aim-backlog-triage` asks the agent
- * to attend to aims carrying unimplemented means, and an aim with nine open
- * marks is still one aim to attend to.
+ * ⚠ **`openTodoNodes` が数えるのは node であって mark ではない** —— 前提が求めている
+ * のは「未実装の手段を抱えた aim に注意を払う」ことであり、open な mark を 9 個持つ aim も、
+ * 注意を払うべき aim としては 1 つである。
  *
  * @param {string} repoRoot
  * @returns {Promise<{openTodoNodes: number, unknownNodes: string[], anomalies: {slug: string, kind: string, line: string, no: number}[]}>}

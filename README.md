@@ -1,46 +1,64 @@
 # bearing
 
-**A bearing is two things at once: the direction you are heading, and the load you carry.**
-This carries both into an AI coding session — and keeps them there across sessions,
-across machines, and across the moment the context window fills up.
+*English: [README.en.md](README.en.md)*
 
-> **The purpose this serves.** *Supply no place of your own; accept the general-purpose
-> harness as the vessel, and graft onto it only what that harness cannot have — the
-> machinery that carries a purpose the human fixed, and protects the attention budget.*
+**bearing は 2 つのことを同時に意味する: 進んでいる方位と、負っている荷重。**
+この repo は、その両方を AI との coding セッションへ持ち込み、**セッションを跨いでも、
+マシンを跨いでも、context window が埋まる瞬間を越えても**そこに保ち続ける。
 
-Coding harnesses got good. What they still do not have is a durable answer to
-*what is this for*, *what did we decide and why*, and *has the code drifted away
-from the reason it was written*. Those questions outlive a session. A session does not.
+> **これが仕えている目的。** *自前の場を供給しない。汎用ハーネスを器として受け入れ、
+> そこへ接ぎ木するのは、そのハーネスが持ちえないものだけ —— 人間が pin した目的を運ぶ
+> 機構と、注意の予算を守る機構である。*
 
-## Three mechanisms
+コーディングハーネスは良くなった。⚠ **それでもなお持っていないのは、「これは何のためか」
+「我々は何をなぜ決めたのか」「code はそれが書かれた理由から離れていないか」に対する持続的な
+答えである。** これらの問いはセッションより長く生きる。セッションは生きない。
 
-| | what it does |
+## 3 つの機構
+
+| | 何をするか |
 | --- | --- |
-| **aim** | A tree of purpose-and-means, one file per purpose. The `aim:` line is the human's, and the agent may not rewrite it. |
-| **handoff** | A baton authored before the context is compacted, so what carries forward is *chosen* rather than whatever survived truncation. |
-| **drift** | Cheap machine detection of purposes whose body has moved away from the purpose it claims to serve, or away from its neighbours. It makes candidates visible. It does not judge them. |
+| **aim** | 目的と手段の木。1 つの目的につき 1 file。⚠ `aim:` の行は**人間のもの**で、エージェントはそれを書き換えてはならない。 |
+| **handoff** | context が圧縮される**前に**著される baton。∴ 先へ運ばれるものは、切り詰めを生き延びたものではなく**選ばれたもの**になる。 |
+| **drift** | body が、それが仕えると称する目的から離れていないか、隣接から離れていないかを、安く機械的に検知する。⚠ **候補を可視化するだけで、判定はしない。** |
 
-## What this is not
+## これが何ではないか
 
-Not an agent framework, not a server, not a wrapper. It adds no place for
-anything to run. It is a plugin, some Markdown, and a few hundred lines of Node
-that ask git questions.
+エージェントの framework ではないし、server でもないし、wrapper でもない。**何かが走るための
+場を一切足さない。** 実体は plugin 1 つと、いくらかの Markdown と、git に問い合わせる数百行の
+Node である。
 
-**The régime it enforces is against the agent, not for it.** The agent maintains
-the tree and may propose changes to any purpose — but pinning a purpose, and
-declaring one achieved, are the human's acts. That asymmetry is the whole point.
+**⚠ ここが敷く体制は、エージェントを*利する*ためではなく、エージェントに*対して*働く。**
+エージェントは木を保守し、どの目的についても変更を提案してよい —— **だが目的を pin すること、
+そして目的が達成されたと宣言することは、人間の act である。** この非対称が要点の全てである。
 
-## Status
+## 言語
 
-Early, and honest about it. This is being extracted from a private project that
-has been running the discipline on itself for months. Until the extraction lands,
-this repository is a name and a README.
+**このプロジェクトの正本は日本語である。** ⚠ これは慣習ではなく、**エージェントへの指示は
+言語を統一した方が質が高い**という判断に基づく手段であり、その前提はまだ実測されていない
+（[`docs/aims/operator-language.md`](docs/aims/operator-language.md) を参照）。英語版の
+README は併置してあるが従属物であり、食い違ったときは日本語側が正である。
 
-## Provenance
+機械が parse する契約 —— fence の tag と field 名、slug、識別子 —— は英語のままである。
+**判別線は「人が読む文か、機械が parse する token か」であって、内と外ではない。**
 
-The discipline grew inside `tmai` (*tactful multi agents interface*), which set
-out to build a place for coding agents to run. Two of its three pillars died when
-the standard harnesses absorbed the job of being that place. What survived was
-never the place — it was the method. This repository is where the method lives now.
+## 現況
 
-*Licensing is not yet decided; until it is, all rights are reserved.*
+初期段階であり、それを正直に述べる。規律そのものは、ある private project の中で数か月に
+わたって自分自身に適用されながら育った。⚠ **plugin の実体はこの repo に移り、標準ハーネス上で
+動いている。だが「標準ハーネスとこの plugin だけで開発が成り立つか」はまだ実測していない。**
+それが root node の中心的な未検証項目である。
+
+**⚠ 履歴は運ばなかった。** 3 機構は前身プロジェクト `tmai`（*tactful multi agents interface*）
+の中で育ったが、あちらの履歴は一貫して「tmai という場所の中での役割・手段」を前提に書かれて
+いる。この repo が問うのは「外付け拡張としてどうか」であり、出発点が違う。∴ **概念は継承し、
+履歴は継承しない。**
+
+## 来歴
+
+規律は `tmai` の中で育った。あれは coding agent が走るための**場**を作ろうとした project で
+あり、3 本の柱のうち 2 本は、標準ハーネスがその「場である」という仕事を吸収した時点で死んだ。
+⚠ **生き残ったのは場ではなく、方法だった。** この repository は、その方法が今住んでいる場所
+である。
+
+*license は未定。決まるまでは all rights reserved。*

@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "trust-delta",
-  "description": "What the standard coding harness does not have: a purpose the agent may not rewrite, a handoff that is authored rather than truncated, and drift made visible without being judged.",
+  "description": "標準的なコーディングハーネスが持たないもの: エージェントが書き換えてはならない目的、切り詰められるのではなく著される引き継ぎ、そして判定されないまま可視化される drift。",
   "owner": {
     "name": "TrustDelta"
   },
   "plugins": [
     {
       "name": "bearing",
-      "description": "A purpose tree the human owns, conversation handoff across sessions and machines, and drift detection between purpose and means — carried into any Claude Code session as hooks and skills.",
+      "description": "人間が所有する目的の木、セッションを跨ぐ会話の引き継ぎ、そして目的と手段の間の drift 検知 —— hook と skill として、あらゆる Claude Code セッションへ運ばれる。",
       "author": {
         "name": "TrustDelta"
       },

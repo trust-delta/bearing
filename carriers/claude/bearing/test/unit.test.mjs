@@ -1,8 +1,8 @@
-// Tests for the unit walk — cwd to the set of repos one session is about.
+// unit の walk の test —— cwd から、1 つのセッションが対象とする repo の集合へ。
 //
-// Checked against a real directory tree for the same reason the git-facing
-// tests are: what `cwd-git` states is a fact about the filesystem, and a mock
-// would only assert that the mock matches the code.
+// git に面した test と同じ理由で本物の directory tree に対して検査する: ⚠ **この walk が
+// 述べるのは filesystem についての事実**であり、mock は「mock が code に一致すること」しか
+// assert しない。
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -12,7 +12,7 @@ import path from 'node:path'
 
 import { resolveUnit, MAX_REPOS } from '../lib/unit.mjs'
 
-/** A `.git` DIRECTORY is what the walk looks for — enough to be found. */
+/** walk が探すのは `.git` **directory** である —— 見つかるにはそれで足りる。 */
 async function repo(root, rel) {
   await mkdir(path.join(root, rel, '.git'), { recursive: true })
 }
@@ -50,8 +50,8 @@ test('the walk prunes on hit — a repo inside a repo is that repo’s business'
 })
 
 test('the walk never climbs — a session inside a member repo is about that repo', async () => {
-  // `producer-cwd`: the cwd defines the project. Finding the wrapper above
-  // would be overriding the operator's choice of where to start.
+  // cwd が project を定義する。⚠ 上にある wrapper を見つけにいくことは、
+  // **どこから始めるかという operator の選択を上書きする**ことになる。
   const root = await tree()
   await repo(root, 'alpha')
   await repo(root, 'beta')
@@ -94,8 +94,8 @@ test('a cwd with no git at all yields an empty unit, not an error', async () => 
 })
 
 test('hitting the repo cap is REPORTED, never silently applied', async () => {
-  // A truncated unit that looks complete is the bad sensor: every fact
-  // downstream is partial and nothing says so.
+  // ⚠ **完全に見える切り詰められた unit は「悪いセンサー」である**: 下流の事実はすべて
+  // 部分的なのに、それを述べるものが何も無い。
   const root = await tree()
   for (let i = 0; i < MAX_REPOS + 2; i++) await repo(root, `r${String(i).padStart(2, '0')}`)
   const u = await resolveUnit(root)

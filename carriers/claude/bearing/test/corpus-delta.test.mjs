@@ -1,14 +1,12 @@
-// Tests for the staleness trigger (`PostToolBatch`) and the digest it gates on.
+// 陳腐化 trigger（`PostToolBatch`）と、それが門として使う digest の test。
 //
-// The invariant that matters most is NOT that it reports a change — it is that
-// it stays quiet when nothing a session could act on has changed. Editing an
-// aim body is the most common thing a session does to the corpus, and a hook
-// that re-injected the same numbers after every one of those edits would make
-// the surface unreadable, which is the failure `aim-upkeep` rules out by
-// putting the machine layer at *visibility*.
+// ⚠ **最も重要な不変条件は「変化を報告すること」ではない** —— **セッションが行動できる何も
+// 変わっていないときに黙っていること**である。aim の body を編集することはセッションが
+// corpus に対して行う最も普通のことであり、そのたびに同じ数を再注入する hook は面を
+// 読めなくする。それは機械層を*可視化*の位置に置く規律が排している失敗である。
 //
-// Every fact asserted here is a fact about a real git repository, for the same
-// reason the drift tests are: a mock would only prove the mock matches the code.
+// ここで assert される事実はすべて**本物の git repository についての事実**である。drift の
+// test と同じ理由で: mock は「mock が code に一致すること」しか証明しない。
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -36,7 +34,7 @@ function run(input) {
   return { status: res.status, stdout: res.stdout ?? '', stderr: res.stderr ?? '' }
 }
 
-/** The injected context, or null when the hook stayed silent. */
+/** 注入された context。hook が黙ったままなら null。 */
 function context(r) {
   if (r.stdout.trim() === '') return null
   const parsed = JSON.parse(r.stdout)
@@ -47,7 +45,7 @@ function context(r) {
 const node = (aim, process_) =>
   `---\naim: ${aim}\nparent: root\nstate: open\n---\n\n# IS\n\nsomething\n\n# PROCESS\n\n${process_}\n`
 
-/** A unit directory holding one repo that carries a corpus. */
+/** corpus を持つ repo を 1 つ抱えた unit directory。 */
 async function unit() {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-delta-'))
   const repo = path.join(root, 'repo')
@@ -62,7 +60,7 @@ async function unit() {
   return { root, repo, aims: path.join(repo, 'docs', 'aims') }
 }
 
-// ── the digest: the line between "bytes moved" and "facts changed" ───────────
+// ── digest: 「byte が動いた」と「事実が変わった」の間の線 ────────────────────
 
 test('the facts digest ignores how a body was phrased', () => {
   const a = { label: 'r', working: [], backlog: { openTodoNodes: 3, unknownNodes: [], anomalies: [] } }
@@ -82,7 +80,7 @@ test('the facts digest does not depend on repo or record order', () => {
   assert.equal(factsDigest([r1, r2]), factsDigest([r2, r1]))
 })
 
-// ── the renderer never judges ────────────────────────────────────────────────
+// ── renderer は決して判定しない ──────────────────────────────────────────────
 
 test('the count is surfaced with the instruction not to triage it', () => {
   const body = renderCorpusDelta({
@@ -91,14 +89,14 @@ test('the count is surfaced with the instruction not to triage it', () => {
     hadBaseline: true,
   })
   assert.match(body, /open-todo: 7/)
-  assert.match(body, /do not triage it/)
+  assert.match(body, /triage も ranking も/)
 })
 
 test('a unit with no corpus renders nothing at all', () => {
   assert.equal(renderCorpusDelta({ repos: [], moved: [], hadBaseline: true }), '')
 })
 
-// ── the hook, against a real repo ────────────────────────────────────────────
+// ── hook を本物の repo に対して ──────────────────────────────────────────────
 
 test('a directory with no corpus is silent — the discipline was never adopted', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-delta-'))
@@ -115,9 +113,9 @@ test('with no baseline it reports the corpus and says the baseline is absent', a
   const u = await unit()
   try {
     const body = context(run({ session_id: freshSession(), cwd: u.root }))
-    // Absent must never render as clean — the same rule the composer follows
-    // when it fails.
-    assert.match(body, /No boot baseline was recorded/)
+    // ⚠ 不在が clean として描画されてはならない —— composer が失敗したときに従うのと
+    // 同じ規則である。
+    assert.match(body, /boot 時の baseline が記録されていない/)
     assert.match(body, /open-todo: 1/)
   } finally {
     await rm(u.root, { recursive: true, force: true })
@@ -139,12 +137,11 @@ test('⚠ a second body edit to an already-dirty node is silent', async () => {
   const u = await unit()
   const session = freshSession()
   try {
-    // ⚠ The FIRST edit is a fact change: the node goes from clean to
-    // uncommitted, and the working-delta fence gains a record. What must be
-    // silent is every edit after that — the node is still uncommitted, the
-    // anchor still unmoved, the count still the same. That is the shape of an
-    // ordinary session maintaining an aim body, and it is the case that would
-    // otherwise re-inject an identical report on every batch.
+    // ⚠ **最初の**編集は事実の変化である: node は clean から未 commit へ移り、
+    // working-delta fence は record を 1 つ得る。**黙らねばならないのはそれ以降の編集
+    // すべて**である —— node はなお未 commit、anchor はなお動かず、数もなお同じ。それが
+    // aim の body を保守する普通のセッションの形であり、放っておけば batch ごとに同一の
+    // 報告を再注入することになる場合である。
     await writeFile(path.join(u.aims, 'alpha.md'), node('alpha', '- [todo] one').replace('something', 'first'))
     assert.notEqual(context(run({ session_id: session, cwd: u.root })), null)
 
@@ -167,7 +164,7 @@ test('a new node carrying a [todo] moves the count and is reported', async () =>
     const body = context(run({ session_id: session, cwd: u.root }))
     assert.match(body, /open-todo: 2/)
     assert.match(body, /gamma \| false \| false \| true/)
-    assert.doesNotMatch(body, /No boot baseline/)
+    assert.doesNotMatch(body, /boot 時の baseline が記録されていない/)
   } finally {
     await rm(u.root, { recursive: true, force: true })
   }
@@ -182,9 +179,9 @@ test('an aim commit moves HEAD and the history fences are recomputed, not just f
     git(u.repo, ['add', '-A'])
     git(u.repo, ['commit', '-qm', 'add gamma'])
     const body = context(run({ session_id: session, cwd: u.root }))
-    assert.match(body, /HEAD moved over/)
-    // Recomputed for real — not a "these are stale, go and refresh" note, which
-    // would turn a fact the régime owes the session into an errand.
+    assert.match(body, /HEAD が動いた/)
+    // ⚠ **本当に再計算する** ——「これらは陳腐化した、更新してこい」という覚書ではない。
+    // それは**体制がセッションに負っている事実を、お使いに変えてしまう。**
     assert.match(body, /bearing-drift-intra v1/)
     assert.match(body, /bearing-unpushed v1/)
     assert.match(body, /bearing-checkpoint-stale v1/)
@@ -208,7 +205,7 @@ test('a commit that touches no aim does not masquerade as an aim change', async 
 })
 
 test('it never obstructs the turn, whatever it is handed', async () => {
-  // Exit 2 on PostToolBatch stops the agentic loop outright.
+  // PostToolBatch での exit 2 は agentic loop を丸ごと止める。
   assert.equal(run('not json').status, 0)
   assert.equal(run('').status, 0)
   assert.equal(run({ session_id: freshSession(), cwd: '/nonexistent-path-xyz' }).status, 0)
@@ -220,8 +217,8 @@ test('the state file is keyed per session, so two sessions do not read each othe
   const b = freshSession()
   try {
     run({ session_id: a, cwd: u.root })
-    // b has its own (absent) baseline and is owed the report of its own.
-    assert.match(context(run({ session_id: b, cwd: u.root })), /No boot baseline/)
+    // b は自分自身の（不在の）baseline を持ち、自分自身の報告を負われている。
+    assert.match(context(run({ session_id: b, cwd: u.root })), /boot 時の baseline が記録されていない/)
     assert.notEqual(deltaStatePath(a), deltaStatePath(b))
     const state = JSON.parse(await readFile(deltaStatePath(a), 'utf8'))
     assert.ok(state.sig && state.facts)

@@ -1,43 +1,39 @@
-// The handoff mechanism — the mechanical half of writing and reading a baton.
+// handoff 機構 —— baton を書き・読む作業のうち、**機械である半分**。
 //
-// Derived from:
+// 導出元の前提:
 //
-//   conversation-handoff  エージェントのネイティブなコンテキスト圧縮やリセット機能では
-//                         なく、セッションを跨ぐコンテキスト伝達のために固有の会話引き
-//                         継ぎ機能を備える
-//   handoff-low-cost      早期の会話引き継ぎを安く行えるようにする。これにより、
-//                         コンテキスト鮮度を保ち、出力品質向上、無駄なコストの抑制を維持
-//   handoff-on-demand     人間の任意タイミングでの会話引き継ぎを行える
-//   handoff-review-gate   引き継ぎ内容は、その前に人間が確認し、内容に漏れや修正がある
-//                         場合に書き直しを指示できる
-//   operator-single-producer  人間が1度に対話するエージェントは常に単一である
+//   引き継ぎの主体  エージェントのネイティブな圧縮・リセットではなく、セッションを跨ぐ
+//                   context 伝達のために固有の会話引き継ぎ機構を備える
+//   安さ            早期の引き継ぎを安く行えるようにし、context の鮮度・出力品質・
+//                   無駄なコストの抑制を保つ
+//   任意の発火      人間の任意のタイミングで引き継ぎを行える
+//   確認の門        引き継ぎ内容は、land の前に人間が確認し、漏れや修正があれば書き直しを
+//                   指示できる
+//   対話の単一性    人間が 1 度に対話するエージェントは常に単一である
 //
-// ═══ What is mechanism here, and what is emphatically not ═══════════════════
+// ═══ ここで機械であるもの、断じて機械でないもの ═════════════════════════════
 //
-// `handoff.md` states the load-bearing claim plainly: **the value of the method
-// is the authoring judgment, not the structure of the baton.** What to keep and
-// what to drop as re-derivable is precisely what native compaction lacks. ∴
-// nothing in this file writes a word of a baton, summarises anything, or decides
-// what matters.
+// `handoff.md` が要となる主張を平明に述べている: ⚠ **この方法の価値は authoring の
+// judgment にあり、baton の構造にはない。** 何を残し、何を「再導出できる」として捨てるか
+// —— それこそが native な圧縮に欠けているものである。∴ **この file は baton の語を 1 つも
+// 書かないし、何も要約しないし、何が重要かを決めない。**
 //
-// What it does own is everything around that judgment which is pure bookkeeping
-// and easy to get wrong by hand — and `handoff-low-cost` says the cost of the
-// ritual is itself a target, because an expensive hand-off is one the operator
-// puts off until the context is already degraded:
+// この file が持つのは、その judgment の周囲にある**純然たる帳簿仕事**であり、しかも手で
+// やると間違えやすいものである —— そして「安さ」の前提が言うとおり、**儀式のコスト自体が
+// 標的である**。高価な引き継ぎは、context が既に劣化するまで operator が先延ばしにする
+// 引き継ぎだからだ:
 //
-//   - archive rotation to an exact UTC name, BEFORE the new baton lands
-//   - `composed-at` stamped from the clock, not from the author's memory
-//   - `read-at` stamped on read (step 3), returning the OLD value first (step 2)
-//   - the aim trace (step 4) that the baton structurally under-reports
+//   - 新しい baton が着地する**前に**、正確な UTC 名で archive へ退避する
+//   - `composed-at` を著者の記憶ではなく時計から刻む
+//   - 読む際に `read-at` を刻む（手順 3）。ただし**旧値を先に返す**（手順 2）
+//   - baton が構造的に過少報告する aim の trace（手順 4）
 //
-// ⚠ **`read-at` is never written by the writer.** A new baton has not been read;
-// the canon says so, and a writer that stamped it would make "already read" mean
-// nothing.
+// ⚠ **`read-at` を書く側が書くことは決して無い。** 新しい baton はまだ読まれていない ——
+// canon がそう述べており、書く側が刻めば「既読」という語が何も意味しなくなる。
 //
-// Placement is `.handoff/` beside the cwd, machine-local, never committed. That
-// is a CONSEQUENCE of the purpose (`operator-single-producer`): what a baton
-// protects is the continuity of ONE conversation between the operator and one
-// session, so acquiring the means to cross machines never creates a reason to.
+// 置き場は cwd の傍らの `.handoff/`、machine-local、決して commit しない。⚠ **これは目的
+// の帰結である**（対話の単一性）: baton が守っているのは operator と 1 つのセッションの間に
+// ある対話の継続である ∴ **越境する手段を手に入れても、越境する理由にはならない。**
 
 import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -50,36 +46,35 @@ export const activePath = (unitRoot) => path.join(unitRoot, HANDOFF_DIR, ACTIVE)
 export const archiveDir = (unitRoot) => path.join(unitRoot, HANDOFF_DIR, ARCHIVE)
 
 /**
- * `YYYY-MM-DDTHHMMSSZ` — the archive file name the canon specifies.
+ * `YYYY-MM-DDTHHMMSSZ` —— canon が指定する archive の file 名。
  *
- * Colons are stripped rather than escaped: the name has to be a legal file name
- * on Windows too, and `:` is not. That is not a compromise of the format, it is
- * why the format is written this way.
+ * colon は escape ではなく除去する: この名は Windows でも合法な file 名でなければならず、
+ * `:` はそうでない。⚠ **これは形式の妥協ではなく、形式がこう書かれている理由そのものである。**
  */
 export function archiveStamp(date = new Date()) {
   return date.toISOString().replace(/\.\d+Z$/, 'Z').replace(/:/g, '')
 }
 
 /**
- * Move the current baton into the archive, if there is one.
+ * 現在の baton を、在れば archive へ移す。
  *
- * ⚠ **Rotation happens on WRITE, never on read.** The canon is explicit: a
- * reader does not archive, so reading the same baton twice is possible — and
- * detecting that is exactly what `read-at` is for. Preventing it is not a goal.
+ * ⚠ **退避は「書く」ときに起こり、「読む」ときには決して起こらない。** canon は明示的で
+ * ある: 読む側は archive しない ∴ 同じ baton を二度読むことは起こりうる —— **それを検出
+ * するのが `read-at` の役目であって、防ぐことは目的ではない。**
  *
- * @returns {Promise<string|null>} the archive path, or null if nothing to move
+ * @returns {Promise<string|null>} archive の path。移すものが無ければ null
  */
 export async function archiveActive(unitRoot, date = new Date()) {
   const src = activePath(unitRoot)
   try {
     await readFile(src, 'utf8')
   } catch {
-    return null // Nothing to rotate is the normal first-ever write.
+    return null // 退避するものが無いのは、初回の書き込みとして正常である。
   }
   const dir = archiveDir(unitRoot)
   await mkdir(dir, { recursive: true })
   let dest = path.join(dir, `${archiveStamp(date)}.md`)
-  // Two hand-offs in the same second is not a case worth losing one over.
+  // 同じ秒に 2 回引き継ぐことは、片方を失ってよい理由にはならない。
   for (let n = 2; ; n++) {
     try {
       await readFile(dest, 'utf8')
@@ -93,20 +88,20 @@ export async function archiveActive(unitRoot, date = new Date()) {
 }
 
 /**
- * Ensure the authored markdown carries a `composed-at`, stamped from the clock.
+ * 著された markdown が、時計から刻まれた `composed-at` を持つことを保証する。
  *
- * ⚠ An author-supplied `composed-at` is REPLACED, not trusted. It is the one
- * field a session cannot know better than the clock, and a wrong one makes the
- * reader's "this baton is several days old" line lie.
+ * ⚠ **著者が与えた `composed-at` は信頼せず、置換する。** これはセッションが時計より
+ * よく知りえない唯一の field であり、誤った値は読む側の「この baton は数日前のものです」
+ * という 1 行を嘘にする。
  *
- * ⚠ An author-supplied `read-at` is REMOVED. A new baton has not been read.
+ * ⚠ **著者が与えた `read-at` は除去する。** 新しい baton はまだ読まれていない。
  */
 export function stampComposedAt(markdown, date = new Date()) {
   const iso = date.toISOString().replace(/\.\d+Z$/, 'Z')
   const m = markdown.match(/^---\r?\n([\s\S]*?\r?\n)---(\r?\n[\s\S]*)$/)
   if (!m) {
-    // No frontmatter at all: give it one rather than refusing. The baton's
-    // value is its body, and a missing delimiter is not worth losing that over.
+    // frontmatter が全く無い: 拒否せず、与える。baton の価値は body に在り、区切りが
+    // 1 つ足りないことは、それを失ってよい理由にならない。
     return `---\ncomposed-at: ${iso}\n---\n\n${markdown.replace(/^\n+/, '')}`
   }
   const front = m[1]
@@ -118,12 +113,11 @@ export function stampComposedAt(markdown, date = new Date()) {
 }
 
 /**
- * Rotate, then place the authored baton.
+ * 退避し、そのうえで著された baton を配置する。
  *
- * ⚠ **This does not gate on review** — `handoff-review-gate` puts the operator's
- * confirmation BEFORE this call, in the conversation, where a human can say
- * "you dropped the reason we abandoned X". A mechanical gate here would only be
- * able to check shape, and shape is not what the gate is for.
+ * ⚠ **ここは確認の門を持たない** —— 確認の門は*この呼び出しの前*、会話の中に在り、そこで
+ * 人間が「X を捨てた理由が落ちている」と言える。**ここに機械の門を置いても検査できるのは
+ * 形だけであり、この門は形のために在るのではない。**
  */
 export async function writeBaton(unitRoot, markdown, date = new Date()) {
   const archived = await archiveActive(unitRoot, date)
@@ -135,15 +129,14 @@ export async function writeBaton(unitRoot, markdown, date = new Date()) {
 }
 
 /**
- * Steps 2 and 3 of the reading procedure, in the order the canon puts them.
+ * 読む手順の 2 と 3 を、canon が置いた順序どおりに行う。
  *
- * Returns the PREVIOUS `read-at` (step 2 — the fact to report in one line) and
- * then stamps the new one (step 3). Doing it in one call is what keeps the
- * order right: a reader who stamps first has destroyed the thing they were
- * meant to report.
+ * **旧**`read-at` を返し（手順 2 —— 1 行で報告すべき事実）、そのうえで新しいものを刻む
+ * （手順 3）。⚠ **これを 1 回の呼び出しで行うことが順序を守る** —— 先に刻んだ読み手は、
+ * 報告すべきものを既に破壊している。
  *
- * ⚠ Reporting a prior read is a FACT, never a warning and never a reason to
- * refuse. Reading an old baton on purpose is a thing people do.
+ * ⚠ **既読の報告は事実であって、警告でも拒否の理由でもない。** 古い baton をあえて読ませ
+ * たい場面はある。
  */
 export async function stampReadAt(unitRoot, date = new Date()) {
   const file = activePath(unitRoot)
@@ -162,15 +155,15 @@ export async function stampReadAt(unitRoot, date = new Date()) {
   } else if (/^composed-at:.*$/m.test(text)) {
     next = text.replace(/^(composed-at:.*)$/m, `$1\nread-at: ${iso}`)
   } else {
-    // No frontmatter to stamp into. The read still happened; say so by
-    // returning the facts, and leave the file alone rather than inventing one.
+    // 刻む先の frontmatter が無い。読んだこと自体は起きている ∴ 事実を返してそう述べ、
+    // frontmatter を発明せず file はそのまま置く。
     return { previousReadAt, composedAt, stamped: false }
   }
   await writeFile(file, next, 'utf8')
   return { previousReadAt, composedAt, stamped: true }
 }
 
-/** Archived batons, newest first. */
+/** 退避済みの baton、新しい順。 */
 export async function listArchive(unitRoot) {
   try {
     return (await readdir(archiveDir(unitRoot)))

@@ -1,22 +1,21 @@
-// Reading a repo's aim corpus.
+// repo の aim corpus を読む。
 //
-// What a corpus IS is settled by `docs/aims/_guide/producer-guide.md`: one file
-// per aim, frontmatter the human's and body the agent's, a child naming its
-// parent, and the slug being the file name. Everything below reads from those
-// and adds nothing of its own.
+// corpus とは**何であるか**は `docs/aims/_guide/producer-guide.md` が決めている:
+// 1 つの aim につき 1 file、frontmatter は人間のもので body はエージェントのもの、
+// 子は親を名指し、slug は file 名である。⚠ **以下はそこから読むだけで、自分では何も
+// 足さない。**
 
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
 /**
- * Is this directory entry an aim record?
+ * この directory entry は aim record か。
  *
- * A `.md` file whose stem is not `README` — `aim-slug-producer-owned` makes
- * the file name the identity, so anything that is not a record's file is not a
- * record. The `_guide/` directory falls out for free (it is a directory, not a
- * `.md`), which is why the canon's own files never appear as aim nodes.
+ * stem が `README` でない `.md` file である —— **file 名が identity** である以上、
+ * record の file でないものは record ではない。`_guide/` は無料で落ちる（`.md` ではなく
+ * directory だから）∴ canon 自身の file が aim node として現れることは決して無い。
  *
- * @param {string} name a bare file name, not a path
+ * @param {string} name path ではなく、裸の file 名
  */
 export function isAimRecord(name) {
   if (path.extname(name) !== '.md') return false
@@ -24,13 +23,12 @@ export function isAimRecord(name) {
 }
 
 /**
- * Every aim slug under `<repoRoot>/docs/aims`, sorted ascending.
+ * `<repoRoot>/docs/aims` 配下の全 aim slug を昇順で。
  *
- * A missing directory yields `[]`: `multi-repo-project` makes plural repos
- * normal, and a member repo that has not adopted the corpus is the structurally
- * normal state, not an error. The
- * sort is plain alphabetical — aim slugs carry no date, so there is no recency
- * dimension to order on; this is just a stable, deterministic walk.
+ * directory が無ければ `[]` を返す: unit は複数 repo でありうるので、**corpus をまだ採って
+ * いない member repo は構造的に正常な状態**であって、error ではない。並びは単純な
+ * 辞書順 —— aim の slug は日付を持たず、順序づけるべき新しさの軸が無い ∴ これは安定で
+ * 決定的な walk であるという以上の意味を持たない。
  *
  * @param {string} repoRoot
  * @returns {Promise<string[]>}
@@ -51,12 +49,11 @@ export async function readAimSlugs(repoRoot) {
 }
 
 /**
- * The repo-relative pathspec for one aim node.
+ * 1 つの aim node に対する repo 相対の pathspec。
  *
- * git pathspecs use `/` on every platform, so the separator is normalised
- * rather than taken from `path.join` — without this the
- * per-file signal is lost on Windows, where the porcelain output this is
- * compared against still says `docs/aims/x.md`.
+ * ⚠ git の pathspec はどの platform でも `/` を使う ∴ 区切りは `path.join` から取らず
+ * 正規化する —— これが無いと **Windows で file 単位の信号が失われる**。比較相手である
+ * porcelain の出力は、あちらでも `docs/aims/x.md` と言うからである。
  *
  * @param {string} slug
  */
@@ -64,45 +61,41 @@ export function aimRelPath(slug) {
   return `docs/aims/${slug}.md`
 }
 
-// --- The graph the drift fences read -------------------------------------
+// --- drift fence が読む graph ---------------------------------------------
 //
-// Derived from the `aim:` statements, not from any prior implementation:
-// `aim-tree-pin` (a child names its parent), `aim-cross-edge-link` (`# DAG`
-// carries the edges the tree cannot reach) and `aim-file-purpose-and-means`
-// (frontmatter is the human's, body is the agent's — so both carry claims).
+// 先行実装からではなく、目的の文から導出している: 子は親を名指す（木）、`# DAG` は木で
+// 辿れない辺を運ぶ、そして frontmatter は人間・body はエージェントのもの
+// ∴ **両方が主張を載せる**。
 
 /**
- * Remove fenced blocks and inline code spans.
+ * fenced block と inline code span を取り除く。
  *
- * Measured against this corpus: the bare `[[…]]` regex calls 24 of 564
- * references unresolved, and every one of them is metasyntax quoted inside
- * backticks (`` `[[slug]]` ``, `` `[[unit]]` ``). Stripping code spans takes it
- * to zero. The law is that **what sits inside a code span is quoted, not
- * asserted** — the same law this repo's `SHIPPED` guard already applies from the
- * other direction, and the same one a path check got wrong when it matched a
- * backticked `.handoff/active.md`.
+ * 実測: 素の `[[…]]` 正規表現は 564 参照のうち 24 件を未解決と呼ぶが、その全てが backtick
+ * の中に引用された記法である（`` `[[slug]]` ``、`` `[[unit]]` ``）。code span を剥ぐと 0 に
+ * なる。⚠ **法は「code span の中に在るものは引用であって主張ではない」である** —— path の
+ * 検査が backtick 付きの `.handoff/active.md` に一致してしまったとき、取り違えたのがこの法
+ * である。
  */
 export function stripCodeSpans(text) {
   return text.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '')
 }
 
 /**
- * Parse one aim record into the facts the fences need.
+ * 1 つの aim record を、fence が必要とする事実へ parse する。
  *
- * The quote strip is not decoration: exactly one node in this corpus of 77
- * writes `parent: "operator-single-producer"`, and without it that node — which
- * happens to be `conversation-handoff` — silently falls out of the tree. A
- * sensor that drops a node is the failure `drift-git` names.
+ * ⚠ **quote の除去は装飾ではない**: 77 node の corpus でちょうど 1 つの node が
+ * `parent: "…"` と quote 付きで書いており、これが無いとその node は**黙って木から
+ * 脱落する**。node を落とすセンサーは、この機構が名指している失敗そのものである。
  */
 export function parseAimRecord(text) {
   const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/)
   const front = m ? m[1] : ''
   const body = m ? m[2] : text
   const field = (key) => {
-    // ⚠ `\\s` not `\s`: inside a template literal an unrecognised escape loses
-    // its backslash, so `\s*` became `s*` — zero-or-more literal `s`. It parsed
-    // this corpus correctly only because every line is `aim: …` with one space
-    // and the value is trimmed afterwards.
+    // ⚠ `\s` ではなく `\\s` である: template literal の中では認識されない escape が
+    // backslash を失うため、`\s*` が `s*`（リテラル `s` の 0 回以上）になっていた。
+    // それでもこの corpus を正しく parse できていたのは、全ての行が空白 1 個の
+    // `aim: …` であり、値が後で trim されるからにすぎない。
     const hit = front.match(new RegExp(`^${key}:\\s*(.*)$`, 'm'))
     if (!hit) return null
     const raw = hit[1].trim()
@@ -114,10 +107,10 @@ export function parseAimRecord(text) {
       [...stripCodeSpans(body).matchAll(/\[\[([^\]\n]+)\]\]/g)].map((x) => x[1].trim()),
     ),
   ]
-  // `last-verified` is the sparse 4th human field (`aim-code-drift`): absence is
-  // a first-class third state — not yet under aim⊥code watch — never a default
-  // to fill in. `body` is returned because `# PROCESS` lives there and the mark
-  // parser must not re-split the frontmatter.
+  // `last-verified` は人間が持つ 4 番目の疎な field である: ⚠ **不在は一級の第 3 状態**
+  // （まだ aim⊥code の監視下に無い）であって、埋めるべき既定値ではない。`body` を返して
+  // いるのは `# PROCESS` がそこに在るからで、mark の parser が frontmatter を再分割しては
+  // ならないためである。
   return {
     aim: field('aim'),
     parent: field('parent'),
@@ -129,13 +122,13 @@ export function parseAimRecord(text) {
 }
 
 /**
- * Read every aim record in a repo and index its neighbours.
+ * repo の全 aim record を読み、その隣接を索引する。
  *
- * A neighbour is the parent, a child, an outbound `[[link]]` or an inbound one.
- * `producer-guide.md` names exactly that set ("親・子・`[[link]]` 先・自身"),
- * and inbound edges belong because a claim about this node lives over there.
- * Edges that do not resolve to a live record are dropped rather than reported:
- * a dangling reference is a corpus question, not a drift fact.
+ * 隣接とは、親・子・外向きの `[[link]]`・内向きの `[[link]]` である。
+ * `producer-guide.md` がちょうどその集合を名指しており（「親・子・`[[link]]` 先・自身」）、
+ * 内向きの辺が含まれるのは、**この node についての主張が向こう側に住んでいる**からである。
+ * 生きた record に解決しない辺は、報告せずに落とす: ⚠ 宙に浮いた参照は corpus の問題で
+ * あって、drift の事実ではない。
  */
 export async function readAimGraph(repoRoot) {
   const slugs = await readAimSlugs(repoRoot)
@@ -148,7 +141,7 @@ export async function readAimGraph(repoRoot) {
     try {
       text = await readFile(path.join(repoRoot, aimRelPath(slug)), 'utf8')
     } catch {
-      continue // Racing with a delete is not a drift fact.
+      continue // 削除と競合しただけで、それは drift の事実ではない。
     }
     nodes.set(slug, parseAimRecord(text))
   }

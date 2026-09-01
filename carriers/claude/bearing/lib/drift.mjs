@@ -1,30 +1,28 @@
-// The drift-possibility fences — derived from the `aim:` statements, not ported.
+// drift 可能性の fence —— 目的から導出したものであって、移植ではない。
 //
-// Three statements settle the shape between them:
+// 形を決めているのは 3 つの前提である:
 //
-//   aim-upkeep    安い機械検知によって検査対象を可視化し、高コストであるエージェント
-//                 によって検査実施および自明な保守を行い、判断が必要な部分のみを人間
-//                 にエスカレーションする
-//   drift-git     既存Aimの変更や新規Aimの作成によって、同Aim内あるいはAim同士で ...
-//                 この「drift可能性」は ... git履歴から得られる事実に基づいて機械的に
-//                 安く表面化できる
-//   git-local-fact-source  ローカルgitをground-truthとし、その履歴（commit・行レベル
-//                 の timestamp / diff / blame）は ... 最大限活用する
+//   層の分割    安い機械検知が検査対象を可視化し、高コストなエージェントが検査と
+//               自明な保守を行い、判断を要する部分だけを人間へ escalate する
+//   drift の源  既存 aim の変更、あるいは新規 aim の作成によって、同一 aim 内でも
+//               aim 同士でも不整合が生じうる。この「可能性」は git 履歴から得られる
+//               事実だけで機械的・安価に表面化できる
+//   事実の出所  ローカル git を ground truth とし、その履歴（commit・行レベルの
+//               timestamp / diff / blame）を最大限に使う
 //
-// So this layer only makes candidates VISIBLE. It never grades them and never
-// says a node has drifted — drift-git says "drift 可能性", the grading is the
-// agent's and the judgment is the human's. Two kinds, because drift-git names
-// two, and they do not share a trigger:
+// ∴ この層は候補を**可視化するだけ**である。採点もしなければ、ある node が drift した
+// と述べることもしない —— 述べられるのは「drift の可能性」までで、採点はエージェントの、
+// 判断は人間の仕事である。種類が 2 つあるのは、不整合の生じ方が 2 通りあるからで、
+// ⚠ **2 つは trigger を共有しない**:
 //
-//   intra — the body against its own anchor. Only a *modified* anchor opens
-//           this gap; at birth the body is written with the anchor.
-//   inter — the neighbours. Here creation IS a trigger, and the common one: a
-//           child added without its parent moving.
+//   intra — body と、それ自身の anchor との間。⚠ anchor が*変更*されたときにのみ
+//           この隙間が開く。誕生時には body は anchor と一緒に書かれている。
+//   inter — 隣接との間。⚠ こちらは*作成*も trigger であり、しかもそれが最も多い形
+//           である —— 親を動かさずに子を足す、という形。
 //
-// Both narrow the same way, and the rule carries no tuned constant: a neighbour
-// that moved at or after the change has had its chance to absorb it, so only
-// the strictly older ones are candidates. Measured on this corpus, the trigger
-// and the narrowing compose from 57 candidate nodes (287 pairs) down to 15 (59).
+// 絞り込みは両者で同じであり、調整された定数を含まない: 変更と同時か、それより後に
+// 動いた隣接は、その変更を吸収する機会を既に得ている ∴ 厳密に古いものだけが候補になる。
+// 実測では、trigger と絞り込みの合成で候補 57 node（287 対）が 15 node（59 対）になった。
 
 import { runGit } from './git.mjs'
 import { aimRelPath, readAimGraph } from './corpus.mjs'
@@ -36,10 +34,10 @@ const AIMS_DIR = 'docs/aims/'
 const FENCE = '`'.repeat(3)
 
 /**
- * Parse `--format=%H --name-only` into commits, newest first.
+ * `--format=%H --name-only` の出力を commit の列（新しい順）に parse する。
  *
- * Batch, not per file: the per-node form costs one process per node, and this
- * answers the same question for the whole corpus in one.
+ * ⚠ file 単位ではなく batch である: node ごとに呼ぶ形は node 数だけ process を起こす。
+ * これは同じ問いを corpus 全体について 1 回で答える。
  */
 export function parseCommitLog(out) {
   const commits = []
@@ -55,7 +53,7 @@ export function parseCommitLog(out) {
   return commits
 }
 
-/** Is this path a live aim record? `_guide/` and README are not records. */
+/** この path は生きた aim record か。`_guide/` と README は record ではない。 */
 export function isAimPath(p) {
   return (
     p.startsWith(AIMS_DIR) &&
@@ -68,15 +66,15 @@ export function isAimPath(p) {
 const slugOfPath = (p) => p.slice(AIMS_DIR.length, -3)
 
 /**
- * Did any line outside the frontmatter change in this commit?
+ * この commit で frontmatter の外の行が動いたか。
  *
- * `git-local-fact-source` licenses line-level diff explicitly. Only candidates
- * are asked, never the whole corpus — the batch passes have already narrowed 77
- * to a handful, which is what makes a per-node call affordable.
+ * 行レベルの diff は事実の出所として明示的に許されている。⚠ 問うのは候補だけで、
+ * corpus 全体には決して問わない —— batch pass が既に 77 を数個まで絞っており、
+ * それが node ごとの呼び出しを成立させている。
  *
- * ⚠ What this can honestly report is whether body LINES moved, not whether the
- * body was brought back to the purpose. A one-line re-parent note moves a line
- * and realigns nothing. The grading belongs to the agent; this states the fact.
+ * ⚠ **ここが正直に報告できるのは body の*行*が動いたかであって、body が目的へ引き戻
+ * されたかではない。** 1 行の re-parent メモは行を動かすが、何も整合させない。採点は
+ * エージェントの仕事であり、ここは事実を述べるだけである。
  */
 export async function bodyMovedIn(repoRoot, sha, slug) {
   const out = await runGit(repoRoot, ['show', '--format=', '-U0', sha, '--', aimRelPath(slug)])
@@ -91,23 +89,21 @@ export async function bodyMovedIn(repoRoot, sha, slug) {
 }
 
 /**
- * Gather both kinds of candidate: two batch passes over git, then one call per
- * intra candidate.
+ * 2 種類の候補を集める: git への batch pass 2 回、そのあと intra 候補 1 件につき 1 回。
  *
- * Every git failure collapses to `null`, and a caller must read that as "no
- * facts", never as "no drift" — the contract `git.mjs` states, and the only
- * asymmetry this layer is granted.
+ * ⚠ **git の失敗はすべて `null` に潰れる。呼び出し側はこれを「事実が無い」と読まねば
+ * ならず、「drift が無い」と読んではならない** —— `git.mjs` が述べている契約であり、
+ * この層に許された唯一の非対称である。
  */
 export async function gatherDrift(repoRoot) {
   const graph = await readAimGraph(repoRoot)
   if (graph === null) return null
 
   const anyOut = await runGit(repoRoot, ['log', '--format=%H', '--name-only', '--', AIMS_DIR])
-  // --diff-filter=AM, with M derived from it by excluding each node's birth.
-  // `-G` on the anchor alone does NOT separate an anchor being changed from one
-  // appearing: creating a file adds a line that matches, so every node still
-  // sitting as it was born would fire. Measured on this corpus: 44 candidates
-  // of 77 before this, 3 after.
+  // --diff-filter=AM を取り、そこから各 node の誕生を除くことで M を導く。
+  // ⚠ anchor に対する `-G` だけでは、anchor が*変更された*ことと*出現した*ことを分離
+  // できない: file の作成は一致する行を足すので、誕生したままの node が全部発火する。
+  // 実測: これを入れる前は 77 中 44 候補、入れた後は 3 候補。
   const ancOut = await runGit(repoRoot, [
     'log', '--format=%H', '--name-only', '--diff-filter=AM', '-G', '^aim:', '--', AIMS_DIR,
   ])
@@ -119,9 +115,9 @@ export async function gatherDrift(repoRoot) {
   const order = new Map()
   anyLog.forEach((c, i) => order.set(c.sha, i))
 
-  // Intersect git with the CURRENT corpus. History carries paths the corpus no
-  // longer has — renames and deletions — and counting them reports on ghosts:
-  // 103 nodes "with anchor history" against the 77 that exist.
+  // git を*現在の* corpus と交差させる。⚠ 履歴は corpus がもう持たない path を運ぶ
+  // ——  rename と削除 —— のでそれを数えると幽霊を報告することになる: 実在 77 に対し
+  // 「anchor 履歴を持つ node」が 103 になった。
   const touchedIn = new Map()
   for (const c of anyLog) {
     const slugs = c.files.filter(isAimPath).map(slugOfPath).filter((s) => live.has(s))
@@ -144,7 +140,7 @@ export async function gatherDrift(repoRoot) {
       for (const f of c.files) {
         if (!isAimPath(f)) continue
         const s = slugOfPath(f)
-        if (live.has(s)) m.set(s, c.sha) // newest-first, so the last write is the oldest commit
+        if (live.has(s)) m.set(s, c.sha) // 新しい順ゆえ、最後の書き込みが最古の commit
       }
     }
     return m
@@ -159,12 +155,12 @@ export async function gatherDrift(repoRoot) {
     const anchor = lastAnchorTouch.get(slug)
     if (!anchor) continue
 
-    // intra: a MODIFIED anchor (not the birth commit) with nothing since.
+    // intra: anchor が*変更*され（誕生 commit ではなく）、以後何も無いもの。
     if (anchor !== birth.get(slug) && lastTouch.get(slug) === anchor) {
       intra.push({ slug, commit: anchor, bodyMoved: await bodyMovedIn(repoRoot, anchor, slug) })
     }
 
-    // inter: neighbours strictly older than the anchor touch — no chance yet.
+    // inter: anchor が触られた時点より厳密に古い隣接 —— まだ機会を得ていないもの。
     const anchorOrder = order.get(anchor)
     const co = touchedIn.get(anchor) ?? new Set()
     const stale = graph.neighbours(slug).filter((n) => {
@@ -182,7 +178,7 @@ const short = (sha) => sha.slice(0, 8)
 export function renderIntraFence(items) {
   const lines = [FENCE + INTRA_FENCE_TAG, '# fields: slug | anchor_commit | body_moved']
   if (items.length === 0) {
-    lines.push('# none — no record has had its anchor modified and been left untouched since')
+    lines.push('# none — anchor が変更され、以後そのまま放置された record は無い')
   } else {
     for (const it of items) {
       const moved = it.bodyMoved === null ? 'unknown' : String(it.bodyMoved)
@@ -199,7 +195,7 @@ export function renderInterFence(items) {
     '# fields: slug | anchor_commit | unreconciled_neighbours (comma-separated)',
   ]
   if (items.length === 0) {
-    lines.push('# none — every neighbour of a changed anchor has moved since')
+    lines.push('# none — 変更された anchor の隣接は、すべてその後に動いている')
   } else {
     for (const it of items) {
       lines.push(`${it.slug} | ${short(it.commit)} | ${it.stale.join(',')}`)

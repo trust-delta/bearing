@@ -1,37 +1,33 @@
-// The baton — the previous session's chosen hand-over.
+// baton —— 直前のセッションが**選んで**渡した引き継ぎ。
 //
-// Derived from:
+// 導出元の前提:
 //
-//   conversation-handoff   エージェントのネイティブなコンテキスト圧縮やリセット機能
-//                          ではなく、セッションを跨ぐコンテキスト伝達のために固有の
-//                          会話引き継ぎ機能を備える
-//   operator-single-producer  人間が1度に対話するエージェントは常に単一である
-//   handoff-low-cost       早期の会話引き継ぎを安く行えるようにする
+//   引き継ぎの主体   エージェントのネイティブな圧縮・リセットではなく、セッションを跨ぐ
+//                    context 伝達のために固有の会話引き継ぎ機構を備える
+//   対話の単一性     人間が 1 度に対話するエージェントは常に単一である
+//   早期化のための安さ  区切りの良いところで早めに引き継げるよう、コストを低く保つ
 //
-// Placement is `.handoff/active.md`, cwd-relative, machine-local. That is the
-// canon in `_guide/handoff.md`, and it is a CONSEQUENCE of the purpose, not an
-// accepted limitation: what a baton protects is the continuity of ONE
-// conversation between the operator and one session, and a session on another
-// machine is simply a different conversation.
+// 置き場は `.handoff/active.md`、cwd 相対、machine-local。これは `_guide/handoff.md` の
+// 正本であり、⚠ **制約の受容ではなく目的の帰結である**: baton が守っているのは
+// **operator と 1 つのセッションの間にある対話の継続**であって、別マシンの別セッションは
+// そもそも別の対話だからである。
 //
-// ⚠ **The reader and the writer must agree on where the baton lives.** The
-// `handoff-r` / `handoff-w` skills write to the canonical path, so this reader
-// reads it. A baton written through this plugin's skill that its own hook
-// cannot see is worse than no baton: the ritual reports success and the next
-// session starts blind.
+// ⚠ **読む側と書く側は baton の在り処について一致していなければならない。**
+// `handoff-r` / `handoff-w` skill は正本の path へ書き、この reader はそこを読む。
+// **この plugin の skill で書かれた baton を、その plugin 自身の hook が見つけられない
+// 状態は、baton が無いことより悪い**: 儀式は成功を報告し、次のセッションは盲目で始まる。
 //
-// ⚠ **This reader does not stamp `read-at`.** That is step 3 of the canon's
-// reading procedure, and steps 4-6 come after it — surfacing unpushed aims,
-// reading the pointers, reporting where things stand. A hook that stamped would
-// be claiming a procedure it cannot carry out, and a baton marked read by a
-// session that then died would be read by nobody. The hook surfaces; the agent
-// executes and stamps.
+// ⚠ **この reader は `read-at` を刻まない。** 刻印は正本の読む手順の 3 であり、その後に
+// 4〜6（未 push aim の surface・pointers の読み込み・現在地の報告）が続く。刻む hook は
+// **自分が遂行できない手順を遂行したと主張すること**になり、しかも「読まれた」と印の付いた
+// baton を残したままセッションが死ねば、その baton は誰にも読まれない。
+// hook は surface する。刻印と遂行はエージェントが行う。
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
 /**
- * Read the unit's baton, if one is present.
+ * unit の baton を、在れば読む。
  *
  * @param {string} unitRoot
  * @returns {Promise<{path: string, text: string, composedAt: string|null, readAt: string|null, task: string|null}|null>}
@@ -42,7 +38,7 @@ export async function readBaton(unitRoot) {
   try {
     text = await readFile(file, 'utf8')
   } catch {
-    // Absent is the structurally normal state — a fresh start, not a fault.
+    // 不在は構造的に正常な状態である —— fresh start であって、故障ではない。
     return null
   }
   if (text.trim() === '') return null

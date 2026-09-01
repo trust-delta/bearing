@@ -19,4 +19,4 @@ node "$CLAUDE_PLUGIN_ROOT"/bin/handoff.mjs write < <あなたが著した baton>
 
 この file は carrier であって手順ではない。ここに手順を複製しない —— 正本が動けば追従する。
 
-⚠ **この file は生成物である**（`scripts/gen-carriers.sh`）。手で編集しても次の生成で消える —— 実体は `docs/aims/_guide/` にある。
+⚠ **この file は生成物である**（`gen/claude-plugin.sh`）。手で編集しても次の生成で消える —— 実体は `docs/aims/_guide/` にある。

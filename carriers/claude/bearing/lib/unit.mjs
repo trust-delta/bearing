@@ -1,46 +1,44 @@
-// The unit — the set of repos one session is about.
+// unit —— 1 つのセッションが対象とする repo の集合。
 //
-// Derived from the `aim:` statements, not ported:
+// 移植ではなく、目的の文から導出している:
 //
-//   producer-cwd        Producerエージェントが立ち上がったcwdをプロジェクトとする
-//   cwd-git             cwd自身を含めて下階層に向かってgitを探索し、各枝で初めて
-//                       現れたものをプロジェクト内で管理するリポジトリとする
-//   multi-repo-project  プロジェクトは複数のリポジトリから構成される場合もある
+//   cwd が project   エージェントが立ち上がった cwd を project とする
+//   下方向の探索     cwd 自身を含めて下階層へ git を探索し、各枝で最初に現れたものを
+//                    project 内で管理する repository とする
+//   複数 repo        project は複数の repository から構成される場合もある
 //
-// Three things fall out of those three sentences and nothing else does:
+// この 3 文から 3 つが従い、それ以外は何も従わない:
 //
-//   1. The walk starts at cwd and goes DOWN. It never climbs. A session opened
-//      inside one member repo is a session about that repo alone — that is the
-//      cwd defining the project, not a mistake to correct by finding the
-//      wrapper above.
-//   2. "各枝で初めて現れたもの" makes the walk prune on hit. A repo's own
-//      submodules and vendored checkouts are inside it, so they are its
-//      business, not the unit's.
-//   3. Plural is normal, so nothing here treats a second repo as an error.
+//   1. **walk は cwd から始まり、下へ行く。決して上らない。** ある member repo の中で
+//      開かれたセッションは、その repo だけについてのセッションである —— それは cwd が
+//      project を定義しているのであって、上の wrapper を見つけて訂正すべき誤りではない。
+//   2. 「各枝で最初に現れたもの」が、**当たった時点で walk を刈る**ことを課す。repo 自身の
+//      submodule や vendor された checkout はその repo の中に在る ∴ それらはその repo の
+//      問題であって、unit の問題ではない。
+//   3. 複数は正常である ∴ ここでは 2 つ目の repo を error として扱わない。
 //
-// ⚠ The caps below are NOT derived — no aim statement names a depth or a count.
-// They exist because this runs in a SessionStart hook with a wall-clock budget,
-// and an unbounded walk of an arbitrary cwd (a home directory, `/`) would hang
-// the session it is supposed to inform. They are stated as what they are:
-// a refusal to hang, not a claim about how projects are shaped. When a cap
-// bites, the fact is REPORTED rather than silently applied — a truncated unit
-// that looks complete is the "bad sensor is worse than no sensor" failure
-// `drift-git` names.
+// ⚠ **下記の上限は導出されたものではない** —— 深さや個数を名指す目的の文は存在しない。
+// これらが在るのは、これが実時間の予算を持つ SessionStart hook の中で走るからであり、
+// 任意の cwd（home directory、`/`）を無制限に walk すれば、情報を与えるべき当のセッションを
+// 吊らせるからである。∴ **これらは在るがままに述べる: 吊らないという拒否であって、project
+// の形についての主張ではない。** 上限が噛んだときは、黙って適用せず**事実として報告する**
+// —— 完全に見える切り詰められた unit は、「悪いセンサーはセンサーが無いことに劣る」という
+// 失敗そのものである。
 
 import { readdir, stat } from 'node:fs/promises'
 import path from 'node:path'
 
-/** How deep below cwd a repo may be found. Not derived — a hang refusal. */
+/** cwd の下、どこまで深く repo を探しうるか。導出ではなく、吊らないための拒否。 */
 export const MAX_DEPTH = 4
-/** How many repos a unit may hold. Not derived — a hang refusal. */
+/** 1 つの unit が持ちうる repo の数。導出ではなく、吊らないための拒否。 */
 export const MAX_REPOS = 12
 
 /**
- * Directory names never worth descending into.
+ * 決して降りる価値のない directory 名。
  *
- * Every one of these is a place where a `.git` would belong to something other
- * than this project — a dependency's vendored checkout, a build artifact, a
- * worktree's own bookkeeping. `node_modules` alone can hold hundreds.
+ * どれも、そこに `.git` が在ればそれはこの project 以外の何かに属する場所である ——
+ * 依存の vendor された checkout、build 生成物、worktree 自身の帳簿。`node_modules`
+ * 1 つで数百を抱えうる。
  */
 const SKIP = new Set([
   'node_modules', 'target', 'dist', 'build', 'out', 'vendor',
@@ -56,7 +54,7 @@ async function isDir(p) {
 }
 
 /**
- * Resolve the unit rooted at `cwd`.
+ * `cwd` を root とする unit を解決する。
  *
  * @param {string} cwd
  * @returns {Promise<{root: string, name: string, repos: {root: string, label: string, primary: boolean}[], truncated: null|'depth'|'count'}>}
@@ -66,10 +64,9 @@ export async function resolveUnit(cwd) {
   const found = []
   let truncated = null
 
-  // Breadth-first, so a shallow repo is never lost to a deep branch that filled
-  // the cap first. Depth order is the only order the aim statements imply
-  // ("下階層に向かって") — within a level the sort is alphabetical for
-  // determinism, which no statement demands but every reader does.
+  // 幅優先である ∴ 浅い repo が、先に上限を埋めた深い枝のせいで失われることが無い。
+  // 深さ順は目的の文が含意する唯一の順序である（「下階層に向かって」）—— 同一 level 内の
+  // 並びは決定性のための辞書順で、これはどの文も要求していないが、読み手は全員要求する。
   let level = [root]
   for (let depth = 0; depth <= MAX_DEPTH && level.length > 0; depth++) {
     const next = []
@@ -79,7 +76,7 @@ export async function resolveUnit(cwd) {
         break
       }
       if (await isDir(path.join(dir, '.git'))) {
-        // Hit. Prune: whatever is below belongs to THIS repo.
+        // 当たり。刈る: この下に在るものは何であれ*この* repo に属する。
         found.push(dir)
         continue
       }
@@ -87,7 +84,7 @@ export async function resolveUnit(cwd) {
       try {
         entries = await readdir(dir, { withFileTypes: true })
       } catch {
-        continue // Unreadable is not a repo and not an error worth stopping for.
+        continue // 読めないものは repo ではないし、止まるに値する error でもない。
       }
       for (const e of entries) {
         if (!e.isDirectory()) continue
@@ -103,11 +100,11 @@ export async function resolveUnit(cwd) {
     level = next
   }
 
-  // Primary: the repo the session is most plausibly *about*. cwd itself wins —
-  // it is what `producer-cwd` points at. Otherwise the one whose directory name
-  // matches the unit's, which is the shape a wrapper takes when it is named for
-  // the thing it wraps. Otherwise the first found. This is a display ordering,
-  // never a filter: every repo carries facts and every repo's facts are emitted.
+  // primary: そのセッションが最も尤もらしく*それについて*である repo。cwd 自身が勝つ ——
+  // 「cwd が project」が指しているのはそれである。次点は directory 名が unit 名と一致する
+  // もので、これは wrapper が包む対象の名を名乗るときに取る形である。それも無ければ最初に
+  // 見つかったもの。⚠ **これは表示順であって filter ではない**: どの repo も事実を運び、
+  // どの repo の事実も出力される。
   const name = path.basename(root)
   const primaryIdx = found.indexOf(root) !== -1
     ? found.indexOf(root)
@@ -118,7 +115,7 @@ export async function resolveUnit(cwd) {
     label: path.basename(r),
     primary: i === primaryIdx,
   }))
-  // Primary first; the rest keep discovery order.
+  // primary を先頭に。残りは発見順を保つ。
   repos.sort((a, b) => (a.primary === b.primary ? 0 : a.primary ? -1 : 1))
 
   return { root, name, repos, truncated }

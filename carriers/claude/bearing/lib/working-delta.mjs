@@ -1,18 +1,15 @@
-// The `bearing-working-delta v1` fence — the working-tree presence layer.
+// `bearing-working-delta v1` fence —— working tree の presence 層。
 //
-// What this layer states: working-tree changes are one of the two things a
-// cheap mechanical sensor can see without judging anything. It reports presence
-// and nothing else.
+// この層が述べること: working tree の変更は、安い機械センサーが何も判定せずに見られる
+// 2 つのうちの 1 つである。**presence を報告し、それ以外は何もしない。**
 //
-// The two notes below marked "kept for the comparison"
-// below have therefore lost their reason and are now open decisions, flagged
-// where they sit rather than silently acted on — changing what a fence says is
-// a change to the contract, not a cleanup.
+// ⚠ 下に「Open decision」と印を付けた箇所が 2 つある。どちらも、直せば **fence が何を
+// 述べるかが変わる** —— それは contract の変更であって cleanup ではない ∴ 黙って手を
+// 入れず、その場に旗を立てたまま残してある。判断は operator のものである。
 //
-// PRESENCE only. Nothing here orders anything: a working tree has no commit
-// timestamps, and emitting one would manufacture the false order judgment the
-// design forbids. On commit a node's fact vanishes from this layer and the
-// committed layer's real order judgment takes over.
+// ⚠ **presence のみ。ここは何の順序も付けない**: working tree には commit の timestamp が
+// 無く、順序を出せばこの設計が禁じている偽の順序判断を製造することになる。commit された
+// 瞬間に node の事実はこの層から消え、commit 側の層が持つ本物の順序判断が引き継ぐ。
 
 import { runGit } from './git.mjs'
 import { aimRelPath } from './corpus.mjs'
@@ -20,20 +17,17 @@ import { aimRelPath } from './corpus.mjs'
 export const WORKING_DELTA_FENCE_TAG = 'bearing-working-delta v1'
 
 /**
- * Parse `git status --porcelain` output into the set of dirty repo-relative
- * paths.
+ * `git status --porcelain` の出力を、dirty な repo 相対 path の集合に parse する。
  *
- * Each line is `XY <path>`, or `XY <old> -> <new>` for a rename — the
- * working-tree side (the last segment) is the one that matters. The slice at 3
- * drops the two status columns and the space after them.
+ * 各行は `XY <path>`、rename なら `XY <old> -> <new>` —— 効くのは working tree 側
+ * （最後の区間）である。3 での slice は status の 2 桁とその後の空白を落としている。
  *
- * ⚠ **Open decision.** git quotes paths containing spaces or non-ASCII bytes
- * (`"docs/aims/a b.md"`), and this does not unquote them, so such a node reads
- * as clean rather than as wrong — a silent false negative. Aim slugs are
- * lowercase kebab-case by the guide, so the case does not arise in this corpus.
- * What keeps it standing is not caution but scope: fixing it changes what the
- * fence says, which is an operator-visible contract change and not a silent
- * cleanup.
+ * ⚠ **Open decision.** git は空白や非 ASCII を含む path を quote する
+ * （`"docs/aims/a b.md"`）が、ここは unquote しない ∴ **そういう node は「異常」ではなく
+ * 「clean」と読まれる —— 黙った false negative である。** guide により aim の slug は
+ * lowercase kebab-case なので、この corpus では該当が生じない。これを残しているのは
+ * 慎重さではなく範囲の問題である: 直すと fence の述べることが変わり、それは operator に
+ * 見える contract の変更であって、黙って行う cleanup ではない。
  *
  * @param {string} out
  * @returns {Set<string>}
@@ -41,7 +35,7 @@ export const WORKING_DELTA_FENCE_TAG = 'bearing-working-delta v1'
 export function parsePorcelainPaths(out) {
   const dirty = new Set()
   for (const line of out.split('\n')) {
-    // A line shorter than the status prefix carries no path.
+    // status の prefix より短い行は path を運んでいない。
     if (line.length < 3) continue
     const rest = line.slice(3).trim()
     const path = rest.split(' -> ').pop().trim()
@@ -51,11 +45,10 @@ export function parsePorcelainPaths(out) {
 }
 
 /**
- * Does the working tree (staged + unstaged, vs HEAD) change this path's `aim:`
- * frontmatter line?
+ * working tree（staged ＋ unstaged、HEAD との比較）は、この path の `aim:` 行を変えるか。
  *
- * The `+++`/`---` file headers cannot false-positive: stripping their first
- * byte leaves `++ …` / `-- …`, never `aim:`.
+ * `+++` / `---` の file header が false positive を起こすことはない: 先頭 1 byte を剥ぐと
+ * `++ …` / `-- …` が残り、`aim:` にはならない。
  *
  * @param {string} repoRoot
  * @param {string} relPath
@@ -71,33 +64,31 @@ export async function workingAnchorChanged(repoRoot, relPath) {
 }
 
 /**
- * Every repo-relative path under `docs/aims/` that any commit has ever touched.
+ * `docs/aims/` 配下で、いずれかの commit が一度でも触った repo 相対 path の全体。
  *
- * Asking this per node, as `git log -1 -- <path>`, costs one process spawn per
- * aim node — 76 of them on a corpus that size, ~11s on Windows, well past the
- * hook's 20s timeout. One `git log` over the directory answers the same
- * question for every node at once. ⚠ Neither form follows renames (no
- * `--follow`): a node's history begins at its current path either way.
+ * これを node ごとに `git log -1 -- <path>` で問う形は、aim node の数だけ process を
+ * 起こす —— その規模の corpus で 76 回、Windows で約 11 秒、hook の 20 秒 timeout に
+ * 十分近い。directory に対する 1 回の `git log` が、全 node について同じ問いに答える。
+ * ⚠ どちらの形も rename を追わない（`--follow` 無し）: node の履歴はいずれにせよ現在の
+ * path から始まる。
  *
- * ⚠ **A `null` from git is two different facts wearing one mask**, and telling
- * them apart is the whole job of the failure branch below. `git log` exits
- * non-zero in a repo with no commits yet — there, every node legitimately IS
- * untracked. It returns `null` just the same on timeout or spawn failure,
- * where we know NOTHING. Collapsing the second into the first published
- * `untracked: true` for all 77 nodes of a clean corpus (observed 2026-09-01)
- * — the positive form of the lie `git.mjs` forbids, whose contract only ever
- * spelled out the negative one ("never read null as no drift").
+ * ⚠ **git が返す `null` は、1 つの仮面を被った 2 つの異なる事実である。** その 2 つを
+ * 区別することが、下の失敗分岐の仕事の全てである。commit が 1 つも無い repo では
+ * `git log` が非 0 で終了する —— そこでは全 node が正当に untracked である。だが timeout
+ * や spawn 失敗でも同じ `null` が返り、そのとき我々は**何も知らない**。後者を前者に潰した
+ * 結果、clean な corpus の 77 node 全部が `untracked: true` として出荷された
+ * （2026-09-01 に観測）。⚠ **これは `git.mjs` が禁じる嘘の肯定形であり、あの契約が明文化
+ * していたのは否定形（「null を drift 無しと読むな」）だけだった。**
  *
- * ⚠ **Open decision.** This still walks the whole history, which is what
- * remains of the cost. `git ls-tree -r HEAD --name-only docs/aims/` would read
- * one tree instead and be far faster, but it answers a subtly different
- * question — "is this path in HEAD?" rather than "did any commit touch it?" —
- * and the two diverge for a node deleted and then recreated without a commit:
- * one calls it committed-and-dirty, the other untracked. Which question the
- * fence should ask is an operator call, not a silent optimisation.
+ * ⚠ **Open decision.** ここはまだ履歴全体を歩いており、それが残っているコストである。
+ * `git ls-tree -r HEAD --name-only docs/aims/` なら tree を 1 つ読むだけで遥かに速いが、
+ * **微妙に違う問いに答える** ——「この path は HEAD に在るか」であって「いずれかの commit が
+ * 触ったか」ではない。両者は「削除され、commit されないまま再作成された node」で食い違う:
+ * 一方はそれを committed かつ dirty と呼び、他方は untracked と呼ぶ。**fence がどちらの
+ * 問いを立てるべきかは operator の判断であって、黙って行う最適化ではない。**
  *
  * @param {string} repoRoot
- * @returns {Promise<Set<string>|null>} `null` when git could not be read
+ * @returns {Promise<Set<string>|null>} git を読めなかったときは `null`
  */
 async function committedAimPaths(repoRoot) {
   const out = await runGit(repoRoot, ['log', '--format=', '--name-only', '--', 'docs/aims/'])
@@ -109,49 +100,45 @@ async function committedAimPaths(repoRoot) {
         .filter(Boolean),
     )
   }
-  // The failure branch. Measured on Windows 2026-09-01: this call is 0.25s at
-  // rest but 10-29s while an antivirus scanner works through a just-pulled
-  // tree, against a 5s `GIT_TIMEOUT_MS` — so it is not hypothetical, and it
-  // is the most expensive git call the plugin makes.
+  // 失敗分岐。⚠ Windows で 2026-09-01 に実測: この呼び出しは平時 0.25 秒だが、pull 直後の
+  // tree をウイルス対策がスキャンしている間は 10〜29 秒かかり、`GIT_TIMEOUT_MS` は 5 秒
+  // である ∴ **これは仮定の話ではなく、plugin が行う git 呼び出しの中で最も高価である。**
   //
-  // Both probes run ONLY here, on a path the happy case never reaches, so the
-  // normal run pays nothing for them.
+  // 2 つの probe はここでのみ走る（正常系が決して到達しない path）∴ 通常の実行はこれらに
+  // 何のコストも払わない。
   const head = await runGit(repoRoot, ['rev-parse', '--verify', '--quiet', 'HEAD'])
-  if (head !== null) return null // commits exist, so the log failed for real
+  if (head !== null) return null // commit は在る ∴ log は本当に失敗した
   const gitDir = await runGit(repoRoot, ['rev-parse', '--git-dir'])
-  if (gitDir === null) return null // git itself cannot be read
-  return new Set() // git answers and HEAD is absent: genuinely no commits yet
+  if (gitDir === null) return null // git 自体が読めない
+  return new Set() // git は答え、HEAD が無い: 本当にまだ commit が無い
 }
 
 /**
- * Gather the working-tree presence facts for one repo's aim nodes.
+ * 1 つの repo の aim node について、working tree の presence 事実を集める。
  *
- * The returned array is sparse and slug-sorted: only nodes with at least one
- * fact set appear. `null` — distinct from `[]` — means git could not be
- * read, and the fence says so in those words rather than rendering `# none`.
- * ⚠ The two used to collapse, and this docstring admitted it as "the one place
- * this layer breaks its own law", trusting the composer to state the
- * distinction above. That trust was misplaced twice over: the composer never
- * did, and the failure did not fall silent — it published every node as
- * `untracked`. **A layer that cannot observe must say so itself**; nothing
- * above it can.
+ * 返る配列は疎で slug 順である: 少なくとも 1 つの事実が立っている node だけが現れる。
+ * `null` は —— `[]` とは別物として —— git が読めなかったことを意味し、fence は `# none` を
+ * 描画せずその旨をその言葉で述べる。⚠ **かつてこの 2 つは潰れており**、この docstring は
+ * それを「この層が自らの法を破る唯一の場所」と認めた上で、区別を述べる仕事を composer に
+ * 委ねていた。**その信頼は二重に誤っていた**: composer は一度も述べなかったし、失敗は沈黙
+ * すらしなかった —— 全 node を `untracked` として出荷した。
+ * ⚠ **観測できない層は、自分でそう言わねばならない。** その上の誰にも代われない。
  *
  * @param {string} repoRoot
- * @param {string[]} slugs slug-sorted, as `readAimSlugs` returns them
- * @returns {Promise<{slug: string, uncommitted: boolean, uncommittedAnchorChange: boolean, untracked: boolean}[]|null>} `null` when git could not be read
+ * @param {string[]} slugs `readAimSlugs` が返すとおりの slug 順
+ * @returns {Promise<{slug: string, uncommitted: boolean, uncommittedAnchorChange: boolean, untracked: boolean}[]|null>} git を読めなかったときは `null`
  */
 export async function gatherWorkingDelta(repoRoot, slugs) {
-  // No corpus, no facts — and no git either. Running the porcelain pass before
-  // finding nothing to iterate is expensive in a repo with a large history: a
-  // member repo that keeps no aims was costing ~4.7s of `git log` to say
-  // `# none`. Skipping is
-  // observationally identical.
+  // corpus が無ければ事実も無い —— git も呼ばない。反復する対象が無いと分かる前に
+  // porcelain pass を走らせるのは、履歴の大きい repo では高価である: aim を持たない
+  // member repo が `# none` と言うためだけに約 4.7 秒の `git log` を払っていた。
+  // 飛ばしても観測上は同一である。
   if (slugs.length === 0) return []
 
-  // One porcelain pass for the whole directory; per-node facts derive from it.
+  // directory 全体に対する porcelain pass を 1 回。node ごとの事実はそこから導く。
   const status = await runGit(repoRoot, ['status', '--porcelain', '--', 'docs/aims/'])
-  // `git status` succeeds in a repo with no commits, so its `null` is
-  // unambiguous: git could not be read.
+  // `git status` は commit の無い repo でも成功する ∴ その `null` は曖昧でない:
+  // git が読めなかったということである。
   if (status === null) return null
   const dirty = parsePorcelainPaths(status)
   const committedPaths = await committedAimPaths(repoRoot)
@@ -160,9 +147,9 @@ export async function gatherWorkingDelta(repoRoot, slugs) {
   const items = []
   for (const slug of slugs) {
     const rel = aimRelPath(slug)
-    // `committed` is the same signal the drift layer reads: has any commit ever
-    // touched this path? A staged-but-never-committed node that porcelain
-    // reports as `A` rather than `??` is caught here, not by the porcelain pass.
+    // `committed` は drift 層が読むのと同じ信号である: いずれかの commit がこの path を
+    // 一度でも触ったか。stage されただけで一度も commit されていない node —— porcelain が
+    // `??` ではなく `A` として報告するもの —— はここで捕まる。porcelain pass ではない。
     const committed = committedPaths.has(rel)
     const untracked = !committed
     const uncommitted = committed && dirty.has(rel)
@@ -171,18 +158,17 @@ export async function gatherWorkingDelta(repoRoot, slugs) {
       items.push({ slug, uncommitted, uncommittedAnchorChange, untracked })
     }
   }
-  // Slug order: presence facts carry no time dimension to "sort recent first"
-  // by — inventing one would be the false order judgment the design forbids.
+  // slug 順である: presence の事実は「新しい順」に並べるための時間軸を持たない ——
+  // それを発明することは、この設計が禁じる偽の順序判断そのものになる。
   items.sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0))
   return items
 }
 
 /**
- * Render the machine-parseable fence.
+ * 機械可読な fence を描画する。
  *
- * Emitted unconditionally, `# none` and all: an empty block means "no records",
- * never "computed by a binary that predates this layer". Fixed field order,
- * ` | ` delimited, one record per line.
+ * ⚠ **`# none` も含め、無条件に出す**: 空の block は「record が無い」を意味するので
+ * あって、「計算されなかった」を意味しない。field 順は固定、区切りは ` | `、1 行 1 record。
  *
  * @param {{slug: string, uncommitted: boolean, uncommittedAnchorChange: boolean, untracked: boolean}[]} items
  * @returns {string}
@@ -192,8 +178,8 @@ export function renderWorkingDeltaFence(items) {
     return (
       [
         '```' + WORKING_DELTA_FENCE_TAG,
-        '# unavailable — git could not be read for this repo.',
-        '# ⚠ Absent, NOT clean: do not read this as "no working-tree changes".',
+        '# unavailable — この repo の git を読めなかった。',
+        '# ⚠ clean ではなく「不在」である: これを「working tree に変更が無い」と読まないこと。',
         '```',
         '',
       ].join('\n') + '\n'
@@ -204,7 +190,7 @@ export function renderWorkingDeltaFence(items) {
     '# fields: slug | uncommitted | uncommitted_anchor_change | untracked',
   ]
   if (items.length === 0) {
-    lines.push('# none — no uncommitted working-tree aim changes for this repo at compose time')
+    lines.push('# none — 構成時点で、この repo の working tree に未 commit の aim 変更は無い')
   } else {
     for (const it of items) {
       lines.push(

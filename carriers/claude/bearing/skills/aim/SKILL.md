@@ -1,6 +1,6 @@
 ---
 name: aim
-description: How to read, write and maintain the aim corpus (docs/aims/) — the purpose=means tree this project is driven by. Use whenever you are about to read, create or edit an aim node, when a boot-time aim-drift / unpushed / checkpoint-stale record names a slug, when asked about open todos or what a project is for, or when a repository has no aim corpus yet and one should be provisioned.
+description: aim corpus（docs/aims/）—— この project を駆動する purpose＝means の木 —— を読み・書き・保守する方法。aim node を読む／作る／編集する前、boot 時の drift / unpushed / checkpoint-stale の record が slug を名指したとき、open todo やこの project が何のためかを問われたとき、あるいは repository にまだ aim corpus が無く設置すべきときに使う。
 ---
 
 # aim
@@ -13,4 +13,4 @@ description: How to read, write and maintain the aim corpus (docs/aims/) — the
 
 常時効く不変（frontmatter は人間のもの・body はあなたのもの 等）は `frame.md` にあり、通常はセッション開始時に自動で注入されている（plugin の SessionStart hook、または vendor ファイルの import）。**ここには複製しない** —— 同じ規則が context に二度入ることになり、しかも複製した側が先に古くなる。
 
-⚠ **この file は生成物である**（`scripts/gen-carriers.sh`）。手で編集しても次の生成で消える —— 実体は `docs/aims/_guide/` にある。
+⚠ **この file は生成物である**（`gen/claude-plugin.sh`）。手で編集しても次の生成で消える —— 実体は `docs/aims/_guide/` にある。

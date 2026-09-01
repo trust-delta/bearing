@@ -1,15 +1,14 @@
-// Rendering the mid-session delta.
+// セッション途中の delta を描画する。
 //
-// Split from `bin/corpus-delta.mjs` for one reason: `bin/aim-facts.mjs` has to
-// agree with it. The composer seeds the session's baseline from facts it has
-// ALREADY gathered, and if the two sides computed "what would be said" by
-// different code they would drift apart silently — the boot baseline claiming
-// one thing and the first batch reporting a change that never happened.
+// `bin/corpus-delta.mjs` から分離してあるのは 1 つの理由による: `bin/aim-facts.mjs` が
+// これと一致していなければならない。composer は**既に**集めた事実からセッションの baseline
+// を播くので、⚠ **両者が「何が述べられるか」を別の code で計算すれば、黙って乖離する** ——
+// boot の baseline が一方を主張し、最初の batch が起きてもいない変化を報告することになる。
 //
-// ⚠ **Nothing here judges.** `aim-upkeep` puts the cheap machine layer at
-// *visibility*: the fences state what is, the agent inspects, the human
-// decides. The open-todo line says so in as many words, because a count that
-// arrives without that sentence invites the triage the régime withholds.
+// ⚠ **ここは何も判定しない。** 安い機械層が置かれているのは**可視化**の位置である:
+// fence が在るものを述べ、エージェントが検査し、人間が決める。open-todo の行がそれを
+// そのまま言葉にしているのは、⚠ **その一文を伴わずに届いた数が、体制が差し控えている
+// triage を招くからである。**
 
 import { renderWorkingDeltaFence } from './working-delta.mjs'
 
@@ -19,7 +18,7 @@ import { renderWorkingDeltaFence } from './working-delta.mjs'
  *   moved: {label: string, from: string, to: string, blocks?: string[]}[],
  *   hadBaseline: boolean,
  * }} args
- * @returns {string} '' when the unit carries no corpus at all
+ * @returns {string} unit が corpus を全く持たないときは ''
  */
 export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   if (!repos || repos.length === 0) return ''
@@ -30,11 +29,11 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   const unknown = []
   const anomalies = []
 
-  lines.push('# aim facts — the corpus moved since this session was given its facts', '')
+  lines.push('# aim facts —— このセッションが事実を渡されて以降、corpus が動いた', '')
   if (!hadBaseline) {
     lines.push(
-      '⚠ **No boot baseline was recorded for this session**, so this is not a diff —',
-      'it is the corpus as it stands now. Absent, not clean.',
+      '⚠ **このセッションには boot 時の baseline が記録されていない** ∴ これは差分ではなく、',
+      '現在の corpus そのものである。clean ではなく「不在」。',
       '',
     )
   }
@@ -48,9 +47,9 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
     const m = movedBy.get(r.label)
     if (m) {
       lines.push(
-        `⚠ **HEAD moved over \`docs/aims/\`**: \`${short(m.from)}\` → \`${short(m.to)}\`. ` +
-          'The history fences below are recomputed; the ones you were given at boot',
-        'are superseded, not merely older.',
+        `⚠ **\`docs/aims/\` の上で HEAD が動いた**: \`${short(m.from)}\` → \`${short(m.to)}\`。` +
+          '以下の履歴 fence は再計算されている。boot 時に渡されたものは、単に古いのではなく',
+        '**置き換えられている**。',
         '',
       )
     }
@@ -59,24 +58,24 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   }
 
   lines.push(
-    `**open-todo: ${openTodo}** — aim nodes whose \`# PROCESS\` carries at least one`,
-    '`[todo]`, excluding `state: dead` nodes. Surface this number; do not triage it,',
-    "rank it, or propose which to work — the pick is the operator's.",
+    `**open-todo: ${openTodo}** —— \`# PROCESS\` に \`[todo]\` を 1 つ以上持つ aim node の数`,
+    '（`state: dead` は除く）。**この数は surface せよ。triage も ranking も、どれをやるべきか',
+    'の提案もするな —— 拾うものを選ぶのは operator の act である。**',
     '',
   )
 
   if (unknown.length > 0) {
     lines.push(
-      `⚠ **${unknown.length} node(s) carry a \`# PROCESS\` heading with no readable mark**: ` +
+      `⚠ **${unknown.length} 個の node が、読める mark を 1 つも持たない \`# PROCESS\` 見出しを抱えている**: ` +
         unknown.join(', '),
-      'Reading that as zero would be a fabricated `[done]`.',
+      'これを 0 と読むことは、捏造された `[done]` である。',
       '',
     )
   }
   if (anomalies.length > 0) {
-    lines.push('⚠ **Notation anomalies** — marks this parser will not count:', '')
+    lines.push('⚠ **記法の anomaly** —— この parser が数えない mark:', '')
     for (const a of anomalies) {
-      lines.push(`- \`${a.repo}/${a.slug}\` line ${a.no} (${a.kind}): ${a.line.trim()}`)
+      lines.push(`- \`${a.repo}/${a.slug}\` ${a.no} 行目 (${a.kind}): ${a.line.trim()}`)
     }
     lines.push('')
   }

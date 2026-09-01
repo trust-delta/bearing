@@ -1,10 +1,10 @@
-// Tests for the SessionStart composer — the two rules it may never break.
+// SessionStart composer の test —— 決して破ってはならない 2 つの規則。
 //
-// This runs at the start of EVERY session in EVERY project, so the invariants
-// are not about output quality; they are about never obstructing a session and
-// never letting an absence read as a clean bill of health. Both are asserted
-// against the real script through a real process, because "exit 0" and "stdout
-// is the context" are facts about the process, not about the module.
+// これは**あらゆる** project の**あらゆる**セッションの開始時に走る ∴ 不変条件は出力の質に
+// ついてではない。**セッションを決して妨げないこと**と、**不在が健康証明として読まれるのを
+// 決して許さないこと**である。両方とも本物の process 越しに本物の script に対して assert する。
+// 「exit 0」と「stdout が context である」は module についてではなく process についての事実
+// だからである。
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const COMPOSER = path.join(HERE, '..', 'bin', 'aim-facts.mjs')
 
-/** Run the composer in `cwd`, returning stdout. Never throws on exit code. */
+/** `cwd` で composer を走らせ、stdout を返す。終了コードで throw することは決して無い。 */
 function compose(cwd, env = {}) {
   return execFileSync(process.execPath, [COMPOSER], {
     cwd,
@@ -45,8 +45,8 @@ async function corpusRepo(root, slugs) {
 }
 
 test('the frame is always injected — a session is never left un-framed', async () => {
-  // An un-framed agent has nothing stopping it from rewriting an `aim:` line,
-  // which is a VIOLATION of the ownership split, not a degradation of speed.
+  // ⚠ frame を与えられていないエージェントには、`aim:` 行を書き換えることを止めるものが
+  // 何も無い。それは**所有の分割の侵害**であって、速度の劣化ではない。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   const outEmpty = compose(root)
   assert.match(outEmpty, /# aim frame/)
@@ -57,7 +57,7 @@ test('the frame is always injected — a session is never left un-framed', async
 test('no git at all is reported as a NEW project, not as an error', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   const out = compose(root)
-  assert.match(out, /No git repository at or below this cwd/)
+  assert.match(out, /git repository が無い/)
   await rm(root, { recursive: true, force: true })
 })
 
@@ -65,9 +65,9 @@ test('git without a corpus is reported as an EXISTING project to attach to', asy
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   execFileSync('git', ['init', '-q', root])
   const out = compose(root)
-  assert.match(out, /Git is here but no .docs\/aims\/. is/)
-  // And provisioning is explicitly NOT something the session does unasked.
-  assert.match(out, /not yours to perform unasked/)
+  assert.match(out, /git は在るが .docs\/aims\/. が無い/)
+  // ⚠ そして設置は、セッションが頼まれずに行うことでは**明示的に**ない。
+  assert.match(out, /頼まれずにあなたが行うもの/)
   await rm(root, { recursive: true, force: true })
 })
 
@@ -83,8 +83,8 @@ test('a corpus yields the fences and the open-todo count', async () => {
   assert.match(out, /```bearing-unpushed v1/)
   assert.match(out, /```bearing-checkpoint-stale v1/)
   assert.match(out, /\*\*open-todo: 2\*\*/)
-  // The count is a fact, and the composer must say so rather than rank it.
-  assert.match(out, /the pick is the operator/)
+  // 数は事実であり、composer はそれに順位を付けるのではなく、事実としてそう述べねばならない。
+  assert.match(out, /拾うものを選ぶのは operator の act である/)
   await rm(dir, { recursive: true, force: true })
 })
 
@@ -94,8 +94,8 @@ test('an absent baton says so, and warns against reading silence as emptiness', 
   await mkdir(root, { recursive: true })
   await corpusRepo(root, ['alpha'])
   const out = compose(root)
-  assert.match(out, /No baton at .\.handoff\/active\.md./)
-  assert.match(out, /An empty baton is not an empty project/)
+  assert.match(out, /.\.handoff\/active\.md. に baton は無い/)
+  assert.match(out, /空の baton は空の project ではない/)
   await rm(dir, { recursive: true, force: true })
 })
 
@@ -109,8 +109,8 @@ test('a baton is surfaced in full, with the reading procedure left to the agent'
   await writeFile(file, baton)
   const out = compose(root)
   assert.match(out, /A THING WE SETTLED/)
-  assert.match(out, /has NOT stamped .read-at./)
-  // The hook must not have written to it.
+  assert.match(out, /は\*\*刻んでいない\*\*/)
+  // hook はそこへ書いていてはならない。
   const { readFile } = await import('node:fs/promises')
   assert.equal(await readFile(file, 'utf8'), baton)
   await rm(dir, { recursive: true, force: true })
@@ -127,16 +127,16 @@ test('a corpus deviating from its own notation is surfaced, not silently dropped
   )
   const out = compose(root)
   assert.match(out, /\*\*open-todo: 0\*\*/)
-  assert.match(out, /PROCESS notation anomal/)
-  assert.match(out, /counted NOWHERE/)
+  assert.match(out, /PROCESS 記法の anomaly/)
+  assert.match(out, /数えられていない/)
   await rm(dir, { recursive: true, force: true })
 })
 
 test('an unreadable corpus still exits 0 and still frames the session', async () => {
-  // Rule 1: nothing here may obstruct the session it exists to inform.
+  // 規則 1: ここにあるどれも、情報を与えるべき当のセッションを妨げてはならない。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
-  // A directory where a record is expected: `readFile` fails on it.
+  // record が在るはずの場所に directory がある: `readFile` はそこで失敗する。
   await mkdir(path.join(root, 'docs', 'aims', 'weird.md'), { recursive: true })
   const out = compose(root)
   assert.match(out, /# aim frame/)

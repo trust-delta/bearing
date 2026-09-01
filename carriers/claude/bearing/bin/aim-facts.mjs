@@ -1,36 +1,34 @@
 #!/usr/bin/env node
-// The plugin's SessionStart composer — what a session is handed.
+// この plugin の SessionStart composer —— セッションが手渡されるもの。
 //
-// ═══ What goes in, and why ══════════════════════════════════════════════════
+// ═══ 何が入り、なぜ入るのか ═══════════════════════════════════════════════════
 //
-// Each element answers one demand of the discipline. Nothing is here because it
-// happened to be cheap to emit:
+// 各要素は規律の要求 1 つに答えている。⚠ **たまたま出すのが安かったから在るものは 1 つも
+// 無い:**
 //
-//   the FRAME     the ownership split must reach the agent through the
-//                 strongest insertion available, or it is merely advice
-//   the BATON     context crosses a session boundary by being CHOSEN, never by
-//                 surviving truncation
-//   DRIFT fences  cheap machine detection makes the inspection surface
-//                 visible — it does not judge what is on it
-//   UNPUSHED      work already done but not yet reachable by the next person to
-//                 decide; a baton is chosen forward and under-reports it
-//   CHECKPOINT    a purpose can come apart from the code that implements it,
-//                 and that separation must be surfaceable
-//   OPEN-TODO     unimplemented means are the backlog: the count is stated and
-//                 the triage is not
-//   the UNIT      a project is not always one repo — resolve from cwd downward
-//   READINESS     no git means a new project; no corpus means a fresh attach
-//   GUIDE check   the canon must actually be present, or be reported absent
+//   FRAME        所有の分割は、利用可能な最も強い挿入経路でエージェントに届かねばならない。
+//                さもなくばそれは単なる助言である
+//   BATON        context がセッション境界を越えるのは**選ばれた**ときであって、切り詰めを
+//                生き延びたときではない
+//   DRIFT fence  安い機械検知が検査面を可視化する —— その上に何が在るかは判定しない
+//   UNPUSHED     既に done だが、次に判断する人にまだ届いていない作業。baton は forward に
+//                選ばれるゆえ、これを過少報告する
+//   CHECKPOINT   目的は、それを実装した code から剥離しうる。その剥離は surface できねば
+//                ならない
+//   OPEN-TODO    未実装の手段が backlog である: **数は述べ、triage はしない**
+//   UNIT         project は常に 1 repo とは限らない —— cwd から下方向に解決する
+//   READINESS    git が無いのは新規 project、corpus が無いのは新規の取り付け
+//   GUIDE 検査   canon は実際に在るか、さもなくば不在として報告されねばならない
 //
-// ═══ Two rules this file may never break ════════════════════════════════════
+// ═══ この file が決して破ってはならない 2 つの規則 ═══════════════════════════
 //
-// 1. **Exit 0, always.** This runs at the start of EVERY session in EVERY
-//    project. A broken corpus, an unreadable repo, a git that hangs — none of
-//    them may obstruct the session they exist to inform.
-// 2. **A fact we cannot observe is absent, never fabricated** — and absent must
-//    never render as clean. Every fence says which of the two it is saying.
+// 1. **常に exit 0。** これは**あらゆる** project の**あらゆる**セッションの開始時に走る。
+//    壊れた corpus・読めない repo・吊る git —— そのどれも、情報を与えるべき当のセッションを
+//    妨げてはならない。
+// 2. **観測できなかった事実は「不在」であって、決して捏造しない** —— そして**不在が clean と
+//    して描画されてはならない。** どの fence も、自分が 2 つのどちらを述べているかを言う。
 //
-// stdout IS the injected context. Nothing else may write to it.
+// ⚠ **stdout が注入される context そのものである。** 他の何もそこへ書いてはならない。
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -51,10 +49,10 @@ const PLUGIN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const out = []
 const say = (...lines) => out.push(...lines)
 
-/** The always-on discipline. Static text; it never needed a binary. */
+/** 常時効く規律。静的な text であり、binary を必要としたことは一度も無い。 */
 async function frame() {
-  // Bundled beside the `aim` skill by `scripts/gen-carriers.sh`, and CI checks
-  // the copy is in sync with `docs/aims/_guide/frame.md`.
+  // `gen/claude-plugin.sh` が `aim` skill の傍らに同梱する。その複製が
+  // `docs/aims/_guide/frame.md` と同期していることは CI が検査する。
   try {
     return await readFile(path.join(PLUGIN_ROOT, 'skills', 'aim', 'frame.md'), 'utf8')
   } catch {
@@ -62,7 +60,7 @@ async function frame() {
   }
 }
 
-/** Per-repo facts. Every failure degrades to a fence that says it failed. */
+/** repo ごとの事実。⚠ **どの失敗も、失敗したと述べる fence へ degrade する。** */
 async function repoFacts(repo) {
   const slugs = await readAimSlugs(repo.root)
   const head = (await runGit(repo.root, ['rev-parse', '--short', 'HEAD']))?.trim() ?? null
@@ -84,13 +82,13 @@ function renderRepo(r) {
   const role = r.primary ? ', primary' : ''
   say(`### ${r.label} (\`${r.root}\`${role}) · git HEAD ${r.head ?? 'unknown'}`, '')
   if (!r.corpus) {
-    say('*No `docs/aims/` in this repo — it has not adopted the corpus. That is a', 
-        'structurally normal state, not a fault.*', '')
+    say('*この repo に `docs/aims/` は無い —— corpus を採っていない。これは構造的に正常な',
+        '状態であって、欠陥ではない。*', '')
     return
   }
   if (r.drift === null) {
-    say('```bearing-drift-intra v1', '# unavailable — git could not be read for this repo.',
-        '# ⚠ Absent, NOT clean: do not read this as "no drift".', '```', '')
+    say('```bearing-drift-intra v1', '# unavailable — この repo の git を読めなかった。',
+        '# ⚠ clean ではなく「不在」である: これを「drift 無し」と読まないこと。', '```', '')
   } else {
     say(renderIntraFence(r.drift.intra).trimEnd(), '')
     say(renderInterFence(r.drift.inter).trimEnd(), '')
@@ -119,59 +117,58 @@ async function main() {
   )
   const baton = await readBatonSafe(unit.root)
 
-  say(`# aim facts — unit: ${unit.name} — composed ${new Date().toISOString()}`)
+  say(`# aim facts —— unit: ${unit.name} —— 構成時刻 ${new Date().toISOString()}`)
   say(
-    `> ${repos.length} repo(s), ${withCorpus.length} with a corpus · ` +
-      `baton: ${baton ? 'present' : 'none'}`,
+    `> repo ${repos.length} 個、うち corpus を持つもの ${withCorpus.length} 個 · ` +
+      `baton: ${baton ? 'あり' : 'なし'}`,
     '',
   )
 
-  // ── boot readiness ────────────────────────────────────────────────────────
-  // `boot-readiness-prompt` splits the two absences, because the act they ask
-  // for is different: no git is a new project, git without a corpus is an
-  // existing project this discipline has not been attached to yet.
+  // ── boot 時の readiness ───────────────────────────────────────────────────
+  // 2 つの不在を分けているのは、求められる act が違うからである: git が無いのは新規
+  // project、git が在って corpus が無いのは、この規律がまだ取り付けられていない既存
+  // project である。
   if (repos.length === 0) {
     say(
-      '⚠ **No git repository at or below this cwd.** Treat this as a NEW project:',
-      'if work begins here, the first aim node is created before the first means',
-      'is implemented (`aim-state-open`).',
+      '⚠ **この cwd 以下に git repository が無い。** これを**新規** project として扱うこと:',
+      'ここで作業が始まるなら、最初の手段が実装される前に最初の aim node が作られる。',
       '',
     )
   } else if (withCorpus.length === 0) {
     say(
-      '⚠ **Git is here but no `docs/aims/` is.** Treat this as an EXISTING project',
-      'that has not adopted the aim discipline yet. Adopting it is an operator act,',
-      'not yours to perform unasked — surface the option, do not provision silently.',
+      '⚠ **git は在るが `docs/aims/` が無い。** これを、aim の規律をまだ採っていない**既存**',
+      'project として扱うこと。⚠ **採用は operator の act であり、頼まれずにあなたが行うもの',
+      'ではない** —— 選択肢を surface せよ。黙って設置するな。',
       '',
     )
   }
   if (unit.truncated) {
     say(
-      `⚠ **The repo walk was truncated (${unit.truncated} cap).** This unit's repo list`,
-      'is INCOMPLETE, so every fact below is partial. Say so before reporting on it.',
+      `⚠ **repo の walk が切り詰められた（${unit.truncated} の上限）。** この unit の repo 一覧は`,
+      '**不完全**である ∴ 以下の事実はすべて部分的である。報告する前にその旨を述べること。',
       '',
     )
   }
 
   // ── baton ─────────────────────────────────────────────────────────────────
-  say('## ▶ Where you left off', '')
+  say('## ▶ 前回どこで止まったか', '')
   if (!baton) {
     say(
-      '*No baton at `.handoff/active.md` — this is a fresh start.*',
+      '*`.handoff/active.md` に baton は無い —— これは fresh start である。*',
       '',
-      '⚠ An empty baton is not an empty project. Read the backlog count below',
-      'before concluding there is nothing to pick up.',
+      '⚠ **空の baton は空の project ではない。** 拾うものが無いと結論する前に、下の',
+      'backlog 数を読むこと。',
       '',
     )
   } else {
     say(
-      `Baton at \`${path.relative(unit.root, baton.path) || baton.path}\`` +
+      `baton: \`${path.relative(unit.root, baton.path) || baton.path}\`` +
         (baton.composedAt ? ` · composed-at \`${baton.composedAt}\`` : '') +
-        (baton.readAt ? ` · **read-at \`${baton.readAt}\` (already read before)**` : ''),
+        (baton.readAt ? ` · **read-at \`${baton.readAt}\`（既に一度読まれている）**` : ''),
       '',
-      '**Follow `_guide/handoff.md` § 読む, steps 2-6** — this hook has surfaced the',
-      'baton but has NOT stamped `read-at`, and steps 4-6 (surface un-pushed aims,',
-      'read the pointers, report where you stand) are yours.',
+      '**`_guide/handoff.md` § 読む の手順 2〜6 に従うこと** —— この hook は baton を surface',
+      'したが `read-at` は**刻んでいない**。手順 4〜6（未 push aim の surface・pointers の',
+      '読み込み・現在地の報告）はあなたの仕事である。',
       '',
       baton.text.trimEnd(),
       '',
@@ -181,7 +178,7 @@ async function main() {
   // ── per-repo aim facts ────────────────────────────────────────────────────
   say('## Aim corpus', '')
   if (withCorpus.length === 0) {
-    say('*No repo in this unit carries `docs/aims/`.*', '')
+    say('*この unit のどの repo も `docs/aims/` を持たない。*', '')
   } else {
     for (const r of repos) renderRepo(r)
   }
@@ -190,37 +187,36 @@ async function main() {
   if (withCorpus.length > 0) {
     say('## Forward backlog', '')
     say(
-      `**open-todo: ${openTodo}** — aim nodes whose \`# PROCESS\` carries at least one`,
-      '`[todo]` mark, excluding `state: dead` nodes. One count per node.',
+      `**open-todo: ${openTodo}** —— \`# PROCESS\` に \`[todo]\` mark を 1 つ以上持つ aim node`,
+      'の数（`state: dead` は除く）。1 node につき 1 回数える。',
       '',
-      'Surface this number. Do not triage it, rank it, or propose which to work —',
-      'the pick is the operator\'s.',
+      '**この数は surface せよ。triage も ranking も、どれをやるべきかの提案もするな ——**',
+      '**拾うものを選ぶのは operator の act である。**',
       '',
     )
     if (anomalies.length > 0) {
-      // The corpus deviated from its own observed notation. Neither silently
-      // absorbed nor silently ignored: a mark this parser did not count is a
-      // todo nobody is attending to.
+      // corpus が、自ら観測された記法から逸脱した。黙って吸収もせず、黙って無視もしない:
+      // ⚠ この parser が数えなかった mark は、誰も注意を払っていない todo である。
       say(
-        `⚠ **${anomalies.length} PROCESS notation anomal${anomalies.length === 1 ? 'y' : 'ies'}** —`,
-        'these lines look like marks but are not in the form the corpus uses, so they',
-        'are counted NOWHERE in the number above:',
+        `⚠ **PROCESS 記法の anomaly が ${anomalies.length} 件** ——`,
+        'これらの行は mark に見えるが corpus が使っている形ではない ∴ 上の数の**どこにも**',
+        '数えられていない:',
         '',
       )
       for (const a of anomalies.slice(0, 20)) {
-        say(`- \`${a.repo}\` **${a.slug}** (${a.kind}, line ${a.no}): ${a.line.slice(0, 100)}`)
+        say(`- \`${a.repo}\` **${a.slug}** (${a.kind}, ${a.no} 行目): ${a.line.slice(0, 100)}`)
       }
-      if (anomalies.length > 20) say(`- … and ${anomalies.length - 20} more`)
+      if (anomalies.length > 20) say(`- … 他 ${anomalies.length - 20} 件`)
       say('')
     }
     if (unknown.length > 0) {
-      // The `unknown` of the four-value progress read: a `# PROCESS` heading
-      // with nothing readable under it. Folding these into "no todos" would be
-      // the fabricated `done` this layer is forbidden.
+      // 進捗読み取りの 4 値のうち `unknown`: `# PROCESS` 見出しの下に読めるものが何も無い
+      // 場合。⚠ これを「todo 無し」へ畳むことは、この層に禁じられている捏造された `done`
+      // そのものである。
       say(
-        `⚠ **${unknown.length} node(s) have a \`# PROCESS\` heading with no readable mark.**`,
-        'They are counted as neither done nor todo — read as `unknown`, never as',
-        'nothing-to-do:',
+        `⚠ **${unknown.length} 個の node が、読める mark を 1 つも持たない \`# PROCESS\` 見出しを持つ。**`,
+        'これらは done とも todo とも数えられていない —— `unknown` と読むこと。決して',
+        '「やることが無い」と読まないこと:',
         '',
         unknown.map((u) => `\`${u}\``).join(', '),
         '',
@@ -228,9 +224,9 @@ async function main() {
     }
   }
 
-  // ── the guide ─────────────────────────────────────────────────────────────
-  // `guide-provisioning`: the canon must be REACHABLE from where the session
-  // stands, and in a multi-repo unit it lives in a member repo, not at cwd.
+  // ── canon ─────────────────────────────────────────────────────────────────
+  // canon はセッションが立っている場所から**到達可能**でなければならない。⚠ multi-repo の
+  // unit では、canon は cwd ではなく member repo の側に在る。
   const guides = []
   for (const r of withCorpus) {
     const g = path.join(r.root, 'docs', 'aims', '_guide', 'producer-guide.md')
@@ -238,19 +234,19 @@ async function main() {
       await readFile(g, 'utf8')
       guides.push(path.relative(unit.root, g) || g)
     } catch {
-      /* not there */
+      /* 在らず */
     }
   }
   if (withCorpus.length > 0) {
-    say('## The canon', '')
+    say('## canon', '')
     if (guides.length > 0) {
-      say(`Guide present: ${guides.map((g) => `\`${g}\``).join(', ')}. Read it before`,
-          'touching any aim node.', '')
+      say(`canon あり: ${guides.map((g) => `\`${g}\``).join('、')}。**aim node に触れる前に`,
+          '読むこと。**', '')
     } else {
       say(
-        '⚠ **No `docs/aims/_guide/producer-guide.md` in this unit.** The `aim` skill',
-        'bundles its own copy of the canon — use that, and treat the absence here as',
-        'something to raise with the operator.',
+        '⚠ **この unit に `docs/aims/_guide/producer-guide.md` が無い。** `aim` skill は canon の',
+        '複製を同梱している —— それを使い、ここでの不在は operator に上げるべきこととして',
+        '扱うこと。',
         '',
       )
     }
@@ -268,12 +264,12 @@ async function readBatonSafe(unitRoot) {
 }
 
 /**
- * The hook input, read without ever being able to stall the composer.
+ * hook の入力を、composer を決して止めない形で読む。
  *
- * Started before `main()` and awaited after, so a pipe that never closes costs
- * nothing the facts had not already spent. The TTY guard is for the documented
- * by-hand invocation (`node bin/aim-facts.mjs` in a unit directory), where
- * stdin is a terminal and would never close at all.
+ * `main()` の前に開始し、後で await する ∴ 決して閉じない pipe があっても、事実の計算が
+ * 既に費やした以上のコストはかからない。TTY の guard は、文書化された手作業の呼び出し
+ * （unit directory で `node bin/aim-facts.mjs`）のためにある —— そこでは stdin は端末で
+ * あり、そもそも閉じない。
  */
 function readHookInput(ms = 1000) {
   if (process.stdin.isTTY) return Promise.resolve({})
@@ -295,13 +291,13 @@ function readHookInput(ms = 1000) {
 }
 
 /**
- * Record what this session was told, so `bin/corpus-delta.mjs` can tell later
- * whether the corpus has moved out from under it.
+ * このセッションが何を告げられたかを記録する。⚠ そうすることで `bin/corpus-delta.mjs` が
+ * 後から「corpus が足元で動いたか」を言えるようになる。
  *
- * ⚠ **Best-effort by construction.** Without a baseline the delta hook reports
- * the corpus as it stands and says so — louder than it needs to be, but never
- * silent. ∴ a failure here degrades toward noise, never toward a session that
- * believes stale numbers.
+ * ⚠ **構造として best-effort である。** baseline が無ければ delta hook は現在の corpus を
+ * そのまま報告し、その旨を述べる —— 必要以上に声は大きいが、**決して沈黙しない**。
+ * ∴ **ここでの失敗は雑音の方へ degrade するのであって、陳腐化した数を信じるセッションの方へ
+ * degrade することは決して無い。**
  */
 async function seedDeltaBaseline(unit, sessionId, repos) {
   if (!unit || !sessionId) return
@@ -310,11 +306,11 @@ async function seedDeltaBaseline(unit, sessionId, repos) {
     if (sig === null) return
     const file = deltaStatePath(sessionId)
     mkdirSync(path.dirname(file), { recursive: true })
-    // The digest comes from facts `main()` already gathered — the composer must
-    // never pay twice, and both sides must agree on what "the facts" means.
+    // digest は `main()` が既に集めた事実から作る —— ⚠ **composer は二度払ってはならず、
+    // 両側が「事実」の意味について一致していなければならない。**
     writeFileSync(file, JSON.stringify({ sig, heads, facts: factsDigest(repos ?? []) }), 'utf8')
   } catch (err) {
-    process.stderr.write(`aim plugin: could not seed the delta baseline: ${err?.message ?? err}\n`)
+    process.stderr.write(`bearing: delta の baseline を播けなかった: ${err?.message ?? err}\n`)
   }
 }
 
@@ -325,14 +321,14 @@ try {
   composed = await main()
   process.stdout.write(out.join('\n') + '\n')
 } catch (err) {
-  // Rule 1. The session must start whatever happened here.
+  // 規則 1。ここで何が起きようと、セッションは開始しなければならない。
   const f = await frame()
   if (f) process.stdout.write(f.trimEnd() + '\n\n---\n\n')
   process.stdout.write(
-    '⚠ **aim facts were NOT computed for this session** — the composer failed.\n' +
-      'Absent, not clean: do not read the silence as "nothing to pick up".\n',
+    '⚠ **このセッションでは aim facts が計算されなかった** —— composer が失敗した。\n' +
+      'clean ではなく「不在」である: この沈黙を「拾うものが無い」と読まないこと。\n',
   )
-  process.stderr.write(`aim plugin: composer failed: ${err?.stack ?? err}\n`)
+  process.stderr.write(`bearing: composer が失敗した: ${err?.stack ?? err}\n`)
 }
 await seedDeltaBaseline(composed?.unit, (await hookInput).session_id, composed?.repos)
 process.exit(0)
