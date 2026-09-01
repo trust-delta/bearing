@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "trust-delta",
+  "description": "What the standard coding harness does not have: a purpose the agent may not rewrite, a handoff that is authored rather than truncated, and drift made visible without being judged.",
+  "owner": {
+    "name": "TrustDelta"
+  },
+  "plugins": [
+    {
+      "name": "bearing",
+      "description": "A purpose tree the human owns, conversation handoff across sessions and machines, and drift detection between purpose and means — carried into any Claude Code session as hooks and skills.",
+      "author": {
+        "name": "TrustDelta"
+      },
+      "category": "workflow",
+      "source": "./carriers/claude/bearing"
+    }
+  ]
+}

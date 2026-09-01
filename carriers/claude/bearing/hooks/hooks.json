@@ -1,0 +1,54 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/aim-facts.mjs\"",
+            "timeout": 20,
+            "statusMessage": "aim: reading the corpus"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/precompact.mjs\"",
+            "timeout": 10,
+            "statusMessage": "aim: threshold — hand off instead of compacting"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/boot-ritual.mjs\"",
+            "timeout": 10,
+            "statusMessage": "aim: an outstanding baton"
+          }
+        ]
+      }
+    ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/corpus-delta.mjs\"",
+            "timeout": 15,
+            "statusMessage": "aim: the corpus moved"
+          }
+        ]
+      }
+    ]
+  }
+}
