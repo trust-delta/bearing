@@ -51,7 +51,7 @@ test('the walk prunes on hit — a repo inside a repo is that repo’s business'
 
 test('the walk never climbs — a session inside a member repo is about that repo', async () => {
   // cwd が project を定義する。⚠ 上にある wrapper を見つけにいくことは、
-  // **どこから始めるかという operator の選択を上書きする**ことになる。
+  // **どこから始めるかという 人間の選択を上書きする**ことになる。
   const root = await tree()
   await repo(root, 'alpha')
   await repo(root, 'beta')

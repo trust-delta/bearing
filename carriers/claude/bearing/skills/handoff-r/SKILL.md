@@ -13,7 +13,7 @@ description: 直前のセッションが残した baton（.handoff/active.md）�
 node "$CLAUDE_PLUGIN_ROOT"/bin/handoff.mjs read
 ```
 
-残り（baton を読むこと・Pointers の slug を読むこと・今どこに立っているかを operator に伝えること）は**あなたの仕事**である。
+残り（baton を読むこと・Pointers の slug を読むこと・今どこに立っているかを 人間に伝えること）は**あなたの仕事**である。
 
 この file は carrier であって手順ではない。ここに手順を複製しない —— 正本が動けば追従する。
 

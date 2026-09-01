@@ -64,19 +64,19 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   lines.push(
     `**open-todo: ${openTodo}** —— \`# PROCESS\` に \`[todo]\` を 1 つ以上持つ aim node の数`,
     '（`state: dead` は除く）。**この数は surface せよ。triage も ranking も、どれをやるべきか',
-    'の提案もするな —— 拾うものを選ぶのは operator の act である。**',
+    'の提案もするな —— 拾うものを選ぶのは 人間の act である。**',
     '',
   )
 
   // ⚠ **セッション途中こそ、この事実が生まれる場所である** —— 最後の `[todo]` を `[done]` に
-  // するのはまさに走っているセッションであり、そのとき番は operator へ渡る。boot 時にしか
+  // するのはまさに走っているセッションであり、そのとき番は 人間へ渡る。boot 時にしか
   // 出さなければ、**渡した当のセッションがそれを知らないまま進む。**
   lines.push(renderAwaitingFence(awaiting).trimEnd(), '')
   if (awaiting.length > 0) {
     lines.push(
-      '⚠ **上の node は producer が尽くしている ∴ 残っているのは operator の観測と `state:` の',
+      '⚠ **上の node は エージェントが尽くしている ∴ 残っているのは 人間の観測と `state:` の',
       '宣言だけである。** 「終わった aim」の一覧ではない —— **満足したかを述べられるのは',
-      'operator だけであり、この一覧はそれを先取りしない。**',
+      '人間だけであり、この一覧はそれを先取りしない。**',
       '',
     )
   }

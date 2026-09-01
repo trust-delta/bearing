@@ -1,6 +1,6 @@
 // repo の aim corpus を読む。
 //
-// corpus とは**何であるか**は `docs/aims/_guide/producer-guide.md` が決めている:
+// corpus とは**何であるか**は `docs/aims/_guide/aim-authoring.md` が決めている:
 // 1 つの aim につき 1 file、frontmatter は人間のもので body はエージェントのもの、
 // 子は親を名指し、slug は file 名である。⚠ **以下はそこから読むだけで、自分では何も
 // 足さない。**
@@ -125,7 +125,7 @@ export function parseAimRecord(text) {
  * repo の全 aim record を読み、その隣接を索引する。
  *
  * 隣接とは、親・子・外向きの `[[link]]`・内向きの `[[link]]` である。
- * `producer-guide.md` がちょうどその集合を名指しており（「親・子・`[[link]]` 先・自身」）、
+ * `aim-authoring.md` がちょうどその集合を名指しており（「親・子・`[[link]]` 先・自身」）、
  * 内向きの辺が含まれるのは、**この node についての主張が向こう側に住んでいる**からである。
  * 生きた record に解決しない辺は、報告せずに落とす: ⚠ 宙に浮いた参照は corpus の問題で
  * あって、drift の事実ではない。

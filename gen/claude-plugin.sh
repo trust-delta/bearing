@@ -23,7 +23,7 @@
 #
 # `--plugin` の出力は**意図して commit される。** plugin は clone した時点で install 手順
 # 無しに動かねばならず、それが plugin をより良い配布手段にしている性質である
-# （operator, 2026-08-31）。⚠ **commit された生成物が安全なのは、両者の一致を何かが検査して
+# （人間が 2026-08-31 に判断した）。⚠ **commit された生成物が安全なのは、両者の一致を何かが検査して
 # いる場合だけである**: CI の `carriers are in sync` step を参照。
 
 set -euo pipefail
@@ -50,7 +50,7 @@ else
 fi
 
 # ── 中立正本 ─────────────────────────────────────────────────────────────────
-for f in handoff.md aim-facts.md producer-guide.md; do
+for f in handoff.md aim-facts.md aim-authoring.md; do
   [ -f "$guide/$f" ] || { echo "error: 中立正本が無い: $guide/$f" >&2; exit 1; }
 done
 
@@ -109,7 +109,7 @@ write_carrier() {
 # ── carrier 群 ───────────────────────────────────────────────────────────────
 handoff_ref="$(source_ref handoff.md)"
 facts_ref="$(source_ref aim-facts.md)"
-guide_ref="$(source_ref producer-guide.md)"
+guide_ref="$(source_ref aim-authoring.md)"
 frame_ref="$(source_ref frame.md)"
 
 echo "carrier を生成中 ($mode) → $out_root"
@@ -125,7 +125,7 @@ write_carrier "handoff-r" \
 $(cli_ref handoff.mjs) read
 \`\`\`
 
-残り（baton を読むこと・Pointers の slug を読むこと・今どこに立っているかを operator に伝えること）は**あなたの仕事**である。
+残り（baton を読むこと・Pointers の slug を読むこと・今どこに立っているかを 人間に伝えること）は**あなたの仕事**である。
 
 この file は carrier であって手順ではない。ここに手順を複製しない —— 正本が動けば追従する。"
 
@@ -134,7 +134,7 @@ write_carrier "handoff-w" \
   "handoff.md" \
   "手順の正本は **\`$handoff_ref\`** の「## 書く」節。**まずそれを読み、そこに書かれた通りに実行すること。**
 
-**何を残し何を省くかの judgment があなたの仕事の全てであり**、それを機械に渡してはならない —— それが native な圧縮に欠けているものだからだ。⚠ **operator に見せて確認を得てから land すること。**
+**何を残し何を省くかの judgment があなたの仕事の全てであり**、それを機械に渡してはならない —— それが native な圧縮に欠けているものだからだ。⚠ **人間に見せて確認を得てから land すること。**
 
 land だけは機械である（旧 baton の archive 退避 → \`composed-at\` の刻印 → 配置）:
 
@@ -148,10 +148,10 @@ $(cli_ref handoff.mjs) write < <あなたが著した baton>
 
 write_carrier "aim" \
   "aim corpus（docs/aims/）—— この project を駆動する purpose＝means の木 —— を読み・書き・保守する方法。aim node を読む／作る／編集する前、boot 時の drift / unpushed / checkpoint-stale の record が slug を名指したとき、open todo やこの project が何のためかを問われたとき、あるいは repository にまだ aim corpus が無く設置すべきときに使う。" \
-  "aim-facts.md producer-guide.md frame.md" \
+  "aim-facts.md aim-authoring.md frame.md" \
   "\`docs/aims/<slug>.md\` の各ファイルが 1 つの **aim**（目的とその手段）であり、親子で目的を分解した木を成す。
 
-**aim の作成と保守の正本は \`$guide_ref\`。aim に触れる前に読むこと。** slug の付け方・body の section・木の保守・drift の検出と修復は、そこが唯一の source である。⚠ この repo に \`docs/aims/_guide/\` が無い場合、**設置は operator の act である** —— plugin は不在を surface するところで止まり、自分では置かない。この skill には正本が同梱されているので、置かれるまではそれを読むこと。⚠ **multi-repo wrapper が cwd の場合、guide は member repo の側にある** —— cwd 直下を見て無いと決めつけないこと。
+**aim の作成と保守の正本は \`$guide_ref\`。aim に触れる前に読むこと。** slug の付け方・body の section・木の保守・drift の検出と修復は、そこが唯一の source である。⚠ この repo に \`docs/aims/_guide/\` が無い場合、**設置は 人間の act である** —— plugin は不在を surface するところで止まり、自分では置かない。この skill には正本が同梱されているので、置かれるまではそれを読むこと。⚠ **multi-repo wrapper が cwd の場合、guide は member repo の側にある** —— cwd 直下を見て無いと決めつけないこと。
 
 **セッション開始時に注入される事実の読み方の正本は \`$facts_ref\`。** fence の schema、各 fence が課すもの、open-todo 数の扱い、\`# PROCESS\` の機械 parse 形、CLI —— これらを知る必要が出たらそこを読む。⚠ **fence を parse せよ。prose を scrape するな。**
 
@@ -161,7 +161,7 @@ write_carrier "aim" \
 # ⚠ **読み手が開けない file を指す carrier は、ここで最も重大な「黙った失敗」である**:
 # エージェントは framed されたと信じ、実際にはされていない。生成の時点が、それについて声を
 # 上げられる最後の場所である ∴ CI だけでなくここでも走らせる。これは既に本物の破損を 2 件
-# 捕まえている: `producer-guide.md` が参照されているのに同梱されていなかった件と、`frame.md`
+# 捕まえている: `aim-authoring.md` が参照されているのに同梱されていなかった件と、`frame.md`
 # が裸の名で hard-code されていて plugin mode では解決し workspace mode で宙に浮いた件。
 fail=0
 for d in "$out_root"/*/; do

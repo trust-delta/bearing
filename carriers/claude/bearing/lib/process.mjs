@@ -28,10 +28,10 @@
 //
 // ═══ mark が尽きた先にあるもの ══════════════════════════════════════════════
 //
-// ⚠ **`[todo]` は producer が自力で完了を確認できる形でのみ書かれる**（正本の「todo の完了
-// 条件」）∴ `open-todo` は **producer の残務**であって、人間待ちを含まない。
+// ⚠ **`[todo]` は エージェントが自力で完了を確認できる形でのみ書かれる**（正本の「todo の完了
+// 条件」）∴ `open-todo` は **エージェントの残務**であって、人間待ちを含まない。
 //
-// ∴ **mark が在り、その全てが `[done]` の node には固有の意味がある**: producer が尽くし、
+// ∴ **mark が在り、その全てが `[done]` の node には固有の意味がある**: エージェントが尽くし、
 // 残っているのは**人間の観測と `state:` の宣言だけ**である。これを `open-todo: 0` として
 // 沈黙させると、⚠ **体制が人間へ番を渡した瞬間が、どこにも現れなくなる。**
 // `renderAwaitingFence` はその瞬間を可視化する —— **可視化するだけで、判定はしない。**
@@ -80,7 +80,7 @@ const stripInlineCode = (line) => line.replace(/`[^`]*`/g, '')
 /**
  * record の body を `# PROCESS` 節とそれ以外に分ける。
  *
- * 節は `# ` 見出しから次の `# ` 見出しまで走る。`producer-guide.md` は body の section を
+ * 節は `# ` 見出しから次の `# ` 見出しまで走る。`aim-authoring.md` は body の section を
  * top-level で与えている（`# IS`・`# PROCESS`・`# HISTORY`・`# DAG`）∴ PROCESS 内の `## `
  * は corpus が使っていない深い level である —— **推測せず anomaly として報告する。**
  *
@@ -189,7 +189,7 @@ export async function gatherBacklog(repoRoot) {
     if (record.state === 'dead') continue
     if (marks.unknown) unknownNodes.push(slug)
     if (marks.todo > 0) openTodoNodes++
-    // ⚠ all-done かつ未解決 ＝ **人間の番**。mark が在り、その全てが `[done]` で、operator が
+    // ⚠ all-done かつ未解決 ＝ **人間の番**。mark が在り、その全てが `[done]` で、人間が
     // まだ `state: done` を宣言していない node。`no-process`（mark が 1 つも無い純 IS）は
     // 入らない —— あちらはまだ何も約束していない。
     else if (marks.done > 0 && record.state !== 'done') {
@@ -200,11 +200,11 @@ export async function gatherBacklog(repoRoot) {
 }
 
 /**
- * `bearing-awaiting-observation v1` —— producer が尽くし、人間の観測を待っている aim。
+ * `bearing-awaiting-observation v1` —— エージェントが尽くし、人間の観測を待っている aim。
  *
- * ⚠ **これは「終わった aim」の一覧ではない。** producer の側の終点は「目的が満たされたこと」
+ * ⚠ **これは「終わった aim」の一覧ではない。** エージェントの側の終点は「目的が満たされたこと」
  * ではなく「人間が観測できるようになったこと」であり、ここに挙がるのは後者に達した node で
- * ある。⚠ **満足したかの宣言は operator の act（`state: done`）であって、この fence は
+ * ある。⚠ **満足したかの宣言は 人間の act（`state: done`）であって、この fence は
  * それを一切先取りしない。**
  *
  * ⚠ **prose ではなく fence で出す理由**: これは数ではなく **slug を運ぶ record** である。
@@ -217,7 +217,7 @@ export function renderAwaitingFence(items) {
     '# fields: slug | done_marks | state',
   ]
   if (items.length === 0) {
-    lines.push('# none — producer が尽くして観測待ちになっている aim は無い')
+    lines.push('# none — エージェントが尽くして観測待ちになっている aim は無い')
   } else {
     for (const it of items) lines.push(`${it.slug} | ${it.doneMarks} | ${it.state}`)
   }

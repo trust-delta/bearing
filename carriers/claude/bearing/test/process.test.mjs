@@ -164,7 +164,7 @@ test('a repo with no corpus yields zero, not an error', async () => {
   await rm(root, { recursive: true, force: true })
 })
 
-test('anomalies carry their slug so the operator can find them', async () => {
+test('anomalies carry their slug so the human can find them', async () => {
   const root = await corpus([['a', 'open', ['* [todo] wrong bullet']]])
   const r = await gatherBacklog(root)
   assert.equal(r.openTodoNodes, 0)
@@ -185,7 +185,7 @@ test('no PROCESS heading at all is `no-process`, a normal state — not `unknown
   assert.equal(r.unknown, false)
 })
 
-test('unknown nodes are named so the operator can see what was unreadable', async () => {
+test('unknown nodes are named so the human can see what was unreadable', async () => {
   const root = await corpus([
     ['readable', 'open', ['- [todo] a']],
     ['unreadable', 'open', ['なにも mark がない']],
@@ -198,8 +198,8 @@ test('unknown nodes are named so the operator can see what was unreadable', asyn
 
 // ── 番が人間へ渡る瞬間 ───────────────────────────────────────────────────────
 //
-// ⚠ `[todo]` は producer が自力で完了を確認できる形でのみ書かれる ∴ mark が尽きた node は
-// 「producer が尽くした ∴ 人間の観測待ち」を意味する。**この瞬間が可視化されなければ、
+// ⚠ `[todo]` は エージェントが自力で完了を確認できる形でのみ書かれる ∴ mark が尽きた node は
+// 「エージェントが尽くした ∴ 人間の観測待ち」を意味する。**この瞬間が可視化されなければ、
 // 誰も観測に来ない** —— open-todo が 0 になるだけでは、番が渡ったことは誰にも見えない。
 
 test('a node whose marks are all done is awaiting the human, not finished', async () => {
@@ -213,10 +213,10 @@ test('a node whose marks are all done is awaiting the human, not finished', asyn
   await rm(root, { recursive: true, force: true })
 })
 
-test('a node the operator already resolved is not awaiting anything', async () => {
+test('a node the human already resolved is not awaiting anything', async () => {
   const root = await corpus([['settled', 'done', ['- [done] a']]])
   const r = await gatherBacklog(root)
-  // ⚠ 宣言は済んでいる。ここへ挙げ続けるのは、operator の act を無かったことにする。
+  // ⚠ 宣言は済んでいる。ここへ挙げ続けるのは、人間の act を無かったことにする。
   assert.deepEqual(r.awaitingNodes, [])
   await rm(root, { recursive: true, force: true })
 })
@@ -255,7 +255,7 @@ test('the fence is emitted even with no records, and says which silence it is', 
   const out = renderAwaitingFence([])
   assert.match(out, /^```bearing-awaiting-observation v1\n/)
   assert.match(out, /# fields: slug \| done_marks \| state/)
-  assert.match(out, /# none — producer が尽くして観測待ちになっている aim は無い/)
+  assert.match(out, /# none — エージェントが尽くして観測待ちになっている aim は無い/)
 })
 
 test('records render one per line, in the fixed field order', () => {

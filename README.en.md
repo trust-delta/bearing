@@ -2,7 +2,7 @@
 
 > **This is a translation.** The canonical README is Japanese: [README.md](README.md).
 > Where the two disagree, the Japanese one is right. Why the project is
-> Japanese-first is stated in [`docs/aims/operator-language.md`](docs/aims/operator-language.md).
+> Japanese-first is stated in [`docs/aims/native-language.md`](docs/aims/native-language.md).
 
 **A bearing is two things at once: the direction you are heading, and the load you carry.**
 This carries both into an AI coding session — and keeps them there across sessions,
@@ -11,6 +11,13 @@ across machines, and across the moment the context window fills up.
 > **The purpose this serves.** *Supply no place of your own; accept the general-purpose
 > harness as the vessel, and graft onto it only what that harness cannot have — the
 > machinery that carries a purpose the human fixed, and protects the attention budget.*
+
+**This is built for solo development** — one person working with one session, what
+people now call vibe coding. That is not modesty about scale; it is the condition
+the machinery rests on. "The purpose belongs to the human" and "escalate to the
+human when in doubt" fit in one sentence each precisely because *which* human is
+never in question. Used on a project with several people, that project has to
+decide and write down who pins a purpose and who declares it achieved.
 
 Coding harnesses got good. What they still do not have is a durable answer to
 *what is this for*, *what did we decide and why*, and *has the code drifted away
@@ -39,7 +46,7 @@ declaring one achieved, are the human's acts. That asymmetry is the whole point.
 **The canonical language of this project is Japanese.** That is a means, not a
 habit: instructions to an agent are judged to read better in one language than in
 two, and that premise has not yet been measured — see
-[`docs/aims/operator-language.md`](docs/aims/operator-language.md). Machine
+[`docs/aims/native-language.md`](docs/aims/native-language.md). Machine
 contracts — fence tags and field names, slugs, identifiers — stay English. The
 line is between prose a person reads and tokens a machine parses.
 
@@ -67,12 +74,12 @@ neither is complete on its own:
 | `.github/workflows/push-policy.yml` | leaves a violation **red and permanent** | no — but it cannot prevent anything |
 
 That the hook can be bypassed is deliberate, not a defect: bending the rule is the
-operator's call, and a tool must not take that away. The bypass shows up in CI.
+human's call, and a tool must not take that away. The bypass shows up in CI.
 
 CI fails on two things only: the **123 tests**, and the **carriers being in sync**
 with their canonical sources. The language measurement (`scripts/lang-report.mjs`)
 reports and never fails — the premise behind
-[`operator-language`](docs/aims/operator-language.md) has not been measured yet, so
+[`native-language`](docs/aims/native-language.md) has not been measured yet, so
 making it a hard gate would be premature.
 
 ## Status

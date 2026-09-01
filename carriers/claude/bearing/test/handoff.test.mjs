@@ -163,7 +163,7 @@ function precompact(input) {
 }
 
 test('a human running /compact is never overridden', async () => {
-  // ⚠ operator に仕えるための儀式を強制するために operator の明示的な act を上書きする
+  // ⚠ 人間に仕えるための儀式を強制するために 人間の明示的な act を上書きする
   // ことは、体制そのものを反転させる。
   const root = await unit('x\n')
   assert.equal(precompact({ trigger: 'manual', session_id: newSessionId(), cwd: root }).code, 0)
@@ -191,7 +191,7 @@ test('it does not fire twice in one session — a standing refusal would be a ca
 })
 
 test('a project that never adopted the régime is left alone', async () => {
-  // corpus も `.handoff/` も無い: ⚠ ここで儀式を課すことは、**operator が決めていない
+  // corpus も `.handoff/` も無い: ⚠ ここで儀式を課すことは、**人間が決めていない
   // ことを plugin が決める**ことになる。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-handoff-'))
   const r = precompact({ trigger: 'auto', session_id: newSessionId(), cwd: root })
