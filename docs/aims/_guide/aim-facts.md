@@ -54,6 +54,8 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 これは **fact であり、fact でしかない。surface せよ。triage も ranking も、どれをやるべきかの提案もするな** —— 拾うものを選ぶのは人間の act である。
 
+⚠ **この数は producer の残務であって、人間待ちを含まない。** `[todo]` は producer が自力で完了を確認できる形でのみ書かれる（[`producer-guide.md`](producer-guide.md) 「todo の完了条件」）∴ **人間の観測を待っているものがここに数えられていたら、それは記法の誤りであって backlog ではない。** 見つけたら、todo を「観測できるようにする」へ書き換えるか `# ESCALATION` へ出す。
+
 ⚠ **空の baton は空の project ではない。** ∴ **この数を述べずに「拾うものが無い」と報告してはならない。** これは記憶されたタイミングではなく*主張*を縛る: boot 時にも、何かを終えた後にも等しく効く。
 
 ---
@@ -80,10 +82,12 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 | 値 | 意味 |
 | :-- | :-- |
-| `some-todo` | `[todo]` が 1 つ以上ある ＝ 未実装の手段が残っている |
-| `all-done` | mark があり、その全てが `[done]` |
+| `some-todo` | `[todo]` が 1 つ以上ある ＝ **producer に**未実装の手段が残っている |
+| `all-done` | mark があり、その全てが `[done]` ＝ **producer が尽くした ∴ 人間の観測待ち** |
 | `no-process` | `# PROCESS` 見出しが無い（純 IS の node。正常な状態） |
 | `unknown` | 見出しはあるが、parse できる mark が 1 つも無い |
+
+⚠ **`all-done` と `no-process` を「todo が 0 件」として同じに読んではならない。** 前者は **producer の側が終わっており、残っているのは人間の観測と `state:` の宣言だけ**という状態である。後者はまだ何も約束していない。⚠ **`all-done` かつ `state: open` の node は、この体制において「人間の番」を意味する** —— 数が 0 だからといって、その aim が閉じたわけではない。
 
 ⚠ **`unknown` を `all-done` に倒してはならない。** これは soft な散文 parse であって、drift のような hard な git 計算ではない。∴ 読めなかったときは**読めなかったと述べる** —— 捏造した `done` より正直な `unknown` が正しい。この非対称が、この層に与えられている権限の全てである。
 
