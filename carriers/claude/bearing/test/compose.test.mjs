@@ -84,7 +84,7 @@ test('a corpus yields the fences and the open-todo count', async () => {
   assert.match(out, /```bearing-checkpoint-stale v1/)
   assert.match(out, /\*\*open-todo: 2\*\*/)
   // 数は事実であり、composer はそれに順位を付けるのではなく、事実としてそう述べねばならない。
-  assert.match(out, /拾うものを選ぶのは operator の act である/)
+  assert.match(out, /拾うものを選ぶのは 人間の act である/)
   await rm(dir, { recursive: true, force: true })
 })
 

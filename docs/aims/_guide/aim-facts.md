@@ -2,7 +2,7 @@
 
 `aim-facts` は、cwd から解決した unit の各 repo の `docs/aims/` を読み、**frame と機械可読な事実**を stdout に出す。server も port も要らない。エージェントのセッション開始時にこれを流し込むことで、`aim` で駆動する project の状態がそのセッションの context に載る。
 
-この doc は**その出力をどう読み、何を義務づけられるか**の正本である。aim をどう作成・保守するかは [`producer-guide.md`](producer-guide.md)、常時効く不変は [`frame.md`](frame.md) が持つ。ここには**それらに無いこと**だけを書く。
+この doc は**その出力をどう読み、何を義務づけられるか**の正本である。aim をどう作成・保守するかは [`aim-authoring.md`](aim-authoring.md)、常時効く不変は [`frame.md`](frame.md) が持つ。ここには**それらに無いこと**だけを書く。
 
 ⚠ **仕様と許容度を区別して読むこと。** ここに書かれたことのうち、**corpus から測られたもの**（実際の記法を全数で数えた結果など）と、**実装がたまたま許すもの**は別である。後者を契約と受け取ると、実装の癖が正本に化ける。切り分けの済んだ箇所には**測定値を併記**してある。
 
@@ -25,7 +25,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
 | `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
-| `bearing-awaiting-observation v1` | `slug \| done_marks \| state` | producer が尽くし（mark が在り、その全てが `[done]`）、operator がまだ `state: done` を宣言していない node |
+| `bearing-awaiting-observation v1` | `slug \| done_marks \| state` | エージェントが尽くし（mark が在り、その全てが `[done]`）、人間がまだ `state: done` を宣言していない node |
 
 ⚠ **前の 5 枚は git の事実だが、6 枚目だけは corpus の事実である。** git が読めなくても出る。
 
@@ -43,7 +43,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 **unpushed は「既に済んだ作業」の frontier。** baton は forward に選択されるため、道中どう aim を触ったかを構造的に過少報告する。ここに挙がった slug は **re-read すること** —— aim を読み直して得られるのは*到達状態*であって*変化*ではないが、この差分だけが変化を運ぶ。
 
-**awaiting-observation は「終わった aim」の一覧ではない。** ここに挙がるのは *producer の側が*尽きた node であり、⚠ **満足したかどうかを述べられるのは operator だけである** —— この fence はそれを一切先取りしない。∴ **surface はせよ。だが「これは done にしてよい」と提案するな。** 逆に、⚠ **ここが空であることは「番が渡っていない」を意味するのであって、「やることが無い」ではない。** `open-todo` と併せて読むこと: **両方 0 なら、producer にも人間にも渡っていない ＝ node が純 IS のままか、すべて解決済みである。**
+**awaiting-observation は「終わった aim」の一覧ではない。** ここに挙がるのは *エージェントの側が*尽きた node であり、⚠ **満足したかどうかを述べられるのは 人間だけである** —— この fence はそれを一切先取りしない。∴ **surface はせよ。だが「これは done にしてよい」と提案するな。** 逆に、⚠ **ここが空であることは「番が渡っていない」を意味するのであって、「やることが無い」ではない。** `open-todo` と併せて読むこと: **両方 0 なら、エージェントにも人間にも渡っていない ＝ node が純 IS のままか、すべて解決済みである。**
 
 **checkpoint-stale は verdict ではない。** footprint はまだ node 自身の code へ絞られておらず、repo 全体が動いただけかもしれない。挙がった slug は「**再検証する価値がありうる候補**」として扱う。判断不要な絞り込みは fan-out してよいが、**aim が code から剥離したという宣言は人間の act** である（`state: done` と同じ層）。
 
@@ -59,7 +59,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 これは **fact であり、fact でしかない。surface せよ。triage も ranking も、どれをやるべきかの提案もするな** —— 拾うものを選ぶのは人間の act である。
 
-⚠ **この数は producer の残務であって、人間待ちを含まない。** `[todo]` は producer が自力で完了を確認できる形でのみ書かれる（[`producer-guide.md`](producer-guide.md) 「todo の完了条件」）∴ **人間の観測を待っているものがここに数えられていたら、それは記法の誤りであって backlog ではない。** 見つけたら、todo を「観測できるようにする」へ書き換えるか `# ESCALATION` へ出す。
+⚠ **この数は エージェントの残務であって、人間待ちを含まない。** `[todo]` は エージェントが自力で完了を確認できる形でのみ書かれる（[`aim-authoring.md`](aim-authoring.md) 「todo の完了条件」）∴ **人間の観測を待っているものがここに数えられていたら、それは記法の誤りであって backlog ではない。** 見つけたら、todo を「観測できるようにする」へ書き換えるか `# ESCALATION` へ出す。
 
 ⚠ **空の baton は空の project ではない。** ∴ **この数を述べずに「拾うものが無い」と報告してはならない。** これは記憶されたタイミングではなく*主張*を縛る: boot 時にも、何かを終えた後にも等しく効く。
 
@@ -87,12 +87,12 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 | 値 | 意味 |
 | :-- | :-- |
-| `some-todo` | `[todo]` が 1 つ以上ある ＝ **producer に**未実装の手段が残っている |
-| `all-done` | mark があり、その全てが `[done]` ＝ **producer が尽くした ∴ 人間の観測待ち** |
+| `some-todo` | `[todo]` が 1 つ以上ある ＝ **エージェントに**未実装の手段が残っている |
+| `all-done` | mark があり、その全てが `[done]` ＝ **エージェントが尽くした ∴ 人間の観測待ち** |
 | `no-process` | `# PROCESS` 見出しが無い（純 IS の node。正常な状態） |
 | `unknown` | 見出しはあるが、parse できる mark が 1 つも無い |
 
-⚠ **`all-done` と `no-process` を「todo が 0 件」として同じに読んではならない。** 前者は **producer の側が終わっており、残っているのは人間の観測と `state:` の宣言だけ**という状態である。後者はまだ何も約束していない。⚠ **`all-done` かつ `state: open` の node は、この体制において「人間の番」を意味する** —— 数が 0 だからといって、その aim が閉じたわけではない。
+⚠ **`all-done` と `no-process` を「todo が 0 件」として同じに読んではならない。** 前者は **エージェントの側が終わっており、残っているのは人間の観測と `state:` の宣言だけ**という状態である。後者はまだ何も約束していない。⚠ **`all-done` かつ `state: open` の node は、この体制において「人間の番」を意味する** —— 数が 0 だからといって、その aim が閉じたわけではない。
 
 ⚠ **`unknown` を `all-done` に倒してはならない。** これは soft な散文 parse であって、drift のような hard な git 計算ではない。∴ 読めなかったときは**読めなかったと述べる** —— 捏造した `done` より正直な `unknown` が正しい。この非対称が、この層に与えられている権限の全てである。
 
@@ -106,7 +106,7 @@ composer は hook から**引数無しで**呼ばれる。frame は常に出し�
 node "$CLAUDE_PLUGIN_ROOT"/bin/aim-facts.mjs
 ```
 
-guide の設置経路も持たない: `_guide/` を repo に置くのは operator の act であり、composer は**不在を surface するところで止まる**。
+guide の設置経路も持たない: `_guide/` を repo に置くのは 人間の act であり、composer は**不在を surface するところで止まる**。
 
 ⚠ **unit は cwd から解決される。** 呼ぶ側が `cd` してはならない。セッションの cwd こそが unit を定義しており、それを動かすと別の unit の事実を注入することになる。
 

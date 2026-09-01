@@ -67,7 +67,7 @@ test('parseCommitLog ignores stray lines before any commit header', () => {
 test('only top-level records under docs/aims are aim paths', () => {
   assert.equal(isAimPath('docs/aims/alpha.md'), true)
   assert.equal(isAimPath('docs/aims/README.md'), false)
-  assert.equal(isAimPath('docs/aims/_guide/producer-guide.md'), false)
+  assert.equal(isAimPath('docs/aims/_guide/aim-authoring.md'), false)
   assert.equal(isAimPath('docs/aims/alpha.txt'), false)
   assert.equal(isAimPath('crates/aim-facts/src/main.rs'), false)
 })
@@ -77,9 +77,9 @@ test('only top-level records under docs/aims are aim paths', () => {
 test('a quoted parent value resolves to the same slug as an unquoted one', () => {
   // 77 node の corpus でちょうど 1 つの node がこう書いており、除去が無ければその node は
   // 木から**丸ごと脱落する**。
-  const quoted = parseAimRecord('---\naim: x\nparent: "operator-single-producer"\nstate: open\n---\n\nbody\n')
-  const bare = parseAimRecord('---\naim: x\nparent: operator-single-producer\nstate: open\n---\n\nbody\n')
-  assert.equal(quoted.parent, 'operator-single-producer')
+  const quoted = parseAimRecord('---\naim: x\nparent: "quoted-parent"\nstate: open\n---\n\nbody\n')
+  const bare = parseAimRecord('---\naim: x\nparent: quoted-parent\nstate: open\n---\n\nbody\n')
+  assert.equal(quoted.parent, 'quoted-parent')
   assert.equal(quoted.parent, bare.parent)
 })
 

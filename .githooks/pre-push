@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # main への直プッシュを、code を含むときに止める。
 #
-# 規則（operator, 2026-09-01）: 非コードのドキュメント系は直プッシュ可、コードを含む場合は
+# 規則（人間が 2026-09-01 に定めた）: 非コードのドキュメント系は直プッシュ可、コードを含む場合は
 # PR 必須。⚠ **GitHub 側でこれを条件付きで強制することはできない**（実測 2026-09-01:
 # path 条件で push を弾ける push ruleset は "Source public repos cannot have push rules" と
 # "only org-owned repos can have push rules" の 2 つの理由で拒否される）∴ 強制の実体は
 # ここ（行為の瞬間）と CI の guard（着地後に赤くする）の 2 段である。
 #
 # ⚠ **この hook は破れる**（`--no-verify`）。それは欠陥ではなく設計である —— 規則を曲げる
-# 判断は operator のものであり、道具がそれを奪ってはならない。**破った事実は CI guard に
+# 判断は 人間のものであり、道具がそれを奪ってはならない。**破った事実は CI guard に
 # 残る**ので、沈黙して通ることはない。
 #
 # 設置（clone ごとに 1 度。core.hooksPath は git config であって clone に付いてこない）:
@@ -76,7 +76,7 @@ push を止めた。code を含む変更は PR 経由で入れる規則である
   git push -u origin <branch>
   gh pr create
 
-⚠ 規則を曲げる判断は operator のものである。意図した直プッシュなら:
+⚠ 規則を曲げる判断は 人間のものである。意図した直プッシュなら:
 
   git push --no-verify
 

@@ -1,4 +1,4 @@
-// `bearing-checkpoint-stale v1` fence —— operator が「この aim は自らの code と整合して
+// `bearing-checkpoint-stale v1` fence —— 人間が「この aim は自らの code と整合して
 // いる」と最後に証言した commit から、repo がどれだけ先へ動いたか。
 //
 // 導出元の前提:
@@ -14,7 +14,7 @@
 // ここから 3 つが従い、それが設計の全てである:
 //
 //   1. **checkpoint は人間の act によって鋳造されるのであって、推論されない。**
-//      `last-verified` は operator が整合を証言したものであり、所有は `state:` と同じ。
+//      `last-verified` は 人間が整合を証言したものであり、所有は `state:` と同じ。
 //      ⚠ **不在は一級の第 3 状態である** —— まだ aim⊥code の監視下に無い —— のであって、
 //      drift でも clean でもない。∴ この fence は疎である: checkpoint を持たない node は
 //      何も寄与せず、推測で埋め戻されることも決して無い。

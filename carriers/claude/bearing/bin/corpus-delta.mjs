@@ -131,7 +131,7 @@ try {
   const unit = await resolveUnit(input.cwd || process.cwd())
   const { sig, heads } = await corpusSignature(unit)
   // unit のどこにも corpus が無い: この project は規律を採ったことが無く、空の corpus を
-  // 報告することは「operator が決めていないことを plugin が決める」ことになる。
+  // 報告することは「人間が決めていないことを plugin が決める」ことになる。
   if (sig === null) process.exit(0)
 
   const file = deltaStatePath(input.session_id)

@@ -1,7 +1,7 @@
 name: ci
 
 # PR と main への push で走る。⚠ **落ちる門は 2 つだけである** —— test と、生成物の同期。
-# 言語の測定は報告であって門ではない（`docs/aims/operator-language.md` の前提がまだ実測
+# 言語の測定は報告であって門ではない（`docs/aims/native-language.md` の前提がまだ実測
 # されていない以上、硬い門にするのは早い）。
 
 on:

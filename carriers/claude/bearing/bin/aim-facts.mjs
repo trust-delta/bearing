@@ -16,7 +16,7 @@
 //   CHECKPOINT   目的は、それを実装した code から剥離しうる。その剥離は surface できねば
 //                ならない
 //   OPEN-TODO    未実装の手段が backlog である: **数は述べ、triage はしない**
-//   AWAITING     producer が尽くした node は、体制が人間へ番を渡した瞬間である ——
+//   AWAITING     エージェントが尽くした node は、体制が人間へ番を渡した瞬間である ——
 //                その瞬間が可視化されなければ、誰も観測に来ない
 //   UNIT         project は常に 1 repo とは限らない —— cwd から下方向に解決する
 //   READINESS    git が無いのは新規 project、corpus が無いのは新規の取り付け
@@ -147,7 +147,7 @@ async function main() {
   } else if (withCorpus.length === 0) {
     say(
       '⚠ **git は在るが `docs/aims/` が無い。** これを、aim の規律をまだ採っていない**既存**',
-      'project として扱うこと。⚠ **採用は operator の act であり、頼まれずにあなたが行うもの',
+      'project として扱うこと。⚠ **採用は 人間の act であり、頼まれずにあなたが行うもの',
       'ではない** —— 選択肢を surface せよ。黙って設置するな。',
       '',
     )
@@ -201,17 +201,17 @@ async function main() {
       'の数（`state: dead` は除く）。1 node につき 1 回数える。',
       '',
       '**この数は surface せよ。triage も ranking も、どれをやるべきかの提案もするな ——**',
-      '**拾うものを選ぶのは operator の act である。**',
+      '**拾うものを選ぶのは 人間の act である。**',
       '',
     )
-    // ⚠ **open-todo の直後に置く。** 数が 0 でも「番が operator へ渡っている」ことが
+    // ⚠ **open-todo の直後に置く。** 数が 0 でも「番が 人間へ渡っている」ことが
     // 同じ視野に入らねばならない —— 離せば、0 が「何も残っていない」と読まれる。
     say(renderAwaitingFence(awaiting).trimEnd(), '')
     if (awaiting.length > 0) {
       say(
-        '⚠ **上の node は producer が尽くしている ∴ 残っているのは operator の観測と',
+        '⚠ **上の node は エージェントが尽くしている ∴ 残っているのは 人間の観測と',
         '`state:` の宣言だけである。** これは「終わった aim」の一覧ではない —— **満足したか',
-        'どうかを述べられるのは operator だけであり、この一覧はそれを一切先取りしない。**',
+        'どうかを述べられるのは 人間だけであり、この一覧はそれを一切先取りしない。**',
         '',
       )
     }
@@ -250,7 +250,7 @@ async function main() {
   // unit では、canon は cwd ではなく member repo の側に在る。
   const guides = []
   for (const r of withCorpus) {
-    const g = path.join(r.root, 'docs', 'aims', '_guide', 'producer-guide.md')
+    const g = path.join(r.root, 'docs', 'aims', '_guide', 'aim-authoring.md')
     try {
       await readFile(g, 'utf8')
       guides.push(path.relative(unit.root, g) || g)
@@ -265,8 +265,8 @@ async function main() {
           '読むこと。**', '')
     } else {
       say(
-        '⚠ **この unit に `docs/aims/_guide/producer-guide.md` が無い。** `aim` skill は canon の',
-        '複製を同梱している —— それを使い、ここでの不在は operator に上げるべきこととして',
+        '⚠ **この unit に `docs/aims/_guide/aim-authoring.md` が無い。** `aim` skill は canon の',
+        '複製を同梱している —— それを使い、ここでの不在は 人間に上げるべきこととして',
         '扱うこと。',
         '',
       )
