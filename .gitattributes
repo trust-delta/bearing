@@ -1,0 +1,8 @@
+# ⚠ shell script と git hook は LF でなければ動かない。
+#
+# 本機は `core.autocrlf=true` である ∴ 指定が無ければ checkout で CRLF に変換され、
+# `#!/usr/bin/env bash` は `bad interpreter: /usr/bin/env bash^M` で死ぬ。
+# ここが効くのは clone した各マシンであって、CI（ubuntu, autocrlf=false）ではない
+# —— **CI が緑でも手元が壊れる**、という形の壊れ方をする。
+*.sh text eol=lf
+.githooks/** text eol=lf

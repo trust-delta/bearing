@@ -1,0 +1,57 @@
+name: ci
+
+# PR と main への push で走る。⚠ **落ちる門は 2 つだけである** —— test と、生成物の同期。
+# 言語の測定は報告であって門ではない（`docs/aims/operator-language.md` の前提がまだ実測
+# されていない以上、硬い門にするのは早い）。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: test（123 件）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: plugin の test を走らせる
+        working-directory: carriers/claude/bearing
+        run: node --test test/*.test.mjs
+
+  carriers-in-sync:
+    name: carrier が正本と同期している
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: carrier を再生成する
+        run: bash gen/claude-plugin.sh --plugin
+      - name: 再生成の結果と commit 済みの生成物を突き合わせる
+        run: |
+          if ! git diff --quiet -- carriers/; then
+            echo '::error::commit された carrier が docs/aims/_guide/ の正本と食い違っている。'
+            echo ''
+            echo '⚠ carrier は生成物である。手で編集してはならない —— 実体は docs/aims/_guide/ にある。'
+            echo '  直し方:  bash gen/claude-plugin.sh --plugin  を走らせて、その結果を commit する。'
+            echo ""
+            git --no-pager diff --stat -- carriers/
+            exit 1
+          fi
+          echo 'carrier は正本と同期している。'
+
+  language:
+    name: 言語の測定（報告のみ・落とさない）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 混在を測る
+        run: node scripts/lang-report.mjs | tee "$GITHUB_STEP_SUMMARY"

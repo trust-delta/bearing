@@ -42,6 +42,44 @@ README は併置してあるが従属物であり、食い違ったときは日�
 機械が parse する契約 —— fence の tag と field 名、slug、識別子 —— は英語のままである。
 **判別線は「人が読む文か、機械が parse する token か」であって、内と外ではない。**
 
+## 開発
+
+**⚠ clone したら 1 度だけ、hook を設置すること:**
+
+```
+git config core.hooksPath .githooks
+```
+
+`main` への push の規則はこうである —— **非コードのドキュメント系は直プッシュ可、コードを
+含む場合は PR 必須。** 判定は `scripts/classify-paths.mjs` が 1 箇所で持ち、pre-push hook と
+CI の `push-policy` workflow の**両方がそれを呼ぶ**（別実装にすれば必ず乖離し、しかも乖離は
+黙って起きる）。
+
+⚠ **GitHub 側でこの規則を条件付きで強制することはできない。** path 条件で push を弾ける
+*push ruleset* は、この repo が **public かつ User 所有**であるため 2 つの理由で拒否される
+（実測 2026-09-01）。∴ 強制の実体は 2 段しかない:
+
+| | 何をするか | 破れるか |
+| --- | --- | --- |
+| `.githooks/pre-push` | **行為の瞬間に**止める | `--no-verify` で破れる。⚠ **上の設定をしていない clone では存在しないのと同じ** |
+| `.github/workflows/push-policy.yml` | 着地した違反を**赤く恒久的に残す** | 破れない。ただし**防げない** |
+
+⚠ **hook が破れるのは欠陥ではなく設計である** —— 規則を曲げる判断は operator のものであり、
+道具がそれを奪ってはならない。破った事実は CI に残る。
+
+CI が落とす門は 2 つだけ: **test（123 件）**と、**carrier が正本と同期していること**。
+言語の測定（`scripts/lang-report.mjs`）は**報告であって門ではない** —— [`operator-language`](docs/aims/operator-language.md)
+の前提がまだ実測されていない以上、規律を硬い門にするのは早い。
+
+```
+node --test carriers/claude/bearing/test/*.test.mjs   # test
+bash gen/claude-plugin.sh --plugin                    # carrier の再生成
+node scripts/lang-report.mjs                          # 言語の測定（落ちない）
+```
+
+⚠ **作業ツリーの plugin を走らせるには** `claude --plugin-dir ./carriers/claude/bearing`。
+marketplace は自分自身の remote を指すので、通常のセッションは **push 済みの版**を読む。
+
 ## 現況
 
 初期段階であり、それを正直に述べる。規律そのものは、ある private project の中で数か月に
