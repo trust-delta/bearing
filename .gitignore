@@ -1,9 +1,12 @@
 node_modules/
 .DS_Store
-.claude/settings.local.json
-.handoff/
 
-# 調査ノートは machine-local な作業の記録である —— durable な findings は README と
-# aim corpus が持ち、あちらには drift 機構が効く。ここに二重の正本を置くと、
-# 監視されない側だけが黙って古くなる。
-.claude/research/
+# ⚠ `.claude/` は既定 deny —— 載せるものだけを名指しで開ける。
+# 逆にすると、次にここへ増えたものが黙って公開される（2026-09-02、調査ノートが実際にそうなった。
+# `.claude/` を丸ごと ignore している他の repo では偶然守られており、settings.json を tracked に
+# する理由を持つこの repo でだけ毛布が無かった）。`scripts/classify-paths.mjs` が push の判定で
+# 採っているのと同じ原則である —— **知らないものは安全側へ倒す。**
+.claude/*
+!.claude/settings.json
+
+.handoff/
