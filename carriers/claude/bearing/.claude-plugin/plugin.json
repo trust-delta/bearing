@@ -1,7 +1,7 @@
 {
   "name": "bearing",
-  "description": "人間が pin した目的を、build 手順なしで、あらゆる Claude Code セッションへ運ぶ。SessionStart hook が frame・未処理の baton・この unit の repo ごとの corpus fence（drift-intra / drift-inter / working-delta / unpushed / checkpoint-stale）・open-todo 数を注入する。UserPromptSubmit hook が、最初の turn が動く前に一度だけ baton を読む手順を述べる。PostToolBatch hook が、セッションの足元で corpus が動いたときに事実を述べ直す。PreCompact hook が、沈黙の自動圧縮を一度だけ差し止め、代わりに baton を著せるようにする。skill は aim / handoff-r / handoff-w。build 手順も server も daemon も無い。",
-  "version": "0.4.0",
+  "description": "人間が pin した目的を、build 手順なしで、あらゆる Claude Code セッションへ運ぶ。SessionStart hook が frame・未処理の baton・この unit の repo ごとの corpus fence（drift-intra / drift-inter / working-delta / unpushed / checkpoint-stale）・open-todo 数を注入する。UserPromptSubmit hook が、最初の turn が動く前に一度だけ baton を読む手順を述べる。PostToolBatch hook が、セッションの足元で corpus が動いたときに事実を述べ直す。PreCompact hook が、沈黙の自動圧縮を一度だけ差し止め、代わりに baton を著せるようにする。skill は aim / handoff-r / handoff-w。`bin/statusline.mjs` は statusline を描く実行ファイルとして供給される —— plugin は statusLine key を宣言できない ∴ 装着は人間が settings.json に 1 行書く。build 手順も server も daemon も無い。",
+  "version": "0.5.0",
   "author": {
     "name": "TrustDelta"
   }

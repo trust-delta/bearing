@@ -9,5 +9,9 @@
   },
   "enabledPlugins": {
     "bearing@trust-delta": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node \"$CLAUDE_PROJECT_DIR/carriers/claude/bearing/bin/statusline.mjs\""
   }
 }

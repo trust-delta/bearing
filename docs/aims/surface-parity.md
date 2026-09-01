@@ -1,0 +1,35 @@
+---
+aim: 同一エージェントの起動経路が複数ある場合、そのUI上の表示を可能な限り揃える
+parent: bearing
+state: open
+---
+
+# IS
+
+**同じ設定を読み、同じ hook を走らせ、同じ skill を持つのに、UI だけが違う。** Claude Code は CLI・デスクトップの Code・web から起動でき、docs が明言する通り `~/.claude/settings.json` も hook も skill も**共有される** —— にもかかわらず、何が画面に出るかは経路ごとに違う。⚠ **∴ 人間は経路を変えるたびに「今どれが見えていないか」を覚え直すことになり、その負担は道具ではなく人間が払っている。**
+
+**⚠「可能な限り」は制約の受容ではなく、この node の仕事そのものである。** 揃えられないものは実在する —— statusline はデスクトップに存在せず、usage ring は CLI に存在しない。**ハーネスが提供していない面は、外付けの拡張には作れない。** ∴ ここでやるべきは妥協の表明ではなく、**どこまでが可能かを実際に測り、可能な範囲を埋め切ること**である。測っていない「可能な限り」は、単に諦めの別名になる。
+
+⚠ **本 node も柱ではない**（人間が 2026-09-02 に判定）。経路ごとに UI が食い違うことは [[bearing]] の 3 点のどれでもなく、**3 点をスムーズに遂行させることを妨げる摩擦**である —— 同じ事実が片方の経路でだけ見えないなら、人間はその経路にいる間だけ目的を見失う。∴ ここで揃えるのは*表示*だが、守っているのは**どの経路から入っても同じ木を見ていられること**である。
+
+**2026-09-01 に測った非対称は 4 つだった。**
+
+| 事実 | CLI | デスクトップの Code |
+| :-- | :-- | :-- |
+| context / plan usage | 無い → [[ambient-display]] が描く | **usage ring**（ハーネスが持つ） |
+| PR の review state | footer badge | footer badge（**揃っている**） |
+| CI の通過 / 失敗 | **無い** | **CI status bar**（auto-fix / auto-merge 付き） |
+| aim / baton / drift | [[ambient-display]] の 2 行目 | **無い**（statusline が存在しない） |
+
+⚠ **埋め方は面ごとに違う。** CLI 側の穴は statusline で埋まる（token を食わない）。**デスクトップ側の穴には対応する面が無い** ∴ hook の会話注入か、人間が呼ぶ on-demand の手段に頼るほかなく、**どちらも token を食う** —— つまり**同じものを見るための費用が経路ごとに違う**。⚠ この非対称は揃えられない。揃えられるのは*見えるかどうか*であって*費用*ではない。
+
+# PROCESS
+
+- [done] **2 つの経路が持つ UI を実測し、非対称を表にした。** 出典は docs（statusline / interactive-mode / desktop）と実際の画面で、記録は `.claude/research/2026-09-01_statusline-の仕様と出せる情報.md` にある
+- [done] **CLI 側に欠けていた context / plan usage / branch を埋めた** —— 手段は [[ambient-display]] が持つ
+- [todo] **デスクトップ側から aim / baton / drift へ届く経路を用意する。** あの面には statusline が無く、2 行目が運ぶ事実は**現状どこにも出ていない**
+- [todo] **CI の通過 / 失敗を CLI 側でも見られるようにする。** ⚠ statusline の stdin JSON に CI は無く、`gh` を自分で叩くしかない ∴ in-flight cancel を踏まないよう、statusline の外で採って読むだけにする形が要る
+
+# DAG
+
+- 依存: [[ambient-display]] —— CLI 側を埋める手段はあちらが持つ。本 node が述べるのは*どこが揃っていないか*であって、埋め方ではない
