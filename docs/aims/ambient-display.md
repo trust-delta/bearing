@@ -18,12 +18,14 @@ state: open
 
 ⚠ **幅が確定した文字だけを使う。** 中黒・矢印・ギリシャ文字・絵文字は East Asian **Ambiguous** 幅であり、日本語フォントでは全角に描かれるのに terminal は半角として桁を進める ∴ **隣の文字と重なる**。使えるのは ASCII printable と Wide が確定した日本語だけで、**構造は記号ではなく色と余白が作る**。これは美意識ではなく、実際に画面が壊れて得た制約である。
 
+⚠ **この面は、描くものではなく装着そのものが黙って消えうる。** `statusLine.command` は `$CLAUDE_PROJECT_DIR` を含む絶対パスで node を呼んでおり、**この env が statusline の script に渡ることは docs に記述が無い** —— 2026-09-01 の実測で在ることを確かめただけである。⚠ **渡らなくなれば `node "/carriers/.../statusline.mjs"` を呼んで即死し、画面からは 2 行が消えるだけで理由は一言も出ない。** ⚠ **同じ形の罠は既に別の env で踏んでいる**（2026-09-02、`$CLAUDE_PLUGIN_ROOT` が Bash の env に無く、それを前提にした呼び出しが `/bin/...` を見て落ちた）—— **ハーネスが渡す env を path に埋める呼び出しは、渡されなかった日に path が壊れる**、という一つの類である。∴ 上の「不在を黙って消さない」は描画の中だけの規律では足りない: **plugin の `bin/` は PATH に入る ∴ 絶対パスを捨てれば、この依存ごと消せる。**
+
 # PROCESS
 
 - [done] **CLI 向けの statusline を実装した。** 1 行目に model / effort / branch / context / rate limit、2 行目に aim・todo・観測待ち・未読 baton・未 commit / 未 push / drift。⚠ **fence は cache を経ず正本の lib を直接呼ぶ** —— 実測 70ms で debounce 300ms に十分収まり、間接層を挟めば二重実装が生まれるからである
 - [done] **幅の規律を機構で固定した。** `widthUnsafeChars()` と test が、Ambiguous な文字を出力に混ぜようとした時点で落ちる —— 一度画面が重なる事故を起こしており、注意ではなく機構で止める
 - [done] **不在を消さない規律を 3 箇所に引いた。** corpus 未取得 / git 未検知 / detached の描き分け。⚠ ついでに degrade が実装の bug をも「事実が採れない」に化けさせることが分かったので、debug の穴が開いているときだけ飲んだものを見せる
-- [todo] **plugin の carrier として配れる形にし、project ごとの手書き設定なしに載るようにする。** 現状は本 repo の `.claude/settings.json` に `statusLine` を手で書いており、他 project へ運ぶ手順が無い
+- [todo] **装着の 1 行から path を外し、どの project へでもそのまま書き写せる形にする。** ⚠ **「手書きなしで載る」は達成できない** —— plugin root の `settings.json` が宣言できる key は `agent` と `subagentStatusLine` だけで、`statusLine` は user / project の settings にしか置けない ∴ **装着の 1 行は原理的に人間の act として残る**（供給は plugin、装着は人間）。エージェントにできるのは、その 1 行を `$CLAUDE_PROJECT_DIR` 依存の絶対パスから `bin/` の名前へ移し、**どこへ貼っても同じ 1 行**にすることまでである
 
 # DAG
 
