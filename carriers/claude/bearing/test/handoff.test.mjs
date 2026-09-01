@@ -163,7 +163,7 @@ function precompact(input) {
 }
 
 test('a human running /compact is never overridden', async () => {
-  // ⚠ 人間に仕えるための儀式を強制するために 人間の明示的な act を上書きする
+  // ⚠ 人間に仕えるための儀式を強制するために人間の明示的な act を上書きする
   // ことは、体制そのものを反転させる。
   const root = await unit('x\n')
   assert.equal(precompact({ trigger: 'manual', session_id: newSessionId(), cwd: root }).code, 0)

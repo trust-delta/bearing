@@ -11,7 +11,7 @@ on:
 
 jobs:
   test:
-    name: test（123 件）
+    name: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

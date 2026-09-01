@@ -28,7 +28,7 @@ gen/claude-plugin.sh --workspace <DIR>     # <DIR>/.claude/skills へ（machine-
 
 ⚠ **carrier は必ず、それが名指す道具のコマンドを載せること。** 誰も名指さない道具は誰も走らせない道具であり、儀式は手作業に戻る。
 
-## 設置は 人間の act
+## 設置は人間の act
 
 ある repo で規律を使うには、この directory がその repo に**在る**必要がある。⚠ **plugin は自分では置かない** —— 不在を surface するところで止まる。置くかどうかは、その repo が規律を採るかどうかの判断であって、道具が代行してよいものではない。
 

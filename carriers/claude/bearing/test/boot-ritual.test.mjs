@@ -4,7 +4,7 @@
 // context に置くが turn を開始しない ∴ `_guide/handoff.md` § 読む の手順 2〜6 ——
 // すべてエージェントの act —— は、人間がたまたま入力するまで走らず、入力が無関係なもので
 // あれば一度も走らなかった。以下は**半強制の 2 つの半分**を assert する:
-// 義務をちょうど一度だけ述べること、そして 人間が入力したものに決して触れないこと。
+// 義務をちょうど一度だけ述べること、そして人間が入力したものに決して触れないこと。
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -88,7 +88,7 @@ test('it never exits 2 — the human’s prompt is never erased', async () => {
   const root = await unitWithBaton()
   try {
     // UserPromptSubmit での exit 2 は「処理を遮断し、元の prompt を消去する」。⚠ 人間に
-    // 仕えるための儀式を強制するために 人間が入力したものを破壊することは、
+    // 仕えるための儀式を強制するために人間が入力したものを破壊することは、
     // `precompact.mjs` も拒んでいる反転である。
     assert.equal(run({ session_id: freshSession(), cwd: root }).status, 0)
     assert.equal(run({ session_id: freshSession(), cwd: '/nonexistent-path-xyz' }).status, 0)
