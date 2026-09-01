@@ -25,7 +25,7 @@ state: open
 
 # PROCESS
 
-- [done] **2 つの経路が持つ UI を実測し、非対称を表にした。** 出典は docs（statusline / interactive-mode / desktop）と実際の画面で、記録は `.claude/research/2026-09-01_statusline-の仕様と出せる情報.md` にある
+- [done] **2 つの経路が持つ UI を実測し、非対称を上の表にした。** 出典は docs（statusline / interactive-mode / desktop）と実際の画面である。⚠ **記録は上の表そのものであって、別の file ではない** —— 実測の作業ログは machine-local に在るが repo には載らない（#6）∴ ここから名指すと、clone した者には辿れない参照になる
 - [done] **CLI 側に欠けていた context / plan usage / branch を埋めた** —— 手段は [[ambient-display]] が持つ
 - [todo] **デスクトップ側から aim / baton / drift へ届く経路を用意する。** あの面には statusline が無く、2 行目が運ぶ事実は**現状どこにも出ていない**
 - [todo] **CI の通過 / 失敗を CLI 側でも見られるようにする。** ⚠ statusline の stdin JSON に CI は無く、`gh` を自分で叩くしかない ∴ in-flight cancel を踏まないよう、statusline の外で採って読むだけにする形が要る
