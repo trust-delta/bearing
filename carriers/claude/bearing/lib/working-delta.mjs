@@ -5,7 +5,7 @@
 //
 // ⚠ 下に「Open decision」と印を付けた箇所が 2 つある。どちらも、直せば **fence が何を
 // 述べるかが変わる** —— それは contract の変更であって cleanup ではない ∴ 黙って手を
-// 入れず、その場に旗を立てたまま残してある。判断は 人間のものである。
+// 入れず、その場に旗を立てたまま残してある。判断は人間のものである。
 //
 // ⚠ **presence のみ。ここは何の順序も付けない**: working tree には commit の timestamp が
 // 無く、順序を出せばこの設計が禁じている偽の順序判断を製造することになる。commit された
@@ -26,7 +26,7 @@ export const WORKING_DELTA_FENCE_TAG = 'bearing-working-delta v1'
  * （`"docs/aims/a b.md"`）が、ここは unquote しない ∴ **そういう node は「異常」ではなく
  * 「clean」と読まれる —— 黙った false negative である。** guide により aim の slug は
  * lowercase kebab-case なので、この corpus では該当が生じない。これを残しているのは
- * 慎重さではなく範囲の問題である: 直すと fence の述べることが変わり、それは 人間に
+ * 慎重さではなく範囲の問題である: 直すと fence の述べることが変わり、それは人間に
  * 見える contract の変更であって、黙って行う cleanup ではない。
  *
  * @param {string} out
@@ -85,7 +85,7 @@ export async function workingAnchorChanged(repoRoot, relPath) {
  * **微妙に違う問いに答える** ——「この path は HEAD に在るか」であって「いずれかの commit が
  * 触ったか」ではない。両者は「削除され、commit されないまま再作成された node」で食い違う:
  * 一方はそれを committed かつ dirty と呼び、他方は untracked と呼ぶ。**fence がどちらの
- * 問いを立てるべきかは 人間の判断であって、黙って行う最適化ではない。**
+ * 問いを立てるべきかは人間の判断であって、黙って行う最適化ではない。**
  *
  * @param {string} repoRoot
  * @returns {Promise<Set<string>|null>} git を読めなかったときは `null`

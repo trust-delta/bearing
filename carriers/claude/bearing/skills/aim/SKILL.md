@@ -7,7 +7,7 @@ description: aim corpus（docs/aims/）—— この project を駆動する pur
 
 `docs/aims/<slug>.md` の各ファイルが 1 つの **aim**（目的とその手段）であり、親子で目的を分解した木を成す。
 
-**aim の作成と保守の正本は `aim-authoring.md`。aim に触れる前に読むこと。** slug の付け方・body の section・木の保守・drift の検出と修復は、そこが唯一の source である。⚠ この repo に `docs/aims/_guide/` が無い場合、**設置は 人間の act である** —— plugin は不在を surface するところで止まり、自分では置かない。この skill には正本が同梱されているので、置かれるまではそれを読むこと。⚠ **multi-repo wrapper が cwd の場合、guide は member repo の側にある** —— cwd 直下を見て無いと決めつけないこと。
+**aim の作成と保守の正本は `aim-authoring.md`。aim に触れる前に読むこと。** slug の付け方・body の section・木の保守・drift の検出と修復は、そこが唯一の source である。⚠ この repo に `docs/aims/_guide/` が無い場合、**設置は人間の act である** —— plugin は不在を surface するところで止まり、自分では置かない。この skill には正本が同梱されているので、置かれるまではそれを読むこと。⚠ **multi-repo wrapper が cwd の場合、guide は member repo の側にある** —— cwd 直下を見て無いと決めつけないこと。
 
 **セッション開始時に注入される事実の読み方の正本は `aim-facts.md`。** fence の schema、各 fence が課すもの、open-todo 数の扱い、`# PROCESS` の機械 parse 形、CLI —— これらを知る必要が出たらそこを読む。⚠ **fence を parse せよ。prose を scrape するな。**
 

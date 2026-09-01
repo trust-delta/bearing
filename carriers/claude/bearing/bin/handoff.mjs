@@ -111,7 +111,7 @@ async function main() {
     say(archived ? `旧 baton を退避した: ${archived}` : '退避すべき旧 baton は無かった')
     say(
       '',
-      '**何を残し何を省いたかを、1〜2 行で 人間に報告すること。**',
+      '**何を残し何を省いたかを、1〜2 行で人間に報告すること。**',
       'それが「書く」の手順 3 であり、**baton の読み手が再構成できない唯一の部分**である。',
       '',
     )
@@ -143,7 +143,7 @@ async function main() {
   if (baton.composedAt) say(`- composed-at: \`${baton.composedAt}\``)
   if (stamp?.previousReadAt) {
     say(
-      `- **過去に \`${stamp.previousReadAt}\` に読まれている** —— これを 1 行で 人間に`,
+      `- **過去に \`${stamp.previousReadAt}\` に読まれている** —— これを 1 行で人間に`,
       '  述べること。⚠ **これは事実であって警告ではない**: 古い baton をあえて読ませたい場面は',
       '  ある。決して拒まず、確認も求めないこと。',
     )
