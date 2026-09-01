@@ -43,6 +43,38 @@ two, and that premise has not yet been measured — see
 contracts — fence tags and field names, slugs, identifiers — stay English. The
 line is between prose a person reads and tokens a machine parses.
 
+## Development
+
+**Install the hook once per clone:**
+
+```
+git config core.hooksPath .githooks
+```
+
+The rule for pushing to `main` is: **documentation may be pushed directly; anything
+containing code needs a pull request.** The decision lives in exactly one place,
+`scripts/classify-paths.mjs`, and both the pre-push hook and the `push-policy`
+workflow call it — two implementations would drift apart, and silently.
+
+**GitHub cannot enforce this conditionally.** The *push ruleset* — the only rule
+that can reject a push by path — is refused for this repository because it is
+public and user-owned (measured 2026-09-01). So enforcement is two layers, and
+neither is complete on its own:
+
+| | what it does | can it be bypassed |
+| --- | --- | --- |
+| `.githooks/pre-push` | stops the act **as it happens** | yes, `--no-verify` — and it does not exist at all in a clone that skipped the config above |
+| `.github/workflows/push-policy.yml` | leaves a violation **red and permanent** | no — but it cannot prevent anything |
+
+That the hook can be bypassed is deliberate, not a defect: bending the rule is the
+operator's call, and a tool must not take that away. The bypass shows up in CI.
+
+CI fails on two things only: the **123 tests**, and the **carriers being in sync**
+with their canonical sources. The language measurement (`scripts/lang-report.mjs`)
+reports and never fails — the premise behind
+[`operator-language`](docs/aims/operator-language.md) has not been measured yet, so
+making it a hard gate would be premature.
+
 ## Status
 
 Early, and honest about it. The discipline grew inside a private project that ran

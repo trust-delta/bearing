@@ -175,7 +175,7 @@ async function main() {
     )
   }
 
-  // ── per-repo aim facts ────────────────────────────────────────────────────
+  // ── repo ごとの aim 事実 ──────────────────────────────────────────────────
   say('## Aim corpus', '')
   if (withCorpus.length === 0) {
     say('*この unit のどの repo も `docs/aims/` を持たない。*', '')

@@ -1,0 +1,108 @@
+name: push-policy
+
+# main への直プッシュが規則に反していないかを検査する。
+#
+# 規則（operator, 2026-09-01）: 非コードのドキュメント系は直プッシュ可、コードを含む場合は
+# PR 必須。
+#
+# ⚠ **これは検知であって防止ではない。** GitHub 側で path 条件つきの push 拒否を強制する
+# ことはできない（実測 2026-09-01: push ruleset は "Source public repos cannot have push
+# rules" と "only org-owned repos can have push rules" で拒否される）∴ push は必ず着地し、
+# ここができるのは**着地した違反を赤く、恒久的に残すこと**だけである。行為の瞬間に止めるのは
+# `.githooks/pre-push` の役目で、そちらは `--no-verify` で破れる —— **破った事実がここに残る。**
+#
+# ⚠ **判定できなかったときは、そう言って落とす。** 「PR かどうか分からなかった」を
+# 「PR だった」に倒せば、このセンサーは黙って嘘をつく。
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  policy:
+    name: 直プッシュに code が含まれていないか
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 変更された path を集める
+        id: changed
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          zero='0000000000000000000000000000000000000000'
+          if [ "$BEFORE" = "$zero" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            # 範囲を決められない。⚠ 観測できなかったことを「変更なし」に倒さない。
+            echo 'unknown=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --name-only "$BEFORE" "$AFTER" > changed.txt
+          echo 'unknown=false' >> "$GITHUB_OUTPUT"
+          echo '変更された path:'
+          cat changed.txt
+
+      - name: 範囲が読めなかった場合
+        if: steps.changed.outputs.unknown == 'true'
+        run: |
+          echo '::warning::push の範囲を決められなかった（force-push、または before が失われている）。'
+          echo '⚠ clean ではなく「不在」である: この push が規則に適合していたかは検査できていない。'
+
+      - name: この push が PR 経由か直プッシュかを判定する
+        if: steps.changed.outputs.unknown == 'false'
+        id: origin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # ⚠ merge / squash / rebase のいずれでも、GitHub は commit を PR に結び付ける。
+          # 結び付きが 1 つでも在れば PR 経由。API が答えられなければ「判定不能」であって
+          # 「直プッシュではない」ではない。
+          if ! gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" \
+                 -H 'Accept: application/vnd.github+json' --jq 'length' > n.txt 2>err.txt; then
+            echo '::error::この commit が PR 由来かを GitHub に問えなかった。'
+            echo '⚠ 判定不能を「PR だった」に倒さない —— これは検査の不在であって適合の証拠ではない。'
+            cat err.txt
+            exit 1
+          fi
+          n="$(cat n.txt)"
+          echo "この commit に結び付く PR: ${n} 件"
+          if [ "$n" -gt 0 ]; then echo 'via_pr=true' >> "$GITHUB_OUTPUT";
+          else echo 'via_pr=false' >> "$GITHUB_OUTPUT"; fi
+
+      - name: 規則を当てる
+        if: steps.changed.outputs.unknown == 'false'
+        env:
+          VIA_PR: ${{ steps.origin.outputs.via_pr }}
+        run: |
+          set -euo pipefail
+          if [ "$VIA_PR" = 'true' ]; then
+            echo 'PR 経由で入っている ∴ この規則は何も要求しない。'
+            node scripts/classify-paths.mjs < changed.txt || true
+            exit 0
+          fi
+
+          echo '直プッシュである。docs のみかを判定する:'
+          if node scripts/classify-paths.mjs < changed.txt; then
+            echo ''
+            echo 'docs のみの直プッシュ ∴ 規則に適合している。'
+            exit 0
+          fi
+
+          echo ''
+          echo '::error::code を含む変更が PR を経ずに main へ直プッシュされた。'
+          echo '⚠ この push は既に着地している —— ここができるのは、それを記録に残すことだけである。'
+          echo '   規則: 非コードのドキュメント系は直プッシュ可、コードを含む場合は PR 必須。'
+          echo '   ローカルで止めたいなら:  git config core.hooksPath .githooks'
+          exit 1
