@@ -32,6 +32,12 @@ import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherDrift } from '../lib/drift.mjs'
 import { readBaton } from '../lib/baton.mjs'
 
+// ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
+// （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
+import { delegateToCheckout } from '../lib/delegate.mjs'
+await delegateToCheckout(import.meta.url)
+
+
 // ⚠ escape 文字を literal で書かない —— この file は heredoc や diff を通って運ばれる
 // ことがあり、生の制御文字はその途中で失われるか、道具に拒まれる。
 const ESC = String.fromCharCode(27)
@@ -227,8 +233,25 @@ export function renderSession(input, branch, now = Date.now()) {
  *
  * @param {'ok'|'no-corpus'|'unavailable'} state
  */
-export function renderBearing(state, facts) {
-  const seg = [paint(C.label, 'bearing')]
+/**
+ * 走っている複製はどちらか。**working tree なら `'repo'`、cache なら `null`。**
+ *
+ * ⚠ **黙っていてよいのは cache のほうである。** 他 project から見れば cache こそ正常な状態
+ * であり、この行の法（静かなときは静かであること）に従えば、述べるべきは*異常*のほう ——
+ * すなわち **「あなたが今見ている事実は、他 project が受け取る版のものではない」**である。
+ *
+ * ⚠ **委譲の env ではなく自分の位置で判定する。** `delegate.mjs` の印は「委譲されて来た」
+ * ことしか語らず、statusline のように**最初から working tree を直に指されている**場合に
+ * 何も立たない —— 2026-09-02 の食い違いは、まさにその経路で起きた。
+ */
+export function provenance(selfDir, projectDir) {
+  if (!projectDir || !selfDir) return null
+  const root = path.resolve(projectDir)
+  return path.resolve(selfDir).startsWith(root + path.sep) ? 'repo' : null
+}
+
+export function renderBearing(state, facts, from = null) {
+  const seg = [paint(C.label, from === 'repo' ? 'bearing repo' : 'bearing')]
 
   // ⚠ `docs/aims/` を持たない repo は**構造的に正常**である ∴ 警告色を与えない。
   // この判定が先に来ること —— corpus が無い repo も facts を持たないため、
@@ -391,7 +414,14 @@ async function main() {
   }
 
   const first = fit(renderSession(input, gathered.branch), columns)
-  const second = fit(renderBearing(gathered.state, gathered.facts), columns)
+  const second = fit(
+    renderBearing(
+      gathered.state,
+      gathered.facts,
+      provenance(import.meta.dirname, resolveCwd(input)),
+    ),
+    columns,
+  )
 
   if (first) process.stdout.write(first + '\n')
   if (second) process.stdout.write(second + '\n')
