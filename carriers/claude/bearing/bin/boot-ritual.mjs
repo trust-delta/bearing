@@ -49,6 +49,19 @@ import { resolveUnit } from '../lib/unit.mjs'
 import { delegateToCheckout } from '../lib/delegate.mjs'
 await delegateToCheckout(import.meta.url)
 
+/**
+ * この儀式が名指す handoff CLI の絶対 path。
+ *
+ * ⚠ **`$CLAUDE_PLUGIN_ROOT` を hook の出力に書いてはならない。** あの placeholder が inline
+ * 展開されるのは hook の `command` field と skill / agent の content であって、**hook が吐く
+ * text ではない** ∴ 文字列のまま届き、しかも **Bash tool の env にその変数は無い** ——
+ * エージェントは `/bin/handoff.mjs` を見て落ちる。2026-09-02 から 4 セッション連続で起きた。
+ *
+ * ⚠ **env ではなく `import.meta.dirname` で解く。** こちらは*今走っている複製*を指す ——
+ * 委譲されて working tree に居るなら working tree を名指し、env の有無に一切依らない。
+ */
+const HANDOFF_CLI = JSON.stringify(path.join(import.meta.dirname, 'handoff.mjs'))
+
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -91,7 +104,7 @@ SessionStart hook はこの baton を surface したが、\`read-at\` は**意�
   1. 帳簿の半分を走らせる（canon の手順 2〜4 —— 旧 \`read-at\` を返し、新しいものを刻み、
      aim の trace を出す）:
 
-       node "$CLAUDE_PLUGIN_ROOT"/bin/handoff.mjs read
+       node ${HANDOFF_CLI} read
 
   2. trace が名指す aim slug をすべて再読すること。⚠ **baton は forward に選ばれる** ∴
      道中どう aim が触られたかを過少報告する —— そして aim を読み直して得られるのは

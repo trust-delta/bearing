@@ -55,6 +55,19 @@ import { resolveUnit } from '../lib/unit.mjs'
 import { delegateToCheckout } from '../lib/delegate.mjs'
 await delegateToCheckout(import.meta.url)
 
+/**
+ * この儀式が名指す handoff CLI の絶対 path。
+ *
+ * ⚠ **`$CLAUDE_PLUGIN_ROOT` を hook の出力に書いてはならない。** あの placeholder が inline
+ * 展開されるのは hook の `command` field と skill / agent の content であって、**hook が吐く
+ * text ではない** ∴ 文字列のまま届き、しかも **Bash tool の env にその変数は無い** ——
+ * エージェントは `/bin/handoff.mjs` を見て落ちる。2026-09-02 から 4 セッション連続で起きた。
+ *
+ * ⚠ **env ではなく `import.meta.dirname` で解く。** こちらは*今走っている複製*を指す ——
+ * 委譲されて working tree に居るなら working tree を名指し、env の有無に一切依らない。
+ */
+const HANDOFF_CLI = JSON.stringify(path.join(import.meta.dirname, 'handoff.mjs'))
+
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -93,7 +106,7 @@ native な圧縮は反応的で不可視であり、**何が落ちたかを誰�
 今これを行うこと:
   1. \`handoff-w\` skill に従う（正本: \`_guide/handoff.md\` § 書く）。
   2. 何を残し何を省いたかを 1〜2 行で人間に見せ、**land する前に**訂正させること。
-  3. land はこれで:  node "$CLAUDE_PLUGIN_ROOT"/bin/handoff.mjs write < <著した.md>
+  3. land はこれで:  node ${HANDOFF_CLI} write < <著した.md>
 
 人間が続行を選ぶなら、そう述べて続けること —— これはこのセッションで二度と発火せず、
 次の自動圧縮はそのまま進む。`
