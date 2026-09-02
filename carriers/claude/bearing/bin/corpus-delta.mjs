@@ -112,7 +112,7 @@ async function historyFences(repo) {
     )
   } else {
     blocks.push(renderIntraFence(drift.intra).trimEnd())
-    blocks.push(renderInterFence(drift.inter).trimEnd())
+    blocks.push(renderInterFence(drift.inter, drift.brokenCollations).trimEnd())
   }
   blocks.push(renderUnpushedFence(unpushed).trimEnd())
   blocks.push(renderCheckpointFence(checkpoint).trimEnd())

@@ -21,7 +21,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | fence tag | fields | 何の事実か |
 | :-- | :-- | :-- |
 | `bearing-drift-intra v1` | `slug \| anchor_commit \| body_moved` | 自 node の `aim:` が**改訂**され、以後 body がそれに寄せられたかどうか |
-| `bearing-drift-inter v1` | `slug \| anchor_commit \| unreconciled_neighbours` | 隣接 node（親・子・`[[link]]` 先）のうち、その変更と一緒に commit されていないもの |
+| `bearing-drift-inter v1` | `slug \| anchor_commit \| unreconciled_neighbours` | 隣接 node（親・子・`[[link]]` 先）のうち、その変更と一緒に commit されておらず、かつ `照合:` 記録でも片付いていないもの |
 | `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
 | `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
@@ -38,6 +38,8 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 ### 各 fence が課すもの
 
 **drift は可能性であって断定ではない。** 挙がった node が親の `aim:` の bearing になお仕えているかを再確認する。**body 内に閉じた改訂で再整合できるなら、それはあなたの担当** —— node を編集すれば flag は self-clear する。**親の bearing 自体が問われているときにのみ人間へ escalate する。**
+
+⚠ **`drift-inter` を「見たが変更不要だった」で終えてはならない。** その結論は何も動かさない ∴ file の移動しか見ない絞り込みでは永久に落ちず、**既に見た者へ「見よ」と言い続ける** —— 可視化ではなく注意予算への課税である。`# DAG` に `照合:` の 1 行を残すこと（形と規律は `aim-authoring.md` の「drift の検出と保守」）。⚠ **flag が無関係な編集で消えるのを待つのは、判断を捨てることである** —— この fence は整合したかを見ておらず、隣接が動けば理由を問わず落ちるので、**書かなかった判断はどこにも残らないまま flag だけが消える。**
 
 **working-delta は presence のみを述べ、順序を一切含意しない。** working tree の中に順序の事実は無いので、この層は比較を行わない。commit された瞬間にこの node の working fact は消え、drift 側の本物の順序判定が引き継ぐ。∴ **ここに時系列を読み込むな。**
 

@@ -76,9 +76,30 @@ export function aimRelPath(slug) {
  * 検査が backtick 付きの `.handoff/active.md` に一致してしまったとき、取り違えたのがこの法
  * である。
  */
-export function stripCodeSpans(text) {
-  return text.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '')
+export function stripFencedBlocks(text) {
+  return text.replace(/```[\s\S]*?```/g, '')
 }
+
+export function stripCodeSpans(text) {
+  return stripFencedBlocks(text).replace(/`[^`\n]*`/g, '')
+}
+
+/**
+ * `# DAG` の**照合記録** —— エージェントが「この隣接を、この commit の変更に対して検査し、
+ * 変更不要と結論した」と書いた行。形は `- 照合: [[slug]] @ <sha>`。
+ *
+ * ⚠ **これが在るのは、`drift-inter` が file の移動しか見ないためである。** 検査の結果
+ * 変更が要れば隣接が動く ∴ flag は自然に落ちる。だが**変更不要という結論は何も動かさない**
+ * ∴ 記録する場所が無ければ flag は立ち続け、**既に見た者に「見よ」と言い続ける**。
+ *
+ * ⚠ **sha を必須にしているのは、照合が commit に対する証言だからである。** anchor が次に
+ * 変われば、その照合はもう答えになっていない —— node に対する証言にすると、一度書いた
+ * 行が以後すべての変更を黙って吸収してしまう。
+ *
+ * ⚠ **fenced block だけを剥ぐ**（inline span は剥がない）。剥ぐと backtick 付きで書かれた
+ * sha が消え、記録が**黙って落ちる** —— 落ちた記録は「記録が無い」と同じ見た目になる。
+ */
+const COLLATION_RE = /^[ \t]*[-*][ \t]*照合:[ \t]*\[\[([^\]\n]+)\]\][ \t]*@[ \t]*([^\s`]+)/gm
 
 /**
  * 1 つの aim record を、fence が必要とする事実へ parse する。
@@ -111,6 +132,10 @@ export function parseAimRecord(text) {
   // （まだ aim⊥code の監視下に無い）であって、埋めるべき既定値ではない。`body` を返して
   // いるのは `# PROCESS` がそこに在るからで、mark の parser が frontmatter を再分割しては
   // ならないためである。
+  const collations = [...stripFencedBlocks(body).matchAll(COLLATION_RE)].map((m) => ({
+    slug: m[1].trim(),
+    sha: m[2].trim(),
+  }))
   return {
     aim: field('aim'),
     parent: field('parent'),
@@ -118,6 +143,7 @@ export function parseAimRecord(text) {
     lastVerified: field('last-verified'),
     body,
     links,
+    collations,
   }
 }
 

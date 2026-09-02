@@ -33,3 +33,4 @@ state: open
 - 関連: [[purpose-drift]] —— 2 行目が運ぶ drift / 未 commit / 未 push は、あの node が可視化する事実そのものである
 - 関連: [[aim-tree]] —— 2 行目の aim 数・open-todo・観測待ちは、あの木から数えている
 - 関連: [[surface-parity]] —— *どこが揃っていないか*はあちらが述べ、**この面で埋める手段**を本 node が持つ
+- 照合: [[aim-tree]] @ e7aecd63 —— 本 node は aim-tree の corpus を*読む*側であり、あちらの手段（所有で引く分割・置き場は repo・木で構造化）に触れていない ∴ 面が 1 つ増えても向こうに書き換える主張が無い

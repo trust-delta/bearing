@@ -112,7 +112,10 @@ test('both fences are emitted even with no candidates', () => {
       '# none — anchor が変更され、以後そのまま放置された record は無い\n' +
       '```\n\n',
   )
-  assert.match(renderInterFence([]), /# none — 変更された anchor の隣接は、すべてその後に動いている/)
+  assert.match(
+    renderInterFence([]),
+    /# none — 変更された anchor の隣接は、すべてその後に動いているか照合済みである/,
+  )
 })
 
 test('an unreadable body diff renders as unknown, never as false', () => {
@@ -287,5 +290,120 @@ test('a clean corpus with no anchor history yields empty fences, not null', asyn
   commit(root, 'born')
 
   const facts = await gatherDrift(root)
-  assert.deepEqual(facts, { intra: [], inter: [] })
+  assert.deepEqual(facts, { intra: [], inter: [], brokenCollations: [] })
+})
+
+// ── 照合記録 ────────────────────────────────────────────────────────────────
+//
+// ⚠ **これらが固定しているのは「注意予算に課税しない」という条項である。** 検査して変更が
+// 要れば隣接が動く ∴ flag は自然に落ちる。だが**変更不要という結論は何も動かさない** ——
+// 記録する場所が無ければ、機構は既に見た者へ「見よ」と言い続ける。それは可視化ではない。
+
+test('照合済みの隣接は候補から落ちる —— 変更不要という結論は何も動かさないため', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born')
+  await writeAim(root, 'child-node', 'the child purpose, revised', { parent: 'parent-node' })
+  commit(root, 'repurpose the child alone')
+  const anchor = git(root, ['rev-parse', 'HEAD']).trim()
+
+  const before = await gatherDrift(root)
+  assert.deepEqual(before.inter.find((r) => r.slug === 'child-node').stale, ['parent-node'])
+
+  await writeAim(root, 'child-node', 'the child purpose, revised', {
+    parent: 'parent-node',
+    body: `- 照合: [[parent-node]] @ ${anchor.slice(0, 8)} —— 読んだが変更不要だった`,
+  })
+  commit(root, 'record the collation')
+
+  const after = await gatherDrift(root)
+  assert.equal(after.inter.find((r) => r.slug === 'child-node'), undefined)
+  assert.deepEqual(after.brokenCollations, [])
+})
+
+test('照合は commit に対する証言である ∴ anchor が再び動けば効かない', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born')
+  await writeAim(root, 'child-node', 'the child purpose, revised', { parent: 'parent-node' })
+  commit(root, 'repurpose the child alone')
+  const anchor = git(root, ['rev-parse', 'HEAD']).trim()
+  const collation = `- 照合: [[parent-node]] @ ${anchor.slice(0, 8)} —— 読んだが変更不要だった`
+  await writeAim(root, 'child-node', 'the child purpose, revised', {
+    parent: 'parent-node',
+    body: collation,
+  })
+  commit(root, 'record the collation')
+
+  // ⚠ 古い照合を残したまま anchor をもう一度動かす —— 一度書いた行が以後すべての変更を
+  // 黙って吸収してはならない。
+  await writeAim(root, 'child-node', 'the child purpose, revised again', {
+    parent: 'parent-node',
+    body: collation,
+  })
+  commit(root, 'repurpose the child once more')
+
+  const facts = await gatherDrift(root)
+  assert.deepEqual(facts.inter.find((r) => r.slug === 'child-node').stale, ['parent-node'])
+})
+
+test('読めない照合記録は候補を消さず、そのまま声になる', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born')
+  await writeAim(root, 'child-node', 'the child purpose, revised', {
+    parent: 'parent-node',
+    // ⚠ 日付を書く取り違えには前例がある（`last-verified` で実際に起きた）。
+    body: '- 照合: [[parent-node]] @ 2026-09-02 —— 日付を書いてしまった',
+  })
+  commit(root, 'repurpose the child alone')
+
+  const facts = await gatherDrift(root)
+  assert.deepEqual(facts.inter.find((r) => r.slug === 'child-node').stale, ['parent-node'])
+  assert.deepEqual(facts.brokenCollations, [
+    { slug: 'child-node', neighbour: 'parent-node', sha: '2026-09-02', why: 'sha ではない' },
+  ])
+})
+
+test('aim 履歴に無い commit を名指した照合も読めない扱いになる', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born')
+  await writeAim(root, 'child-node', 'the child purpose, revised', {
+    parent: 'parent-node',
+    body: '- 照合: [[parent-node]] @ ' + 'f'.repeat(40) + ' —— 在りもしない commit',
+  })
+  commit(root, 'repurpose the child alone')
+
+  const facts = await gatherDrift(root)
+  assert.deepEqual(facts.inter.find((r) => r.slug === 'child-node').stale, ['parent-node'])
+  assert.equal(facts.brokenCollations[0].why, 'aim 履歴に無い')
+})
+
+test('読めない記録は候補の一覧より先に出る —— 一覧を先に信じさせないため', () => {
+  const out = renderInterFence(
+    [{ slug: 'alpha', commit: 'b'.repeat(40), stale: ['beta'] }],
+    [{ slug: 'alpha', neighbour: 'gamma', sha: 'nope', why: 'sha ではない' }],
+  )
+  const lines = out.split('\n')
+  const warn = lines.findIndex((l) => l.startsWith('# ⚠ 読めない照合記録'))
+  const row = lines.findIndex((l) => l.startsWith('alpha |'))
+  assert.ok(warn !== -1 && row !== -1)
+  assert.ok(warn < row, '読めない記録は候補行より前に出ること')
+})
+
+test('fenced block の中の照合は記録ではなく引用である', () => {
+  const record = parseAimRecord(
+    ['---', 'aim: x', '---', '', '# DAG', '', '```', '- 照合: [[quoted]] @ abcdef1', '```', '',
+     '- 照合: [[real]] @ abcdef1', ''].join('\n'),
+  )
+  assert.deepEqual(record.collations, [{ slug: 'real', sha: 'abcdef1' }])
 })

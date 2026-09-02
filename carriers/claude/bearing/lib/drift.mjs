@@ -26,6 +26,9 @@
 
 import { runGit } from './git.mjs'
 import { aimRelPath, readAimGraph } from './corpus.mjs'
+// ⚠ 判定を再実装しない: 「sha として妥当か」の正本は checkpoint 側に既に在り、二重に
+// 書けば片方だけが直る日が来る。
+import { isShaLike } from './checkpoint.mjs'
 
 export const INTRA_FENCE_TAG = 'bearing-drift-intra v1'
 export const INTER_FENCE_TAG = 'bearing-drift-inter v1'
@@ -151,6 +154,7 @@ export async function gatherDrift(repoRoot) {
 
   const intra = []
   const inter = []
+  const brokenCollations = []
   for (const slug of [...live.keys()].sort()) {
     const anchor = lastAnchorTouch.get(slug)
     if (!anchor) continue
@@ -163,14 +167,61 @@ export async function gatherDrift(repoRoot) {
     // inter: anchor が触られた時点より厳密に古い隣接 —— まだ機会を得ていないもの。
     const anchorOrder = order.get(anchor)
     const co = touchedIn.get(anchor) ?? new Set()
+    const { collated, broken } = readCollations(live.get(slug), order)
+    for (const b of broken) brokenCollations.push({ slug, ...b })
     const stale = graph.neighbours(slug).filter((n) => {
       if (co.has(n)) return false
+      // ⚠ **照合済みの対は候補ではない。** 「検査したが変更不要だった」は何も動かさない
+      // ∴ file の移動だけを見る絞り込みでは永久に落ちず、**既に見た者へ「見よ」と言い
+      // 続ける**。それは可視化ではなく、注意予算への課税である。
+      const at = collated.get(n)
+      if (at !== undefined && at <= anchorOrder) return false
       const seen = lastTouch.get(n)
       return seen !== undefined && order.get(seen) > anchorOrder
     })
     if (stale.length > 0) inter.push({ slug, commit: anchor, stale: stale.sort() })
   }
-  return { intra, inter }
+  return { intra, inter, brokenCollations }
+}
+
+/**
+ * 1 つの node の照合記録を、aim 履歴の順序へ解決する。
+ *
+ * ⚠ **読めない記録は suppression に使わず、そのまま声にする。** 誰かが証言を鋳造したのに
+ * センサーが読めない —— これは記録が無い状態より悪く、黙って飛ばせば「照合したのに flag が
+ * 消えない」という、原因の見えない不信だけが残る（`checkpoint.mjs` が同じ理由で同じ形を
+ * 採っている）。
+ *
+ * ⚠ **短縮 sha が複数に一致したら読めない扱いである。** 曖昧な証言は証言ではない。
+ */
+function readCollations(record, order) {
+  const collated = new Map()
+  const broken = []
+  for (const c of record?.collations ?? []) {
+    // ⚠ **`neighbour` へ改名して持つ。** 記録の `slug` は*隣接*の名であり、呼び出し側は
+    // そこへ*この node* の名を足す —— 同じ key 名のまま spread すると、node の名が隣接の
+    // 名に黙って潰れ、fence が「誰の記録が読めないのか」を取り違えて述べる。
+    if (!isShaLike(c.sha)) {
+      broken.push({ neighbour: c.slug, sha: c.sha, why: 'sha ではない' })
+      continue
+    }
+    const hits = order.has(c.sha) ? [c.sha] : [...order.keys()].filter((f) => f.startsWith(c.sha))
+    if (hits.length !== 1) {
+      // ⚠ 0 件は「aim を触っていない commit を書いた」場合を含む —— 照合には fence が
+      // 出した anchor_commit をそのまま書くこと、が canon の求めである。
+      broken.push({
+        neighbour: c.slug,
+        sha: c.sha,
+        why: hits.length === 0 ? 'aim 履歴に無い' : '短縮 sha が曖昧',
+      })
+      continue
+    }
+    const at = order.get(hits[0])
+    // 同じ隣接に複数の照合が在れば、最も新しいもの（order が小さい）が効く。
+    const prev = collated.get(c.slug)
+    collated.set(c.slug, prev === undefined ? at : Math.min(prev, at))
+  }
+  return { collated, broken }
 }
 
 const short = (sha) => sha.slice(0, 8)
@@ -189,13 +240,23 @@ export function renderIntraFence(items) {
   return lines.join('\n') + '\n'
 }
 
-export function renderInterFence(items) {
+/**
+ * @param {{slug: string, commit: string, stale: string[]}[]} items
+ * @param {{slug: string, slug2?: string, sha: string, why: string}[]} broken 読めない照合記録
+ */
+export function renderInterFence(items, broken = []) {
   const lines = [
     FENCE + INTER_FENCE_TAG,
     '# fields: slug | anchor_commit | unreconciled_neighbours (comma-separated)',
   ]
+  // ⚠ **読めない照合記録は、候補の一覧より先に出す。** 候補が減っていること自体がこの
+  // 記録に依存しており、記録が読めないなら「減っていない」ではなく「減ったかどうかが
+  // 分からない」が正しい —— それを一覧の後ろに置くと、読み手は先に一覧を信じる。
+  for (const b of broken) {
+    lines.push(`# ⚠ 読めない照合記録: ${b.slug} が [[${b.neighbour}]] @ ${b.sha} —— ${b.why}`)
+  }
   if (items.length === 0) {
-    lines.push('# none — 変更された anchor の隣接は、すべてその後に動いている')
+    lines.push('# none — 変更された anchor の隣接は、すべてその後に動いているか照合済みである')
   } else {
     for (const it of items) {
       lines.push(`${it.slug} | ${short(it.commit)} | ${it.stale.join(',')}`)
