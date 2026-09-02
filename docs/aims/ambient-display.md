@@ -18,7 +18,15 @@ state: open
 
 ⚠ **幅が確定した文字だけを使う。** 中黒・矢印・ギリシャ文字・絵文字は East Asian **Ambiguous** 幅であり、日本語フォントでは全角に描かれるのに terminal は半角として桁を進める ∴ **隣の文字と重なる**。使えるのは ASCII printable と Wide が確定した日本語だけで、**構造は記号ではなく色と余白が作る**。これは美意識ではなく、実際に画面が壊れて得た制約である。
 
-⚠ **この面は、描くものではなく装着そのものが黙って消えうる。** `statusLine.command` は `$CLAUDE_PROJECT_DIR` を含む絶対パスで node を呼んでおり、**この env が statusline の script に渡ることは docs に記述が無い** —— 2026-09-01 の実測で在ることを確かめただけである。⚠ **渡らなくなれば `node "/carriers/.../statusline.mjs"` を呼んで即死し、画面からは 2 行が消えるだけで理由は一言も出ない。** ⚠ **同じ形の罠は既に別の env で踏んでいる**（2026-09-02、`$CLAUDE_PLUGIN_ROOT` が Bash の env に無く、それを前提にした呼び出しが `/bin/...` を見て落ちた）—— **ハーネスが渡す env を path に埋める呼び出しは、渡されなかった日に path が壊れる**、という一つの類である。∴ 上の「不在を黙って消さない」は描画の中だけの規律では足りない: **plugin の `bin/` は PATH に入る ∴ 絶対パスを捨てれば、この依存ごと消せる。**
+⚠ **この面は、描くものではなく装着そのものが黙って消えうる。** `statusLine.command` は `$CLAUDE_PROJECT_DIR` を含む絶対パスで node を呼んでおり、**この env が statusline の script に渡ることは docs に記述が無い** —— 2026-09-01 の実測で在ることを確かめただけである。⚠ **渡らなくなれば `node "/carriers/.../statusline.mjs"` を呼んで即死し、画面からは 2 行が消えるだけで理由は一言も出ない。** ⚠ **同じ形の罠は既に別の env で踏んでいる**（2026-09-02、`$CLAUDE_PLUGIN_ROOT` が Bash の env に無く、それを前提にした呼び出しが `/bin/...` を見て落ちた）—— **ハーネスが渡す env を path に埋める呼び出しは、渡されなかった日に path が壊れる**、という一つの類である。∴ 上の「不在を黙って消さない」は描画の中だけの規律では足りない —— **装着そのものが黙って消える経路を塞げるかが、この面の問いである。**
+
+⚠ **2026-09-03、その経路は塞げないことが確定した（公式 docs ＋ 実測）。** plugin の `bin/` が PATH に入るのは **Bash tool に対してだけ**であり（docs の file locations 表が "Executables added to the Bash tool's `PATH`" と明記する）、**statusline の process には入らない** —— 実測でも、Bash tool の PATH 58 要素に対し statusline は 52 要素で、**差はちょうど 6 つの plugin `bin/`** だった。∴ **裸のコマンド名へ移す道は無く、装着の 1 行から path は消せない。** ⚠ **同じ実測が `$CLAUDE_PROJECT_DIR` は statusline に渡ることを再確認した** ∴ この面は「docs に無いが実在する env」1 つに依り続ける。⚠ **前段の「絶対パスを捨てれば依存ごと消せる」は取り下げる** —— あのまま実装していれば statusline は解決しないコマンド名を呼んで即死し、**画面からは 2 行が消えるだけで理由は一言も出なかった。この node が warn している壊れ方を、この node の todo が自分で踏むところだった。**
+
+⚠ **path が消せない帰結は、他 project のほうが重い。** bearing の checkout の外に `carriers/...` は無い ∴ 他 project の 1 行は cache を直に指すほかなく、**その path は version を含む**（`.../bearing/0.7.0/bin/statusline.mjs`）。⚠ **cache は旧版を消さない**（実測: `0.4.0` / `0.5.0` / `0.7.0` が並存）∴ bump しても 1 行は壊れず、**黙って古い版を描き続ける** —— [[bearing]] の「この repo は自分自身の古い版を食べていた」の、消費者側での形である。装着は原理的に人間の act ゆえ、**bump のたびに人間が書き換えねばならず、忘れても何も言わない。**
+
+# ESCALATION
+
+- **装着の 1 行から version を外す手を採るか。** cache の中から最新版を実行時に解決する形（`node "$(ls -d ~/.claude/plugins/cache/trust-delta/bearing/*/bin/statusline.mjs | sort -V | tail -1)"`）なら、1 行はどこへ貼っても同じになり bump で腐らない —— **委譲の shim が在るので、bearing の checkout の中では同じ 1 行が working tree を走らせる。** ⚠ **だがこれは docs に無い cache の layout に依り、しかも公開の助言として README に載る。** 依存を 1 つ捨てて別の 1 つを取る取引であり、**どちらの依存を選ぶかは人間の判断である。**
 
 # PROCESS
 
@@ -26,7 +34,7 @@ state: open
 - [done] **幅の規律を機構で固定した。** `widthUnsafeChars()` と test が、Ambiguous な文字を出力に混ぜようとした時点で落ちる —— 一度画面が重なる事故を起こしており、注意ではなく機構で止める
 - [done] **不在を消さない規律を 3 箇所に引いた。** corpus 未取得 / git 未検知 / detached の描き分け。⚠ ついでに degrade が実装の bug をも「事実が採れない」に化けさせることが分かったので、debug の穴が開いているときだけ飲んだものを見せる
 - [done] **どちらの複製が描いているかを label に出した**（working tree なら `bearing repo`、cache なら黙る）。⚠ **黙るのは cache のほうである** —— 他 project から見れば cache こそ正常であり、この行の法に従えば述べるべきは「今見ている事実は、他 project が受け取る版のものではない」のほう。⚠ **委譲の印ではなく自分の位置で判定する**: あの印は「委譲されて来た」ことしか語らず、**最初から working tree を直に指されている**この面では何も立たない —— 2026-09-02 の食い違いはまさにその経路で起きた
-- [todo] **装着の 1 行から path を外し、どの project へでもそのまま書き写せる形にする。** ⚠ **「手書きなしで載る」は達成できない** —— plugin root の `settings.json` が宣言できる key は `agent` と `subagentStatusLine` だけで、`statusLine` は user / project の settings にしか置けない ∴ **装着の 1 行は原理的に人間の act として残る**（供給は plugin、装着は人間）。エージェントにできるのは、その 1 行を `$CLAUDE_PROJECT_DIR` 依存の絶対パスから `bin/` の名前へ移し、**どこへ貼っても同じ 1 行**にすることまでである
+- [todo] **装着の 1 行を、bearing の checkout の中と他 project の両方について書き出し、その 1 行が version に釘付けであることを同じ場所で述べる。** ⚠ **「手書きなしで載る」は達成できない** —— plugin root の `settings.json` が宣言できる key は `agent` と `subagentStatusLine` だけで、`statusLine` は user / project の settings にしか置けない ∴ **装着の 1 行は原理的に人間の act として残る**（供給は plugin、装着は人間）。⚠ **`bin/` の名前へ移す道は塞がっていると確定した**（上記）∴ 残る仕事は「消せない path を、腐り方ごと正確に書く」ことである —— 1 行だけを載せて version 依存を伏せれば、bump のたびに黙って古い版が描かれる。⚠ **version を外す手そのものは `# ESCALATION` に在る**
 
 # DAG
 
