@@ -107,6 +107,36 @@ plugin details` は record が無くても版も skill も hook も列挙する 
 —— 映すのは `claude plugin list` の側である。⚠ **これは 1 台での実測（2026-09-03）であり、
 公式 docs の裏付けはまだ無い。**
 
+### statusline の装着 —— 1 行は人間が書くが、path は書かない
+
+⚠ **plugin は `statusLine` key を宣言できない**（plugin root の settings が持てるのは `agent`
+と `subagentStatusLine` だけ）∴ **装着は原理的に人間の act として残る。** ⚠ **そして plugin の
+`bin/` は statusline の PATH に入らない** —— docs が言う PATH は **Bash tool のもの**であり、
+実測も一致した ∴ **裸のコマンド名で呼ぶ道は無い。**
+
+∴ 装着はコマンド 1 つで済ませる:
+
+```
+/bearing:statusline-setup
+```
+
+これが `~/.claude/bearing-statusline.mjs` に薄い shim を置き、`~/.claude/settings.json` に 1 行を
+書く。⚠ **shim は走るたびに install record を読んで今の版へ橋渡しする** ∴ **1 行に version が
+入らず、bump で腐らない** —— cache は旧版を消さないので、versioned な path を直に書けば bump 後も
+黙って古い版が描かれ続ける。
+
+⚠ **書き先は user settings に限る。** 絶対 path は home を含む ∴ tracked な project settings へ
+書けば、他の人間の面が黙って壊れる形を repo に commit することになる。既に別の statusline が在れば
+**上書きせず述べて止まる**（差し替えるなら `--force`、外すのは `--uninstall`）。
+
+⚠ **bearing 自身の repo は、tracked な project settings で working tree を直に指している** ——
+これは重複ではない: あちらは **bearing が載っていなくても、clone しただけで描ける**（そして
+project settings は user settings に勝つ）。
+
+⚠ **載っていなければ shim はそう描く。** record が無ければ本体は 1 枚も載っておらず、**載って
+いない機構は自分の不在を報告できない** —— だが shim は plugin の外に住む ∴ **載っていなくても
+走り、そう述べられる。**
+
 ## 現況
 
 初期段階であり、それを正直に述べる。規律そのものは、ある private project の中で数か月に

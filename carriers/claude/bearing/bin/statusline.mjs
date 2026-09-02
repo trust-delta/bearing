@@ -386,7 +386,12 @@ async function readStdin() {
   }
 }
 
-async function main() {
+/**
+ * ⚠ **export されているのは、装着の shim が呼ぶからである。**
+ * `bin/bearing-statusline.mjs` は `~/.claude/` に住み、install record を読んでここへ橋渡し
+ * する ∴ そのとき `process.argv[1]` は shim を指し、下の entry 判定は当たらない。
+ */
+export async function main() {
   const { input, raw } = await readStdin()
 
   // 実物の JSON を一度見るための穴。⚠ 既定では何も書かない —— statusline は毎ターン
@@ -428,6 +433,8 @@ async function main() {
 }
 
 // ⚠ import されたとき（test）は走らせない。
-if (process.argv[1] && path.resolve(process.argv[1]).endsWith('statusline.mjs')) {
+// ⚠ **basename の一致で見る。** `endsWith` は `bearing-statusline.mjs`（装着の shim）にも
+// 当たり、shim 経由で import したときに main() が二重に走る —— 面が 2 度描かれる。
+if (process.argv[1] && path.basename(process.argv[1]) === 'statusline.mjs') {
   await main()
 }

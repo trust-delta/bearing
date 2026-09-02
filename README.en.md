@@ -107,6 +107,38 @@ with no record present, so it is never evidence of being loaded — `claude plug
 list` is the side that reflects it. ⚠ Measured on a single machine (2026-09-03);
 the official docs do not yet back it.
 
+### Attaching the status line — the human writes one line, but not a path
+
+⚠ A plugin cannot declare a `statusLine` key (a plugin root's settings may only carry `agent`
+and `subagentStatusLine`), so **attaching stays a human act.** ⚠ And a plugin's `bin/` is not on
+the status line's `PATH` — the `PATH` the docs mean is **the Bash tool's**, which measurement
+confirmed — so **there is no bare command name to call.**
+
+One command does the attaching:
+
+```
+/bearing:statusline-setup
+```
+
+It drops a thin shim at `~/.claude/bearing-statusline.mjs` and writes one line into
+`~/.claude/settings.json`. ⚠ **The shim reads the install record on every run and bridges to
+whichever version is loaded**, so **the line carries no version and does not rot on a bump** —
+the cache never deletes old versions, so a versioned path written directly keeps silently
+drawing the old one.
+
+⚠ **It writes user settings only.** An absolute path contains a home directory, so writing it
+into tracked project settings would commit a surface that breaks silently for everybody else.
+If a different status line is already configured it **says so and stops** rather than
+overwriting (`--force` to replace, `--uninstall` to remove).
+
+⚠ **This repository points at its own working tree from tracked project settings.** That is not
+a duplicate: that line draws from a bare clone even when bearing is not installed at all, and
+project settings win over user settings.
+
+⚠ **When nothing is loaded, the shim says so.** With no record not one piece of the plugin is
+loaded, and **a mechanism that is not loaded cannot report its own absence** — but the shim
+lives outside the plugin, so it runs anyway and can say it.
+
 ## Status
 
 Early, and honest about it. The discipline grew inside a private project that ran

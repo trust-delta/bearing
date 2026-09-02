@@ -24,9 +24,13 @@ state: open
 
 ⚠ **path が消せない帰結は、他 project のほうが重い。** bearing の checkout の外に `carriers/...` は無い ∴ 他 project の 1 行は cache を直に指すほかなく、**その path は version を含む**（`.../bearing/0.7.0/bin/statusline.mjs`）。⚠ **cache は旧版を消さない**（実測: `0.4.0` / `0.5.0` / `0.7.0` が並存）∴ bump しても 1 行は壊れず、**黙って古い版を描き続ける** —— [[bearing]] の「この repo は自分自身の古い版を食べていた」の、消費者側での形である。装着は原理的に人間の act ゆえ、**bump のたびに人間が書き換えねばならず、忘れても何も言わない。**
 
-# ESCALATION
+**⚠ 2026-09-03、公開されている statusline を 5 つ実測した —— 誰一人 plugin の cache から statusline を走らせていない。** 公式 docs の例と `levz0r/claude-code-statusline` は人間が `~/.claude/` に置いた script を指し、`sirmalloc/ccstatusline`（最有名）と `z80020100/claude-code-statusline` は npm、`fredrikaverpil/claudeline` は落とした binary を指す。⚠ **versioned な cache path を settings に書く例は 1 つも無かった。** そして **plugin として配られている 3 つは全て setup コマンドを持ち、1 行を*生成*している** —— ⚠ **∴「装着は人間の act」は正しいが、それは「人間が path を手で写す」という意味ではなかった。** 人間の act は *setup を打つこと*で足りる。⚠ **`z80020100`（plugin ＋ `bin/` ＋ hook という、この repo と同じ構造）ですら `bin/` を cache から呼ばず、npm global に入れ直して裸の名で呼ぶ** ∴ 我々が今日測った穴は、あちらでは `isOnPath()` の警告として既に実装されていた。
 
-- **装着の 1 行から version を外す手を採るか。** cache の中から最新版を実行時に解決する形（`node "$(ls -d ~/.claude/plugins/cache/trust-delta/bearing/*/bin/statusline.mjs | sort -V | tail -1)"`）なら、1 行はどこへ貼っても同じになり bump で腐らない —— **委譲の shim が在るので、bearing の checkout の中では同じ 1 行が working tree を走らせる。** ⚠ **だがこれは docs に無い cache の layout に依り、しかも公開の助言として README に載る。** 依存を 1 つ捨てて別の 1 つを取る取引であり、**どちらの依存を選ぶかは人間の判断である。**
+**∴ 同じ形を採る —— ただし npm は使わない**（第 2 の配布経路は「build 手順も無い」を破る）。`bin/bearing-statusline.mjs` が `~/.claude/` に置かれ、**走るたびに install record を読んで今の版へ橋渡しする** ∴ **settings の 1 行から version が消え、bump で腐らない。** 置くのと 1 行を書くのは `/bearing:statusline-setup` である。⚠ **これは machine-local な不可視の細工ではない** —— shim の中身は repo に在り、test が掛かり、置くのは repo の code である。⚠ **ただし置かれたものは複製である** ∴ 版の門が 1 つ増える（`lib/delegate.mjs` の shim と同じ性質で、shim 自体を変えたときだけ効く）。
+
+⚠ **そして shim は、この面が塞げなかった穴を 1 つ塞ぐ。** record が無ければ本体は 1 枚も載っておらず、**載っていない機構は自分の不在を報告できない** —— だが **shim は plugin の外に住む ∴ 載っていなくても走り、そう述べられる。** ⚠ **これが shim を「薄い間接層」以上のものにしている理由であり、間接層が欲しかったのではない。** ⚠ 塞がるのは *statusline の面*だけである —— hook も skill も、載っていなければ依然として黙る。
+
+⚠ **bearing 自身の repo は tracked な project settings で working tree を直に指し続ける。これは重複ではない**: あの 1 行は **bearing が載っていなくても clone しただけで描け**、machine-local な前提を 1 つも持たない。project settings は user settings に勝つ ∴ 両方在っても食い違わない。
 
 # PROCESS
 
@@ -34,7 +38,9 @@ state: open
 - [done] **幅の規律を機構で固定した。** `widthUnsafeChars()` と test が、Ambiguous な文字を出力に混ぜようとした時点で落ちる —— 一度画面が重なる事故を起こしており、注意ではなく機構で止める
 - [done] **不在を消さない規律を 3 箇所に引いた。** corpus 未取得 / git 未検知 / detached の描き分け。⚠ ついでに degrade が実装の bug をも「事実が採れない」に化けさせることが分かったので、debug の穴が開いているときだけ飲んだものを見せる
 - [done] **どちらの複製が描いているかを label に出した**（working tree なら `bearing repo`、cache なら黙る）。⚠ **黙るのは cache のほうである** —— 他 project から見れば cache こそ正常であり、この行の法に従えば述べるべきは「今見ている事実は、他 project が受け取る版のものではない」のほう。⚠ **委譲の印ではなく自分の位置で判定する**: あの印は「委譲されて来た」ことしか語らず、**最初から working tree を直に指されている**この面では何も立たない —— 2026-09-02 の食い違いはまさにその経路で起きた
-- [todo] **装着の 1 行を、bearing の checkout の中と他 project の両方について書き出し、その 1 行が version に釘付けであることを同じ場所で述べる。** ⚠ **「手書きなしで載る」は達成できない** —— plugin root の `settings.json` が宣言できる key は `agent` と `subagentStatusLine` だけで、`statusLine` は user / project の settings にしか置けない ∴ **装着の 1 行は原理的に人間の act として残る**（供給は plugin、装着は人間）。⚠ **`bin/` の名前へ移す道は塞がっていると確定した**（上記）∴ 残る仕事は「消せない path を、腐り方ごと正確に書く」ことである —— 1 行だけを載せて version 依存を伏せれば、bump のたびに黙って古い版が描かれる。⚠ **version を外す手そのものは `# ESCALATION` に在る**
+- [done] **装着を `/bearing:statusline-setup` にした。** `~/.claude/bearing-statusline.mjs` へ shim を置き、user settings に 1 行を書く。⚠ **書き先を user settings に限る** —— 絶対 path は home を含む ∴ tracked な project settings へ書けば、他の人間の面が黙って壊れる形を repo に commit することになる。⚠ **既存の statusline は上書きせず、述べて止まる**（面は 1 つしかなく、上書きは相手の面を消すことである）。⚠ **描画時に解決できるかを setup が確かめて述べる** —— 装着が失敗しても画面からは 2 行が消えるだけで理由は出ない ∴ **述べられる最後の場所が setup である**
+- [done] **shim が「載っていない」を描くようにした。** record の不在・本体の不在・読めない record を畳まず、理由つきで 1 行にする。⚠ **本体を import できない場面で描く行ゆえ、幅の規律は literal として守るほかない** —— test が見張っている
+- [todo] **置かれた shim が古いことを面に出す。** ⚠ **shim は複製である ∴ 版の門が 1 つ増えた** —— `bin/bearing-statusline.mjs` を変えても、`~/.claude/` の複製は setup を打ち直すまで古いままで、しかも**古い複製は正常に動いて見える**。⚠ 同じ構造の plugin（z80020100）は SessionStart hook で版を突き合わせている ∴ 形の前例は在る
 
 # DAG
 
