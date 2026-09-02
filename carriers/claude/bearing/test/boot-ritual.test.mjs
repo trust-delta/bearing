@@ -61,7 +61,13 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     // ⚠ 手順を再掲せず、正本と帳簿 CLI を指す —— 木の中に儀式についての第 3 の記述が
     // 置かれることは、「正本は 1 つ」の規則が禁じている複製である。
     assert.match(r.stdout, /_guide\/handoff\.md/)
-    assert.match(r.stdout, /bin\/handoff\.mjs read/)
+    // ⚠ **CLI は解決済みの絶対 path で名指されねばならない。** hook の吐く text は
+    // `${CLAUDE_PLUGIN_ROOT}` の inline 展開の対象では**ない**（対象は hook の `command`
+    // field である）∴ placeholder を書けば文字列のまま届き、しかも Bash tool の env に
+    // その変数は無い —— エージェントは `/bin/handoff.mjs` を見て落ちる。4 セッション連続で
+    // 実際に起きた。この 2 行がその回帰を止める。
+    assert.match(r.stdout, /node "\/.*\/bin\/handoff\.mjs" read/)
+    assert.ok(!r.stdout.includes('CLAUDE_PLUGIN_ROOT'))
   } finally {
     await rm(root, { recursive: true, force: true })
   }

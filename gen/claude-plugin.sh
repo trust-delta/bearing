@@ -58,10 +58,16 @@ done
 # 経路でそこへ届く —— ⚠ **そしてこの言及は装飾ではない**: どの carrier も名指さない道具は
 # 誰も走らせない道具であり、儀式は手作業へ戻る。そのとき archive の退避と read-at の順序は
 # 記憶任せになる。
+#
+# ⚠ **placeholder は波括弧つきで書く。** docs が inline 展開を明記しているのは
+# `${CLAUDE_PLUGIN_ROOT}` の形であり、対象は skill / agent の content と hook / monitor の
+# command である。⚠ **波括弧なしの `$CLAUDE_PLUGIN_ROOT` は展開されず、文字列のまま skill に
+# 載る** —— そして **Bash tool の env にその変数は無い** ∴ エージェントは `/bin/handoff.mjs`
+# を見て落ちる。2026-09-02 から 4 セッション連続で起きた、たった 2 文字の欠落である。
 cli_ref() {
   local rel="carriers/claude/bearing/bin/$1"
   if [ "$mode" = "plugin" ]; then
-    printf 'node "$CLAUDE_PLUGIN_ROOT"/bin/%s' "$1"
+    printf 'node "${CLAUDE_PLUGIN_ROOT}"/bin/%s' "$1"
   else
     printf 'node %s' "$(realpath --relative-to="$target" "$repo_root/$rel")"
   fi

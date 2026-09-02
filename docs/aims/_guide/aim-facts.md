@@ -102,10 +102,10 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 ## 呼び出し
 
-composer は hook から**引数無しで**呼ばれる。frame は常に出し、unit は cwd から解決し、fence は必ず 5 枚出す。**flag は持たない。**
+composer は hook から**引数無しで**呼ばれる。⚠ **下の行は形の説明であって、写して打てる 1 行ではない** —— この canon は plugin にも workspace にも同じ text で運ばれる ∴ どちらの置き場も名指せない。frame は常に出し、unit は cwd から解決し、fence は必ず 5 枚出す。**flag は持たない。**
 
 ```
-node "$CLAUDE_PLUGIN_ROOT"/bin/aim-facts.mjs
+node <plugin root>/bin/aim-facts.mjs
 ```
 
 guide の設置経路も持たない: `_guide/` を repo に置くのは人間の act であり、composer は**不在を surface するところで止まる**。

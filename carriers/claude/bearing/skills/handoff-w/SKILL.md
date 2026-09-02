@@ -12,7 +12,7 @@ description: このセッションの baton（会話引き継ぎ）を authoring
 land だけは機械である（旧 baton の archive 退避 → `composed-at` の刻印 → 配置）:
 
 ```bash
-node "$CLAUDE_PLUGIN_ROOT"/bin/handoff.mjs write < <あなたが著した baton>
+node "${CLAUDE_PLUGIN_ROOT}"/bin/handoff.mjs write < <あなたが著した baton>
 ```
 
 ⚠ `read-at` は書かない —— 新しい baton は「まだ読まれていない」が正で、この経路は書かれていても除去する。
