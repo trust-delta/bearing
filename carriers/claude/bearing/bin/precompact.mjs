@@ -50,6 +50,12 @@ import os from 'node:os'
 import path from 'node:path'
 import { resolveUnit } from '../lib/unit.mjs'
 
+// ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
+// （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
+import { delegateToCheckout } from '../lib/delegate.mjs'
+await delegateToCheckout(import.meta.url)
+
+
 function readStdin() {
   return new Promise((resolve) => {
     let buf = ''

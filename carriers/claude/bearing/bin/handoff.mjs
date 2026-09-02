@@ -25,6 +25,12 @@ import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { listArchive, stampReadAt, writeBaton } from '../lib/handoff.mjs'
 import { readBaton } from '../lib/baton.mjs'
 
+// ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
+// （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
+import { delegateToCheckout } from '../lib/delegate.mjs'
+await delegateToCheckout(import.meta.url)
+
+
 const out = []
 const say = (...l) => out.push(...l)
 

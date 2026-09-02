@@ -25,6 +25,7 @@ state: open
 - [done] **CLI 向けの statusline を実装した。** 1 行目に model / effort / branch / context / rate limit、2 行目に aim・todo・観測待ち・未読 baton・未 commit / 未 push / drift。⚠ **fence は cache を経ず正本の lib を直接呼ぶ** —— 実測 70ms で debounce 300ms に十分収まり、間接層を挟めば二重実装が生まれるからである
 - [done] **幅の規律を機構で固定した。** `widthUnsafeChars()` と test が、Ambiguous な文字を出力に混ぜようとした時点で落ちる —— 一度画面が重なる事故を起こしており、注意ではなく機構で止める
 - [done] **不在を消さない規律を 3 箇所に引いた。** corpus 未取得 / git 未検知 / detached の描き分け。⚠ ついでに degrade が実装の bug をも「事実が採れない」に化けさせることが分かったので、debug の穴が開いているときだけ飲んだものを見せる
+- [done] **どちらの複製が描いているかを label に出した**（working tree なら `bearing repo`、cache なら黙る）。⚠ **黙るのは cache のほうである** —— 他 project から見れば cache こそ正常であり、この行の法に従えば述べるべきは「今見ている事実は、他 project が受け取る版のものではない」のほう。⚠ **委譲の印ではなく自分の位置で判定する**: あの印は「委譲されて来た」ことしか語らず、**最初から working tree を直に指されている**この面では何も立たない —— 2026-09-02 の食い違いはまさにその経路で起きた
 - [todo] **装着の 1 行から path を外し、どの project へでもそのまま書き写せる形にする。** ⚠ **「手書きなしで載る」は達成できない** —— plugin root の `settings.json` が宣言できる key は `agent` と `subagentStatusLine` だけで、`statusLine` は user / project の settings にしか置けない ∴ **装着の 1 行は原理的に人間の act として残る**（供給は plugin、装着は人間）。エージェントにできるのは、その 1 行を `$CLAUDE_PROJECT_DIR` 依存の絶対パスから `bin/` の名前へ移し、**どこへ貼っても同じ 1 行**にすることまでである
 
 # DAG
