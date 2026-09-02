@@ -104,8 +104,37 @@ hook runs, yet **a mechanism that is not loaded cannot report its own absence** 
 nothing shows in the statusline or the fences, and even `/plugin update` stays
 silent. ⚠ `claude plugin details` lists the version, the skills and the hooks
 with no record present, so it is never evidence of being loaded — `claude plugin
-list` is the side that reflects it. ⚠ Measured on a single machine (2026-09-03);
-the official docs do not yet back it.
+list` is the side that reflects it. ⚠ The *silence* is measured on a single
+machine (2026-09-03); the gate itself the docs back, as below.
+
+#### Intent and fact — a plugin is decided in two layers
+
+| layer | where it lives | tracked? | what it says |
+| --- | --- | --- | --- |
+| **intent** | `enabledPlugins` and `extraKnownMarketplaces` in `settings.json` (user / project / local) | **tracked** at project scope | which plugins should load, and where the marketplace is |
+| **fact** | the record in `~/.claude/plugins/installed_plugins.json` (`scope` / `projectPath` / `installPath` / `version`) plus what is in the cache | **untracked, machine-local** | what is actually loaded, at which version, from where |
+
+⚠ **`enabledPlugins` is a load switch, not an install** — the docs call it
+"necessary but not sufficient" and say it "alone doesn't install a plugin". So a
+declaration with no record means the plugin is *wanted*, not loaded. **Git holds
+the intent; the fact of being loaded lives only on the untracked side** — and the
+two can diverge in silence.
+
+⚠ **`--scope` is the scope of the install, not merely of the declaration.** There
+are three (user / project / local): a project-scoped record only counts inside
+its `projectPath`, a user-scoped one counts everywhere, and **the same plugin can
+hold records in both** — so "is it loaded" is not answerable from the plugin name
+alone, only from the plugin name *and the project you are asking from*.
+
+⚠ **The docs say a declaration in project settings installs with no separate
+prompt once the folder is trusted; that did not reproduce here.** Measured in an
+isolated config (2026-09-03, one machine): a **fresh clone that was already
+trusted**, carrying the tracked declaration, registered no marketplace and
+produced neither cache nor record simply by starting a session. ⚠ **Only
+non-interactive (`-p`) sessions were measured**, so what happens *at the moment
+the trust dialog is accepted* is **still untested** — that path needs a human at
+an interactive first run. This README therefore assumes the receiving side runs
+the install once.
 
 ### Attaching the status line — the human writes one line, but not a path
 

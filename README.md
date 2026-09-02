@@ -104,8 +104,34 @@ commit 由来の resolved version に落ち、「push すれば届く」挙動�
 record が無ければ skill も hook も 1 枚として走らないが、**載っていない機構は自分の不在を
 報告できない** ∴ statusline にも fence にも現れず、`/plugin update` すら黙る。⚠ **`claude
 plugin details` は record が無くても版も skill も hook も列挙する ∴ 載っている証拠にならない**
-—— 映すのは `claude plugin list` の側である。⚠ **これは 1 台での実測（2026-09-03）であり、
-公式 docs の裏付けはまだ無い。**
+—— 映すのは `claude plugin list` の側である。⚠ **沈黙のほうは 1 台での実測（2026-09-03）で
+ある** が、門そのものは docs が裏づけている（下記）。
+
+#### 宣言と実体 —— plugin は 2 層で決まる
+
+| 層 | どこに住むか | tracked か | 何を言うか |
+| --- | --- | --- | --- |
+| **宣言** | `settings.json` の `enabledPlugins` ＋ `extraKnownMarketplaces`（user / project / local） | project スコープなら **tracked** | どれを載せたいか・marketplace はどこか |
+| **実体** | `~/.claude/plugins/installed_plugins.json` の record（`scope` / `projectPath` / `installPath` / `version`）と cache の実物 | **untracked・machine-local** | 実際に載っている（どの版が、どこから） |
+
+⚠ **`enabledPlugins` は load の switch であって install ではない** —— docs は
+"necessary but not sufficient"、"alone doesn't install a plugin" と明記している。∴ **宣言だけが
+在って record が無い状態は、「載せたい」と書いてあるだけで載っていない。** git に残るのは
+**意志**であり、**載っている事実は untracked な側にしか無い** —— そして 2 つは黙って食い違いうる。
+
+⚠ **`--scope` は install の scope であって「宣言をどこに書くか」だけの話ではない。** user /
+project / local の 3 つが在り、**project スコープの record は `projectPath` のその project の中
+でだけ効き**、user スコープの record はどの project でも効く。⚠ **同じ plugin が両方に record を
+持つこともある** ∴ 「載っているか」は plugin 名だけでは決まらず、**どの project から見ているか**
+に依る。
+
+⚠ **docs は「project settings に書いておけば、フォルダを信頼した時点で別のプロンプト無しに
+入る」と書いているが、そうならない場合が在る。** 隔離した config で実測した（2026-09-03、
+1 台）—— **既に信頼済みの新しい clone** に tracked な宣言が在っても、セッションを開始しただけ
+では marketplace は登録されず、cache も record も生まれなかった。⚠ **ただし測ったのは
+非対話（`-p`）のセッションだけである** ∴ *信頼ダイアログを受け入れる瞬間*に何が起きるかは
+**まだ測っていない** —— そこは人間が対話で通るほかない。∴ この README は「受ける側が 1 度
+install を打つ」を前提に書いてある。
 
 ### statusline の装着 —— 1 行は人間が書くが、path は書かない
 
