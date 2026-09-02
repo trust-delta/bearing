@@ -11,6 +11,10 @@ state: open
 
 **供給の形は 3 つあり、選択は「宣言をどこに置くか」に尽きる。** 本 repo が採っているのは project の `.claude/settings.json` に `extraKnownMarketplaces` ＋ `enabledPlugins` を書く形で、⚠ **tracked ゆえ clone した者にも同じものが載り、載っている事実自体が git に残る。** 他に `~/.claude/settings.json` へ書く形と、user scope で `claude plugin install` を打つ形があり、この 2 つは cwd に依らず**全 project**に効く。⚠ **だがどちらも untracked である ∴ 載せたという記録がどこにも残らない** —— 前身が `~/.claude/skills/aim` の symlink で全 dir に載り、やがて所在が分からなくなったのと**同じ層の同じ罠**であり、`bearing-trace` にも原理的に映らない。∴ **「全 project に効く」と「載っていることが後から辿れる」は、この層では両立しない。** ⚠ どちらを取るかは、機構の性能ではなく人間が何を失う覚悟をするかの問いである。 ⚠ **2026-09-02、この二律は仮定でなくなった** —— 同日 user scope の install が実際に起き、**tracked な宣言と untracked な entry が同時に効いている**。踏んだ記録は `~/.claude/plugins/installed_plugins.json` にしか無く、**本 repo からは辿れない。**
 
+**⚠ 同日、人間が project スコープを選び、user スコープを外した。** 理由は 2 つある —— ⑴ **user スコープは「より汎用的で普遍なもの」の置き場**であり、bearing は `docs/aims/` という **doc 構成を前提にする** ∴ そこへ置く性質のものではない。⑵ **他人の repo へ貢献するとき、明らかに邪魔になる。** ⚠ **そして記憶で答えられなくなる事態は、選択より先に既に起きていた** —— 人間は user スコープに入れた覚えが無く、実際には入っていた。上が述べた untracked の罠は、**予測ではなく観測になった。**
+
+⚠ **だが「邪魔さ」を実測すると 1 箇所に集中していた。** PreCompact は corpus と `.handoff/` の不在を見て既に自ら降りており、UserPromptSubmit も PostToolBatch も黙る。⚠ **残っていたのは SessionStart だけで、しかも害は量ではなく偽だった** —— frame の冒頭が無条件に断定していた。∴ **スコープの選択とは別に、frame 自身の欠陥として直した**（[[aim-tree]]）: **宣言していない repo へ届かないこと**と、**届いた先で嘘をつかないこと**は別々の穴であり、片方を塞いでももう片方は残る。
+
 **⚠ 供給したものが届くかは `version` 宣言が握っており、道具の側もそれを前提にしている。** `plugin.json` が `version` を宣言している以上、**上げない限り既存の利用者は古い cache を持ち続ける** ∴ bump は release の一部である（受ける側の門と併せて `README.md` の配布節が述べる）。⚠ **`claude plugin tag` は `{name}--v{version}` の git tag を作る際に、`plugin.json` と marketplace entry の version が一致していることを検証する** —— 「忘れれば黙って届かない」を機械で止める手が、既に道具の側に在るということである。⚠ **ただし現 `marketplace.json` の entry は `version` を宣言していない ∴ この検証が実際に何を見るかは未実測**であり、使えると書いてあるのではなく、**まだ試していない**と書いてある。
 
 ⚠ **供給された機構は、この repo の中では 2 つ在る。** hook の宣言は `${CLAUDE_PLUGIN_ROOT}` に釘付けで cache を走らせ、statusline は project の path に釘付けで working tree を走らせる ∴ **同じ機構の 2 つの複製が同時に走り、片方だけが新しい**。⚠ **2026-09-02 に実際に食い違った** —— statusline は照合記録を読んで flag を落としたのに、hook は cache 0.5.0 を走らせて同じ flag を出し続けた。**この repo は自分自身の古い版を食べていた** ∴ ドッグフーディングは bump の間隔だけ遅れる。

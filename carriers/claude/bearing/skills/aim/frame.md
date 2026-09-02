@@ -1,6 +1,7 @@
 # aim frame
 
-このプロジェクトは **aim** で開発を進める。`docs/aims/<slug>.md` の各ファイルが 1 つの aim（目的とその手段）であり、親子で目的を分解した木を成す。
+⚠ **この repo が aim corpus を持つなら、開発はそれによって駆動される。** `docs/aims/<slug>.md` の各ファイルが 1 つの aim（目的とその手段）であり、親子で目的を分解した木を成す。
+
 
 - **aim に触れる前に [`docs/aims/_guide/aim-authoring.md`](aim-authoring.md) を読むこと。** slug の付け方、body の section、木の保守、drift の検出と修復は、そこが唯一の正本である。
 - **frontmatter は人間のもの、body はあなたのもの。** `aim:`（目的 1 文）・`parent:`（木の位置）・`state:`（open / done / dead）を書き換えてはならない。目的が動くべきだと考えたなら、候補を提案して人間に escalate する。確定は人間の act である。
