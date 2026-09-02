@@ -88,16 +88,24 @@ marketplace は自分自身の remote を指すので、通常のセッション
 
 ### 配布 —— push しただけでは誰にも届かない
 
-⚠ 門は 2 つあり、**受ける側と配る側に 1 つずつ**在る（公式 docs と実測、2026-09-01）:
+⚠ 門は 3 つあり、**受ける側に 2 つ・配る側に 1 つ**在る（公式 docs と実測、2026-09-01 / 09-03）:
 
 | 門 | 誰が外すか |
 | --- | --- |
 | marketplace の clone は起動時に自動 pull されない | **受ける側** —— `extraKnownMarketplaces` に `"autoUpdate": true` を宣言すれば起動時に自動。しなければ `/plugin marketplace update trust-delta` → `/plugin update bearing` → 再起動の 3 手 |
 | `plugin.json` の `version` を上げない限り cache は差し替わらない | **配る側** —— 毎リリース bump する。⚠ これを忘れると、受ける側が何をしても届かない |
+| tracked な宣言は **enable であって install ではない** —— `installed_plugins.json` に record が無い限り、plugin は 1 枚も載らない | **受ける側** —— `claude plugin install bearing@trust-delta --scope project` を 1 度打つ。⚠ この file は machine-local かつ untracked ∴ **載せる意志は git に残り、載っている事実は残らない** |
 
 ⚠ **2 つ目が在るのは、この repo が `version` を宣言しているからである** —— 宣言を省けば
 commit 由来の resolved version に落ち、「push すれば届く」挙動になる。宣言を残す以上、
 **bump は release の一部であって、忘れれば変更は静かに、誰にも届かないまま着地する。**
+
+⚠ **3 つ目は他の 2 つより手前に在り、しかも唯一、外れていることが画面に一言も出ない。**
+record が無ければ skill も hook も 1 枚として走らないが、**載っていない機構は自分の不在を
+報告できない** ∴ statusline にも fence にも現れず、`/plugin update` すら黙る。⚠ **`claude
+plugin details` は record が無くても版も skill も hook も列挙する ∴ 載っている証拠にならない**
+—— 映すのは `claude plugin list` の側である。⚠ **これは 1 台での実測（2026-09-03）であり、
+公式 docs の裏付けはまだ無い。**
 
 ## 現況
 

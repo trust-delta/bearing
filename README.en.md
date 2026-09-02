@@ -84,17 +84,28 @@ making it a hard gate would be premature.
 
 ### Distribution — pushing alone reaches nobody
 
-There are two gates, one on each side (docs plus measurement, 2026-09-01):
+There are three gates, two on the receiving side and one on the publishing
+side (docs plus measurement, 2026-09-01 / 09-03):
 
 | gate | who clears it |
 | --- | --- |
 | a marketplace clone is never pulled automatically at startup | **the receiving side** — declare `"autoUpdate": true` on the `extraKnownMarketplaces` entry, or run `/plugin marketplace update trust-delta` → `/plugin update bearing` → restart |
 | the cache is not replaced unless `plugin.json` raises `version` | **the publishing side** — bump it on every release. Forget it and nothing the receiver does will help |
+| a tracked declaration **enables but never installs** — with no record in `installed_plugins.json`, not one piece of the plugin loads | **the receiving side** — run `claude plugin install bearing@trust-delta --scope project` once. ⚠ that file is machine-local and untracked, so **git holds the intent to load it, never the fact that it is loaded** |
 
 The second gate exists only because this repository declares a `version` at all;
 omitting the field falls back to a commit-derived one, and pushing would suffice.
 Keeping the declaration makes the bump *part of* a release — forget it and the
 change lands silently, reaching no one.
+
+⚠ The third gate sits ahead of the other two, and it is the only one whose
+failure says nothing on screen. Without the record not one skill and not one
+hook runs, yet **a mechanism that is not loaded cannot report its own absence** —
+nothing shows in the statusline or the fences, and even `/plugin update` stays
+silent. ⚠ `claude plugin details` lists the version, the skills and the hooks
+with no record present, so it is never evidence of being loaded — `claude plugin
+list` is the side that reflects it. ⚠ Measured on a single machine (2026-09-03);
+the official docs do not yet back it.
 
 ## Status
 
