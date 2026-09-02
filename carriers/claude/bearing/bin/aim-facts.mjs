@@ -93,7 +93,7 @@ function renderRepo(r) {
         '# ⚠ clean ではなく「不在」である: これを「drift 無し」と読まないこと。', '```', '')
   } else {
     say(renderIntraFence(r.drift.intra).trimEnd(), '')
-    say(renderInterFence(r.drift.inter).trimEnd(), '')
+    say(renderInterFence(r.drift.inter, r.drift.brokenCollations).trimEnd(), '')
   }
   say(renderWorkingDeltaFence(r.working).trimEnd(), '')
   say(renderUnpushedFence(r.unpushed).trimEnd(), '')
