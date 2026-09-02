@@ -12,7 +12,7 @@ import assert from 'node:assert/strict'
 
 import {
   humanTokens, untilReset, displayWidth, widthUnsafeChars, fit, bar, resolveCwd,
-  renderSession, renderBearing, foldRepos, heat,
+  renderSession, renderBearing, foldRepos, heat, provenance,
 } from '../bin/statusline.mjs'
 
 const ESC = String.fromCharCode(27)
@@ -282,4 +282,34 @@ test('foldRepos —— 1 つでも採れなければ合計は null', () => {
 
 test('foldRepos —— corpus を持つ repo が 1 つも無ければ null', () => {
   assert.equal(foldRepos([]), null)
+})
+
+// ── どちらの複製が走っているか ──────────────────────────────────────────────
+//
+// ⚠ **2026-09-02 に、2 つの複製が同じ問いへ違う答えを出した。** statusline は working tree
+// の code で照合記録を読み flag を落としたのに、hook は cache 0.5.0 を走らせて同じ flag を
+// 出し続けた。⚠ **食い違い自体は避けられないが、黙って起きることは避けられる。**
+
+test('provenance —— working tree の複製は repo、cache の複製は黙る', () => {
+  const project = '/home/someone/works/bearing'
+  assert.equal(provenance(`${project}/carriers/claude/bearing/bin`, project), 'repo')
+  assert.equal(provenance('/home/someone/.claude/plugins/cache/x/bearing/0.6.0/bin', project), null)
+  // ⚠ 黙るのは cache のほうである: 他 project から見れば cache こそ正常な状態であり、
+  // 述べるべきは「今見ている事実は、他 project が受け取る版のものではない」のほう。
+})
+
+test('provenance —— 材料が欠けたら黙る。推測で repo と言わない', () => {
+  assert.equal(provenance('/anywhere/bin', null), null)
+  assert.equal(provenance(null, '/home/someone/works/bearing'), null)
+})
+
+test('provenance —— 名前が前方一致するだけの別 project を repo と呼ばない', () => {
+  // ⚠ `path.sep` を足さずに startsWith すると `bearing-old` が `bearing` の中と判定される。
+  assert.equal(provenance('/works/bearing-old/carriers/claude/bearing/bin', '/works/bearing'), null)
+})
+
+test('renderBearing —— repo の複製であることは label に出る', () => {
+  const facts = { aimCount: 5, openTodo: 0, awaiting: 0, batonUnread: false, working: 0, unpushed: 0, drift: 0 }
+  assert.equal(line(renderBearing('ok', facts, 'repo')), 'bearing repo   aim 5')
+  assert.deepEqual(widthUnsafeChars(line(renderBearing('ok', facts, 'repo'))), [])
 })
