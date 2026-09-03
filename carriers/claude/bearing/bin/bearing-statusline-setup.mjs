@@ -124,7 +124,14 @@ async function main(argv) {
   } catch {
     log(`⚠ ${shimPath} が実行できない。statusline は黙って出なくなる。`)
   }
-  const record = await readInstallRecord({ configDir, projectDir: process.env.CLAUDE_PROJECT_DIR })
+  // ⚠ **`CLAUDE_PROJECT_DIR` は Bash tool の env に無い**（実測 2026-09-03）∴ setup は常に
+  // それを欠いた状態で走る。⚠ **欠いたまま record を引くと「この project に効く record が
+  // 無い」と*断言*してしまう** —— 判定できないことを不在として述べる形であり、しかも
+  // ここは「装着が効くかを述べられる最後の場所」として置いた行である。**そこが嘘をつく。**
+  const record = await readInstallRecord({
+    configDir,
+    projectDir: process.env.CLAUDE_PROJECT_DIR ?? process.cwd(),
+  })
   if (record.installPath) {
     log(`今この shim が橋渡しする先: ${record.installPath}（${record.scope} / ${record.version}）`)
   } else {

@@ -134,6 +134,28 @@ test('renderSession —— context の量が無くても割合だけは描く', 
   assert.equal(line(renderSession(input, 'main')), `git main   ctx ${' '.repeat(8)} 42%`)
 })
 
+test('renderBearing —— aim を採っていない project では、行そのものが出ない', () => {
+  // ⚠ **「不在を黙って消さない」が守るのは*採ろうとして採れなかった*ものである。**
+  // 採用していない project に corpus が無いのは不在ではなく、元から無い —— そこへ
+  // `corpus 無し` を描くのは、元から無いものを消えたものと同じ声で述べることである。
+  assert.equal(line(renderBearing('not-engaged', { batonUnread: false })), '')
+  assert.equal(line(renderBearing('not-engaged', null)), '')
+})
+
+test('renderBearing —— 採っていなくても baton 未読だけは述べる', () => {
+  // ⚠ **handoff は aim ではない。** baton は `docs/aims/` に何も依存せず、どの project でも
+  // 使える ∴ ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。
+  assert.equal(line(renderBearing('not-engaged', { batonUnread: true })), 'bearing   baton 未読')
+})
+
+test('renderBearing —— 採用済みで corpus が空なら、そう言い、baton も落とさない', () => {
+  assert.equal(line(renderBearing('no-corpus', { batonUnread: false })), 'bearing   corpus 無し')
+  assert.equal(
+    line(renderBearing('no-corpus', { batonUnread: true })),
+    'bearing   corpus 無し   baton 未読',
+  )
+})
+
 test('renderBearing —— 静かなときは静かである', () => {
   const facts = {
     aimCount: 5, openTodo: 0, awaiting: 0, escalation: 0, batonUnread: false,

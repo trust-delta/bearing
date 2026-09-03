@@ -248,6 +248,31 @@ export function findBlocks(text) {
 }
 
 /**
+ * この project は aim を**採ったか**。`CLAUDE.md` に法の block が在るか、だけを見る。
+ *
+ * ⚠ **これは「採用したか」であって「corpus が在るか」ではない。** 2 つは別の事実であり、
+ * どちらか一方でも真なら aim は engaged である —— corpus を先に置いて marker を後から置く
+ * 順序も、marker を置いて最初の node をこれから書く順序も、どちらも正規だからである。
+ *
+ * ⚠ **壊れた block は「採っていない」ではない。** anomalies が出るのは marker が在って
+ * 形が崩れている場合であり、**採用の事実そのものは立っている** ∴ ここで `false` を返せば、
+ * 採った project が block を壊した瞬間に面ごと消える —— 直すべきときに黙る形である。
+ *
+ * @param {string} root unit root
+ * @returns {Promise<boolean>}
+ */
+export async function readAdopted(root) {
+  let text
+  try {
+    text = await readFile(path.join(root, 'CLAUDE.md'), 'utf8')
+  } catch {
+    return false
+  }
+  const { blocks, anomalies } = findBlocks(text)
+  return blocks.length > 0 || anomalies.length > 0
+}
+
+/**
  * その `CLAUDE.md` が宣言している corpus の在り処。
  *
  * ⚠ **「宣言が無い」と「宣言が壊れている」を分ける。** 前者は既定でよいが、後者で既定へ

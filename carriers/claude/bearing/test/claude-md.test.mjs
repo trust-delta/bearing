@@ -10,12 +10,14 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, mkdtemp, writeFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import {
   MARKER, AIMS_PLACEHOLDER, bodySha, declaredAimsDir, detectEol, findBlocks, inspect, planApply,
   planRemove, renderBlock, renderLaw, substituteAims,
+  readAdopted,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR, normalizeAimsDir } from '../lib/corpus.mjs'
 
@@ -317,4 +319,35 @@ test('dir= だけを手で書き換えても「人間が本文を編集した」
   assert.notEqual(inspect(edited, desired).state, 'edited')
   const plan = planApply(edited, { version: V, law: renderLaw(frameText, 'aims'), dir: 'aims' })
   assert.equal(plan.action, 'update')
+})
+
+test('readAdopted —— CLAUDE.md が無ければ採っていない', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'bearing-adopt-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  assert.equal(await readAdopted(dir), false)
+})
+
+test('readAdopted —— 法の block が在れば採っている', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'bearing-adopt-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  await writeFile(path.join(dir, 'CLAUDE.md'), '# p\n\n' + renderBlock('1.0.0', '法', DEFAULT_AIMS_DIR))
+  assert.equal(await readAdopted(dir), true)
+})
+
+test('readAdopted —— block が壊れていても「採っていない」ではない', async (t) => {
+  // ⚠ **採用の事実そのものは立っている** ∴ ここで false を返せば、採った project が block を
+  // 壊した瞬間に面ごと消える —— **直すべきときに黙る**形である。
+  const dir = await mkdtemp(path.join(tmpdir(), 'bearing-adopt-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const block = renderBlock('1.0.0', '法', DEFAULT_AIMS_DIR)
+  const opened = block.slice(0, block.lastIndexOf('<!--'))
+  await writeFile(path.join(dir, 'CLAUDE.md'), '# p\n\n' + opened)
+  assert.equal(await readAdopted(dir), true)
+})
+
+test('readAdopted —— 無関係な CLAUDE.md は採っていない', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'bearing-adopt-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  await writeFile(path.join(dir, 'CLAUDE.md'), '# project\n\nふつうの指示だけが在る。\n')
+  assert.equal(await readAdopted(dir), false)
 })

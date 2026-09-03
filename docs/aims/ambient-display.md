@@ -32,6 +32,10 @@ state: open
 
 ⚠ **bearing 自身の repo は tracked な project settings で working tree を直に指し続ける。これは重複ではない**: あの 1 行は **bearing が載っていなくても clone しただけで描け**、machine-local な前提を 1 つも持たない。project settings は user settings に勝つ ∴ 両方在っても食い違わない。
 
+⚠ **2026-09-03、user スコープで載せた瞬間に、この面の法の適用先が 1 つ間違っていたことが露わになった。** 2 行目は corpus の有無だけを見ており、**aim を採っていない全 project に `corpus 無し` を描いていた** —— 一方 hook は `CLAUDE.md` の marker を見て黙る。⚠ **「不在を黙って消さない」が守るのは*採ろうとして採れなかった*ものであって、採用していない project に corpus が無いのは不在ではなく元から無い** ∴ あれは**元から無いものを、消えたものと同じ声で述べていた**。上段が「消えたものと元から無いものが同じ見た目になる」と警告していた事故の、**向きが逆の形**である。
+
+**∴ 2 行目は hook と同じ述語で gate する** —— corpus が在るか、`CLAUDE.md` に法の block が在るか（`bin/aim-facts.mjs` の `aimEngaged` と同一）。⚠ **2 つの面が違う条件で黙れば、同じ project が面ごとに別の姿を持つ。** ⚠ **ただし baton だけは別である**: handoff は `docs/aims/` に何も依存せず**どの project でも使える** ∴ 採っていない project でも `baton 未読` は述べる —— ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。hook も同じ例外を持つ。
+
 **⚠ 2026-09-03、この面は「不在を述べる唯一の面」になった。** [[bearing]] の人間が「plugin 側は自分の実体が置かれているかを検査しない」を通例として採り、**plugin の範囲ではない statusline だけを例外的に検知対象として残した** ∴ 上段の「塞がるのは *statusline の面*だけである」は、**穴の記述から役割の記述へ変わった** —— hook と skill が黙るのは未了ではなく、決着した設計である。⚠ **∴ shim が描く「載っていない」の 1 行は、もはや補助ではない** —— あれが黙れば、不在を述べる面はどこにも無くなる。
 
 # PROCESS
@@ -42,6 +46,8 @@ state: open
 - [done] **どちらの複製が描いているかを label に出した**（working tree なら `bearing repo`、cache なら黙る）。⚠ **黙るのは cache のほうである** —— 他 project から見れば cache こそ正常であり、この行の法に従えば述べるべきは「今見ている事実は、他 project が受け取る版のものではない」のほう。⚠ **委譲の印ではなく自分の位置で判定する**: あの印は「委譲されて来た」ことしか語らず、**最初から working tree を直に指されている**この面では何も立たない —— 2026-09-02 の食い違いはまさにその経路で起きた
 - [done] **装着を `/bearing:statusline-setup` にした。** `~/.claude/bearing-statusline.mjs` へ shim を置き、user settings に 1 行を書く。⚠ **書き先を user settings に限る** —— 絶対 path は home を含む ∴ tracked な project settings へ書けば、他の人間の面が黙って壊れる形を repo に commit することになる。⚠ **既存の statusline は上書きせず、述べて止まる**（面は 1 つしかなく、上書きは相手の面を消すことである）。⚠ **描画時に解決できるかを setup が確かめて述べる** —— 装着が失敗しても画面からは 2 行が消えるだけで理由は出ない ∴ **述べられる最後の場所が setup である**
 - [done] **shim が「載っていない」を描くようにした。** record の不在・本体の不在・読めない record を畳まず、理由つきで 1 行にする。⚠ **本体を import できない場面で描く行ゆえ、幅の規律は literal として守るほかない** —— test が見張っている
+- [done] **2 行目を、hook と同じ述語で gate した。** aim を採っていない project では行そのものを出さない（`corpus 無し` は「採用済みだが空」のためだけの言葉に戻した）。⚠ **例外は baton 未読 1 つ** —— handoff はどの project でも使える。⚠ **user スコープで載せるまで、この誤りは見えなかった** —— bearing の repo と、aim を採った repo でしか面を見ていなかったからである
+- [done] **setup の偽陰性を潰した。** `CLAUDE_PROJECT_DIR` は Bash tool の env に無い ∴ setup は常にそれを欠いて走り、**判定できないことを「この project に効く record が無い」と断言していた**。cwd へ落とす。⚠ **ここは「装着が効くかを述べられる最後の場所」として置いた行である** ∴ そこが嘘をつくのは、行が無いより悪い
 - [todo] **置かれた shim が古いことを面に出す。** ⚠ **shim は複製である ∴ 版の門が 1 つ増えた** —— `bin/bearing-statusline.mjs` を変えても、`~/.claude/` の複製は setup を打ち直すまで古いままで、しかも**古い複製は正常に動いて見える**。⚠ 同じ構造の plugin（z80020100）は SessionStart hook で版を突き合わせている ∴ 形の前例は在る。⚠ **2026-09-03、同じ構造の複製が 2 つ目できることが決まった** —— [[bearing]] が `CLAUDE.md` へ置く法の block である ∴ **版の門は 1 つではなく 2 つになる。** ⚠ **あちらの marker は版と本文 sha の両方を持つ** —— shim には無い「人間が手を入れたか」の判別が要るからで、**この面の複製にも同じ問いは在る**（shim を手で書き換えた人間を、我々はまだ検出できない）
 
 # DAG

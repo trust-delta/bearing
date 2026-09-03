@@ -11,7 +11,9 @@ disable-model-invocation: true
 bearing-with-aim.mjs $ARGUMENTS
 ```
 
-⚠ **`${CLAUDE_PLUGIN_ROOT}` を使わない。** plugin の `bin/` は **Bash tool の PATH に入り、裸のコマンド名で呼べる**（公式 docs）—— 一方 `${CLAUDE_PLUGIN_ROOT}` が inline 展開されると docs が明記しているのは hook と skill / agent の content であって、command ではない。**確かなほうを使う。**
+⚠ **裸のコマンド名で呼ぶ。** plugin の `bin/` は **Bash tool の PATH に入り、裸のコマンド名で呼べる**（公式 docs が明記している唯一の経路）∴ path も env も要らない。
+
+⚠ **`CLAUDE_PLUGIN_ROOT` を波括弧つきで書いてはならない** —— この command 本文でも **inline 展開される**（2026-09-03 に実測。docs の表は command を挙げていないが、実際には置換される）∴ 散文の中に書けば、注意書きが**その場で実 path に化けて意味を失う。**
 
 出力はそのまま人間に見せること。書き先・既存 block の扱い・置き直しの可否は、すべて CLI 側が述べる。⚠ **この command が代わりに要約しない** —— **触らずに止まった**という報告は、成功の報告よりも読まれる必要がある。
 
