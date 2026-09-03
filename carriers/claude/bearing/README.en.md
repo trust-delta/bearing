@@ -42,6 +42,26 @@ own act with a ritual meant to serve them is the inversion this refuses.
 Three skills ship with it: `/bearing:aim`, `/bearing:handoff-r`,
 `/bearing:handoff-w`.
 
+### aim is opt-in per project
+
+The handoff skills and the status line's first row are useful in any
+project, but the aim discipline presumes a corpus — so in a repo that has
+not opted in, the SessionStart hook emits **not one byte** (except an unread
+baton, which is handoff, not aim). Once, in a project that wants it:
+
+```
+/bearing:with-aim
+```
+
+That inserts a marker-delimited block of the law at the end of the
+project-root `CLAUDE.md` (`--check` and `--remove` are there too). The
+markers are HTML comments, which the docs state are stripped before the
+content is injected — so they cost no context. The hook reads them: if the
+block is stale it says so, and if a human edited the block it stops instead
+of rewriting it.
+
+A repo that already has a corpus keeps working without a marker.
+
 ## What it refuses to do
 
 **It does not judge.** The machine layer makes candidates visible; grading them

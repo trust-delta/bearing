@@ -163,6 +163,43 @@ project settings は user settings に勝つ）。
 いない機構は自分の不在を報告できない** —— だが shim は plugin の外に住む ∴ **載っていなくても
 走り、そう述べられる。**
 
+### aim は project ごとの opt-in —— 全 project に載せても邪魔にならないために
+
+⚠ **bearing は 1 つの単位ではない。** handoff の 2 枚と statusline の 1 行目は `docs/aims/`
+に何も依存せず**どの project でも使える**が、aim の規律は corpus を前提にし、**採っていない
+repo では邪魔になる**。∴ **plugin 本体は user スコープで全 project に載せてよく、aim の規律
+だけを project ごとに opt-in する。**
+
+```
+/bearing:with-aim
+```
+
+これが project-root の `CLAUDE.md` の**末尾**に、marker で挟んだ法の block を差し込む
+（`--check` で状態だけ、`--remove` で外す）。
+
+⚠ **なぜ hook ではなく `CLAUDE.md` か。** SessionStart hook の出力は**会話として要約され
+消える**（docs: "Context that hooks added earlier — Summarized with the rest of the
+conversation"）が、**project-root の `CLAUDE.md` は compaction 後に disk から再注入される**。
+さらに `CLAUDE.md` は **subagent にも階層ごと載る**（組み込みの Explore と Plan だけが除かれる）
+のに対し、docs が subagent の lifecycle として挙げるのは `SubagentStart` / `SubagentStop`
+である。⚠ **どちらも「強い」のではない** —— docs は両方を「context であって強制される設定
+ではない」と述べ、system prompt に載るのはどちらでもない。**差は位置と消えなさだけで、
+それが層を決める**: 静的な法は `CLAUDE.md`、実行時にしか出せない事実は hook。
+
+⚠ **marker は HTML コメントである。** docs が「block-level の HTML コメントは context へ
+注入される**前に**除かれる」と明記している ∴ **識別子・版・本文 sha を持たせても、
+context を 1 token も食わない** —— そして `Read` で開けば人間には見える。
+
+⚠ **本文 sha が在るので、2 つの別物を別物として述べられる**: **版が古い**のか、**人間が
+block の中を編集した**のか。⚠ **後者では置き直さず、述べて止まる** —— 置き直せば消えるのは
+その編集だからである。marker が壊れている（片方だけ・読めない・2 組ある）ときも同じく
+触らない。
+
+⚠ **そして marker は opt-in の宣言でもある。** hook はこれを読み、**採っていない repo では
+1 byte も出さない** —— ただし **未読の baton だけは述べる**（handoff は aim ではなく、
+どの project でも使える）。⚠ **corpus が在れば、marker が無くても従来どおり喋る**:
+印は後から入った機構であり、既に node を書いている repo を「印が無い」で黙らせない。
+
 ## 現況
 
 初期段階であり、それを正直に述べる。規律そのものは、ある private project の中で数か月に

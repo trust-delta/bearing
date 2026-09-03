@@ -44,6 +44,7 @@ import { gatherWorkingDelta, renderWorkingDeltaFence } from '../lib/working-delt
 import { gatherUnpushed, renderUnpushedFence } from '../lib/unpushed.mjs'
 import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
+import { findBlocks, inspect as inspectBlock, loadDesired } from '../lib/claude-md.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -56,6 +57,48 @@ const PLUGIN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 
 const out = []
 const say = (...lines) => out.push(...lines)
+
+// ⚠ **aim を採っていない project では、aim について 1 行も述べない。** 毎セッション「この
+// project は aim を採っていない」と述べる機構こそ、人間が 2026-09-02 に user スコープを
+// 外した理由そのものである。∴ 採用の印を読み、無ければ黙る。
+//
+// ⚠ **catch 節もこれを見る** —— composer が落ちた場面で frame だけを吐けば、黙ると決めた
+// project に、失敗経路からだけ法が漏れる。
+let aimEngaged = null
+
+/**
+ * この project が aim を採ったか、そして置かれた法が今の版か。
+ *
+ * ⚠ **印は `CLAUDE.md` の marker である**（`/bearing:with-aim` が置く）。marker は HTML
+ * コメント ∴ 消費者の context には乗らないが、**我々は file を読むので見える。**
+ *
+ * ⚠ **「今の法を組み立てられない」を「印が無い」に畳まない。** 畳めば、採用済みの project が
+ * 生成の失敗をきっかけに黙る —— 沈黙が 2 つの別々の原因を持つ形は、この repo が一貫して
+ * 拒んできたものである。
+ *
+ * @param {string} root unit root
+ * @returns {Promise<{state: string, version: string|null, detail: string}>}
+ */
+async function readOptIn(root) {
+  let text
+  try {
+    text = await readFile(path.join(root, 'CLAUDE.md'), 'utf8')
+  } catch {
+    return { state: 'absent', version: null, detail: 'CLAUDE.md が無いか読めない' }
+  }
+  const { blocks, anomalies } = findBlocks(text)
+  if (anomalies.length > 0) return { state: 'broken', version: null, detail: anomalies.join('。') }
+  if (blocks.length === 0) return { state: 'absent', version: null, detail: 'block が無い' }
+  try {
+    return inspectBlock(text, await loadDesired(PLUGIN_ROOT))
+  } catch (err) {
+    return {
+      state: 'unverifiable',
+      version: blocks[0].version,
+      detail: `今の法を組み立てられない: ${err?.message ?? err}`,
+    }
+  }
+}
 
 /** 常時効く規律。静的な text であり、binary を必要としたことは一度も無い。 */
 async function frame() {
@@ -106,16 +149,54 @@ function renderRepo(r) {
   say(renderCheckpointFence(r.checkpoint).trimEnd(), '')
 }
 
+/**
+ * 未読の baton を surface する。
+ *
+ * ⚠ **2 つの経路がここを呼ぶ** —— aim を採った project の facts と、採っていない project の
+ * handoff だけの出力である。**文言が割れれば、片方の project の人間だけが手順を知らされる。**
+ */
+function sayBatonPresent(unit, baton) {
+  say(
+    `baton: \`${path.relative(unit.root, baton.path) || baton.path}\`` +
+      (baton.composedAt ? ` · composed-at \`${baton.composedAt}\`` : '') +
+      (baton.readAt ? ` · **read-at \`${baton.readAt}\`（既に一度読まれている）**` : ''),
+    '',
+    '**`_guide/handoff.md` § 読む の手順 2〜6 に従うこと** —— この hook は baton を surface',
+    'したが `read-at` は**刻んでいない**。手順 4〜6（未 push aim の surface・pointers の',
+    '読み込み・現在地の報告）はあなたの仕事である。',
+    '',
+    baton.text.trimEnd(),
+    '',
+  )
+}
+
 async function main() {
   const cwd = process.cwd()
-  const f = await frame()
-  if (f) say(f.trimEnd(), '', '---', '')
-
   const unit = await resolveUnit(cwd)
   const repos = []
   for (const repo of unit.repos) repos.push(await repoFacts(repo))
 
   const withCorpus = repos.filter((r) => r.corpus)
+
+  // ── この project は aim を採ったか ────────────────────────────────────────
+  // ⚠ **corpus が在れば、印の有無に関わらず採っている。** 印は後から入った機構であり、
+  // **既に node を書いている project を、印が無いという理由で黙らせてはならない。**
+  const optIn = await readOptIn(unit.root)
+  aimEngaged = withCorpus.length > 0 || optIn.state !== 'absent'
+  const baton = await readBatonSafe(unit.root)
+
+  if (!aimEngaged) {
+    // ⚠ **handoff は aim ではない。** baton は `docs/aims/` に何も依存せず、どの project でも
+    // 使える ∴ **ここで baton を黙らせることは、aim の沈黙ではなく handoff の欠落である。**
+    if (baton) {
+      say('# bearing —— 前回どこで止まったか', '')
+      sayBatonPresent(unit, baton)
+    }
+    return { unit, repos: withCorpus }
+  }
+
+  const f = await frame()
+  if (f) say(f.trimEnd(), '', '---', '')
   const openTodo = withCorpus.reduce((n, r) => n + r.backlog.openTodoNodes, 0)
   const escalation = withCorpus.reduce((n, r) => n + (r.backlog.escalationNodes?.length ?? 0), 0)
   const anomalies = withCorpus.flatMap((r) =>
@@ -135,8 +216,6 @@ async function main() {
       slug: withCorpus.length > 1 ? `${r.label}/${a.slug}` : a.slug,
     })),
   )
-  const baton = await readBatonSafe(unit.root)
-
   say(`# aim facts —— unit: ${unit.name} —— 構成時刻 ${new Date().toISOString()}`)
   say(
     `> repo ${repos.length} 個、うち corpus を持つもの ${withCorpus.length} 個 · ` +
@@ -155,10 +234,13 @@ async function main() {
       '',
     )
   } else if (withCorpus.length === 0) {
+    // ⚠ **ここに立つのは「採用済みだが corpus が空」の project だけである。** 採っていない
+    // project は上の gate で既に返っている ∴ **「まだ採っていない」を述べる分岐をここに
+    // 置いてはならない** —— 到達しない分岐は、扱えているという嘘である。
     say(
-      '⚠ **git は在るが `docs/aims/` が無い。** これを、aim の規律をまだ採っていない**既存**',
-      'project として扱うこと。⚠ **採用は人間の act であり、頼まれずにあなたが行うもの',
-      'ではない** —— 選択肢を surface せよ。黙って設置するな。',
+      '⚠ **この project は aim を採用済みだが、`docs/aims/` はまだ空である**（`CLAUDE.md` に',
+      '法の block が在る）。∴ ここで作業が始まるなら、最初の手段が実装される前に最初の',
+      'aim node が作られる。⚠ **`aim:` を書くのは人間である** —— 候補を出し、確定を待て。',
       '',
     )
   }
@@ -166,6 +248,31 @@ async function main() {
     say(
       `⚠ **repo の walk が切り詰められた（${unit.truncated} の上限）。** この unit の repo 一覧は`,
       '**不完全**である ∴ 以下の事実はすべて部分的である。報告する前にその旨を述べること。',
+      '',
+    )
+  }
+
+  // ── 置かれた法の版 ────────────────────────────────────────────────────────
+  // ⚠ **block は複製である ∴ 版の門が 1 つ増える**（`~/.claude/` の statusline shim と
+  // 同じ構造）。⚠ **古い複製は正常に動いて見える** ∴ 面に出さなければ誰も気づかない。
+  if (optIn.state === 'stale') {
+    say(
+      `⚠ **CLAUDE.md に置かれた法の block が古い** —— ${optIn.detail}。`,
+      '`/bearing:with-aim` で置き直せる。⚠ **古い複製は正常に動いて見える** ∴ 今この',
+      'セッションが読んでいる法は、この plugin の今の法ではない。',
+      '',
+    )
+  } else if (optIn.state === 'edited') {
+    say(
+      '⚠ **`CLAUDE.md` の法の block に、人間が手を入れている**（本文が marker の sha と',
+      '一致しない）。⚠ **置き直せばその編集が消える** ∴ 機構は触らない —— どうするかは',
+      '人間が決める。',
+      '',
+    )
+  } else if (optIn.state === 'broken' || optIn.state === 'unverifiable') {
+    say(
+      `⚠ **CLAUDE.md の法の block を読めない** —— ${optIn.detail}。これは「block が無い」`,
+      'とは別である: **壊れた記録は、無い記録より声が大きい。**',
       '',
     )
   }
@@ -181,18 +288,7 @@ async function main() {
       '',
     )
   } else {
-    say(
-      `baton: \`${path.relative(unit.root, baton.path) || baton.path}\`` +
-        (baton.composedAt ? ` · composed-at \`${baton.composedAt}\`` : '') +
-        (baton.readAt ? ` · **read-at \`${baton.readAt}\`（既に一度読まれている）**` : ''),
-      '',
-      '**`_guide/handoff.md` § 読む の手順 2〜6 に従うこと** —— この hook は baton を surface',
-      'したが `read-at` は**刻んでいない**。手順 4〜6（未 push aim の surface・pointers の',
-      '読み込み・現在地の報告）はあなたの仕事である。',
-      '',
-      baton.text.trimEnd(),
-      '',
-    )
+    sayBatonPresent(unit, baton)
   }
 
   // ── repo ごとの aim 事実 ──────────────────────────────────────────────────
@@ -376,15 +472,24 @@ const hookInput = readHookInput()
 let composed = null
 try {
   composed = await main()
-  process.stdout.write(out.join('\n') + '\n')
+  // ⚠ **空なら 1 byte も書かない。** 裸の改行 1 つでも、それは「aim を採っていない
+  // project では黙る」を破っている —— 黙るとは、出力が短いことではない。
+  if (out.length > 0) process.stdout.write(out.join('\n') + '\n')
 } catch (err) {
   // 規則 1。ここで何が起きようと、セッションは開始しなければならない。
-  const f = await frame()
-  if (f) process.stdout.write(f.trimEnd() + '\n\n---\n\n')
-  process.stdout.write(
-    '⚠ **このセッションでは aim facts が計算されなかった** —— composer が失敗した。\n' +
-      'clean ではなく「不在」である: この沈黙を「拾うものが無い」と読まないこと。\n',
-  )
+  //
+  // ⚠ **aim を採っていないと分かっている project へは、ここでも何も述べない。** 失敗経路
+  // だけが法を吐けば、黙ると決めた repo に、最も説明のつかない形で 2KB が現れる。
+  // ⚠ **まだ分かっていない（null）なら述べる** —— 不明を沈黙へ倒すのは、この file が
+  // 規則 2 で禁じている degrade そのものである。
+  if (aimEngaged !== false) {
+    const f = await frame()
+    if (f) process.stdout.write(f.trimEnd() + '\n\n---\n\n')
+    process.stdout.write(
+      '⚠ **このセッションでは aim facts が計算されなかった** —— composer が失敗した。\n' +
+        'clean ではなく「不在」である: この沈黙を「拾うものが無い」と読まないこと。\n',
+    )
+  }
   process.stderr.write(`bearing: composer が失敗した: ${err?.stack ?? err}\n`)
 }
 await seedDeltaBaseline(composed?.unit, (await hookInput).session_id, composed?.repos)

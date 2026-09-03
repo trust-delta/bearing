@@ -35,6 +35,23 @@ Node が要る。build 手順も daemon も server も無い —— hook は fil
 
 3 つの skill が同梱される: `/bearing:aim`・`/bearing:handoff-r`・`/bearing:handoff-w`。
 
+### aim は project ごとの opt-in
+
+⚠ **handoff と statusline の 1 行目はどの project でも使えるが、aim の規律は corpus を
+前提にする** ∴ **採っていない repo で SessionStart hook は 1 byte も出さない**（未読の
+baton だけは述べる —— handoff は aim ではない）。使う project で 1 度だけ:
+
+```
+/bearing:with-aim
+```
+
+project-root の `CLAUDE.md` の末尾へ、marker で挟んだ法を差し込む（`--check` / `--remove`
+も在る）。⚠ **marker は HTML コメント ∴ context には 1 token も乗らない** —— docs が
+「block-level の HTML コメントは注入前に除かれる」と明記している。⚠ **hook はこの marker を
+読み、置かれた法が古ければそう述べる。人間が block の中を編集していれば、置き直さず止まる。**
+
+⚠ **corpus が既に在る repo では、marker が無くても従来どおり動く。**
+
 ## 何をすることを拒むか
 
 **判定しない。** 機械層は候補を可視化し、採点はエージェントの仕事、決定は人間のものである。
