@@ -185,6 +185,22 @@ That inserts a marker-delimited block of the law at the **end** of the
 project-root `CLAUDE.md` (`--check` reports state only, `--remove` takes it
 out).
 
+Where the corpus lives is the project's call. The default is `docs/aims/`,
+and `--dir` changes it:
+
+```
+/bearing:with-aim --dir proj/aims
+```
+
+The default itself never moves — moving it would make every existing corpus
+vanish at once. The declaration rides in the marker, so it is the same single
+declaration as opting in (no `dir=` means the default, so blocks written
+before this existed keep working untouched). Globs are refused: the value is
+handed to git as a pathspec, colliding slugs break `parent:` and `[[link]]`
+resolution, and "there is no corpus" stops being distinguishable from "we were
+looking somewhere else". Re-running without arguments keeps whatever the block
+already declares, so updating the version never silently relocates a corpus.
+
 Why `CLAUDE.md` rather than a hook: a SessionStart hook's output is
 summarized away with the conversation on compaction ("Context that hooks
 added earlier — Summarized with the rest of the conversation"), whereas the

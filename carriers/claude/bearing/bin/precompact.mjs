@@ -95,7 +95,7 @@ function readStdin() {
 async function inScope(unit) {
   if (existsSync(path.join(unit.root, '.handoff'))) return true
   for (const repo of unit.repos) {
-    if ((await readAimSlugs(repo.root)).length > 0) return true
+    if ((await readAimSlugs(repo.root, repo.aimsDir)).length > 0) return true
   }
   return false
 }

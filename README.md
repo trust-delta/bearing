@@ -177,6 +177,19 @@ repo では邪魔になる**。∴ **plugin 本体は user スコープで全 pr
 これが project-root の `CLAUDE.md` の**末尾**に、marker で挟んだ法の block を差し込む
 （`--check` で状態だけ、`--remove` で外す）。
 
+⚠ **corpus の在り処は project が決める。** 既定は `docs/aims/` で、`--dir` で変えられる:
+
+```
+/bearing:with-aim --dir proj/aims
+```
+
+⚠ **既定は動かさない** —— 既定が動けば、既に在る corpus が一斉に行方不明になる。⚠ **在り処の
+宣言は marker が運ぶ ∴ 採用の宣言と同じ 1 つの宣言である**（`dir=` が無ければ既定 ∴ 既に置かれた
+block は何もしなくてよい）。⚠ **glob は受け付けない**: git の pathspec として渡る値であり、
+slug の衝突は `parent:` と `[[link]]` の解決を壊し、「corpus が無い」と「別の場所を見ていた」の
+区別も失われる。⚠ **引数を付けずに打ち直したときは、既に置かれた宣言が正である** —— 版の更新の
+ためだけに打った人間の corpus を、黙って既定へ引っ越させない。
+
 ⚠ **なぜ hook ではなく `CLAUDE.md` か。** SessionStart hook の出力は**会話として要約され
 消える**（docs: "Context that hooks added earlier — Summarized with the rest of the
 conversation"）が、**project-root の `CLAUDE.md` は compaction 後に disk から再注入される**。

@@ -57,7 +57,7 @@
 
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import { aimRelPath, parseAimRecord, readAimSlugs } from './corpus.mjs'
+import { aimRelPath, parseAimRecord, readAimSlugs, DEFAULT_AIMS_DIR } from './corpus.mjs'
 
 export const AWAITING_FENCE_TAG = 'bearing-awaiting-observation v1'
 
@@ -234,8 +234,8 @@ export function parseProcessMarks(body) {
  * @param {string} repoRoot
  * @returns {Promise<{openTodoNodes: number, escalationNodes: string[], escalationEmptyNodes: string[], unknownNodes: string[], anomalies: {slug: string, kind: string, line: string, no: number}[]}>}
  */
-export async function gatherBacklog(repoRoot) {
-  const slugs = await readAimSlugs(repoRoot)
+export async function gatherBacklog(repoRoot, dir = DEFAULT_AIMS_DIR) {
+  const slugs = await readAimSlugs(repoRoot, dir)
   let openTodoNodes = 0
   const unknownNodes = []
   const awaitingNodes = []
@@ -245,7 +245,7 @@ export async function gatherBacklog(repoRoot) {
   for (const slug of slugs) {
     let text
     try {
-      text = await readFile(path.join(repoRoot, aimRelPath(slug)), 'utf8')
+      text = await readFile(path.join(repoRoot, aimRelPath(slug, dir)), 'utf8')
     } catch {
       continue
     }

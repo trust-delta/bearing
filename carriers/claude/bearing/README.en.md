@@ -62,6 +62,12 @@ of rewriting it.
 
 A repo that already has a corpus keeps working without a marker.
 
+Where the corpus lives is configurable with `--dir` (default `docs/aims/`):
+`/bearing:with-aim --dir proj/aims`. The declaration rides in the marker, so
+it is the same declaration as opting in, and a missing `dir=` means the
+default. Re-running with no arguments keeps whatever the block declares, so a
+version update never relocates a corpus.
+
 ## What it refuses to do
 
 **It does not judge.** The machine layer makes candidates visible; grading them

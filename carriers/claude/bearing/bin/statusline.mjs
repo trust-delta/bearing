@@ -23,7 +23,7 @@
 import path from 'node:path'
 import { writeFile } from 'node:fs/promises'
 
-import { readAimSlugs } from '../lib/corpus.mjs'
+import { readAimSlugs, DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { runGit } from '../lib/git.mjs'
 import { resolveUnit } from '../lib/unit.mjs'
 import { gatherBacklog } from '../lib/process.mjs'
@@ -250,13 +250,25 @@ export function provenance(selfDir, projectDir) {
   return path.resolve(selfDir).startsWith(root + path.sep) ? 'repo' : null
 }
 
-export function renderBearing(state, facts, from = null) {
+export function renderBearing(state, facts, from = null, aimsDirs = []) {
   const seg = [paint(C.label, from === 'repo' ? 'bearing repo' : 'bearing')]
 
   // ⚠ `docs/aims/` を持たない repo は**構造的に正常**である ∴ 警告色を与えない。
   // この判定が先に来ること —— corpus が無い repo も facts を持たないため、
   // 順序を違えれば「正常な不在」がすべて警告に化ける。
-  if (state === 'no-corpus') return [...seg, paint(C.faint, 'corpus 無し')]
+  // ⚠ **既定でない在り処を見ているときは、それを言う。** 言わなければ「corpus 無し」が、
+  // *本当に無い*のか *宣言を誤って別の場所を見ている*のかを畳んでしまう —— そして
+  // ⚠ **既定のときは言わない**: 既定を毎回描くのは、この面が最も持たない予算（幅）を
+  // 何も告げずに食うことである。
+  if (state === 'no-corpus') {
+    // ⚠ **既定のときは黙る** —— 既定を毎回描くのは、この面が最も持たない予算（幅）を
+    // 何も告げずに食うことである。⚠ **幅が確定しない文字を含む在り処は名指さない**:
+    // 名指せば画面が重なり、**述べようとした事実ごと読めなくなる。**
+    const custom = aimsDirs.filter((d) => d && d !== DEFAULT_AIMS_DIR)
+    const safe = custom.filter((d) => widthUnsafeChars(d).length === 0)
+    const where = safe.length > 0 ? ` (${safe.join(',')})` : custom.length > 0 ? ' (別の在り処)' : ''
+    return [...seg, paint(C.faint, `corpus 無し${where}`)]
+  }
   // ⚠ 一方 **repo が見つからない**は clean ではない。`resolveUnit` は cwd から*下*を
   // 探す ∴ repo の subdirectory で起動すれば、corpus は在るのに見つからない。
   if (state === 'unavailable' || !facts) return [...seg, paint(C.yellow, 'corpus 未取得')]
@@ -360,20 +372,26 @@ async function gatherFacts(input) {
   if (unit.repos.length === 0) return { state: 'unavailable', facts: null, branch }
 
   const perRepo = (await Promise.all(unit.repos.map(async (repo) => {
-    const slugs = await readAimSlugs(repo.root)
+    const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
+    const slugs = await readAimSlugs(repo.root, dir)
     // corpus を採っていない repo は unit の中に普通に居る ∴ 落とすのであって、
     // 「読めなかった」とは数えない。
     if (slugs.length === 0) return null
     const [working, unpushed, drift, backlog] = await Promise.all([
-      gatherWorkingDelta(repo.root, slugs).catch(() => null),
-      gatherUnpushed(repo.root, slugs).catch(() => null),
-      gatherDrift(repo.root).catch(() => null),
-      gatherBacklog(repo.root).catch(() => null),
+      gatherWorkingDelta(repo.root, slugs, dir).catch(() => null),
+      gatherUnpushed(repo.root, slugs, dir).catch(() => null),
+      gatherDrift(repo.root, dir).catch(() => null),
+      gatherBacklog(repo.root, dir).catch(() => null),
     ])
     return { slugs, working, unpushed, drift, backlog }
   }))).filter(Boolean)
 
-  if (perRepo.length === 0) return { state: 'no-corpus', facts: null, branch }
+  // ⚠ **「無い」だけでは足りない。** 在り処が宣言で動く以上、*本当に無い*のか
+  // *別の場所を見ている*のかを、面が区別できなければならない。
+  if (perRepo.length === 0) {
+    const aimsDirs = [...new Set(unit.repos.map((r) => r.aimsDir ?? DEFAULT_AIMS_DIR))]
+    return { state: 'no-corpus', facts: null, branch, aimsDirs }
+  }
 
   // ⚠ baton は unit に 1 つである（repo ではなく unit root に置かれる）∴ 畳まない。
   const baton = await readBaton(unit.root).catch(() => null)
@@ -433,6 +451,7 @@ export async function main() {
       gathered.state,
       gathered.facts,
       provenance(import.meta.dirname, resolveCwd(input)),
+      gathered.aimsDirs ?? [],
     ),
     columns,
   )

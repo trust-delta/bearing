@@ -32,6 +32,11 @@ import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import { DEFAULT_AIMS_DIR, normalizeAimsDir } from './corpus.mjs'
+
+/** 法の本文の中で、corpus の在り処が入る場所。⚠ **残ったまま配ってはならない。** */
+export const AIMS_PLACEHOLDER = '{{aims}}'
+
 /** marker の名。⚠ **他 plugin と衝突しない形であること** —— `bin/` の名前空間と同じ理由。 */
 export const MARKER = 'bearing:aim'
 
@@ -41,9 +46,37 @@ export const MARKER = 'bearing:aim'
 // ⚠ **片方だけが引用を主張として読めば、我々は他人の doc に載った例示を書き換える。**
 const FENCE_LINE = /^ {0,3}(```+|~~~+)/
 
-const BEGIN = /^<!--\s*bearing:aim\s+v(\S+)\s+sha=([0-9a-f]{16})\s*-->\s*$/
+const BEGIN_ANY = /^<!--\s*bearing:aim\s+(.*?)\s*-->\s*$/
 const BEGIN_LOOSE = /^<!--\s*bearing:aim(\s|-->)/
 const END = /^<!--\s*\/bearing:aim\s*-->\s*$/
+
+/**
+ * 開始 marker の中身を読む。**読めなければ null**（「無い」ではない）。
+ *
+ * 形は `v<version>` に続く `key=value` の並びで、⚠ **`dir` は省略可能である** ——
+ * 省略は既定を意味する ∴ **`dir=` を持たない古い block は、何もしなくてもそのまま読める。**
+ *
+ * @param {string} line
+ * @returns {{version: string, sha: string, dir: string}|null}
+ */
+function parseBegin(line) {
+  const m = line.match(BEGIN_ANY)
+  if (!m) return null
+  const [head, ...rest] = m[1].split(/\s+/).filter(Boolean)
+  if (!head || !head.startsWith('v') || head.length < 2) return null
+  const attrs = new Map()
+  for (const token of rest) {
+    const at = token.indexOf('=')
+    if (at <= 0) return null
+    attrs.set(token.slice(0, at), token.slice(at + 1))
+  }
+  const sha = attrs.get('sha')
+  if (!/^[0-9a-f]{16}$/.test(sha ?? '')) return null
+  // ⚠ **扱えない dir は「既定」に落とさない。** 落とせば、誤った宣言が既定として黙って動く。
+  const dir = attrs.has('dir') ? normalizeAimsDir(attrs.get('dir')) : DEFAULT_AIMS_DIR
+  if (dir === null) return null
+  return { version: head.slice(1), sha, dir }
+}
 
 const normalize = (s) => s.replace(/\r\n/g, '\n')
 
@@ -79,11 +112,12 @@ export const bodySha = (body) =>
  * @param {string} frameText `skills/aim/frame.md` の中身
  * @returns {string} block の本文（LF・末尾空白なし）
  */
-export function renderLaw(frameText) {
+export function renderLaw(frameText, dir = DEFAULT_AIMS_DIR) {
   // ⚠ **後ろの半角空白まで含めて置き換える。** 全角の閉じ括弧の直後に半角空白が残ると、
   // 差し込んだ 1 行だけが他人の doc の中で組版を外す。
-  const LINK = '[`docs/aims/_guide/aim-authoring.md`](aim-authoring.md) '
-  const LINK_TO = '`docs/aims/_guide/aim-authoring.md`（無ければ `aim` skill が同梱する複製）'
+  const P = AIMS_PLACEHOLDER
+  const LINK = `[\`${P}/_guide/aim-authoring.md\`](aim-authoring.md) `
+  const LINK_TO = `\`${P}/_guide/aim-authoring.md\`（無ければ \`aim\` skill が同梱する複製）`
 
   const text = normalize(frameText).trimEnd()
   const hits = text.split(LINK).length - 1
@@ -111,7 +145,25 @@ export function renderLaw(frameText) {
   if (demoted === 0) {
     throw new Error('frame に見出しが無い —— 変換の前提が崩れている。他人の CLAUDE.md で H1 を名乗らせない。')
   }
-  return lines.join('\n')
+  return substituteAims(lines.join('\n'), dir)
+}
+
+/**
+ * 法の本文の placeholder を、宣言された在り処で埋める。
+ *
+ * ⚠ **埋め残しは throw する。** `{{aims}}` を含んだまま配れば、**他人の repo のセッションが
+ * 存在しない path を正本として読む** —— そして placeholder は、prose の中では意味ありげな
+ * 記号にしか見えないので、誰も壊れたと気づかない。
+ *
+ * @param {string} text
+ * @param {string} dir
+ */
+export function substituteAims(text, dir) {
+  const out = text.split(AIMS_PLACEHOLDER).join(dir)
+  if (out.includes(AIMS_PLACEHOLDER) || out.includes('{{')) {
+    throw new Error(`法の本文に埋められていない placeholder が残っている（dir=${dir}）`)
+  }
+  return out
 }
 
 /**
@@ -124,10 +176,10 @@ export function renderLaw(frameText) {
  * @param {string} root plugin root
  * @returns {Promise<{version: string, law: string}>}
  */
-export async function loadDesired(root) {
+export async function loadDesired(root, dir = DEFAULT_AIMS_DIR) {
   const frame = await readFile(path.join(root, 'skills', 'aim', 'frame.md'), 'utf8')
   const manifest = JSON.parse(await readFile(path.join(root, '.claude-plugin', 'plugin.json'), 'utf8'))
-  return { version: manifest.version, law: renderLaw(frame) }
+  return { version: manifest.version, law: renderLaw(frame, dir), dir }
 }
 
 /**
@@ -137,9 +189,12 @@ export async function loadDesired(root) {
  * @param {string} body
  * @returns {string} LF で綴じた block（前後に空行を持たない）
  */
-export const renderBlock = (version, body) => {
+export const renderBlock = (version, body, dir = DEFAULT_AIMS_DIR) => {
   const b = normalize(body).trimEnd()
-  return `<!-- ${MARKER} v${version} sha=${bodySha(b)} -->\n${b}\n<!-- /${MARKER} -->`
+  // ⚠ **`dir=` は既定であっても書く。** 省略できる形にしておきながら省くと、file を開いた
+  // 人間は「どこを見ているか」を知るために既定を覚えていなければならない。**読み取りは省略を
+  // 許し、書き出しは省略しない** —— 古い block を読めることと、新しい block が黙ることは別。
+  return `<!-- ${MARKER} v${version} dir=${dir} sha=${bodySha(b)} -->\n${b}\n<!-- /${MARKER} -->`
 }
 
 /**
@@ -166,14 +221,16 @@ export function findBlocks(text) {
     }
     if (inFence) return
 
-    const begin = line.match(BEGIN)
+    const begin = BEGIN_LOOSE.test(line) && !END.test(line) ? parseBegin(line) : null
     if (begin) {
       if (open) anomalies.push(`${open.from + 1} 行目の開始 marker が閉じられないまま、${i + 1} 行目で次が開いている`)
-      open = { from: i, version: begin[1], sha: begin[2] }
+      open = { from: i, ...begin }
       return
     }
     if (BEGIN_LOOSE.test(line) && !END.test(line)) {
-      anomalies.push(`${i + 1} 行目の marker を読めない（版と sha を持つ形ではない）: ${line.trim()}`)
+      anomalies.push(
+        `${i + 1} 行目の marker を読めない（版・sha・扱える dir を持つ形ではない）: ${line.trim()}`,
+      )
       return
     }
     if (END.test(line)) {
@@ -188,6 +245,22 @@ export function findBlocks(text) {
   if (open) anomalies.push(`${open.from + 1} 行目の開始 marker が閉じられていない`)
   if (blocks.length > 1) anomalies.push(`block が ${blocks.length} 組ある（1 組であるべき）`)
   return { blocks, anomalies }
+}
+
+/**
+ * その `CLAUDE.md` が宣言している corpus の在り処。
+ *
+ * ⚠ **「宣言が無い」と「宣言が壊れている」を分ける。** 前者は既定でよいが、後者で既定へ
+ * 落とせば、**誤った宣言が既定として黙って動き、人間は自分の宣言が効いていると信じ続ける。**
+ *
+ * @param {string} text
+ * @returns {{dir: string|null, declared: boolean, reason: string|null}}
+ */
+export function declaredAimsDir(text) {
+  const { blocks, anomalies } = findBlocks(text)
+  if (anomalies.length > 0) return { dir: null, declared: false, reason: anomalies.join('。') }
+  if (blocks.length === 0) return { dir: null, declared: false, reason: null }
+  return { dir: blocks[0].dir, declared: true, reason: null }
 }
 
 /**
@@ -206,13 +279,13 @@ const restore = (lines, source) => lines.join(detectEol(source))
  * @param {{version: string, law: string}} desired
  * @returns {{action: 'create'|'update'|'unchanged'|'refuse', reason: string, text?: string}}
  */
-export function planApply(text, { version, law }) {
+export function planApply(text, { version, law, dir = DEFAULT_AIMS_DIR }) {
   const { blocks, anomalies } = findBlocks(text)
   if (anomalies.length > 0) {
     return { action: 'refuse', reason: `marker が壊れている ∴ 触らない —— ${anomalies.join('。')}` }
   }
 
-  const block = renderBlock(version, law)
+  const block = renderBlock(version, law, dir)
   const lines = normalize(text).split('\n')
 
   if (blocks.length === 0) {
@@ -244,12 +317,13 @@ export function planApply(text, { version, law }) {
 
   const current = lines.slice(found.from, found.to + 1).join('\n')
   if (current === block) {
-    return { action: 'unchanged', reason: `既にこの block である（v${found.version}）` }
+    return { action: 'unchanged', reason: `既にこの block である（v${found.version} / ${found.dir}）` }
   }
   const next = [...lines.slice(0, found.from), ...block.split('\n'), ...lines.slice(found.to + 1)]
+  const moved = found.dir !== dir ? `、在り処を ${found.dir} から ${dir} へ` : ''
   return {
     action: 'update',
-    reason: `v${found.version} から v${version} へ置き直した`,
+    reason: `v${found.version} から v${version} へ置き直した${moved}`,
     text: restore(next, text),
   }
 }
@@ -293,21 +367,31 @@ export function planRemove(text) {
  * @param {{version: string, law: string}} desired
  * @returns {{state: 'absent'|'current'|'stale'|'edited'|'broken', version: string|null, detail: string}}
  */
-export function inspect(text, { version, law }) {
+export function inspect(text, { version, law, dir = DEFAULT_AIMS_DIR }) {
   const { blocks, anomalies } = findBlocks(text)
-  if (anomalies.length > 0) return { state: 'broken', version: null, detail: anomalies.join('。') }
-  if (blocks.length === 0) return { state: 'absent', version: null, detail: 'block が無い' }
+  if (anomalies.length > 0) {
+    return { state: 'broken', version: null, dir: null, detail: anomalies.join('。') }
+  }
+  if (blocks.length === 0) {
+    return { state: 'absent', version: null, dir: null, detail: 'block が無い' }
+  }
 
   const [found] = blocks
   if (bodySha(found.body) !== found.sha) {
-    return { state: 'edited', version: found.version, detail: '本文が marker の sha と一致しない' }
+    return {
+      state: 'edited',
+      version: found.version,
+      dir: found.dir,
+      detail: '本文が marker の sha と一致しない',
+    }
   }
-  if (found.version === version && found.sha === bodySha(law)) {
-    return { state: 'current', version: found.version, detail: '今の版と一致する' }
+  if (found.version === version && found.dir === dir && found.sha === bodySha(law)) {
+    return { state: 'current', version: found.version, dir: found.dir, detail: '今の版と一致する' }
   }
-  return {
-    state: 'stale',
-    version: found.version,
-    detail: `置かれているのは v${found.version}、今の版は v${version}`,
-  }
+  // ⚠ **在り処が動いたことは、版が古いことと別の理由で起きる** ∴ 別の言葉で述べる ——
+  // 「古い」とだけ言えば、人間は plugin を更新して直らない理由を探すことになる。
+  const detail = found.dir !== dir
+    ? `宣言された在り処は ${found.dir}、今の解決は ${dir}`
+    : `置かれているのは v${found.version}、今の版は v${version}`
+  return { state: 'stale', version: found.version, dir: found.dir, detail }
 }

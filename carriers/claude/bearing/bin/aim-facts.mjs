@@ -44,7 +44,10 @@ import { gatherWorkingDelta, renderWorkingDeltaFence } from '../lib/working-delt
 import { gatherUnpushed, renderUnpushedFence } from '../lib/unpushed.mjs'
 import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
-import { findBlocks, inspect as inspectBlock, loadDesired } from '../lib/claude-md.mjs'
+import {
+  findBlocks, inspect as inspectBlock, loadDesired, substituteAims, declaredAimsDir,
+} from '../lib/claude-md.mjs'
+import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -90,7 +93,11 @@ async function readOptIn(root) {
   if (anomalies.length > 0) return { state: 'broken', version: null, detail: anomalies.join('。') }
   if (blocks.length === 0) return { state: 'absent', version: null, detail: 'block が無い' }
   try {
-    return inspectBlock(text, await loadDesired(PLUGIN_ROOT))
+    // ⚠ **宣言された在り処から法を組み立てる。** 既定で組み立てれば、在り処を宣言した
+    // project は**恒久的に「古い」と報告される** —— そして人間は、plugin を更新しても
+    // 直らない理由を探すことになる。
+    const declared = declaredAimsDir(text)
+    return inspectBlock(text, await loadDesired(PLUGIN_ROOT, declared.dir ?? DEFAULT_AIMS_DIR))
   } catch (err) {
     return {
       state: 'unverifiable',
@@ -101,11 +108,15 @@ async function readOptIn(root) {
 }
 
 /** 常時効く規律。静的な text であり、binary を必要としたことは一度も無い。 */
-async function frame() {
+async function frame(dir = DEFAULT_AIMS_DIR) {
   // `gen/claude-plugin.sh` が `aim` skill の傍らに同梱する。その複製が
   // `docs/aims/_guide/frame.md` と同期していることは CI が検査する。
+  // ⚠ **placeholder を埋めてから注入する。** `{{aims}}` を残したまま出せば、セッションは
+  // 存在しない path を正本として読む —— そして placeholder は prose の中では意味ありげな
+  // 記号にしか見えないので、誰も壊れたと気づかない。
   try {
-    return await readFile(path.join(PLUGIN_ROOT, 'skills', 'aim', 'frame.md'), 'utf8')
+    const raw = await readFile(path.join(PLUGIN_ROOT, 'skills', 'aim', 'frame.md'), 'utf8')
+    return substituteAims(raw, dir)
   } catch {
     return null
   }
@@ -113,19 +124,21 @@ async function frame() {
 
 /** repo ごとの事実。⚠ **どの失敗も、失敗したと述べる fence へ degrade する。** */
 async function repoFacts(repo) {
-  const slugs = await readAimSlugs(repo.root)
+  // ⚠ **在り処は repo ごとに違いうる** ∴ ここで既定へ落とさない。
+  const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
+  const slugs = await readAimSlugs(repo.root, dir)
   const head = (await runGit(repo.root, ['rev-parse', '--short', 'HEAD']))?.trim() ?? null
   if (slugs.length === 0) {
     return { ...repo, head, slugs, corpus: false }
   }
-  const graph = await readAimGraph(repo.root)
+  const graph = await readAimGraph(repo.root, dir)
   const [drift, working, unpushed, checkpoint] = await Promise.all([
-    gatherDrift(repo.root),
-    gatherWorkingDelta(repo.root, slugs),
-    gatherUnpushed(repo.root, slugs),
+    gatherDrift(repo.root, dir),
+    gatherWorkingDelta(repo.root, slugs, dir),
+    gatherUnpushed(repo.root, slugs, dir),
     gatherCheckpointStale(repo.root, graph?.nodes ?? new Map()),
   ])
-  const backlog = await gatherBacklog(repo.root)
+  const backlog = await gatherBacklog(repo.root, dir)
   return { ...repo, head, slugs, corpus: true, drift, working, unpushed, checkpoint, backlog }
 }
 
@@ -133,8 +146,10 @@ function renderRepo(r) {
   const role = r.primary ? ', primary' : ''
   say(`### ${r.label} (\`${r.root}\`${role}) · git HEAD ${r.head ?? 'unknown'}`, '')
   if (!r.corpus) {
-    say('*この repo に `docs/aims/` は無い —— corpus を採っていない。これは構造的に正常な',
-        '状態であって、欠陥ではない。*', '')
+    // ⚠ **どこを見たかを言う。** 言わなければ、在り処の宣言を誤った repo で、**設定の
+    // 誤りが健康証明として読まれる。**
+    say(`*この repo に \`${r.aimsDir}/\` は無い —— corpus を採っていない。これは構造的に*`,
+        '*正常な状態であって、欠陥ではない。*', '')
     return
   }
   if (r.drift === null) {
@@ -195,7 +210,9 @@ async function main() {
     return { unit, repos: withCorpus }
   }
 
-  const f = await frame()
+  // ⚠ **frame は unit に 1 つ ∴ primary の在り処で埋める。** repo ごとに違う場合、
+  // 各 repo の事実の側が自分の在り処を述べる —— 法は 1 つ、事実は repo ごと。
+  const f = await frame(repos[0]?.aimsDir ?? DEFAULT_AIMS_DIR)
   if (f) say(f.trimEnd(), '', '---', '')
   const openTodo = withCorpus.reduce((n, r) => n + r.backlog.openTodoNodes, 0)
   const escalation = withCorpus.reduce((n, r) => n + (r.backlog.escalationNodes?.length ?? 0), 0)
@@ -269,7 +286,16 @@ async function main() {
       '人間が決める。',
       '',
     )
-  } else if (optIn.state === 'broken' || optIn.state === 'unverifiable') {
+  }
+
+  // ⚠ **扱えない在り処の宣言を、既定として黙って動かさない。** 人間は自分の宣言が効いて
+  // いると信じ続けることになる。
+  for (const r of repos.filter((x) => x.aimsDirProblem)) {
+    say(`⚠ **${r.label} の在り処の宣言を読めない** —— ${r.aimsDirProblem}。`,
+        `既定（\`${DEFAULT_AIMS_DIR}/\`）を見ている。`, '')
+  }
+
+  if (optIn.state === 'broken' || optIn.state === 'unverifiable') {
     say(
       `⚠ **CLAUDE.md の法の block を読めない** —— ${optIn.detail}。これは「block が無い」`,
       'とは別である: **壊れた記録は、無い記録より声が大きい。**',
@@ -294,7 +320,11 @@ async function main() {
   // ── repo ごとの aim 事実 ──────────────────────────────────────────────────
   say('## Aim corpus', '')
   if (withCorpus.length === 0) {
-    say('*この unit のどの repo も `docs/aims/` を持たない。*', '')
+    say(
+      `*この unit のどの repo も宣言された在り処に corpus を持たない（` +
+        `${[...new Set(repos.map((r) => r.aimsDir))].join('、')}）。*`,
+      '',
+    )
   } else {
     for (const r of repos) renderRepo(r)
   }
@@ -382,7 +412,7 @@ async function main() {
   // unit では、canon は cwd ではなく member repo の側に在る。
   const guides = []
   for (const r of withCorpus) {
-    const g = path.join(r.root, 'docs', 'aims', '_guide', 'aim-authoring.md')
+    const g = path.join(r.root, ...r.aimsDir.split('/'), '_guide', 'aim-authoring.md')
     try {
       await readFile(g, 'utf8')
       guides.push(path.relative(unit.root, g) || g)
@@ -396,10 +426,13 @@ async function main() {
       say(`canon あり: ${guides.map((g) => `\`${g}\``).join('、')}。**aim node に触れる前に`,
           '読むこと。**', '')
     } else {
+      // ⚠ **どこを見たかを言う。** 在り処が宣言で動く以上、「無い」だけでは、canon が
+      // 本当に無いのか、宣言が誤っているのかを人間が切り分けられない。
+      const looked = [...new Set(withCorpus.map((r) => `${r.aimsDir}/_guide/aim-authoring.md`))]
       say(
-        '⚠ **この unit に `docs/aims/_guide/aim-authoring.md` が無い。** `aim` skill は canon の',
-        '複製を同梱している —— それを使い、ここでの不在は人間に上げるべきこととして',
-        '扱うこと。',
+        `⚠ **この unit に canon が無い** —— 見たのは ${looked.map((p) => `\`${p}\``).join('、')}。`,
+        '`aim` skill は canon の複製を同梱している —— それを使い、ここでの不在は人間に',
+        '上げるべきこととして扱うこと。',
         '',
       )
     }

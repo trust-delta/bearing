@@ -14,8 +14,10 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
 import {
-  MARKER, bodySha, detectEol, findBlocks, inspect, planApply, planRemove, renderBlock, renderLaw,
+  MARKER, AIMS_PLACEHOLDER, bodySha, declaredAimsDir, detectEol, findBlocks, inspect, planApply,
+  planRemove, renderBlock, renderLaw, substituteAims,
 } from '../lib/claude-md.mjs'
+import { DEFAULT_AIMS_DIR, normalizeAimsDir } from '../lib/corpus.mjs'
 
 const ROOT = path.join(import.meta.dirname, '..')
 const CR = String.fromCharCode(13)
@@ -53,11 +55,24 @@ test('条件文は落とさない —— 採用は corpus の存在を意味し�
 })
 
 test('前提が崩れたら黙って no-op にせず throw する', () => {
+  const P = AIMS_PLACEHOLDER
   assert.throws(() => renderLaw('# 見出しだけで link が無い\n\n本文\n'), /link が 0 個/)
   assert.throws(
-    () => renderLaw('見出しが無い [`docs/aims/_guide/aim-authoring.md`](aim-authoring.md) 本文\n'),
+    () => renderLaw(`見出しが無い [\`${P}/_guide/aim-authoring.md\`](aim-authoring.md) 本文\n`),
     /見出しが無い/,
   )
+})
+
+test('placeholder の埋め残しは throw する —— 存在しない path を正本として配らない', () => {
+  assert.throws(() => substituteAims(`本文 ${AIMS_PLACEHOLDER}/x と {{other}}`, 'aims'), /placeholder/)
+  assert.equal(substituteAims(`${AIMS_PLACEHOLDER}/x`, 'aims'), 'aims/x')
+})
+
+test('法の本文は、宣言された在り処を名乗る', () => {
+  const law = renderLaw(frameText, 'proj/aims')
+  assert.ok(law.includes('`proj/aims/_guide/aim-authoring.md`'))
+  assert.ok(law.includes('proj/aims/<slug>.md'))
+  assert.ok(!law.includes('docs/aims'), '既定が残っている')
 })
 
 // ── sha ─────────────────────────────────────────────────────────────────────
@@ -79,8 +94,34 @@ test('本文が 1 文字でも違えば sha は動く', () => {
 
 test('marker は独立行に置かれる —— block-level でなければ context から除かれない', () => {
   const lines = block().split('\n')
-  assert.match(lines[0], /^<!-- bearing:aim v1\.2\.3 sha=[0-9a-f]{16} -->$/)
+  assert.match(lines[0], /^<!-- bearing:aim v1\.2\.3 dir=docs\/aims sha=[0-9a-f]{16} -->$/)
   assert.equal(lines.at(-1), `<!-- /${MARKER} -->`)
+})
+
+test('書き出しは dir を省略しない —— 既定であっても', () => {
+  // ⚠ **読み取りは省略を許し、書き出しは省略しない。** file を開いた人間が、どこを見て
+  // いるかを知るために既定を覚えている必要は無い。
+  assert.ok(renderBlock('1.0.0', LAW, DEFAULT_AIMS_DIR).includes(`dir=${DEFAULT_AIMS_DIR}`))
+})
+
+test('dir= を持たない古い block も読める —— 前方互換', () => {
+  const body = LAW
+  const old = `<!-- ${MARKER} v0.9.0 sha=${bodySha(body)} -->\n${body}\n<!-- /${MARKER} -->\n`
+  const { blocks, anomalies } = findBlocks(old)
+  assert.deepEqual(anomalies, [])
+  assert.equal(blocks.length, 1)
+  assert.equal(blocks[0].dir, DEFAULT_AIMS_DIR, '省略は既定を意味する')
+})
+
+test('扱えない dir= は「無い」ではなく anomaly になる', () => {
+  // ⚠ **既定へ落とせば、誤った宣言が既定として黙って動く** —— 人間は自分の宣言が効いて
+  // いると信じ続ける。
+  for (const bad of ['/abs', '../up', 'a*b', 'C:/x']) {
+    const doc = `<!-- ${MARKER} v1 dir=${bad} sha=${bodySha(LAW)} -->\n${LAW}\n<!-- /${MARKER} -->\n`
+    const { blocks, anomalies } = findBlocks(doc)
+    assert.deepEqual(blocks, [], `${bad} が block として読まれた`)
+    assert.ok(anomalies.some((a) => /読めない/.test(a)), `${bad} が anomaly にならない`)
+  }
 })
 
 test('marker の sha は、その block の本文の sha である', () => {
@@ -219,4 +260,61 @@ test('古い block は版を名指せる —— 「違う」だけでは置き�
 test('1 つでも CRLF が在れば CRLF とみなす', () => {
   assert.equal(detectEol('a\nb' + CR + '\nc'), CR + '\n')
   assert.equal(detectEol('a\nb\nc'), '\n')
+})
+
+// ── 在り処の宣言 ────────────────────────────────────────────────────────────
+
+test('normalizeAimsDir は、pathspec として渡せないものを拒む', () => {
+  // ⚠ **5 箇所がこの値を git の pathspec として渡す** ∴ 緩めることは走査が黙って
+  // 広がることを許すのと同じである。
+  assert.equal(normalizeAimsDir('docs/aims'), 'docs/aims')
+  assert.equal(normalizeAimsDir('docs/aims/'), 'docs/aims', '末尾の / は落とす')
+  // ⚠ 先頭の / は「repo root から」とも「絶対 path」とも読める ∴ 落とさず拒む。
+  assert.equal(normalizeAimsDir('/docs/aims'), null, '先頭の / は曖昧 ∴ 拒む')
+  assert.equal(normalizeAimsDir('docs' + String.fromCharCode(92) + 'aims'), 'docs/aims', 'backslash は / に倒す')
+  // ⚠ 先頭が separator なら、win32 の絶対形でも拒む —— 上と同じ曖昧さである。
+  assert.equal(normalizeAimsDir(String.fromCharCode(92) + 'aims'), null)
+  for (const bad of ['', '   ', '..', 'a/../b', 'C:/x', 'a*b', 'a?b', 'a[b]', ':x', 42, null]) {
+    assert.equal(normalizeAimsDir(bad), null, `${bad} を通してしまった`)
+  }
+})
+
+test('declaredAimsDir は「宣言が無い」と「宣言が壊れている」を分ける', () => {
+  assert.deepEqual(declaredAimsDir('# doc\n'), { dir: null, declared: false, reason: null })
+
+  const placed = planApply('# doc\n', { version: V, law: renderLaw(frameText, 'aims'), dir: 'aims' }).text
+  assert.deepEqual(declaredAimsDir(placed), { dir: 'aims', declared: true, reason: null })
+
+  const broken = declaredAimsDir(`<!-- ${MARKER} v1 dir=../up sha=${bodySha(LAW)} -->\n`)
+  assert.equal(broken.declared, false)
+  assert.ok(broken.reason, '壊れているのに reason が無い')
+})
+
+test('在り処が動いたことは、版が古いこととは別の言葉で述べられる', () => {
+  // ⚠ 「古い」とだけ言えば、人間は plugin を更新して直らない理由を探すことになる。
+  const desiredA = { version: V, law: renderLaw(frameText, 'aims'), dir: 'aims' }
+  const placed = planApply('# doc\n', desiredA).text
+  const s = inspect(placed, desired)
+  assert.equal(s.state, 'stale')
+  assert.match(s.detail, /宣言された在り処/)
+  assert.doesNotMatch(s.detail, /今の版/)
+})
+
+test('在り処を変えると block は置き直され、末尾に 2 つ目が増えない', () => {
+  const placed = planApply('# doc\n', desired).text
+  const moved = planApply(placed, { version: V, law: renderLaw(frameText, 'aims'), dir: 'aims' })
+  assert.equal(moved.action, 'update')
+  assert.match(moved.reason, /在り処を docs\/aims から aims へ/)
+  assert.equal(findBlocks(moved.text).blocks.length, 1)
+  assert.equal(declaredAimsDir(moved.text).dir, 'aims')
+})
+
+test('dir= だけを手で書き換えても「人間が本文を編集した」にはならない', () => {
+  // ⚠ **本文の sha は本文だけを見る** ∴ 宣言の変更は編集の検出を汚さない。宣言を正として
+  // 本文を追従させるのが正しい —— block の本文は我々のものであって人間の散文ではない。
+  const placed = planApply('# doc\n', desired).text
+  const edited = placed.replace('dir=docs/aims', 'dir=aims')
+  assert.notEqual(inspect(edited, desired).state, 'edited')
+  const plan = planApply(edited, { version: V, law: renderLaw(frameText, 'aims'), dir: 'aims' })
+  assert.equal(plan.action, 'update')
 })
