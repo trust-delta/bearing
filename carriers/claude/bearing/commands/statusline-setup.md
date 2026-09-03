@@ -1,6 +1,6 @@
 ---
 description: bearing の statusline を装着する（~/.claude/settings.json に 1 行を書き、shim を置く）
-argument-hint: [--force | --uninstall]
+argument-hint: "[--force | --uninstall]"
 allowed-tools: Bash(bearing-statusline-setup.mjs:*)
 disable-model-invocation: true
 ---
