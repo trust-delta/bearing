@@ -1,6 +1,6 @@
 ---
 name: handoff-w
-description: このセッションの baton（会話引き継ぎ）を authoring して .handoff/active.md に書き出す。context を使い切る前、あるいは区切りの良いところで実行する。
+description: このセッションの baton（会話引き継ぎ）を authoring して machine-local な置き場へ書き出す。context を使い切る前、あるいは区切りの良いところで実行する。
 ---
 
 # handoff-w

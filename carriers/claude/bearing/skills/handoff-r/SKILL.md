@@ -1,6 +1,6 @@
 ---
 name: handoff-r
-description: 直前のセッションが残した baton（.handoff/active.md）を読み込み、未プッシュの aim を surface して作業を再開する。新しいセッションの最初に実行する。
+description: 直前のセッションが残した baton（machine-local な会話の引き継ぎ）を読み込み、未プッシュの aim を surface して作業を再開する。新しいセッションの最初に実行する。
 ---
 
 # handoff-r
