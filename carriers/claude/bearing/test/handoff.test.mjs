@@ -10,6 +10,7 @@ import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { mkdtempSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -21,7 +22,16 @@ import {
   stampReadAt,
   writeBaton,
   activePath,
+  archiveDir,
+  batonDir,
+  bearingHome,
+  unitSlug,
 } from '../lib/handoff.mjs'
+
+// ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
+// baton** —— を読み書きする。`activePath` 等は呼ばれた時点の env を見る ∴ import より後、
+// 最初の fixture より前にここで倒しておけば足りる。
+process.env.BEARING_HOME = mkdtempSync(path.join(tmpdir(), 'bearing-home-'))
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const PRECOMPACT = path.join(HERE, '..', 'bin', 'precompact.mjs')
@@ -29,7 +39,7 @@ const PRECOMPACT = path.join(HERE, '..', 'bin', 'precompact.mjs')
 async function unit(withBaton) {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-handoff-'))
   if (withBaton !== undefined) {
-    await mkdir(path.join(root, '.handoff'), { recursive: true })
+    await mkdir(batonDir(root), { recursive: true })
     await writeFile(activePath(root), withBaton, 'utf8')
   }
   return root
@@ -76,7 +86,7 @@ test('two hand-offs in the same second do not lose one', async () => {
   const at = new Date('2026-08-31T11:22:33Z')
   await writeBaton(root, 'B\n', at)
   await writeBaton(root, 'C\n', at)
-  const names = await readdir(path.join(root, '.handoff', 'archive'))
+  const names = await readdir(archiveDir(root))
   assert.equal(names.length, 2)
   await rm(root, { recursive: true, force: true })
 })
@@ -205,4 +215,84 @@ test('unparseable hook input never interferes with the session', () => {
   } catch (e) {
     assert.fail(`should have exited 0, got ${e.status}`)
   }
+})
+
+// ── 置き場 —— repo の外、unit ごと ───────────────────────────────────────────
+
+test('unit slug は読める名と path の hash を両方持つ —— 名だけでは一意にならない', () => {
+  const a = unitSlug('/home/x/works/api')
+  const b = unitSlug('/home/x/other/api')
+  assert.match(a, /^api-[0-9a-f]{8}$/)
+  assert.match(b, /^api-[0-9a-f]{8}$/)
+  // ⚠ **同名 repo が黙って同じ baton を共有する形は、baton が無いことより悪い** ——
+  // 別の対話の baton を読むことになる。
+  assert.notEqual(a, b)
+})
+
+test('unit slug は同じ path に対して安定である —— 揺れれば baton は毎回行方不明になる', () => {
+  assert.equal(unitSlug('/home/x/works/api'), unitSlug('/home/x/works/api/'))
+})
+
+test('baton は repo の外に置かれる —— unit root の下に何も作らない', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-handoff-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeBaton(root, '---\ntask: x\n---\n\nbody\n')
+  // ⚠ **これがこの移設の全てである。** repo の中に生まれなければ、`git add` で痕跡に
+  // なりようがない —— ignore に頼らず、構造として保たれる。
+  assert.equal(existsSync(path.join(root, '.handoff')), false)
+  assert.ok(activePath(root).startsWith(process.env.BEARING_HOME))
+  assert.equal(existsSync(activePath(root)), true)
+})
+
+test('BEARING_HOME が家を移す —— 移せなければ test が人間の baton を触る', () => {
+  assert.equal(
+    bearingHome({ BEARING_HOME: '/elsewhere' }, '/home/x'),
+    '/elsewhere',
+  )
+  assert.equal(bearingHome({}, '/home/x'), path.join('/home/x', '.bearing'))
+})
+
+// ── 移行 —— 述べるが、動かさない ─────────────────────────────────────────────
+
+const runCli = (root, verb) =>
+  execFileSync(process.execPath, [path.join(HERE, '..', 'bin', 'handoff.mjs'), verb], {
+    cwd: root, encoding: 'utf8', env: { ...process.env },
+  })
+
+async function legacyUnit() {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-legacy-'))
+  await mkdir(path.join(root, '.handoff', 'archive'), { recursive: true })
+  await writeFile(path.join(root, '.handoff', 'active.md'), '---\ntask: old\n---\n\nold\n')
+  await writeFile(path.join(root, '.handoff', 'archive', '2026-01-01T000000Z.md'), 'archived\n')
+  return root
+}
+
+test('旧い置き場に残った baton は、読むときに述べられる —— 黙れば「fresh start」と嘘をつく', async (t) => {
+  const root = await legacyUnit()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const out = runCli(root, 'read')
+  assert.match(out, /旧い置き場に baton が残っている/)
+  assert.match(out, /handoff\.mjs migrate/)
+})
+
+test('migrate は移し、旧い dir 自体は残す —— 人間の repo の中を我々の都合で消さない', async (t) => {
+  const root = await legacyUnit()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const out = runCli(root, 'migrate')
+  assert.match(out, /移した: 2 本/)
+  assert.equal(existsSync(activePath(root)), true)
+  assert.equal(existsSync(path.join(archiveDir(root), '2026-01-01T000000Z.md')), true)
+  assert.equal(existsSync(path.join(root, '.handoff')), true)
+  // 移し終えれば、次の read はもう述べない。
+  assert.doesNotMatch(runCli(root, 'read'), /旧い置き場に baton が残っている/)
+})
+
+test('migrate は移動先に在るものを黙って潰さない', async (t) => {
+  const root = await legacyUnit()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await mkdir(batonDir(root), { recursive: true })
+  await writeFile(activePath(root), '---\ntask: new\n---\n\nnew\n')
+  const out = runCli(root, 'migrate')
+  assert.match(out, /移さなかった: 1 本/)
+  assert.match(await readFile(activePath(root), 'utf8'), /task: new/)
 })

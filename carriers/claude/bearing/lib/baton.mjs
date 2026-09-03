@@ -7,7 +7,7 @@
 //   対話の単一性人間が 1 度に対話するエージェントは常に単一である
 //   早期化のための安さ  区切りの良いところで早めに引き継げるよう、コストを低く保つ
 //
-// 置き場は `.handoff/active.md`、cwd 相対、machine-local。これは `_guide/handoff.md` の
+// 置き場は `~/.bearing/units/<unit>/active.md`、machine-local。これは `_guide/handoff.md` の
 // 正本であり、⚠ **制約の受容ではなく目的の帰結である**: baton が守っているのは
 // **人間と 1 つのセッションの間にある対話の継続**であって、別マシンの別セッションは
 // そもそも別の対話だからである。
@@ -26,6 +26,8 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
+import { activePath } from './handoff.mjs'
+
 /**
  * unit の baton を、在れば読む。
  *
@@ -33,7 +35,10 @@ import path from 'node:path'
  * @returns {Promise<{path: string, text: string, composedAt: string|null, readAt: string|null, task: string|null}|null>}
  */
 export async function readBaton(unitRoot) {
-  const file = path.join(unitRoot, '.handoff', 'active.md')
+  // ⚠ **置き場の正本は `lib/handoff.mjs` 1 箇所である。** 読む側と書く側が別々に path を
+  // 組み立てれば、書かれた baton を我々自身の hook が見つけられない状態が作れてしまう ——
+  // それは baton が無いことより悪い（儀式は成功を報告し、次のセッションは盲目で始まる）。
+  const file = activePath(unitRoot)
   let text
   try {
     text = await readFile(file, 'utf8')

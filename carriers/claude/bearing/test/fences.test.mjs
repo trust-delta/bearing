@@ -9,11 +9,17 @@ import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { mkdtempSync } from 'node:fs'
 import path from 'node:path'
 
 import { gatherUnpushed, renderUnpushedFence, parseUnpushedLog } from '../lib/unpushed.mjs'
 import { gatherCheckpointStale, renderCheckpointFence, isShaLike } from '../lib/checkpoint.mjs'
 import { readBaton } from '../lib/baton.mjs'
+import { activePath, batonDir } from '../lib/handoff.mjs'
+
+// ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
+// baton** —— を読み書きする。
+process.env.BEARING_HOME = mkdtempSync(path.join(tmpdir(), 'bearing-home-'))
 
 const git = (root, args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' })
 
@@ -184,9 +190,9 @@ test('no tuned floor: a single commit of movement is still a candidate', async (
 
 test('a baton at the canonical path is read, with its front matter', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
-  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await mkdir(batonDir(root), { recursive: true })
   await writeFile(
-    path.join(root, '.handoff', 'active.md'),
+    activePath(root),
     '---\ncomposed-at: 2026-08-31T11:00:00Z\ntask: wiring the hook\n---\n\n## ▶ Task\nx\n',
   )
   const b = await readBaton(root)
@@ -199,9 +205,9 @@ test('a baton at the canonical path is read, with its front matter', async () =>
 test('a previously-read baton reports its read-at rather than hiding it', async () => {
   // 正本: 事実を 1 行で述べる。読むことを拒まない。警告もしない。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
-  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await mkdir(batonDir(root), { recursive: true })
   await writeFile(
-    path.join(root, '.handoff', 'active.md'),
+    activePath(root),
     '---\ncomposed-at: 2026-08-28T01:00:00Z\nread-at: 2026-08-30T02:00:00Z\n---\n\nx\n',
   )
   const b = await readBaton(root)
@@ -211,8 +217,8 @@ test('a previously-read baton reports its read-at rather than hiding it', async 
 
 test('reading does NOT stamp read-at — that is step 3 of a procedure with 4-6 after it', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
-  await mkdir(path.join(root, '.handoff'), { recursive: true })
-  const file = path.join(root, '.handoff', 'active.md')
+  await mkdir(batonDir(root), { recursive: true })
+  const file = activePath(root)
   const original = '---\ncomposed-at: 2026-08-31T11:00:00Z\n---\n\nx\n'
   await writeFile(file, original)
   await readBaton(root)
@@ -224,8 +230,8 @@ test('reading does NOT stamp read-at — that is step 3 of a procedure with 4-6 
 test('no baton, and an empty baton, are both a fresh start', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
   assert.equal(await readBaton(root), null)
-  await mkdir(path.join(root, '.handoff'), { recursive: true })
-  await writeFile(path.join(root, '.handoff', 'active.md'), '\n\n')
+  await mkdir(batonDir(root), { recursive: true })
+  await writeFile(activePath(root), '\n\n')
   assert.equal(await readBaton(root), null)
   await rm(root, { recursive: true, force: true })
 })

@@ -31,7 +31,7 @@ state: open
 - [done] **[[ambient-display]] の 2 行目を、hook と同じ述語で gate した。** 例外は baton 未読 1 つ。⚠ **面ごとに述語が違えば、同じ project が面ごとに別の姿を持つ**
 - [done] **user スコープの install で、汎用側を全 project へ供給した。** 装着は `/bearing:statusline-setup` の 1 手で、shim は install record を読むので 1 行に version が入らない
 - [todo] **corpus が在っても「採用しない」を選べるようにする。** ⚠ **現在の述語は `corpus 在り || marker 在り` であり、corpus を持つ project は有効を降りられない** —— これは移行の便宜として入ったものだが、**`aim:` が述べる「選択できる」を満たしていない。** 降りる宣言をどの形で持つか（marker の変種か、settings の key か）を決めて、hook と面の両方がそれに従うようにする
-- [todo] **baton が消費者の repo で痕跡にならないことを、機構で担保する。** ⚠ **`.handoff/` を ignore しているのは bearing 自身の `.gitignore` だけである** ∴ 他 project では untracked で現れ、**まとめて `git add` されれば痕跡になる** —— そして baton は machine-local であることが目的の帰結として決まっている（越境させない）。⚠ **消費者の `.gitignore` を我々が書き換えてはならない**（人間の file である）∴ baton を置くときに `.handoff/.gitignore` を添える形が要る
+- [done] **baton を repo の外へ出した。** `~/.bearing/units/<名>-<path の hash>/` へ移し、**unit root の下には何も作らない** ∴ `.gitignore` に頼らず、**痕跡になりようがない**形になった。⚠ **添える案（`.handoff/.gitignore`）は採らなかった** —— あれは「痕跡を残しうるが隠す」であって、`aim:` が述べる「痕跡を残さない」ではない。⚠ **引くのは unit root の path であって repo 名ではない**（同名 repo や複数 worktree が黙って同じ baton を共有する形を塞ぐ）。⚠ **旧い置き場に残ったものは機構がもう読まない** ∴ 在ることを述べ、`handoff.mjs migrate` を名指すところで止まる —— **移動は人間の act である**
 
 # DAG
 

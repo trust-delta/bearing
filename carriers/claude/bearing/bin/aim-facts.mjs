@@ -307,7 +307,7 @@ async function main() {
   say('## ▶ 前回どこで止まったか', '')
   if (!baton) {
     say(
-      '*`.handoff/active.md` に baton は無い —— これは fresh start である。*',
+      '*この unit に baton は無い —— これは fresh start である。*',
       '',
       '⚠ **空の baton は空の project ではない。** 拾うものが無いと結論する前に、下の',
       'backlog 数を読むこと。',

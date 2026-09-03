@@ -31,19 +31,66 @@
 // ⚠ **`read-at` を書く側が書くことは決して無い。** 新しい baton はまだ読まれていない ——
 // canon がそう述べており、書く側が刻めば「既読」という語が何も意味しなくなる。
 //
-// 置き場は cwd の傍らの `.handoff/`、machine-local、決して commit しない。⚠ **これは目的
-// の帰結である**（対話の単一性）: baton が守っているのは人間と 1 つのセッションの間に
-// ある対話の継続である ∴ **越境する手段を手に入れても、越境する理由にはならない。**
+// 置き場は **人間の home の下**（`~/.bearing/units/<unit>/`）、machine-local、決して commit
+// しない。⚠ **これは目的の帰結である**（対話の単一性）: baton が守っているのは人間と 1 つの
+// セッションの間にある対話の継続である ∴ **越境する手段を手に入れても、越境する理由には
+// ならない。**
+//
+// ⚠ **2026-09-03 に repo の外へ出した。** 以前は cwd の傍らの `.handoff/` に置いており、
+// 「どの repo にも属さないので commit されえない」と述べていた —— だがそれが真だったのは
+// **multi-repo wrapper が cwd のときだけ**である。単一 repo で使えば `.handoff/` は repo の
+// 中に生まれ、⚠ **ignore しているのは bearing 自身の `.gitignore` だけ** ∴ 他 project では
+// untracked で現れ、まとめて `git add` されれば**痕跡になる。** home の下へ出せば、
+// commit されえないことが**どの使い方でも**構造として保たれる。
+//
+// ⚠ **引くのは unit root の path であって repo 名ではない。** canon は multi-repo wrapper が
+// cwd のとき wrapper 直下に置くと定めており、**repo 名では引けない場合がある**。名前だけで
+// 引けば、同名 repo や複数 worktree が**黙って同じ baton を共有する** —— 別の対話の baton を
+// 読むことになり、これは baton が無いことより悪い。∴ **読める名 ＋ path の hash**にする。
 
 import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import path from 'node:path'
+import os from 'node:os'
 
-export const HANDOFF_DIR = '.handoff'
 export const ACTIVE = 'active.md'
 export const ARCHIVE = 'archive'
 
-export const activePath = (unitRoot) => path.join(unitRoot, HANDOFF_DIR, ACTIVE)
-export const archiveDir = (unitRoot) => path.join(unitRoot, HANDOFF_DIR, ARCHIVE)
+/** ⚠ 旧い置き場。**読み書きはしない** —— 移行を検出して人間に述べるためだけに在る。 */
+export const LEGACY_DIR = '.handoff'
+export const legacyDir = (unitRoot) => path.join(unitRoot, LEGACY_DIR)
+
+/**
+ * baton たちの家。⚠ **`BEARING_HOME` で移せる** —— test がここを差し替えられなければ、
+ * test は人間の実際の baton を触ることになる。
+ */
+export const bearingHome = (env = process.env, home = os.homedir()) =>
+  env.BEARING_HOME || path.join(home, '.bearing')
+
+/**
+ * unit を指す dir 名。**読める名 ＋ path の短い hash。**
+ *
+ * ⚠ **hash だけでは人間が読めず、名だけでは一意にならない。** 前者は `~/.bearing/` を開いた
+ * 人間が自分の baton を見つけられないことを意味し、後者は**別の対話の baton を黙って読む**
+ * ことを意味する ∴ どちらか一方は選べない。
+ *
+ * ⚠ **symlink 越しの別 path は別の unit になる。** 解決してから hash を取れば同じにできるが、
+ * **解決は file system への問い合わせであり、失敗しうる** —— baton の在り処が「今 disk が
+ * 何を答えたか」に依るほうが、別々になることより高くつく。
+ */
+export function unitSlug(unitRoot) {
+  const abs = path.resolve(unitRoot)
+  const hash = createHash('sha256').update(abs).digest('hex').slice(0, 8)
+  const name = path.basename(abs).replace(/[^A-Za-z0-9_.-]/g, '-') || 'unit'
+  return `${name}-${hash}`
+}
+
+export const batonDir = (unitRoot, env = process.env) =>
+  path.join(bearingHome(env), 'units', unitSlug(unitRoot))
+
+export const activePath = (unitRoot, env = process.env) => path.join(batonDir(unitRoot, env), ACTIVE)
+export const archiveDir = (unitRoot, env = process.env) =>
+  path.join(batonDir(unitRoot, env), ARCHIVE)
 
 /**
  * `YYYY-MM-DDTHHMMSSZ` —— canon が指定する archive の file 名。
@@ -121,8 +168,7 @@ export function stampComposedAt(markdown, date = new Date()) {
  */
 export async function writeBaton(unitRoot, markdown, date = new Date()) {
   const archived = await archiveActive(unitRoot, date)
-  const dir = path.join(unitRoot, HANDOFF_DIR)
-  await mkdir(dir, { recursive: true })
+  await mkdir(batonDir(unitRoot), { recursive: true })
   const text = stampComposedAt(markdown, date)
   await writeFile(activePath(unitRoot), text.endsWith('\n') ? text : text + '\n', 'utf8')
   return { path: activePath(unitRoot), archived }
