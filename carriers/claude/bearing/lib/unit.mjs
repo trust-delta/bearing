@@ -25,8 +25,11 @@
 // —— 完全に見える切り詰められた unit は、「悪いセンサーはセンサーが無いことに劣る」という
 // 失敗そのものである。
 
-import { readdir, stat } from 'node:fs/promises'
+import { readdir, stat, readFile } from 'node:fs/promises'
 import path from 'node:path'
+
+import { DEFAULT_AIMS_DIR } from './corpus.mjs'
+import { declaredAimsDir } from './claude-md.mjs'
 
 /** cwd の下、どこまで深く repo を探しうるか。導出ではなく、吊らないための拒否。 */
 export const MAX_DEPTH = 4
@@ -51,6 +54,49 @@ async function isDir(p) {
   } catch {
     return false
   }
+}
+
+/**
+ * その dir の `CLAUDE.md` が宣言している corpus の在り処。
+ *
+ * ⚠ **読めない file は「宣言が無い」である** —— そこに在ったかもしれない宣言を我々は
+ * 知りようがなく、**知らないことを壊れていると述べるのは捏造である。**
+ */
+async function declaredIn(dir) {
+  try {
+    return declaredAimsDir(await readFile(path.join(dir, 'CLAUDE.md'), 'utf8'))
+  } catch {
+    return { dir: null, declared: false, reason: null }
+  }
+}
+
+/**
+ * corpus の在り処を repo ごとに解決する。**解決はここ 1 箇所で行い、そこから配る。**
+ *
+ * ⚠ **8 箇所の hardcode を「`CLAUDE.md` を読む」8 箇所の hardcode に置き換えてはならない**
+ * —— 読む場所が増えれば、どれが正かが再び分からなくなる。
+ *
+ * 順序は **repo 自身の宣言 → unit root の宣言 → 既定**。⚠ **repo 自身が先に来るのは、
+ * corpus が repo の artifact だからである**（[[aim-tree]]「置き場はリポジトリである」）——
+ * wrapper の宣言は、自分で名乗らない repo に対する既定にすぎない。
+ *
+ * ⚠ **壊れた宣言を既定へ落とさない。** `reason` を持たせて呼ぶ側に述べさせる ——
+ * 既定として黙って動けば、人間は自分の宣言が効いていると信じ続ける。
+ */
+async function resolveAimsDirs(root, repos) {
+  const unitLevel = await declaredIn(root)
+  const out = []
+  for (const repo of repos) {
+    const own = repo.root === root ? unitLevel : await declaredIn(repo.root)
+    const chosen = own.declared ? own : unitLevel
+    out.push({
+      ...repo,
+      aimsDir: chosen.dir ?? DEFAULT_AIMS_DIR,
+      aimsDirDeclared: chosen.declared,
+      aimsDirProblem: own.reason ?? unitLevel.reason ?? null,
+    })
+  }
+  return out
 }
 
 /**
@@ -110,11 +156,14 @@ export async function resolveUnit(cwd) {
     ? found.indexOf(root)
     : Math.max(0, found.findIndex((r) => path.basename(r) === name))
 
-  const repos = found.map((r, i) => ({
-    root: r,
-    label: path.basename(r),
-    primary: i === primaryIdx,
-  }))
+  const repos = await resolveAimsDirs(
+    root,
+    found.map((r, i) => ({
+      root: r,
+      label: path.basename(r),
+      primary: i === primaryIdx,
+    })),
+  )
   // primary を先頭に。残りは発見順を保つ。
   repos.sort((a, b) => (a.primary === b.primary ? 0 : a.primary ? -1 : 1))
 

@@ -29,9 +29,42 @@ import path from 'node:path'
 import { delegateToCheckout } from '../lib/delegate.mjs'
 await delegateToCheckout(import.meta.url)
 
-import { planApply, planRemove, inspect, loadDesired, bodySha } from '../lib/claude-md.mjs'
+import {
+  planApply, planRemove, inspect, loadDesired, bodySha, declaredAimsDir,
+} from '../lib/claude-md.mjs'
+import { DEFAULT_AIMS_DIR, normalizeAimsDir } from '../lib/corpus.mjs'
 
 const log = (...a) => console.log(...a)
+
+/**
+ * この実行が使う corpus の在り処を決める。
+ *
+ * 順序は **`--dir` → 既に置かれた block の宣言 → 既定**。⚠ **既に宣言が在るのに既定へ
+ * 落としてはならない** —— 落とせば、`with-aim` を版の更新のために打ち直しただけの人間の
+ * corpus が、**黙って既定へ引っ越したことにされる。**
+ *
+ * @param {string[]} argv
+ * @param {string} text 現在の `CLAUDE.md`
+ * @returns {{dir: string, from: 'flag'|'declared'|'default'}|{error: string}}
+ */
+export function chooseDir(argv, text) {
+  const at = argv.indexOf('--dir')
+  if (at !== -1) {
+    const raw = argv[at + 1]
+    const dir = normalizeAimsDir(raw)
+    if (dir === null) {
+      return {
+        error:
+          `--dir に渡された「${raw ?? ''}」は在り処として使えない。` +
+          ' repo 相対の path であること（先頭の `/`・`..`・glob・drive letter は受け付けない）。',
+      }
+    }
+    return { dir, from: 'flag' }
+  }
+  const declared = declaredAimsDir(text)
+  if (declared.declared) return { dir: declared.dir, from: 'declared' }
+  return { dir: DEFAULT_AIMS_DIR, from: 'default' }
+}
 
 /** 我々が書く先。⚠ **1 箇所である**（上の見出しコメントを見よ）。 */
 export const TARGET = 'CLAUDE.md'
@@ -62,8 +95,18 @@ async function main(argv) {
   // 実績が在る（[[bearing]] の `[todo]`）∴ 書き先を黙って決めない。
   log(`対象: ${target}`)
 
-  const desired = await loadDesired(root)
   const before = (await exists(target)) ? await readFile(target, 'utf8') : ''
+
+  const chosen = chooseDir(argv, before)
+  if (chosen.error) {
+    log(chosen.error)
+    return 1
+  }
+  const desired = await loadDesired(root, chosen.dir)
+  log(
+    `corpus の在り処: ${chosen.dir}` +
+      (chosen.from === 'flag' ? '（--dir）' : chosen.from === 'declared' ? '（既に置かれた宣言）' : '（既定）'),
+  )
 
   if (await exists(path.join(projectDir, ALT))) {
     log(`⚠ ${ALT} も在るが触らない —— compaction 後に再注入されると docs が述べるのは`)

@@ -25,7 +25,7 @@
 // 実測では、trigger と絞り込みの合成で候補 57 node（287 対）が 15 node（59 対）になった。
 
 import { runGit } from './git.mjs'
-import { aimRelPath, readAimGraph } from './corpus.mjs'
+import { aimRelPath, readAimGraph, DEFAULT_AIMS_DIR } from './corpus.mjs'
 // ⚠ 判定を再実装しない: 「sha として妥当か」の正本は checkpoint 側に既に在り、二重に
 // 書けば片方だけが直る日が来る。
 import { isShaLike } from './checkpoint.mjs'
@@ -33,7 +33,8 @@ import { isShaLike } from './checkpoint.mjs'
 export const INTRA_FENCE_TAG = 'bearing-drift-intra v1'
 export const INTER_FENCE_TAG = 'bearing-drift-inter v1'
 
-const AIMS_DIR = 'docs/aims/'
+// ⚠ **在り処は project が宣言する** ∴ ここに焼かない（既定は `corpus.mjs` が持つ）。
+const dirPrefix = (dir) => `${dir}/`
 const FENCE = '`'.repeat(3)
 
 /**
@@ -57,16 +58,17 @@ export function parseCommitLog(out) {
 }
 
 /** この path は生きた aim record か。`_guide/` と README は record ではない。 */
-export function isAimPath(p) {
+export function isAimPath(p, dir = DEFAULT_AIMS_DIR) {
+  const prefix = dirPrefix(dir)
   return (
-    p.startsWith(AIMS_DIR) &&
+    p.startsWith(prefix) &&
     p.endsWith('.md') &&
-    !p.slice(AIMS_DIR.length).includes('/') &&
+    !p.slice(prefix.length).includes('/') &&
     !p.endsWith('/README.md')
   )
 }
 
-const slugOfPath = (p) => p.slice(AIMS_DIR.length, -3)
+const slugOfPath = (p, dir) => p.slice(dirPrefix(dir).length, -3)
 
 /**
  * この commit で frontmatter の外の行が動いたか。
@@ -79,8 +81,8 @@ const slugOfPath = (p) => p.slice(AIMS_DIR.length, -3)
  * されたかではない。** 1 行の re-parent メモは行を動かすが、何も整合させない。採点は
  * エージェントの仕事であり、ここは事実を述べるだけである。
  */
-export async function bodyMovedIn(repoRoot, sha, slug) {
-  const out = await runGit(repoRoot, ['show', '--format=', '-U0', sha, '--', aimRelPath(slug)])
+export async function bodyMovedIn(repoRoot, sha, slug, dir = DEFAULT_AIMS_DIR) {
+  const out = await runGit(repoRoot, ['show', '--format=', '-U0', sha, '--', aimRelPath(slug, dir)])
   if (out === null) return null
   for (const line of out.split(/\r?\n/)) {
     if (!/^[+-]/.test(line) || /^(\+\+\+|---)/.test(line)) continue
@@ -98,17 +100,17 @@ export async function bodyMovedIn(repoRoot, sha, slug) {
  * ならず、「drift が無い」と読んではならない** —— `git.mjs` が述べている契約であり、
  * この層に許された唯一の非対称である。
  */
-export async function gatherDrift(repoRoot) {
-  const graph = await readAimGraph(repoRoot)
+export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
+  const graph = await readAimGraph(repoRoot, dir)
   if (graph === null) return null
 
-  const anyOut = await runGit(repoRoot, ['log', '--format=%H', '--name-only', '--', AIMS_DIR])
+  const anyOut = await runGit(repoRoot, ['log', '--format=%H', '--name-only', '--', dirPrefix(dir)])
   // --diff-filter=AM を取り、そこから各 node の誕生を除くことで M を導く。
   // ⚠ anchor に対する `-G` だけでは、anchor が*変更された*ことと*出現した*ことを分離
   // できない: file の作成は一致する行を足すので、誕生したままの node が全部発火する。
   // 実測: これを入れる前は 77 中 44 候補、入れた後は 3 候補。
   const ancOut = await runGit(repoRoot, [
-    'log', '--format=%H', '--name-only', '--diff-filter=AM', '-G', '^aim:', '--', AIMS_DIR,
+    'log', '--format=%H', '--name-only', '--diff-filter=AM', '-G', '^aim:', '--', dirPrefix(dir),
   ])
   if (anyOut === null || ancOut === null) return null
 
@@ -123,7 +125,10 @@ export async function gatherDrift(repoRoot) {
   // 「anchor 履歴を持つ node」が 103 になった。
   const touchedIn = new Map()
   for (const c of anyLog) {
-    const slugs = c.files.filter(isAimPath).map(slugOfPath).filter((s) => live.has(s))
+    const slugs = c.files
+      .filter((f) => isAimPath(f, dir))
+      .map((f) => slugOfPath(f, dir))
+      .filter((s) => live.has(s))
     touchedIn.set(c.sha, new Set(slugs))
   }
   const newestPerSlug = (log) => {

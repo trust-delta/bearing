@@ -47,7 +47,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { readAimGraph, readAimSlugs } from '../lib/corpus.mjs'
+import { readAimGraph, readAimSlugs, DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
 import { renderCorpusDelta } from '../lib/corpus-delta.mjs'
 import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.mjs'
@@ -104,10 +104,11 @@ async function aimsMovedBetween(repoRoot, from, to) {
 
 /** 1 つの repo について再計算した履歴層。⚠ どの失敗も「不在」として描画される。 */
 async function historyFences(repo) {
-  const graph = await readAimGraph(repo.root)
+  const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
+  const graph = await readAimGraph(repo.root, dir)
   const [drift, unpushed, checkpoint] = await Promise.all([
-    gatherDrift(repo.root),
-    gatherUnpushed(repo.root, repo.slugs),
+    gatherDrift(repo.root, dir),
+    gatherUnpushed(repo.root, repo.slugs, dir),
     gatherCheckpointStale(repo.root, graph?.nodes ?? new Map()),
   ])
   const blocks = []
@@ -148,14 +149,14 @@ try {
 
   const repos = []
   for (const repo of unit.repos) {
-    const slugs = await readAimSlugs(repo.root)
+    const slugs = await readAimSlugs(repo.root, repo.aimsDir ?? DEFAULT_AIMS_DIR)
     if (slugs.length === 0) continue
     repos.push({
       label: repo.label,
       root: repo.root,
       slugs,
       working: await gatherWorkingDelta(repo.root, slugs),
-      backlog: await gatherBacklog(repo.root),
+      backlog: await gatherBacklog(repo.root, repo.aimsDir ?? DEFAULT_AIMS_DIR),
     })
   }
 

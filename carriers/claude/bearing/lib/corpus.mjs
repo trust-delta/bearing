@@ -17,6 +17,41 @@ import path from 'node:path'
  *
  * @param {string} name path ではなく、裸の file 名
  */
+/**
+ * corpus の既定の在り処。
+ *
+ * ⚠ **既定は動かさない。** 既定が動けば、既に在る corpus が一斉に行方不明になる ——
+ * **在り処を変えられるようにすること**と**既定を変えること**は別の act である。
+ * ⚠ **既定はここ 1 箇所にしか置かない** —— 2 箇所に置けば、片方だけが動く日が来る。
+ */
+export const DEFAULT_AIMS_DIR = 'docs/aims'
+
+/**
+ * 宣言された在り処を、この機構が扱える形へ正規化する。**扱えないものは null を返す。**
+ *
+ * ⚠ **5 箇所がこの値を git の pathspec として渡す** ∴ ここを緩めることは、走査が黙って
+ * 広がることを許すのと同じである。∴ 絶対 path・`..`・glob と pathspec magic の文字を拒む。
+ * ⚠ **拒むときは null を返し、呼ぶ側が述べる** —— ここで既定へ落とせば、**誤った宣言が
+ * 既定として黙って動く**。
+ *
+ * @param {unknown} value
+ * @returns {string|null} 前後の `/` を落とした repo 相対 path、扱えなければ null
+ */
+export function normalizeAimsDir(value) {
+  if (typeof value !== 'string') return null
+  // ⚠ **backslash は `/` へ倒す** —— win32 で人間が書いた宣言も、git の pathspec は
+  // `/` で受ける。⚠ **末尾の `/` は落とすが、先頭は落とさず拒む**: 「repo root から」と
+  // 「絶対 path」のどちらとも読める ∴ **曖昧なものを我々の側で決めない。**
+  const v = value.trim().replace(/\\/g, '/').replace(/\/+$/, '')
+  if (v === '') return null
+  if (v.startsWith('/')) return null
+  if (/^[A-Za-z]:/.test(v)) return null // 絶対 path（win32）
+  const segs = v.split('/')
+  if (segs.some((s) => s === '' || s === '.' || s === '..')) return null
+  if (/[*?\[\]:]/.test(v)) return null // glob と pathspec magic
+  return v
+}
+
 export function isAimRecord(name) {
   if (path.extname(name) !== '.md') return false
   return path.basename(name, '.md') !== 'README'
@@ -33,8 +68,8 @@ export function isAimRecord(name) {
  * @param {string} repoRoot
  * @returns {Promise<string[]>}
  */
-export async function readAimSlugs(repoRoot) {
-  const aimsDir = path.join(repoRoot, 'docs', 'aims')
+export async function readAimSlugs(repoRoot, dir = DEFAULT_AIMS_DIR) {
+  const aimsDir = path.join(repoRoot, ...dir.split('/'))
   let entries
   try {
     entries = await readdir(aimsDir, { withFileTypes: true })
@@ -57,8 +92,8 @@ export async function readAimSlugs(repoRoot) {
  *
  * @param {string} slug
  */
-export function aimRelPath(slug) {
-  return `docs/aims/${slug}.md`
+export function aimRelPath(slug, dir = DEFAULT_AIMS_DIR) {
+  return `${dir}/${slug}.md`
 }
 
 // --- drift fence が読む graph ---------------------------------------------
@@ -156,8 +191,8 @@ export function parseAimRecord(text) {
  * 生きた record に解決しない辺は、報告せずに落とす: ⚠ 宙に浮いた参照は corpus の問題で
  * あって、drift の事実ではない。
  */
-export async function readAimGraph(repoRoot) {
-  const slugs = await readAimSlugs(repoRoot)
+export async function readAimGraph(repoRoot, dir = DEFAULT_AIMS_DIR) {
+  const slugs = await readAimSlugs(repoRoot, dir)
   if (slugs === null) return null
   const { readFile } = await import('node:fs/promises')
   const path = (await import('node:path')).default
@@ -165,7 +200,7 @@ export async function readAimGraph(repoRoot) {
   for (const slug of slugs) {
     let text
     try {
-      text = await readFile(path.join(repoRoot, aimRelPath(slug)), 'utf8')
+      text = await readFile(path.join(repoRoot, aimRelPath(slug, dir)), 'utf8')
     } catch {
       continue // 削除と競合しただけで、それは drift の事実ではない。
     }

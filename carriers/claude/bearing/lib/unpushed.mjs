@@ -25,7 +25,10 @@ import { readAimSlugs } from './corpus.mjs'
 
 export const UNPUSHED_FENCE_TAG = 'bearing-unpushed v1'
 
-const AIMS_DIR = 'docs/aims/'
+import { DEFAULT_AIMS_DIR } from './corpus.mjs'
+
+// ⚠ **在り処は project が宣言する** ∴ ここに焼かない（既定は `corpus.mjs` が持つ）。
+const dirPrefix = (dir) => `${dir}/`
 
 /**
  * `--format=%H%x09%cI --name-only` を `{sha, date, files}` の列（新しい順）に parse する。
@@ -56,11 +59,11 @@ export function parseUnpushedLog(out) {
  * @param {string[]} slugs 生きた slug。履歴の幽霊を濾すために渡す
  * @returns {Promise<{slug: string, aheadCommits: number, latestSha: string, latestDate: string}[]|null>}
  */
-export async function gatherUnpushed(repoRoot, slugs) {
+export async function gatherUnpushed(repoRoot, slugs, dir = DEFAULT_AIMS_DIR) {
   if (slugs.length === 0) return []
   const live = new Set(slugs)
   const out = await runGit(repoRoot, [
-    'log', '@{upstream}..HEAD', '--format=%H%x09%cI', '--name-only', '--', AIMS_DIR,
+    'log', '@{upstream}..HEAD', '--format=%H%x09%cI', '--name-only', '--', dirPrefix(dir),
   ])
   // null は「比較対象の upstream が無い」であることも「git が失敗した」であることも
   // 同じくらいあるが、ここでは両者は同じ答えである: 事実が無い。
@@ -69,8 +72,8 @@ export async function gatherUnpushed(repoRoot, slugs) {
   const perSlug = new Map()
   for (const c of parseUnpushedLog(out)) {
     for (const f of c.files) {
-      if (!f.startsWith(AIMS_DIR) || !f.endsWith('.md')) continue
-      const slug = f.slice(AIMS_DIR.length, -3)
+      if (!f.startsWith(dirPrefix(dir)) || !f.endsWith('.md')) continue
+      const slug = f.slice(dirPrefix(dir).length, -3)
       // 生きた corpus と交差させる: 履歴は rename と削除が奪った path を運んでおり、
       // それを報告することは幽霊を報告することである。
       if (slug.includes('/') || !live.has(slug)) continue

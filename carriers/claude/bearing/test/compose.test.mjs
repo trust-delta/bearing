@@ -15,6 +15,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { loadDesired, renderBlock } from '../lib/claude-md.mjs'
+import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const COMPOSER = path.join(HERE, '..', 'bin', 'aim-facts.mjs')
@@ -39,18 +40,18 @@ const git = (root, args) => execFileSync('git', ['-C', root, ...args], { encodin
  * ⚠ **印は corpus とは別物である。** corpus はまだ 1 枚も無くても、人間は採用を宣言できる
  * —— この 2 つを分けることが、印を入れた理由そのものである。
  */
-async function withAim(root, version = VERSION) {
-  await writeFile(path.join(root, 'CLAUDE.md'), `# doc\n\n${renderBlock(version, LAW)}\n`)
+async function withAim(root, version = VERSION, dir = DEFAULT_AIMS_DIR) {
+  await writeFile(path.join(root, 'CLAUDE.md'), `# doc\n\n${renderBlock(version, LAW, dir)}\n`)
 }
 
-async function corpusRepo(root, slugs) {
+async function corpusRepo(root, slugs, dir = DEFAULT_AIMS_DIR) {
   execFileSync('git', ['init', '-q', root])
   git(root, ['config', 'user.email', 'test@example.invalid'])
   git(root, ['config', 'user.name', 'aim-facts test'])
-  await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
+  await mkdir(path.join(root, ...dir.split('/')), { recursive: true })
   for (const slug of slugs) {
     await writeFile(
-      path.join(root, 'docs', 'aims', slug + '.md'),
+      path.join(root, ...dir.split('/'), slug + '.md'),
       `---\naim: x\nstate: open\n---\n\n# PROCESS\n\n- [todo] a\n`,
     )
   }
@@ -240,5 +241,53 @@ test('an unreadable corpus still exits 0 and still frames the session', async ()
   await mkdir(path.join(root, 'docs', 'aims', 'weird.md'), { recursive: true })
   const out = compose(root)
   assert.match(out, /# aim frame/)
+  await rm(root, { recursive: true, force: true })
+})
+
+test('宣言された在り処の corpus が、どの面からも見える —— 渡し忘れの門', async () => {
+  // ⚠ **これは機能の試験ではなく、渡し忘れを捕まえる門である。** 在り処は既定引数を
+  // 持って各層へ渡る ∴ **1 箇所でも渡し忘れれば、そこだけが既定を見て黙って空を返す** ——
+  // そして空の fence は「clean」に見える。**既定でない在り処で 1 度通すことだけが、
+  // 全部の層に届いたことの証拠になる。**
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  const dir = 'proj/aims'
+  await corpusRepo(root, ['alpha', 'beta'], dir)
+  await withAim(root, VERSION, dir)
+  const out = compose(root)
+
+  // 数と fence —— どれも corpus を実際に読めていなければ出ない
+  assert.match(out, /\*\*open-todo: 2\*\*/, '2 node とも読めていない')
+  for (const tag of [
+    'bearing-drift-intra', 'bearing-drift-inter', 'bearing-working-delta',
+    'bearing-unpushed', 'bearing-checkpoint-stale',
+  ]) {
+    assert.match(out, new RegExp(tag), `${tag} が出ていない`)
+  }
+  // ⚠ **法も事実も、既定を名乗ってはならない**
+  assert.match(out, /proj\/aims/)
+  assert.doesNotMatch(out, /docs\/aims/, '既定の在り処を名乗っている')
+  await rm(root, { recursive: true, force: true })
+})
+
+test('宣言された在り処に corpus が無ければ、どこを見たかを言う', async () => {
+  // ⚠ **不在と誤設定が同じ顔で出れば、設定の誤りが健康証明として読まれる。**
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  execFileSync('git', ['init', '-q', root])
+  await withAim(root, VERSION, 'proj/aims')
+  const out = compose(root)
+  assert.match(out, /proj\/aims/)
+  await rm(root, { recursive: true, force: true })
+})
+
+test('扱えない在り処の宣言は、既定として黙って動かない', async () => {
+  // ⚠ 既定へ落とせば、人間は自分の宣言が効いていると信じ続ける。
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  await corpusRepo(root, ['alpha'])
+  await writeFile(
+    path.join(root, 'CLAUDE.md'),
+    `# doc\n\n<!-- bearing:aim v${VERSION} dir=../up sha=${'0'.repeat(16)} -->\n本文\n<!-- /bearing:aim -->\n`,
+  )
+  const out = compose(root)
+  assert.match(out, /読めない/)
   await rm(root, { recursive: true, force: true })
 })

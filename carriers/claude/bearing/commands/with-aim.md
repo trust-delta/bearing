@@ -1,6 +1,6 @@
 ---
 description: この project で aim の規律を使う（CLAUDE.md へ marker 付きの法を差し込む）
-argument-hint: [--check | --remove]
+argument-hint: [--dir <path>] [--check | --remove]
 allowed-tools: Bash(bearing-with-aim.mjs:*)
 disable-model-invocation: true
 ---

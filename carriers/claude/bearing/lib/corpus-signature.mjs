@@ -59,13 +59,16 @@ export async function corpusSignature(unit) {
   let any = false
 
   for (const repo of unit.repos) {
-    const slugs = await readAimSlugs(repo.root)
+    // ⚠ **在り処は repo ごとに違いうる** ∴ unit が解決したものを使う。ここで既定へ
+    // 落とせば、custom dir の repo は signature の上で**永久に空**に見える。
+    const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
+    const slugs = await readAimSlugs(repo.root, dir)
     if (slugs.length === 0) continue
     any = true
 
     const head = await runGit(repo.root, ['rev-parse', 'HEAD'])
     heads[repo.label] = head?.trim() ?? null
-    const status = await runGit(repo.root, ['status', '--porcelain', '--', 'docs/aims/'])
+    const status = await runGit(repo.root, ['status', '--porcelain', '--', `${dir}/`])
     const dirty = status === null ? new Set() : parsePorcelainPaths(status)
 
     const files = []

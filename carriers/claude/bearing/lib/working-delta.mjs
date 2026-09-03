@@ -12,7 +12,7 @@
 // 瞬間に node の事実はこの層から消え、commit 側の層が持つ本物の順序判断が引き継ぐ。
 
 import { runGit } from './git.mjs'
-import { aimRelPath } from './corpus.mjs'
+import { aimRelPath, DEFAULT_AIMS_DIR } from './corpus.mjs'
 
 export const WORKING_DELTA_FENCE_TAG = 'bearing-working-delta v1'
 
@@ -88,10 +88,11 @@ export async function workingAnchorChanged(repoRoot, relPath) {
  * 問いを立てるべきかは人間の判断であって、黙って行う最適化ではない。**
  *
  * @param {string} repoRoot
+ * @param {string} dir corpus の在り処（repo 相対）
  * @returns {Promise<Set<string>|null>} git を読めなかったときは `null`
  */
-async function committedAimPaths(repoRoot) {
-  const out = await runGit(repoRoot, ['log', '--format=', '--name-only', '--', 'docs/aims/'])
+async function committedAimPaths(repoRoot, dir) {
+  const out = await runGit(repoRoot, ['log', '--format=', '--name-only', '--', `${dir}/`])
   if (out !== null) {
     return new Set(
       out
@@ -128,7 +129,7 @@ async function committedAimPaths(repoRoot) {
  * @param {string[]} slugs `readAimSlugs` が返すとおりの slug 順
  * @returns {Promise<{slug: string, uncommitted: boolean, uncommittedAnchorChange: boolean, untracked: boolean}[]|null>} git を読めなかったときは `null`
  */
-export async function gatherWorkingDelta(repoRoot, slugs) {
+export async function gatherWorkingDelta(repoRoot, slugs, dir = DEFAULT_AIMS_DIR) {
   // corpus が無ければ事実も無い —— git も呼ばない。反復する対象が無いと分かる前に
   // porcelain pass を走らせるのは、履歴の大きい repo では高価である: aim を持たない
   // member repo が `# none` と言うためだけに約 4.7 秒の `git log` を払っていた。
@@ -136,17 +137,17 @@ export async function gatherWorkingDelta(repoRoot, slugs) {
   if (slugs.length === 0) return []
 
   // directory 全体に対する porcelain pass を 1 回。node ごとの事実はそこから導く。
-  const status = await runGit(repoRoot, ['status', '--porcelain', '--', 'docs/aims/'])
+  const status = await runGit(repoRoot, ['status', '--porcelain', '--', `${dir}/`])
   // `git status` は commit の無い repo でも成功する ∴ その `null` は曖昧でない:
   // git が読めなかったということである。
   if (status === null) return null
   const dirty = parsePorcelainPaths(status)
-  const committedPaths = await committedAimPaths(repoRoot)
+  const committedPaths = await committedAimPaths(repoRoot, dir)
   if (committedPaths === null) return null
 
   const items = []
   for (const slug of slugs) {
-    const rel = aimRelPath(slug)
+    const rel = aimRelPath(slug, dir)
     // `committed` は drift 層が読むのと同じ信号である: いずれかの commit がこの path を
     // 一度でも触ったか。stage されただけで一度も commit されていない node —— porcelain が
     // `??` ではなく `A` として報告するもの —— はここで捕まる。porcelain pass ではない。

@@ -45,11 +45,12 @@ const say = (...l) => out.push(...l)
 async function trace(unit) {
   const rows = []
   for (const repo of unit.repos) {
-    const slugs = await readAimSlugs(repo.root)
+    const dir = repo.aimsDir
+    const slugs = await readAimSlugs(repo.root, dir)
     if (slugs.length === 0) continue
     const [working, unpushed] = await Promise.all([
-      gatherWorkingDelta(repo.root, slugs),
-      gatherUnpushed(repo.root, slugs),
+      gatherWorkingDelta(repo.root, slugs, dir),
+      gatherUnpushed(repo.root, slugs, dir),
     ])
     // ⚠ 読めなかったものを省く trace は、省略によって嘘をつく trace である ——
     // fence 自身が今は拒んでいるのと同じ捏造。
@@ -81,7 +82,11 @@ async function trace(unit) {
   // ⚠ これを述べるのは、これが但し書きではなく**穴**だからである: ここが見るのは tracked な
   // `docs/aims/` だけ。untracked なローカルの変化は構造上ここに映らない ∴ baton の散文だけが
   // その記録である。
-  say('⚠ この trace が見るのは tracked な `docs/aims/` だけである。untracked なローカルの', '変化はここに現れえない —— baton 自身の言葉だけがその記録である。', '')
+  // ⚠ **どこを見たかを言う。** 在り処は project が宣言する ∴ 「`docs/aims/`」と決め打つ
+  // 文言は、宣言を変えた repo で**嘘になる**。
+  const looked = [...new Set(unit.repos.map((r) => `\`${r.aimsDir}/\``))].join('、')
+  say(`⚠ この trace が見るのは tracked な ${looked} だけである。untracked なローカルの`,
+      '変化はここに現れえない —— baton 自身の言葉だけがその記録である。', '')
 }
 
 function readStdin() {
