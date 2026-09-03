@@ -10,7 +10,7 @@ description: 直前のセッションが残した baton（.handoff/active.md）�
 手順 2〜4（前回 read-at の報告 → 新しい read-at の刻印 → 未 push/未 commit aim の trace）は**機械であって判断ではない**。次のコマンドが正しい順序で行う —— 手で刻むと、報告すべき旧 read-at を先に潰す事故が起きる:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}"/bin/handoff.mjs read
+bearing-handoff.mjs read
 ```
 
 残り（baton を読むこと・Pointers の slug を読むこと・今どこに立っているかを人間に伝えること）は**あなたの仕事**である。

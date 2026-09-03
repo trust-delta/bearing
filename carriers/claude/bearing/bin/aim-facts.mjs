@@ -48,6 +48,7 @@ import {
   findBlocks, inspect as inspectBlock, loadDesired, substituteAims, declaredAimsDir,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
+import { strandedBatons } from '../lib/handoff.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -170,9 +171,17 @@ function renderRepo(r) {
  * ⚠ **2 つの経路がここを呼ぶ** —— aim を採った project の facts と、採っていない project の
  * handoff だけの出力である。**文言が割れれば、片方の project の人間だけが手順を知らされる。**
  */
+/** unit の中なら相対で、外なら絶対で。⚠ **登り始める相対 path は説明ではなく謎である。** */
+function relativeIfInside(root, target) {
+  const rel = path.relative(root, target)
+  return rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? rel : target
+}
+
 function sayBatonPresent(unit, baton) {
   say(
-    `baton: \`${path.relative(unit.root, baton.path) || baton.path}\`` +
+    // ⚠ **unit の外に在る path を相対で描かない。** baton は repo の外に住む ∴ 相対にすると
+    // `../../.bearing/...` と登り始め、**どこに在るのかがかえって読めなくなる。**
+    `baton: \`${relativeIfInside(unit.root, baton.path)}\`` +
       (baton.composedAt ? ` · composed-at \`${baton.composedAt}\`` : '') +
       (baton.readAt ? ` · **read-at \`${baton.readAt}\`（既に一度読まれている）**` : ''),
     '',
@@ -306,13 +315,32 @@ async function main() {
   // ── baton ─────────────────────────────────────────────────────────────────
   say('## ▶ 前回どこで止まったか', '')
   if (!baton) {
-    say(
-      '*この unit に baton は無い —— これは fresh start である。*',
-      '',
-      '⚠ **空の baton は空の project ではない。** 拾うものが無いと結論する前に、下の',
-      'backlog 数を読むこと。',
-      '',
-    )
+    // ⚠ **旧い置き場に取り残された baton は、無い baton ではない。** そこを見ずに
+    // 「fresh start」と述べれば、**在るのに無いと報告する** —— この機構が一貫して拒んで
+    // きた形であり、2026-09-03 に実際にこの行がそれをやった。
+    const stranded = await strandedBatons(unit.root)
+    if (stranded.length > 0) {
+      for (const l of stranded) {
+        say(`⚠ **旧い置き場に baton が取り残されている**（\`${l.dir}\`）—— active ${l.active ? 1 : 0} 本 / archive ${l.archived} 本。`)
+      }
+      say(
+        '',
+        '**この機構はもうそこを読まない ∴ これは fresh start ではない。** 移すには:',
+        '',
+        '    bearing-handoff.mjs migrate',
+        '',
+        '⚠ **移動は人間の act である** —— エージェントは述べるところで止まること。',
+        '',
+      )
+    } else {
+      say(
+        '*この unit に baton は無い —— これは fresh start である。*',
+        '',
+        '⚠ **空の baton は空の project ではない。** 拾うものが無いと結論する前に、下の',
+        'backlog 数を読むこと。',
+        '',
+      )
+    }
   } else {
     sayBatonPresent(unit, baton)
   }

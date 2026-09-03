@@ -48,16 +48,28 @@
 // 引けば、同名 repo や複数 worktree が**黙って同じ baton を共有する** —— 別の対話の baton を
 // 読むことになり、これは baton が無いことより悪い。∴ **読める名 ＋ path の hash**にする。
 
-import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
 
 export const ACTIVE = 'active.md'
 export const ARCHIVE = 'archive'
 
-/** ⚠ 旧い置き場。**読み書きはしない** —— 移行を検出して人間に述べるためだけに在る。 */
+/** ⚠ 旧い置き場たち。**読み書きはしない** —— 移行を検出して人間に述べるためだけに在る。 */
 export const LEGACY_DIR = '.handoff'
 export const legacyDir = (unitRoot) => path.join(unitRoot, LEGACY_DIR)
+
+/**
+ * この unit の baton が過去に置かれていた場所。**新しい順ではなく、古い順に並べる。**
+ *
+ * ⚠ **2 つ在るのは、1 日のうちに 2 度動かしたからである** —— repo の中（`~/.handoff/`）から
+ * unit の直下へ、そこからさらに `handoff/` の下へ。⚠ **中間の置き場を忘れると、その日に
+ * 移した人間の baton だけが取り残される** ∴ 忘れないために、ここに列挙して残す。
+ */
+export const legacyDirs = (unitRoot, env = process.env) => [
+  legacyDir(unitRoot),
+  unitHome(unitRoot, env),
+]
 
 /**
  * baton たちの家。⚠ **`BEARING_HOME` で移せる** —— test がここを差し替えられなければ、
@@ -86,8 +98,16 @@ export function unitSlug(unitRoot) {
   return path.resolve(unitRoot).replace(/[^A-Za-z0-9-]/g, '-') || 'unit'
 }
 
-export const batonDir = (unitRoot, env = process.env) =>
+/**
+ * この unit のために我々が持つもの全部の家。⚠ **baton はそのうちの 1 つでしかない** ——
+ * `handoff/` の下に置くのは、次に増えるものが baton の隣へ雑に積まれないためである
+ * （人間が 2026-09-03 に決定）。
+ */
+export const unitHome = (unitRoot, env = process.env) =>
   path.join(bearingHome(env), 'units', unitSlug(unitRoot))
+
+export const batonDir = (unitRoot, env = process.env) =>
+  path.join(unitHome(unitRoot, env), 'handoff')
 
 export const activePath = (unitRoot, env = process.env) => path.join(batonDir(unitRoot, env), ACTIVE)
 export const archiveDir = (unitRoot, env = process.env) =>
@@ -220,4 +240,29 @@ export async function listArchive(unitRoot) {
   } catch {
     return []
   }
+}
+
+/**
+ * 旧い置き場に取り残された baton を数える。**在るものだけを返す。**
+ *
+ * ⚠ **hook も CLI もここを呼ぶ。** 検出を 2 度実装すれば、片方だけが新しい置き場を知って
+ * いる状態が作れる —— そのとき面は「baton は無い（fresh start）」と述べ、**在るのに無いと
+ * 報告する**。2026-09-03 に実際にそうなった: CLI だけ塞いで、面を塞ぎ忘れた。
+ *
+ * @returns {Promise<Array<{dir: string, active: boolean, archived: number}>>}
+ */
+export async function strandedBatons(unitRoot, env = process.env) {
+  const found = []
+  for (const dir of legacyDirs(unitRoot, env)) {
+    let active = false
+    try {
+      active = (await stat(path.join(dir, ACTIVE))).isFile()
+    } catch { /* 無い */ }
+    let archived = []
+    try {
+      archived = (await readdir(path.join(dir, ARCHIVE))).filter((f) => f.endsWith('.md'))
+    } catch { /* 無い */ }
+    if (active || archived.length > 0) found.push({ dir, active, archived: archived.length })
+  }
+  return found
 }

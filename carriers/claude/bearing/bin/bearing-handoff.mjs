@@ -7,11 +7,16 @@
 // 人間が先延ばしにする引き継ぎであり、それこそがこの方法全体が避けるために在る失敗
 // だからだ。
 //
-//   handoff.mjs read    「読む」の手順 2〜4: 旧 read-at を報告し、新しいものを刻み、
-//                       baton が構造的に過少報告する aim の trace を surface する。
-//   handoff.mjs write   「書く」の手順 1: 現在の baton を archive へ退避し、stdin から
-//                       受け取った著述物を、時計から刻んだ `composed-at` 付きで配置する。
-//   handoff.mjs trace   aim の trace だけ。
+//   bearing-handoff.mjs read     「読む」の手順 2〜4: 旧 read-at を報告し、新しいものを
+//                                刻み、baton が過少報告する aim の trace を surface する。
+//   bearing-handoff.mjs write    「書く」の手順 1: 現在の baton を archive へ退避し、stdin
+//                                から受け取った著述物を `composed-at` 付きで配置する。
+//   bearing-handoff.mjs trace    aim の trace だけ。
+//   bearing-handoff.mjs migrate  旧い置き場に取り残された baton を、今の置き場へ移す。
+//
+// ⚠ **名前に `bearing-` を冠している。** plugin の `bin/` は Bash tool の PATH に入り
+// **裸のコマンド名で呼べる** ∴ そこは全 plugin が共有する名前空間である —— `handoff.mjs`
+// のような一般名を置くのは、path の一致を実行の根拠にするのと同じ弱さである。
 //
 // ⚠ **ここは何も著さず、何も要約せず、何も判定しない。** 何を残し、何を「再導出できる」と
 // して捨てるか —— それが native な圧縮に欠けている judgment であり、この方法の価値の全て
@@ -24,8 +29,8 @@ import { resolveUnit } from '../lib/unit.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import {
-  ACTIVE, ARCHIVE, activePath, archiveDir, batonDir, legacyDir, listArchive, stampReadAt,
-  writeBaton,
+  ACTIVE, ARCHIVE, activePath, archiveDir, batonDir, listArchive, stampReadAt,
+  strandedBatons, writeBaton,
 } from '../lib/handoff.mjs'
 import { readBaton } from '../lib/baton.mjs'
 
@@ -103,35 +108,13 @@ function readStdin() {
   })
 }
 
-/**
- * 旧い置き場（`<unit>/.handoff/`）に baton が残っていれば、その本数を返す。
- *
- * ⚠ **見つけても動かさない。** file の移動は人間の act であり、しかも**移した先で読まれる
- * のは別のセッション**である ∴ 黙って動かせば、人間は自分の baton がどこへ行ったかを
- * 知らないまま次の対話を始める。述べて、コマンドを名指すところで止まる。
- */
-async function legacyBatons(unitRoot) {
-  const dir = legacyDir(unitRoot)
-  let active = false
-  try {
-    active = (await stat(path.join(dir, ACTIVE))).isFile()
-  } catch { /* 無い */ }
-  let archived = []
-  try {
-    archived = (await readdir(path.join(dir, ARCHIVE))).filter((f) => f.endsWith('.md'))
-  } catch { /* 無い */ }
-  if (!active && archived.length === 0) return null
-  return { dir, active, archived: archived.length }
-}
-
 /** 旧い置き場を新しい置き場へ移す。⚠ **上書きしない** —— 既に在るものを黙って潰さない。 */
 async function migrate(unitRoot) {
-  const found = await legacyBatons(unitRoot)
-  if (!found) {
-    say(`旧い置き場に baton は無い（${legacyDir(unitRoot)}）。移すものは何も無い。`)
+  const found = await strandedBatons(unitRoot)
+  if (found.length === 0) {
+    say('旧い置き場に baton は無い。移すものは何も無い。')
     return 0
   }
-  const dest = batonDir(unitRoot)
   await mkdir(archiveDir(unitRoot), { recursive: true })
 
   const moved = []
@@ -145,22 +128,27 @@ async function migrate(unitRoot) {
     await rename(from, to)
     moved.push(to)
   }
-  if (found.active) await move(path.join(found.dir, ACTIVE), activePath(unitRoot))
-  try {
-    for (const f of await readdir(path.join(found.dir, ARCHIVE))) {
-      if (f.endsWith('.md')) await move(path.join(found.dir, ARCHIVE, f), path.join(archiveDir(unitRoot), f))
-    }
-  } catch { /* archive が無い */ }
+  for (const src of found) {
+    if (src.active) await move(path.join(src.dir, ACTIVE), activePath(unitRoot))
+    try {
+      for (const f of await readdir(path.join(src.dir, ARCHIVE))) {
+        if (f.endsWith('.md')) {
+          await move(path.join(src.dir, ARCHIVE, f), path.join(archiveDir(unitRoot), f))
+        }
+      }
+    } catch { /* archive が無い */ }
+  }
 
-  say(`移した: ${moved.length} 本 -> ${dest}`)
+  say(`移した: ${moved.length} 本 -> ${batonDir(unitRoot)}`)
+  for (const src of found) say(`  もと: ${src.dir}`)
   if (kept.length > 0) {
     say(`⚠ **移さなかった: ${kept.length} 本** —— 移動先に同じ名の file が既に在る。`)
     for (const k of kept) say(`  ${k}`)
   }
   say(
     '',
-    `⚠ 旧い dir 自体は残してある（${found.dir}）—— **空でも消さない。**`,
-    '人間の repo の中に在るものを、我々の都合で消さない。',
+    '⚠ **旧い dir 自体は残してある —— 空でも消さない。**',
+    '人間の持ち物を、我々の都合で消さない。',
     '',
   )
   return 0
@@ -176,13 +164,17 @@ async function main() {
   // 読む機構は、そこに何も無ければ「fresh start」と述べる ∴ **在るのに無いと報告する。**
   // 述べるのは read と write の両方である —— 書く側も、退避すべき旧 baton を見落とす。
   if (verb === 'read' || verb === 'write') {
-    const legacy = await legacyBatons(unit.root)
-    if (legacy) {
+    const legacy = await strandedBatons(unit.root)
+    for (const l of legacy) {
       say(
-        `⚠ **旧い置き場に baton が残っている**（${legacy.dir}）—— active ${legacy.active ? 1 : 0} 本 / archive ${legacy.archived} 本。`,
+        `⚠ **旧い置き場に baton が残っている**（${l.dir}）—— active ${l.active ? 1 : 0} 本 / archive ${l.archived} 本。`,
+      )
+    }
+    if (legacy.length > 0) {
+      say(
         '**この機構はもうそこを読まない。** 移すには:',
         '',
-        '    handoff.mjs migrate',
+        '    bearing-handoff.mjs migrate',
         '',
         '⚠ **移動は人間の act である** —— 我々は述べるところで止まる。',
         '',

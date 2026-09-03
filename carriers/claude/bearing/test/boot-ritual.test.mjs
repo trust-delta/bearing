@@ -72,7 +72,7 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     // ⚠ **CLI は解決済みの絶対 path で名指されねばならない。** hook の吐く text は
     // `${CLAUDE_PLUGIN_ROOT}` の inline 展開の対象では**ない**（対象は hook の `command`
     // field である）∴ placeholder を書けば文字列のまま届き、しかも Bash tool の env に
-    // その変数は無い —— エージェントは `/bin/handoff.mjs` を見て落ちる。4 セッション連続で
+    // その変数は無い —— エージェントは `/bin/bearing-handoff.mjs` を見て落ちる。4 セッション連続で
     // 実際に起きた。この 2 行がその回帰を止める。
     //
     // ⚠ **path の*形*ではなく、解決された path *そのもの*を突き合わせる。** 先行版は
@@ -85,7 +85,7 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     // ⚠ **シェルへ載せる形そのものは `lib/shell.mjs` の持ち物で、あちらが単体で検査される**
     // （`shell.test.mjs`。UNC・POSIX の backslash・platform 分岐）。ここが見るのは
     // **hook がその正本を通したか**であって、quoting の規則ではない。
-    const cli = path.join(HERE, '..', 'bin', 'handoff.mjs')
+    const cli = path.join(HERE, '..', 'bin', 'bearing-handoff.mjs')
     assert.ok(path.isAbsolute(cli))
     assert.ok(
       r.stdout.includes(`node ${quotePathForShell(cli)} read`),
@@ -154,4 +154,24 @@ test('an empty baton file is an absent baton, not an outstanding one', async () 
   } finally {
     await rm(root, { recursive: true, force: true })
   }
+})
+
+test('旧い置き場に取り残された baton も、儀式を一度だけ発火させる', async (t) => {
+  // ⚠ **儀式が在るのは未処理の baton が無視されないためであって、それがどこに置かれて
+  // いるかは理由ではない。** 黙れば、その baton は誰にも読まれないまま残り続ける。
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await writeFile(path.join(root, '.handoff', 'active.md'), '---\ntask: old\n---\n\nold\n')
+
+  const session = freshSession()
+  const first = run({ session_id: session, cwd: root })
+  assert.equal(first.status, 0)
+  assert.match(first.stdout, /旧い置き場に baton が取り残されている/)
+  assert.match(first.stdout, /bearing-handoff\.mjs migrate/)
+  // ⚠ **「読め」ではなく「移せ」である** —— 機構はもうそこを読まない ∴ 読む手順を述べても
+  // 実行できない。
+  assert.doesNotMatch(first.stdout, /read-at/)
+  // 二度は言わない。促しは promise ではなく、繰り返せば単なる騒音になる。
+  assert.equal(run({ session_id: session, cwd: root }).stdout, '')
 })

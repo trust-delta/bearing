@@ -59,15 +59,16 @@ done
 # 誰も走らせない道具であり、儀式は手作業へ戻る。そのとき archive の退避と read-at の順序は
 # 記憶任せになる。
 #
-# ⚠ **placeholder は波括弧つきで書く。** docs が inline 展開を明記しているのは
-# `${CLAUDE_PLUGIN_ROOT}` の形であり、対象は skill / agent の content と hook / monitor の
-# command である。⚠ **波括弧なしの `$CLAUDE_PLUGIN_ROOT` は展開されず、文字列のまま skill に
-# 載る** —— そして **Bash tool の env にその変数は無い** ∴ エージェントは `/bin/handoff.mjs`
-# を見て落ちる。2026-09-02 から 4 セッション連続で起きた、たった 2 文字の欠落である。
+# ⚠ **plugin mode は裸のコマンド名を書く。** plugin の `bin/` は **Bash tool の PATH に入り、
+# 裸のコマンド名で呼べる**（公式 docs が明記する唯一の経路）∴ env にも path にも依らない。
+# ⚠ **`${CLAUDE_PLUGIN_ROOT}` でも動く**（skill content は inline 展開の対象であり、実測でも
+# 展開された）**が、env が渡らなかった日に壊れる形をわざわざ選ぶ理由が無い。**
+# ⚠ **裸で呼べるには exec bit が要る** —— 2026-09-03、PATH では解決したのに exec bit が
+# 無くて落ちた。`test/bin-namespace.test.mjs` がその対を固定している。
 cli_ref() {
   local rel="carriers/claude/bearing/bin/$1"
   if [ "$mode" = "plugin" ]; then
-    printf 'node "${CLAUDE_PLUGIN_ROOT}"/bin/%s' "$1"
+    printf '%s' "$1"
   else
     printf 'node %s' "$(realpath --relative-to="$target" "$repo_root/$rel")"
   fi
@@ -128,7 +129,7 @@ write_carrier "handoff-r" \
 手順 2〜4（前回 read-at の報告 → 新しい read-at の刻印 → 未 push/未 commit aim の trace）は**機械であって判断ではない**。次のコマンドが正しい順序で行う —— 手で刻むと、報告すべき旧 read-at を先に潰す事故が起きる:
 
 \`\`\`bash
-$(cli_ref handoff.mjs) read
+$(cli_ref bearing-handoff.mjs) read
 \`\`\`
 
 残り（baton を読むこと・Pointers の slug を読むこと・今どこに立っているかを人間に伝えること）は**あなたの仕事**である。
@@ -145,7 +146,7 @@ write_carrier "handoff-w" \
 land だけは機械である（旧 baton の archive 退避 → \`composed-at\` の刻印 → 配置）:
 
 \`\`\`bash
-$(cli_ref handoff.mjs) write < <あなたが著した baton>
+$(cli_ref bearing-handoff.mjs) write < <あなたが著した baton>
 \`\`\`
 
 ⚠ \`read-at\` は書かない —— 新しい baton は「まだ読まれていない」が正で、この経路は書かれていても除去する。
