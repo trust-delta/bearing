@@ -136,7 +136,7 @@ test('renderSession —— context の量が無くても割合だけは描く', 
 
 test('renderBearing —— 静かなときは静かである', () => {
   const facts = {
-    aimCount: 5, openTodo: 0, awaiting: 0, batonUnread: false,
+    aimCount: 5, openTodo: 0, awaiting: 0, escalation: 0, batonUnread: false,
     working: 0, unpushed: 0, drift: 0,
   }
   assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5')
@@ -144,12 +144,29 @@ test('renderBearing —— 静かなときは静かである', () => {
 
 test('renderBearing —— 異常だけが現れる', () => {
   const facts = {
-    aimCount: 5, openTodo: 2, awaiting: 3, batonUnread: true,
+    aimCount: 5, openTodo: 2, awaiting: 3, escalation: 1, batonUnread: true,
     working: 2, unpushed: 1, drift: 4,
   }
   assert.equal(
     line(renderBearing('ok', facts)),
-    'bearing   aim 5   todo 2   観測待ち 3   baton 未読   未commit 2   未push 1   drift 4',
+    'bearing   aim 5   todo 2   観測待ち 3   escalation 1   ' +
+      'baton 未読   未commit 2   未push 1   drift 4',
+  )
+})
+
+test('renderBearing —— escalation は人間の番の隣に立ち、採れなければ `?` になる', () => {
+  // ⚠ **`観測待ち` の隣であることに意味がある。** 「見れば済む」と「決めなければ誰も
+  // 進めない」は、どちらも**人間が動かない限り動かない** ∴ 人間の側の残りが 1 箇所で読める。
+  const facts = {
+    aimCount: 5, openTodo: 0, awaiting: 0, escalation: 2, batonUnread: false,
+    working: 0, unpushed: 0, drift: 0,
+  }
+  assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5   escalation 2')
+  // ⚠ **採れなかった escalation を 0 と描かない。** 判断待ちが在るのに「無い」と読ませる
+  // 面は、この行の中心的な主張をそのまま裏切る。
+  assert.equal(
+    line(renderBearing('ok', { ...facts, escalation: null })),
+    'bearing   aim 5   escalation ?',
   )
 })
 
@@ -158,7 +175,7 @@ test('renderBearing —— 採れなかったことを 0 と描かない', () =>
   // 畳めば、読み手は「未 push は無い」と読む —— corpus fence が一貫して拒んできた誤読で
   // あり、statusline でだけ許す理由は無い。
   const facts = {
-    aimCount: 5, openTodo: 0, awaiting: 0, batonUnread: false,
+    aimCount: 5, openTodo: 0, awaiting: 0, escalation: 0, batonUnread: false,
     working: null, unpushed: null, drift: null,
   }
   assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5   未commit ?   未push ?   drift ?')
@@ -196,7 +213,7 @@ test('描かれる文字はすべて幅が確定している', () => {
     },
   }
   const facts = {
-    aimCount: 5, openTodo: 2, awaiting: 3, batonUnread: true,
+    aimCount: 5, openTodo: 2, awaiting: 3, escalation: 1, batonUnread: true,
     working: 2, unpushed: null, drift: 4,
   }
   // ⚠ **`state` を渡し忘れないこと。** 1 引数で呼ぶと `facts` が `state` の位置に入り、
@@ -209,7 +226,7 @@ test('描かれる文字はすべて幅が確定している', () => {
   const first = renderSession(input, 'feature/x', now)
   const second = renderBearing('ok', facts)
   assert.equal(first.length, 6, `1 行目が痩せている: ${first.map(strip).join(' / ')}`)
-  assert.equal(second.length, 8, `2 行目が痩せている: ${second.map(strip).join(' / ')}`)
+  assert.equal(second.length, 9, `2 行目が痩せている: ${second.map(strip).join(' / ')}`)
   for (const seg of [...first, ...second]) {
     assert.deepEqual(widthUnsafeChars(seg), [], `幅の確定しない文字: ${strip(seg)}`)
     // ⚠ 色名の綴り誤りは色を落とさず、文字列 `undefined` を値の前に置く（`heat` を見よ）。
@@ -255,13 +272,14 @@ test('foldRepos —— unit の全 repo を畳む（primary は filter ではな
   // `bin/aim-facts.mjs` と**同じ画面で数が食い違う**。
   const repo = (n) => ({
     slugs: Array(n).fill('x'),
-    backlog: { openTodoNodes: n, awaitingNodes: Array(n).fill({}) },
+    backlog: { openTodoNodes: n, awaitingNodes: Array(n).fill({}), escalationNodes: Array(n).fill('x') },
     working: [], unpushed: [], drift: { intra: [], inter: [] },
   })
   const f = foldRepos([repo(2), repo(3)])
   assert.equal(f.aimCount, 5)
   assert.equal(f.openTodo, 5)
   assert.equal(f.awaiting, 5)
+  assert.equal(f.escalation, 5)
   assert.equal(f.working, 0)
 })
 
@@ -269,7 +287,7 @@ test('foldRepos —— 1 つでも採れなければ合計は null', () => {
   // ⚠ 「一部は読めた」は「読めた」ではない —— 3 repo のうち 1 つを読み落とした合計を
   // 数として出せば、それは過少報告である。
   const ok = {
-    slugs: ['a'], backlog: { openTodoNodes: 1, awaitingNodes: [] },
+    slugs: ['a'], backlog: { openTodoNodes: 1, awaitingNodes: [], escalationNodes: [] },
     working: [{}], unpushed: [], drift: { intra: [], inter: [] },
   }
   const blind = { ...ok, working: null, backlog: null }
@@ -277,6 +295,7 @@ test('foldRepos —— 1 つでも採れなければ合計は null', () => {
   assert.equal(f.aimCount, 2)      // slug は両方から読めている
   assert.equal(f.working, null)    // ⚠ 片方が盲であれば合計は不明
   assert.equal(f.openTodo, null)
+  assert.equal(f.escalation, null)
   assert.equal(f.unpushed, 0)      // こちらは両方読めている
 })
 
@@ -309,7 +328,7 @@ test('provenance —— 名前が前方一致するだけの別 project を repo
 })
 
 test('renderBearing —— repo の複製であることは label に出る', () => {
-  const facts = { aimCount: 5, openTodo: 0, awaiting: 0, batonUnread: false, working: 0, unpushed: 0, drift: 0 }
+  const facts = { aimCount: 5, openTodo: 0, awaiting: 0, escalation: 0, batonUnread: false, working: 0, unpushed: 0, drift: 0 }
   assert.equal(line(renderBearing('ok', facts, 'repo')), 'bearing repo   aim 5')
   assert.deepEqual(widthUnsafeChars(line(renderBearing('ok', facts, 'repo'))), [])
 })

@@ -136,6 +136,12 @@ export function factsDigest(repos) {
               .map((w) => [w.slug, !!w.uncommitted, !!w.uncommittedAnchorChange, !!w.untracked])
               .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)),
       openTodo: r.backlog?.openTodoNodes ?? 0,
+      // ⚠ **escalation は数ではなく slug で digest に入れる。** 数だけを入れると、**1 つが
+      // 片付き別の 1 つが生まれた**セッション —— 判断待ちの中身が入れ替わったのに総数は
+      // 動かない経路 —— で第 2 の門が「事実は変わっていない」と判定して黙る。⚠ **これは
+      // 観測待ちを digest へ入れたときと同じ理由であり、同じ罠である。**
+      escalation: [...(r.backlog?.escalationNodes ?? [])].sort(),
+      escalationEmpty: [...(r.backlog?.escalationEmptyNodes ?? [])].sort(),
       unknown: [...(r.backlog?.unknownNodes ?? [])].sort(),
       // ⚠ **観測待ちも digest に入れる。** 入れなければ、最後の `[todo]` が `[done]` に
       // なった瞬間 —— **体制が人間へ番を渡すまさにその瞬間** —— を第 2 の門が「事実は

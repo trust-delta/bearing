@@ -182,4 +182,11 @@ project settings は user settings に勝つ）。
 ⚠ **生き残ったのは場ではなく、方法だった。** この repository は、その方法が今住んでいる場所
 である。
 
-*license は未定。決まるまでは all rights reserved。*
+## ライセンス
+
+MIT。⚠ **正本は [`LICENSE`](LICENSE) 1 枚である。** plugin 側の複製は生成物であり
+（`gen/claude-plugin.sh`）、食い違いは CI が赤くする —— ⚠ **marketplace entry の source は
+`./carriers/claude/bearing` ∴ root の LICENSE は消費者の cache に届かない**（実測）。
+複製は重複ではなく、配布物の一部である。
+
+Copyright (c) 2026 TrustDelta

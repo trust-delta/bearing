@@ -74,6 +74,19 @@ test('the facts digest moves when the open-todo count does', () => {
   assert.notEqual(factsDigest([base]), factsDigest([more]))
 })
 
+test('the facts digest moves when escalation changes hands but the count does not', () => {
+  // ⚠ **これが escalation を数ではなく slug で digest に入れる理由である。** 1 つが片付き、
+  // 別の 1 つが生まれたセッションでは総数が動かない ∴ 数だけを入れれば、**判断待ちの中身が
+  // 入れ替わったちょうどその瞬間に**第 2 の門が「事実は変わっていない」と判定して黙る。
+  const one = { label: 'r', working: [], backlog: { escalationNodes: ['a'], anomalies: [] } }
+  const other = { label: 'r', working: [], backlog: { escalationNodes: ['b'], anomalies: [] } }
+  assert.notEqual(factsDigest([one]), factsDigest([other]))
+  // ⚠ 順序は事実ではない —— 同じ集合を別の順で採っただけで「動いた」と述べてはならない。
+  const ab = { label: 'r', working: [], backlog: { escalationNodes: ['a', 'b'], anomalies: [] } }
+  const ba = { label: 'r', working: [], backlog: { escalationNodes: ['b', 'a'], anomalies: [] } }
+  assert.equal(factsDigest([ab]), factsDigest([ba]))
+})
+
 test('the facts digest does not depend on repo or record order', () => {
   const r1 = { label: 'a', working: [{ slug: 'x', uncommitted: true }], backlog: {} }
   const r2 = { label: 'b', working: [], backlog: {} }
@@ -90,6 +103,44 @@ test('the count is surfaced with the instruction not to triage it', () => {
   })
   assert.match(body, /open-todo: 7/)
   assert.match(body, /triage も ranking も/)
+})
+
+test('escalation is surfaced mid-session too — that is where a todo becomes one', () => {
+  // ⚠ **自力で閉じられないと分かった todo を `# ESCALATION` へ出すのは、走っている
+  // セッションである。** そのとき `open-todo` は 1 減る ∴ boot 時にしか出さなければ、
+  // **減った分がどこへ行ったのかを誰も知らないまま**進むことになる。
+  const body = renderCorpusDelta({
+    repos: [
+      {
+        label: 'r',
+        working: [],
+        backlog: {
+          openTodoNodes: 1,
+          escalationNodes: ['blocked-a', 'blocked-b'],
+          escalationEmptyNodes: ['hollow'],
+          unknownNodes: [],
+          anomalies: [],
+        },
+      },
+    ],
+    moved: [],
+    hadBaseline: true,
+  })
+  assert.match(body, /escalation: 2/)
+  // ⚠ 空の見出しは数に入らず、しかし黙って落ちもしない。
+  assert.match(body, /中身が空の node が 1 件.*r\/hollow/s)
+})
+
+test('a backlog with no escalation field renders 0, not `undefined`', () => {
+  // ⚠ **古い形の backlog を渡されても、面は数を偽らない。** `undefined` がそのまま文字列に
+  // なれば、読み手はそこに事実が無いことすら知りようがない。
+  const body = renderCorpusDelta({
+    repos: [{ label: 'r', working: [], backlog: { openTodoNodes: 1, unknownNodes: [], anomalies: [] } }],
+    moved: [],
+    hadBaseline: true,
+  })
+  assert.match(body, /escalation: 0/)
+  assert.ok(!body.includes('undefined'))
 })
 
 test('a unit with no corpus renders nothing at all', () => {

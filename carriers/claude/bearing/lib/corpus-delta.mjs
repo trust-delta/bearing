@@ -15,7 +15,7 @@ import { renderAwaitingFence } from './process.mjs'
 
 /**
  * @param {{
- *   repos: {label: string, working: object[], backlog: {openTodoNodes: number, unknownNodes: string[], anomalies: object[]}}[],
+ *   repos: {label: string, working: object[], backlog: {openTodoNodes: number, escalationNodes: string[], unknownNodes: string[], anomalies: object[]}}[],
  *   moved: {label: string, from: string, to: string, blocks?: string[]}[],
  *   hadBaseline: boolean,
  * }} args
@@ -27,7 +27,9 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   const movedBy = new Map(moved.map((m) => [m.label, m]))
   const lines = []
   let openTodo = 0
+  let escalation = 0
   const unknown = []
+  const emptyEscalation = []
   const awaiting = []
   const anomalies = []
 
@@ -42,7 +44,9 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
 
   for (const r of repos) {
     openTodo += r.backlog?.openTodoNodes ?? 0
+    escalation += r.backlog?.escalationNodes?.length ?? 0
     for (const s of r.backlog?.unknownNodes ?? []) unknown.push(`${r.label}/${s}`)
+    for (const s of r.backlog?.escalationEmptyNodes ?? []) emptyEscalation.push(`${r.label}/${s}`)
     for (const a of r.backlog?.awaitingNodes ?? [])
       awaiting.push({ ...a, slug: repos.length > 1 ? `${r.label}/${a.slug}` : a.slug })
     for (const a of r.backlog?.anomalies ?? []) anomalies.push({ repo: r.label, ...a })
@@ -77,6 +81,26 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
       '⚠ **上の node はエージェントが尽くしている ∴ 残っているのは人間の観測と `state:` の',
       '宣言だけである。** 「終わった aim」の一覧ではない —— **満足したかを述べられるのは',
       '人間だけであり、この一覧はそれを先取りしない。**',
+      '',
+    )
+  }
+
+  // ⚠ **セッション途中に生まれる、もう 1 つの「人間の番」。** 自力で閉じられないと分かった
+  // todo を `# ESCALATION` へ出すのはまさに走っているセッションであり、⚠ **そのとき
+  // `open-todo` は 1 減る** —— boot 時にしか出さなければ、**減った分がどこへ行ったのかを
+  // 誰も知らないまま**進むことになる。
+  lines.push(
+    `**escalation: ${escalation}** —— \`# ESCALATION\` に中身を持つ aim node の数`,
+    '（`state: dead` は除く）。**この数も surface せよ。triage も ranking も、どれから片付ける',
+    'べきかの提案もするな —— どの数がより重いかを述べることは、注意予算の割り当てであって',
+    '観測ではない。**',
+    '',
+  )
+  if (emptyEscalation.length > 0) {
+    lines.push(
+      `⚠ **\`# ESCALATION\` 見出しを持つが中身が空の node が ${emptyEscalation.length} 件**: ` +
+        emptyEscalation.join(', '),
+      '**上の数には入っていない。**',
       '',
     )
   }

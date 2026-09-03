@@ -13,7 +13,8 @@
         "name": "TrustDelta"
       },
       "category": "workflow",
-      "source": "./carriers/claude/bearing"
+      "source": "./carriers/claude/bearing",
+      "license": "MIT"
     }
   ]
 }
