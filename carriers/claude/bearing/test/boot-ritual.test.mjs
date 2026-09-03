@@ -13,6 +13,7 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { quotePathForShell } from '../lib/shell.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const HOOK = path.join(HERE, '..', 'bin', 'boot-ritual.mjs')
@@ -74,29 +75,14 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     // 期待値を組み立てる形なら platform を問わず、しかも「絶対 path らしさ」ではなく
     // **どの複製を名指したか**まで固定できる。
     //
-    // ⚠ **Windows で `JSON.stringify` が backslash を二重化する件は、直さない —— ただし
-    // 無条件に安全なのではない。** 2026-09-03 に argv を実測したところ、2 つのシェルは
-    // *別々の機構で*通っていた:
-    //
-    //   Git Bash    argv = `D:\trust_project\...`（単一）—— POSIX シェルの unescape が
-    //               `\\` を `\` へ畳む ∴ **JSON のエスケープをちょうど打ち消している**。
-    //               これは Windows の性質ではなくシェルの性質である。
-    //   PowerShell  argv = `D:\\trust_project\\...`（二重のまま）—— escape 文字は backtick
-    //               ゆえ畳まれない。通るのは **path 正規化が繰り返し separator を畳む**
-    //               からで、`existsSync` も true を返す。
-    //
-    // ⚠ **成立は drive letter で始まる path に限られる。** 先頭の `\\` だけは UNC の印ゆえ
-    // 畳む規則が違い、`\\server\share\x` は JSON escape を経ると `\server\share\x` に化ける
-    // （先頭が 1 本になり UNC でなくなる）∴ **plugin が network path に載り、かつシェルが
-    // PowerShell だと、この 1 行は解決に失敗する。**
-    //
-    // ∴ 現に走っている形（`C:` / `D:` の下の cache と checkout）では動く出力であって
-    // bug ではない。**見た目を理由に触らないこと** —— 触るなら理由は UNC のほうである。
+    // ⚠ **シェルへ載せる形そのものは `lib/shell.mjs` の持ち物で、あちらが単体で検査される**
+    // （`shell.test.mjs`。UNC・POSIX の backslash・platform 分岐）。ここが見るのは
+    // **hook がその正本を通したか**であって、quoting の規則ではない。
     const cli = path.join(HERE, '..', 'bin', 'handoff.mjs')
     assert.ok(path.isAbsolute(cli))
     assert.ok(
-      r.stdout.includes(`node ${JSON.stringify(cli)} read`),
-      `解決済みの絶対 path で CLI を名指していない。期待した断片: node ${JSON.stringify(cli)} read`,
+      r.stdout.includes(`node ${quotePathForShell(cli)} read`),
+      `解決済みの絶対 path で CLI を名指していない。期待した断片: node ${quotePathForShell(cli)} read`,
     )
     assert.ok(!r.stdout.includes('CLAUDE_PLUGIN_ROOT'))
   } finally {

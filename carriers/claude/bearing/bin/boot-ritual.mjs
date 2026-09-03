@@ -43,6 +43,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { readBaton } from '../lib/baton.mjs'
 import { resolveUnit } from '../lib/unit.mjs'
+import { quotePathForShell } from '../lib/shell.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
 // （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
@@ -59,8 +60,11 @@ await delegateToCheckout(import.meta.url)
  *
  * ⚠ **env ではなく `import.meta.dirname` で解く。** こちらは*今走っている複製*を指す ——
  * 委譲されて working tree に居るなら working tree を名指し、env の有無に一切依らない。
+ *
+ * ⚠ **シェルへ載せる形の正本は `lib/shell.mjs` である** —— なぜ `JSON.stringify` では
+ * 足りないか（UNC で壊れる）は、あちらに 1 度だけ書いてある。**ここへ複製しない。**
  */
-const HANDOFF_CLI = JSON.stringify(path.join(import.meta.dirname, 'handoff.mjs'))
+const HANDOFF_CLI = quotePathForShell(path.join(import.meta.dirname, 'handoff.mjs'))
 
 
 function readStdin() {
