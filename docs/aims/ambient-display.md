@@ -32,6 +32,8 @@ state: open
 
 ⚠ **bearing 自身の repo は tracked な project settings で working tree を直に指し続ける。これは重複ではない**: あの 1 行は **bearing が載っていなくても clone しただけで描け**、machine-local な前提を 1 つも持たない。project settings は user settings に勝つ ∴ 両方在っても食い違わない。
 
+**⚠ 2026-09-03、この面は「不在を述べる唯一の面」になった。** [[bearing]] の人間が「plugin 側は自分の実体が置かれているかを検査しない」を通例として採り、**plugin の範囲ではない statusline だけを例外的に検知対象として残した** ∴ 上段の「塞がるのは *statusline の面*だけである」は、**穴の記述から役割の記述へ変わった** —— hook と skill が黙るのは未了ではなく、決着した設計である。⚠ **∴ shim が描く「載っていない」の 1 行は、もはや補助ではない** —— あれが黙れば、不在を述べる面はどこにも無くなる。
+
 # PROCESS
 
 - [done] **CLI 向けの statusline を実装した。** 1 行目に model / effort / branch / context / rate limit、2 行目に aim・todo・観測待ち・未読 baton・未 commit / 未 push / drift。⚠ **fence は cache を経ず正本の lib を直接呼ぶ** —— 実測 70ms で debounce 300ms に十分収まり、間接層を挟めば二重実装が生まれるからである
