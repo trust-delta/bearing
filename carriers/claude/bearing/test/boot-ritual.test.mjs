@@ -13,6 +13,7 @@ import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { quotePathForShell } from '../lib/shell.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const HOOK = path.join(HERE, '..', 'bin', 'boot-ritual.mjs')
@@ -66,7 +67,23 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     // field である）∴ placeholder を書けば文字列のまま届き、しかも Bash tool の env に
     // その変数は無い —— エージェントは `/bin/handoff.mjs` を見て落ちる。4 セッション連続で
     // 実際に起きた。この 2 行がその回帰を止める。
-    assert.match(r.stdout, /node "\/.*\/bin\/handoff\.mjs" read/)
+    //
+    // ⚠ **path の*形*ではなく、解決された path *そのもの*を突き合わせる。** 先行版は
+    // `/node "\/.*\/bin\/handoff\.mjs" read/` と書いており、先頭 `/` を要求する ∴ POSIX
+    // でしか真になりえなかった —— **win32 では常に落ち、CI は ubuntu ゆえ誰も気づかない**。
+    // 常時赤い門は、門を持たないより悪い（それを読む側が失敗を読み飛ばすようになる）。
+    // 期待値を組み立てる形なら platform を問わず、しかも「絶対 path らしさ」ではなく
+    // **どの複製を名指したか**まで固定できる。
+    //
+    // ⚠ **シェルへ載せる形そのものは `lib/shell.mjs` の持ち物で、あちらが単体で検査される**
+    // （`shell.test.mjs`。UNC・POSIX の backslash・platform 分岐）。ここが見るのは
+    // **hook がその正本を通したか**であって、quoting の規則ではない。
+    const cli = path.join(HERE, '..', 'bin', 'handoff.mjs')
+    assert.ok(path.isAbsolute(cli))
+    assert.ok(
+      r.stdout.includes(`node ${quotePathForShell(cli)} read`),
+      `解決済みの絶対 path で CLI を名指していない。期待した断片: node ${quotePathForShell(cli)} read`,
+    )
     assert.ok(!r.stdout.includes('CLAUDE_PLUGIN_ROOT'))
   } finally {
     await rm(root, { recursive: true, force: true })
