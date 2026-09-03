@@ -71,7 +71,7 @@ await delegateToCheckout(import.meta.url)
  * ⚠ **シェルへ載せる形の正本は `lib/shell.mjs` である** —— なぜ `JSON.stringify` では
  * 足りないか（UNC で壊れる）は、あちらに 1 度だけ書いてある。**ここへ複製しない。**
  */
-const HANDOFF_CLI = quotePathForShell(path.join(import.meta.dirname, 'handoff.mjs'))
+const HANDOFF_CLI = quotePathForShell(path.join(import.meta.dirname, 'bearing-handoff.mjs'))
 
 
 function readStdin() {

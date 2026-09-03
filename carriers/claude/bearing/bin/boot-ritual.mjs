@@ -42,6 +42,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { readBaton } from '../lib/baton.mjs'
+import { strandedBatons } from '../lib/handoff.mjs'
 import { resolveUnit } from '../lib/unit.mjs'
 import { quotePathForShell } from '../lib/shell.mjs'
 
@@ -64,8 +65,34 @@ await delegateToCheckout(import.meta.url)
  * ⚠ **シェルへ載せる形の正本は `lib/shell.mjs` である** —— なぜ `JSON.stringify` では
  * 足りないか（UNC で壊れる）は、あちらに 1 度だけ書いてある。**ここへ複製しない。**
  */
-const HANDOFF_CLI = quotePathForShell(path.join(import.meta.dirname, 'handoff.mjs'))
+const HANDOFF_CLI = quotePathForShell(path.join(import.meta.dirname, 'bearing-handoff.mjs'))
 
+
+/**
+ * 旧い置き場に取り残された baton についての促し。
+ *
+ * ⚠ **これは「読め」ではなく「移せ」である。** 機構はもうそこを読まない ∴ 読む手順を
+ * 述べても実行できない。そして⚠ **移すのは人間の act である** —— エージェントは述べる
+ * ところで止まる。
+ */
+function strandedMessage(stranded) {
+  const lines = stranded.map(
+    (l) => `  ${l.dir} —— active ${l.active ? 1 : 0} 本 / archive ${l.archived} 本`,
+  )
+  return `⚠ **旧い置き場に baton が取り残されている。** この機構はもうそこを読まない ∴
+**今のこの unit は「fresh start」ではない。**
+
+${lines.join('\n')}
+
+移すコマンドはこれである:
+
+    bearing-handoff.mjs migrate
+
+⚠ **走らせるかは人間が決める。** ここで勝手に動かせば、人間は自分の baton がどこへ
+行ったかを知らないまま次の対話を始めることになる —— **述べるところで止まること。**
+
+これはセッションにつき一度だけ発火する。`
+}
 
 function readStdin() {
   return new Promise((resolve) => {
@@ -138,11 +165,15 @@ if (existsSync(marker)) process.exit(0)
 try {
   const unit = await resolveUnit(input.cwd || process.cwd())
   const baton = await readBaton(unit.root)
-  if (!baton) process.exit(0)
+  // ⚠ **取り残された baton も「未処理の baton」である。** 儀式が在るのは、未処理の baton が
+  // 無視されないためであって、それが**どこに置かれているか**は理由ではない ∴ 旧い置き場に
+  // 在るときも一度だけ述べる —— 黙れば、その baton は誰にも読まれないまま残り続ける。
+  const stranded = baton ? [] : await strandedBatons(unit.root)
+  if (!baton && stranded.length === 0) process.exit(0)
   mkdirSync(path.dirname(marker), { recursive: true })
   writeFileSync(marker, new Date().toISOString(), 'utf8')
   // exit 0: stdout はエージェントに見せられる。⚠ 決して exit 2 しない —— 冒頭を参照。
-  process.stdout.write(message(baton) + '\n')
+  process.stdout.write((baton ? message(baton) : strandedMessage(stranded)) + '\n')
 } catch (err) {
   // 規則: この hook の bug でセッションを妨げることは決してしない。
   process.stderr.write(`bearing: boot-ritual hook が失敗した: ${err?.stack ?? err}\n`)

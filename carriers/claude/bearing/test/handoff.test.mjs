@@ -265,7 +265,7 @@ test('BEARING_HOME が家を移す —— 移せなければ test が人間の b
 // ── 移行 —— 述べるが、動かさない ─────────────────────────────────────────────
 
 const runCli = (root, verb) =>
-  execFileSync(process.execPath, [path.join(HERE, '..', 'bin', 'handoff.mjs'), verb], {
+  execFileSync(process.execPath, [path.join(HERE, '..', 'bin', 'bearing-handoff.mjs'), verb], {
     cwd: root, encoding: 'utf8', env: { ...process.env },
   })
 

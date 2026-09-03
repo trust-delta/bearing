@@ -297,3 +297,24 @@ test('扱えない在り処の宣言は、既定として黙って動かない',
   assert.match(out, /読めない/)
   await rm(root, { recursive: true, force: true })
 })
+
+test('旧い置き場に取り残された baton は、fresh start と呼ばれない', async (t) => {
+  // ⚠ **在るのに無いと報告する形は、この機構が一貫して拒んできたものである。**
+  // 2026-09-03、CLI だけ塞いで面を塞ぎ忘れ、この行が実際に嘘をついた。
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await withAim(root)
+  await mkdir(path.join(root, '.handoff', 'archive'), { recursive: true })
+  await writeFile(path.join(root, '.handoff', 'active.md'), '---\ntask: old\n---\n\nold\n')
+  const out = compose(root)
+  assert.match(out, /旧い置き場に baton が取り残されている/)
+  assert.match(out, /bearing-handoff\.mjs migrate/)
+  assert.doesNotMatch(out, /fresh start である/)
+})
+
+test('取り残しが無ければ、これまで通り fresh start と述べる', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await withAim(root)
+  assert.match(compose(root), /fresh start である/)
+})
