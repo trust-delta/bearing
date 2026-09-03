@@ -11,11 +11,17 @@ import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { mkdtempSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { loadDesired, renderBlock } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
+import { activePath, batonDir } from '../lib/handoff.mjs'
+
+// ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
+// baton** —— を読み書きする。
+process.env.BEARING_HOME = mkdtempSync(path.join(tmpdir(), 'bearing-home-'))
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const COMPOSER = path.join(HERE, '..', 'bin', 'aim-facts.mjs')
@@ -93,9 +99,9 @@ test('採っていない project でも、未読の baton だけは述べる', a
   // 使える ∴ ここで黙るのは aim の沈黙ではなく handoff の欠落である。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   execFileSync('git', ['init', '-q', root])
-  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await mkdir(batonDir(root), { recursive: true })
   await writeFile(
-    path.join(root, '.handoff', 'active.md'),
+    activePath(root),
     '---\ncomposed-at: 2026-09-03T00:00:00Z\ntask: x\n---\n\n本文\n',
   )
   const out = compose(root)
@@ -194,7 +200,7 @@ test('an absent baton says so, and warns against reading silence as emptiness', 
   await mkdir(root, { recursive: true })
   await corpusRepo(root, ['alpha'])
   const out = compose(root)
-  assert.match(out, /.\.handoff\/active\.md. に baton は無い/)
+  assert.match(out, /この unit に baton は無い/)
   assert.match(out, /空の baton は空の project ではない/)
   await rm(dir, { recursive: true, force: true })
 })
@@ -202,9 +208,9 @@ test('an absent baton says so, and warns against reading silence as emptiness', 
 test('a baton is surfaced in full, with the reading procedure left to the agent', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   const root = path.join(dir, 'proj')
-  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await mkdir(batonDir(root), { recursive: true })
   await corpusRepo(root, ['alpha'])
-  const file = path.join(root, '.handoff', 'active.md')
+  const file = activePath(root)
   const baton = '---\ncomposed-at: 2026-08-31T11:00:00Z\ntask: t\n---\n\n## Settled\nA THING WE SETTLED\n'
   await writeFile(file, baton)
   const out = compose(root)

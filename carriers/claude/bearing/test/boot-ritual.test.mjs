@@ -11,9 +11,16 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { mkdtempSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { quotePathForShell } from '../lib/shell.mjs'
+import { activePath, batonDir } from '../lib/handoff.mjs'
+
+// ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
+// baton** —— を読み書きする。`activePath` 等は呼ばれた時点の env を見る ∴ import より後、
+// 最初の fixture より前にここで倒しておけば足りる。
+process.env.BEARING_HOME = mkdtempSync(path.join(tmpdir(), 'bearing-home-'))
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const HOOK = path.join(HERE, '..', 'bin', 'boot-ritual.mjs')
@@ -32,9 +39,9 @@ function run(input) {
 
 async function unitWithBaton(front = 'composed-at: 2026-08-31T13:07:56Z') {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
-  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await mkdir(batonDir(root), { recursive: true })
   await writeFile(
-    path.join(root, '.handoff', 'active.md'),
+    activePath(root),
     `---\n${front}\ntask: pick up the measurement\n---\n\n## ▶ Task\n\nkeep going\n`,
     'utf8',
   )
@@ -58,7 +65,7 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     const r = run({ session_id: freshSession(), cwd: root })
     assert.equal(r.status, 0)
     assert.match(r.stdout, /未処理の baton があり/)
-    assert.ok(r.stdout.includes(path.join(root, '.handoff', 'active.md')))
+    assert.ok(r.stdout.includes(activePath(root)))
     // ⚠ 手順を再掲せず、正本と帳簿 CLI を指す —— 木の中に儀式についての第 3 の記述が
     // 置かれることは、「正本は 1 つ」の規則が禁じている複製である。
     assert.match(r.stdout, /_guide\/handoff\.md/)
@@ -141,8 +148,8 @@ test('a baton that was already read says so, and is still handed over', async ()
 test('an empty baton file is an absent baton, not an outstanding one', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
   try {
-    await mkdir(path.join(root, '.handoff'), { recursive: true })
-    await writeFile(path.join(root, '.handoff', 'active.md'), '   \n', 'utf8')
+    await mkdir(batonDir(root), { recursive: true })
+    await writeFile(activePath(root), '   \n', 'utf8')
     assert.equal(run({ session_id: freshSession(), cwd: root }).stdout, '')
   } finally {
     await rm(root, { recursive: true, force: true })

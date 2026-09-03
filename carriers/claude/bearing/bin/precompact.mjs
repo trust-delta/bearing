@@ -49,6 +49,7 @@ import { readAimSlugs } from '../lib/corpus.mjs'
 import os from 'node:os'
 import path from 'node:path'
 import { resolveUnit } from '../lib/unit.mjs'
+import { batonDir } from '../lib/handoff.mjs'
 import { quotePathForShell } from '../lib/shell.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -88,12 +89,12 @@ function readStdin() {
 /**
  * そもそもこの規律はここに適用されるのか。
  *
- * corpus が在るか、誰かが既に作った `.handoff/` が在るか。⚠ **どちらも無ければ、この
+ * corpus が在るか、この unit の baton が既に在るか。⚠ **どちらも無ければ、この
  * project は体制を採ったことが無く、その儀式を課すことは「人間が決めていないことを
  * plugin が決める」ことになる。**
  */
 async function inScope(unit) {
-  if (existsSync(path.join(unit.root, '.handoff'))) return true
+  if (existsSync(batonDir(unit.root))) return true
   for (const repo of unit.repos) {
     if ((await readAimSlugs(repo.root, repo.aimsDir)).length > 0) return true
   }

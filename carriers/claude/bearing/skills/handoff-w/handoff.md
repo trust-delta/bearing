@@ -87,8 +87,22 @@ task: <今取り組んでいることの 1 文>
 
 ## 置き場
 
-baton は **machine-local**（越境しない。git に載せない）。cwd 相対で `.handoff/active.md`、退避先は `.handoff/archive/`。
+baton は **machine-local**（越境しない。git に載せない）。置き場は**人間の home の下**で、unit ごとに 1 つ:
 
-multi-repo の wrapper が cwd の場合、wrapper 直下に置かれる —— どの repo にも属さないので、commit されえないことが構造として保たれる。
+```
+~/.bearing/units/<unit root の絶対 path を平坦化したもの>/
+    active.md
+    archive/<UTC>.md
+
+例: /home/x/works/api  ->  ~/.bearing/units/-home-x-works-api/
+```
+
+⚠ **引くのは unit root の path であって repo 名ではない。** unit は repo とは限らず（multi-repo の wrapper が cwd ならそれが unit である）、⚠ **名前だけで引けば、同名 repo や複数 worktree が黙って同じ baton を共有する** —— **別の対話の baton を読むことは、baton が無いことより悪い。**
+
+⚠ **平坦化は Claude Code が `~/.claude/projects/` で採っているのと同じ規則である**（英数字以外はすべて `-`）。**理由は一意性ではなく馴染みである** —— 人間が自力で archive を見に行くとき、見慣れた形なら path から unit を読み取れる。⚠ **∴ 単射ではない**: `/w/a.b` と `/w/a-b` は同じ dir 名になる。hash を足せば塞げるが**読めなくなる** ∴ 人間は読めるほうを選んだ —— **衝突は「起きない」ではなく「起きたら述べる」で塞ぐ。**
+
+⚠ **2026-09-03 に repo の外へ出した**（人間が決定）。以前は cwd の傍らの `.handoff/` に置き、「どの repo にも属さないので commit されえない」と述べていた —— **だがそれが真だったのは wrapper が cwd のときだけである。** 単一 repo で使えば `.handoff/` は repo の中に生まれ、ignore されていなければ untracked で現れ、まとめて `git add` されれば**痕跡になる**。home の下へ出せば、**commit されえないことがどの使い方でも構造として保たれる。**
+
+⚠ **旧い置き場に残った baton は、機構がもう読まない。** 読む側は在ることを述べ、`handoff.mjs migrate` を名指すところで止まる —— **file の移動は人間の act である。**
 
 ⚠ **越境しないのは制約の受容ではなく目的の帰結である**（人間が 2026-08-31 に確定）。handoff が回避する摩擦は「新しいセッションで説明と調査をやり直すこと」であり、それが移動を鈍らせ、劣化した context のまま話し続けさせる。∴ 守っているのは **人間と 1 つのセッションの間にある対話の継続**であって、別マシンの別セッションはそもそも別の対話である。**この不変は実装形態に依らない** —— 誰が baton を運ぼうと同じゆえ、越境する手段が手に入っても baton は越境させない。上段の「commit されえない」は目的に構造が沿っているという確認であって、machine-local の理由ではない。

@@ -1,7 +1,7 @@
 {
   "name": "bearing",
   "description": "人間が pin した目的を、build 手順なしで、あらゆる Claude Code セッションへ運ぶ。SessionStart hook が frame・未処理の baton・この unit の repo ごとの corpus fence（drift-intra / drift-inter / working-delta / unpushed / checkpoint-stale）・open-todo 数・escalation 数を注入する。UserPromptSubmit hook が、最初の turn が動く前に一度だけ baton を読む手順を述べる。PostToolBatch hook が、セッションの足元で corpus が動いたときに事実を述べ直す。PreCompact hook が、沈黙の自動圧縮を一度だけ差し止め、代わりに baton を著せるようにする。skill は aim / handoff-r / handoff-w。 aim の規律は project ごとの opt-in である —— /bearing:with-aim が project-root の `CLAUDE.md` の末尾へ marker 付きの法を差し込み、hook はその marker を読む ∴ 採っていない repo では 1 byte も出さない（未読の baton だけは述べる）。marker は HTML コメント ∴ 消費者の context には乗らず、版と本文 sha を運ぶので「版が古い」と「人間が編集した」を別物として 述べられる。corpus の在り処は既定 `docs/aims/` で、--dir で project が宣言できる。`bin/statusline.mjs` は statusline を描く実行ファイルとして供給される —— plugin は statusLine key を宣言できない ∴ 装着は人間の act として残るが、`/bearing:statusline-setup` が `~/.claude/` へ薄い shim を置いて settings.json の 1 行を書く。shim は走るたびに install record を読んで今の版へ橋渡しする ∴ 1 行に version が入らず bump で腐らず、載っていないときはそう描く。build 手順も server も daemon も無い。 cache の複製は、bearing の checkout の中に居ると分かったとき working tree 側へ委譲する —— 開発中は working tree、他 project では cache が自動で選ばれる。",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "author": {
     "name": "TrustDelta"
   },
