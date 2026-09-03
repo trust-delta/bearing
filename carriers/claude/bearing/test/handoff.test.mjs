@@ -219,14 +219,24 @@ test('unparseable hook input never interferes with the session', () => {
 
 // ── 置き場 —— repo の外、unit ごと ───────────────────────────────────────────
 
-test('unit slug は読める名と path の hash を両方持つ —— 名だけでは一意にならない', () => {
-  const a = unitSlug('/home/x/works/api')
-  const b = unitSlug('/home/x/other/api')
-  assert.match(a, /^api-[0-9a-f]{8}$/)
-  assert.match(b, /^api-[0-9a-f]{8}$/)
-  // ⚠ **同名 repo が黙って同じ baton を共有する形は、baton が無いことより悪い** ——
-  // 別の対話の baton を読むことになる。
-  assert.notEqual(a, b)
+test('unit slug は unit root の path を平坦化したものである —— Claude Code と同じ形', () => {
+  // ⚠ **理由は一意性ではなく馴染みである**（人間が 2026-09-03 に決定）—— 人間が自力で
+  // archive を見に行くとき、`~/.claude/projects/` で見慣れた形なら path から unit を読める。
+  assert.equal(unitSlug('/home/x/works/api'), '-home-x-works-api')
+  // ⚠ 別の場所の同名 repo は、別の unit になる。
+  assert.notEqual(unitSlug('/home/x/works/api'), unitSlug('/home/x/other/api'))
+})
+
+test('英数字以外はすべて潰す —— Claude Code の `~/.claude/projects/` と同じ規則である', () => {
+  assert.equal(unitSlug('/home/x/my repo'), '-home-x-my-repo')
+  // ⚠ 実測: `/home/trustdelta/.claude` は `-home-trustdelta--claude` になっている。
+  assert.equal(unitSlug('/home/x/.claude'), '-home-x--claude')
+})
+
+test('⚠ 平坦化は単射でない —— 衝突は「起きない」ではなく「述べる」で塞ぐ', () => {
+  // ⚠ **この test は欠陥を固定している。** 人間は一意性より読めることを選んだ ∴ ここで
+  // 等しくなること自体は仕様である。**衝突したときに黙らないこと**が別に要る。
+  assert.equal(unitSlug('/w/a.b'), unitSlug('/w/a-b'))
 })
 
 test('unit slug は同じ path に対して安定である —— 揺れれば baton は毎回行方不明になる', () => {

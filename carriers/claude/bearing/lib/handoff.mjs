@@ -49,7 +49,6 @@
 // 読むことになり、これは baton が無いことより悪い。∴ **読める名 ＋ path の hash**にする。
 
 import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises'
-import { createHash } from 'node:crypto'
 import path from 'node:path'
 import os from 'node:os'
 
@@ -68,21 +67,23 @@ export const bearingHome = (env = process.env, home = os.homedir()) =>
   env.BEARING_HOME || path.join(home, '.bearing')
 
 /**
- * unit を指す dir 名。**読める名 ＋ path の短い hash。**
+ * unit を指す dir 名。**unit root の絶対 path を平坦化したもの** ——
+ * `/home/x/works/api` → `-home-x-works-api`。
  *
- * ⚠ **hash だけでは人間が読めず、名だけでは一意にならない。** 前者は `~/.bearing/` を開いた
- * 人間が自分の baton を見つけられないことを意味し、後者は**別の対話の baton を黙って読む**
- * ことを意味する ∴ どちらか一方は選べない。
+ * ⚠ **Claude Code が `~/.claude/projects/` で採っているのと同じ規則である**（人間が
+ * 2026-09-03 に決定）。理由は一意性ではなく**馴染み**である: 人間が自力で archive を見に
+ * 行くとき、既に見慣れた形なら path から unit を読み取れる。⚠ **英数字以外はすべて `-` に
+ * なる** —— 実測で `/home/trustdelta/.claude` が `-home-trustdelta--claude` になっており、
+ * `/` だけでなく `.` も潰れている。win32 の `\` と `:` も同じ規則に含まれる。
  *
- * ⚠ **symlink 越しの別 path は別の unit になる。** 解決してから hash を取れば同じにできるが、
- * **解決は file system への問い合わせであり、失敗しうる** —— baton の在り処が「今 disk が
- * 何を答えたか」に依るほうが、別々になることより高くつく。
+ * ⚠ **∴ 平坦化は単射でない。** `/w/名前` と `/w/名称` は同じ dir 名になる —— **別の対話の
+ * baton を読む**ことになり、これは baton が無いことより悪い。**hash を足せば塞げるが、
+ * 塞ぐ代わりに読めなくなる** ∴ 人間は読めるほうを選んだ。**衝突の検出は別に立てる**
+ * （[[session-handoff]] の `[todo]`）—— 名前を安全にするのではなく、**衝突したときに
+ * 述べる**ほうへ寄せる。
  */
 export function unitSlug(unitRoot) {
-  const abs = path.resolve(unitRoot)
-  const hash = createHash('sha256').update(abs).digest('hex').slice(0, 8)
-  const name = path.basename(abs).replace(/[^A-Za-z0-9_.-]/g, '-') || 'unit'
-  return `${name}-${hash}`
+  return path.resolve(unitRoot).replace(/[^A-Za-z0-9-]/g, '-') || 'unit'
 }
 
 export const batonDir = (unitRoot, env = process.env) =>
