@@ -42,7 +42,7 @@ state: open
 - [done] **どちらの複製が描いているかを label に出した**（working tree なら `bearing repo`、cache なら黙る）。⚠ **黙るのは cache のほうである** —— 他 project から見れば cache こそ正常であり、この行の法に従えば述べるべきは「今見ている事実は、他 project が受け取る版のものではない」のほう。⚠ **委譲の印ではなく自分の位置で判定する**: あの印は「委譲されて来た」ことしか語らず、**最初から working tree を直に指されている**この面では何も立たない —— 2026-09-02 の食い違いはまさにその経路で起きた
 - [done] **装着を `/bearing:statusline-setup` にした。** `~/.claude/bearing-statusline.mjs` へ shim を置き、user settings に 1 行を書く。⚠ **書き先を user settings に限る** —— 絶対 path は home を含む ∴ tracked な project settings へ書けば、他の人間の面が黙って壊れる形を repo に commit することになる。⚠ **既存の statusline は上書きせず、述べて止まる**（面は 1 つしかなく、上書きは相手の面を消すことである）。⚠ **描画時に解決できるかを setup が確かめて述べる** —— 装着が失敗しても画面からは 2 行が消えるだけで理由は出ない ∴ **述べられる最後の場所が setup である**
 - [done] **shim が「載っていない」を描くようにした。** record の不在・本体の不在・読めない record を畳まず、理由つきで 1 行にする。⚠ **本体を import できない場面で描く行ゆえ、幅の規律は literal として守るほかない** —— test が見張っている
-- [todo] **置かれた shim が古いことを面に出す。** ⚠ **shim は複製である ∴ 版の門が 1 つ増えた** —— `bin/bearing-statusline.mjs` を変えても、`~/.claude/` の複製は setup を打ち直すまで古いままで、しかも**古い複製は正常に動いて見える**。⚠ 同じ構造の plugin（z80020100）は SessionStart hook で版を突き合わせている ∴ 形の前例は在る
+- [todo] **置かれた shim が古いことを面に出す。** ⚠ **shim は複製である ∴ 版の門が 1 つ増えた** —— `bin/bearing-statusline.mjs` を変えても、`~/.claude/` の複製は setup を打ち直すまで古いままで、しかも**古い複製は正常に動いて見える**。⚠ 同じ構造の plugin（z80020100）は SessionStart hook で版を突き合わせている ∴ 形の前例は在る。⚠ **2026-09-03、同じ構造の複製が 2 つ目できることが決まった** —— [[bearing]] が `CLAUDE.md` へ置く法の block である ∴ **版の門は 1 つではなく 2 つになる。** ⚠ **あちらの marker は版と本文 sha の両方を持つ** —— shim には無い「人間が手を入れたか」の判別が要るからで、**この面の複製にも同じ問いは在る**（shim を手で書き換えた人間を、我々はまだ検出できない）
 
 # DAG
 
