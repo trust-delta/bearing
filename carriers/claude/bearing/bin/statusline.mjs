@@ -31,6 +31,7 @@ import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherDrift } from '../lib/drift.mjs'
 import { readBaton } from '../lib/baton.mjs'
+import { readAdopted } from '../lib/claude-md.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
 // （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
@@ -253,6 +254,21 @@ export function provenance(selfDir, projectDir) {
 export function renderBearing(state, facts, from = null, aimsDirs = []) {
   const seg = [paint(C.label, from === 'repo' ? 'bearing repo' : 'bearing')]
 
+  // ⚠ **aim を採っていない project では、この行そのものを出さない。** 「不在を黙って
+  // 消さない」が守るのは*採ろうとして採れなかった*ものであって、**採用していない project に
+  // corpus が無いのは不在ではなく、元から無い** —— そこへ `corpus 無し` を描くのは、
+  // ⚠ **元から無いものを、消えたものと同じ声で述べること**である。
+  //
+  // ⚠ **判定は hook と同じ述語でなければならない**（`bin/aim-facts.mjs` の `aimEngaged`）——
+  // corpus が在るか、`CLAUDE.md` に法の block が在るか。2 つの面が違う条件で黙れば、
+  // **同じ project が面ごとに別の姿を持つ。**
+  //
+  // ⚠ **ただし baton は別である。** handoff は `docs/aims/` に何も依存せず、どの project でも
+  // 使える ∴ **ここで baton を黙らせることは、aim の沈黙ではなく handoff の欠落になる。**
+  if (state === 'not-engaged') {
+    return facts?.batonUnread ? [...seg, paint(C.yellow, 'baton 未読')] : []
+  }
+
   // ⚠ `docs/aims/` を持たない repo は**構造的に正常**である ∴ 警告色を与えない。
   // この判定が先に来ること —— corpus が無い repo も facts を持たないため、
   // 順序を違えれば「正常な不在」がすべて警告に化ける。
@@ -267,7 +283,10 @@ export function renderBearing(state, facts, from = null, aimsDirs = []) {
     const custom = aimsDirs.filter((d) => d && d !== DEFAULT_AIMS_DIR)
     const safe = custom.filter((d) => widthUnsafeChars(d).length === 0)
     const where = safe.length > 0 ? ` (${safe.join(',')})` : custom.length > 0 ? ' (別の在り処)' : ''
-    return [...seg, paint(C.faint, `corpus 無し${where}`)]
+    // ⚠ **採用済みの project では baton も述べる。** corpus が空であることは、baton が
+    // 未読であることを何も打ち消さない —— 2 つは別の事実である。
+    const line = [...seg, paint(C.faint, `corpus 無し${where}`)]
+    return facts?.batonUnread ? [...line, paint(C.yellow, 'baton 未読')] : line
   }
   // ⚠ 一方 **repo が見つからない**は clean ではない。`resolveUnit` は cwd から*下*を
   // 探す ∴ repo の subdirectory で起動すれば、corpus は在るのに見つからない。
@@ -369,7 +388,18 @@ async function gatherFacts(input) {
   // ⚠ `''` は detached HEAD、`null` は git を読めなかったこと。**別の事実である。**
   const branch = branchRaw === null ? null : branchRaw.trim()
 
-  if (unit.repos.length === 0) return { state: 'unavailable', facts: null, branch }
+  // ⚠ **baton は aim ではない ∴ engaged の判定より先に読む。** aim を採っていない project
+  // でも「baton 未読」だけは述べねばならない —— handoff はどこでも使えるからである。
+  const baton = await readBaton(unit.root).catch(() => null)
+  const batonUnread = Boolean(baton && !baton.readAt)
+  const notEngaged = { state: 'not-engaged', facts: { batonUnread }, branch }
+
+  // ⚠ **repo が 1 つも無い場所は、採用の宣言が在るときだけ「未取得」と言ってよい。**
+  // user スコープで載せた plugin は非 git の directory でも走る ∴ ここで黙らなければ、
+  // 関係のない場所で毎ターン警告色が出る。
+  if (unit.repos.length === 0) {
+    return (await readAdopted(unit.root)) ? { state: 'unavailable', facts: null, branch } : notEngaged
+  }
 
   const perRepo = (await Promise.all(unit.repos.map(async (repo) => {
     const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
@@ -388,18 +418,16 @@ async function gatherFacts(input) {
 
   // ⚠ **「無い」だけでは足りない。** 在り処が宣言で動く以上、*本当に無い*のか
   // *別の場所を見ている*のかを、面が区別できなければならない。
+  // ⚠ **`corpus 無し` は「採用済みだが空」のためだけの言葉である。** 採っていない project で
+  // それを描けば、警告でも事実でもない行が全 project に居座る。
   if (perRepo.length === 0) {
+    if (!(await readAdopted(unit.root))) return notEngaged
     const aimsDirs = [...new Set(unit.repos.map((r) => r.aimsDir ?? DEFAULT_AIMS_DIR))]
-    return { state: 'no-corpus', facts: null, branch, aimsDirs }
+    return { state: 'no-corpus', facts: { batonUnread }, branch, aimsDirs }
   }
 
   // ⚠ baton は unit に 1 つである（repo ではなく unit root に置かれる）∴ 畳まない。
-  const baton = await readBaton(unit.root).catch(() => null)
-  return {
-    state: 'ok',
-    branch,
-    facts: { ...foldRepos(perRepo), batonUnread: Boolean(baton && !baton.readAt) },
-  }
+  return { state: 'ok', branch, facts: { ...foldRepos(perRepo), batonUnread } }
 }
 
 async function readStdin() {

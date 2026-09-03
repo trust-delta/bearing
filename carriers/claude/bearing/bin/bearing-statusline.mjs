@@ -124,7 +124,10 @@ export function absentLine(reason) {
 export async function run({ env = process.env, write = (s) => process.stdout.write(s) } = {}) {
   const record = await readInstallRecord({
     configDir: resolveConfigDir(env),
-    projectDir: env.CLAUDE_PROJECT_DIR,
+    // ⚠ **statusline には `CLAUDE_PROJECT_DIR` が渡る**（実測）が、**Bash tool から直に
+    // 叩いたときは渡らない** ∴ 欠けたら cwd へ落とす —— さもなくば project スコープの
+    // record が「無い」と読まれ、載っているのに載っていないと描く。
+    projectDir: env.CLAUDE_PROJECT_DIR ?? process.cwd(),
   })
   if (!record.installPath) {
     write(absentLine(record.reason) + '\n')
