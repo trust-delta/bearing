@@ -121,8 +121,12 @@ frame_ref="$(source_ref frame.md)"
 
 echo "carrier を生成中 ($mode) → $out_root"
 
+# ⚠ **description に baton の置き場を書かない。** 置き場は動きうるが（2026-09-03 に 2 度
+# 動いた）**machine-local であることは目的の帰結ゆえ動かない** —— path を書けば次の移動で
+# 黙って嘘になり、実際に旧い `.handoff/active.md` を名乗ったまま腐った。**述べてよいのは
+# 不変のほうだけである。**
 write_carrier "handoff-r" \
-  "直前のセッションが残した baton（.handoff/active.md）を読み込み、未プッシュの aim を surface して作業を再開する。新しいセッションの最初に実行する。" \
+  "直前のセッションが残した baton（machine-local な会話の引き継ぎ）を読み込み、未プッシュの aim を surface して作業を再開する。新しいセッションの最初に実行する。" \
   "handoff.md" \
   "手順の正本は **\`$handoff_ref\`** の「## 読む」節。**まずそれを読み、そこに書かれた通りに実行すること。**
 
@@ -137,7 +141,7 @@ $(cli_ref bearing-handoff.mjs) read
 この file は carrier であって手順ではない。ここに手順を複製しない —— 正本が動けば追従する。"
 
 write_carrier "handoff-w" \
-  "このセッションの baton（会話引き継ぎ）を authoring して .handoff/active.md に書き出す。context を使い切る前、あるいは区切りの良いところで実行する。" \
+  "このセッションの baton（会話引き継ぎ）を authoring して machine-local な置き場へ書き出す。context を使い切る前、あるいは区切りの良いところで実行する。" \
   "handoff.md" \
   "手順の正本は **\`$handoff_ref\`** の「## 書く」節。**まずそれを読み、そこに書かれた通りに実行すること。**
 
@@ -206,7 +210,7 @@ for d in "$out_root"/*/; do
 
   # 同梱された正本については、本物の markdown link だけを見る。backtick 付きの名は見ない。
   # ⚠ 中立正本は我々が制御していない散文であり、**開くべき file ではない path** を言及する
-  # —— `handoff.md` は baton である `.handoff/active.md` を名指す —— ∴ 広い pattern は
+  # —— `handoff.md` は baton の file 名（`active.md`）や退避先の形を名指す —— ∴ 広い pattern は
   # 完全に正しい text の上で失敗することになる。
   for f in "$d"*.md; do
     [ -f "$f" ] || continue
