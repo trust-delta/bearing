@@ -23,6 +23,14 @@ state: open
 
 **復旧は `claude plugin install bearing@trust-delta --scope project` の 1 手**で、`installed_plugins.json` へ `projectPath` つきの record が入る（tracked な `.claude/settings.json` は 1 文字も動かない）。⚠ **record が入ると `/plugin update` は喋り出す**（`bearing is already at the latest version (0.7.0)`）∴ **あの沈黙は道具の破れではなく、record の不在の症状だった** —— 前段の「我々には直せない層に在る」は取り下げる。
 
+⚠ **2026-09-03、別マシンの 14 commit を取り込んだ機体で計り直したところ、「減ってはいない」が覆った。** record が `0.4.0` に留まった状態で `/plugin marketplace update trust-delta` を 1 回打つと、**cache の書き込み・marketplace の刻印・record の bump が 250ms 以内に順に起きた** —— cache の中身 `10:11:54.044` → `known_marketplaces.json` `.176` → `installed_plugins.json` `.228`（`0.8.0`・当時の HEAD の sha）。⚠ **cache は marketplace の刻印より 132ms *先に* 書かれている** ∴ 届けたのは marketplace update そのものであり、続けて打った `/plugin update bearing` は disk を 1 byte も動かさなかった。**∴ 上段の「減ってはいない」は取り下げる —— 減っている。ただし record が在るときに限る。**
+
+⚠ **食い違いの理由は、この節が既に名指していたものだった** —— 09-02 の観測は **record が無い状態**で採られており、bump する対象が存在しない ∴ あのとき marketplace update には届けようが無かった。**同じ record の不在が、沈黙と「減っていない」の両方を生んでいた** ∴ 上段の取り下げは 1 つ足りていなかった。⚠ **一度取り下げた観測の上に、別の結論が乗ったまま生き残る** —— これは木の側で起きる drift の形であり、機構は捉えない（[[purpose-drift]] が見るのは file の移動であって、主張が依拠する観測ではない）。
+
+**⚠ ただし `/plugin update <name>` については、2 つの観測が食い違ったままである。** 上段が記録したのは `bearing is already at the latest version (0.7.0)` という発話だが、本日この機体で 2 度打った slash command は**何も出さず、plugin 設定の UI を開いた**（引数無しの `/plugin` と同じ挙動）。⚠ **CLI の `claude plugin update` と slash command の `/plugin update` が同じものだと確かめていない** ∴ **どちらの観測も取り下げない** —— 別のものを見ていた可能性のほうが高く、それを潰す観測をまだ持たない。
+
+⚠ **宣言と実体の食い違いは、`autoUpdate` にもう 1 つ在る。** 本 repo の `extraKnownMarketplaces.trust-delta` は `"autoUpdate": true` を宣言しており、`README.md` の配布表は「宣言すれば起動時に自動」と述べている。⚠ **だが `known_marketplaces.json` の `lastUpdated` は `2026-09-01T06:13:59Z` から 2 日間動かず**、人間が手で打つまで clone は `f6692ae` に留まっていた —— **その間に 14 commit が push されている**。⚠ **同じ機体・同じ file の中で `claude-plugins-official` は本日 01:01:05 に自動更新されている** ∴ 機構が走っていないのではなく、**この entry だけが引かれなかった**。⚠ **理由は特定できていない** —— project スコープの entry が対象外なのか、失敗して黙ったのかを分ける観測をまだ持たない ∴ **`README.md` のあの行は現在 未検証である。** 本 node はそれを述べるに留め、doc は書き換えない —— **何が正しいかを知らないまま instruction を書き換えれば、読み手を別の誤りへ送る。**
+
 ⚠ **∴ 上段の二律は、より鋭い形へ言い直される。** 「tracked ゆえ載っている事実自体が git に残る」は**半分しか真でない** —— git に残るのは**載せる意志**であり、**載っている事実は untracked な `installed_plugins.json` にしか無い**。∴ **project スコープを選んでも untracked の罠は消えず、効く範囲が狭まるだけである。** ⚠ **意志と事実は黙って食い違いうる** —— 実際に丸 1 日食い違った。
 
 ⚠ **供給された機構は、この repo の中では 2 つ在る。** hook の宣言は `${CLAUDE_PLUGIN_ROOT}` に釘付けで cache を走らせ、statusline は project の path に釘付けで working tree を走らせる ∴ **同じ機構の 2 つの複製が同時に走り、片方だけが新しい**。⚠ **2026-09-02 に実際に食い違った** —— statusline は照合記録を読んで flag を落としたのに、hook は cache 0.5.0 を走らせて同じ flag を出し続けた。**この repo は自分自身の古い版を食べていた** ∴ ドッグフーディングは bump の間隔だけ遅れる。
