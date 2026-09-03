@@ -14,8 +14,12 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { loadDesired, renderBlock } from '../lib/claude-md.mjs'
+
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const COMPOSER = path.join(HERE, '..', 'bin', 'aim-facts.mjs')
+const PLUGIN_ROOT = path.join(HERE, '..')
+const { version: VERSION, law: LAW } = await loadDesired(PLUGIN_ROOT)
 
 /** `cwd` で composer を走らせ、stdout を返す。終了コードで throw することは決して無い。 */
 function compose(cwd, env = {}) {
@@ -28,6 +32,16 @@ function compose(cwd, env = {}) {
 }
 
 const git = (root, args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' })
+
+/**
+ * その project で aim を採用したことにする（`CLAUDE.md` に法の block を置く）。
+ *
+ * ⚠ **印は corpus とは別物である。** corpus はまだ 1 枚も無くても、人間は採用を宣言できる
+ * —— この 2 つを分けることが、印を入れた理由そのものである。
+ */
+async function withAim(root, version = VERSION) {
+  await writeFile(path.join(root, 'CLAUDE.md'), `# doc\n\n${renderBlock(version, LAW)}\n`)
+}
 
 async function corpusRepo(root, slugs) {
   execFileSync('git', ['init', '-q', root])
@@ -44,30 +58,94 @@ async function corpusRepo(root, slugs) {
   git(root, ['commit', '-q', '-m', 'corpus'])
 }
 
-test('the frame is always injected — a session is never left un-framed', async () => {
+test('aim を採った project では、frame は必ず注入される', async () => {
   // ⚠ frame を与えられていないエージェントには、`aim:` 行を書き換えることを止めるものが
   // 何も無い。それは**所有の分割の侵害**であって、速度の劣化ではない。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
-  const outEmpty = compose(root)
-  assert.match(outEmpty, /# aim frame/)
-  assert.match(outEmpty, /frontmatter は人間のもの/)
+  await withAim(root)
+  const out = compose(root)
+  assert.match(out, /# aim frame/)
+  assert.match(out, /frontmatter は人間のもの/)
+  await rm(root, { recursive: true, force: true })
+})
+
+test('corpus が在れば、印が無くても frame は注入される', async () => {
+  // ⚠ **印は後から入った機構である。** 既に node を書いている project を、印が無いという
+  // 理由で黙らせれば、**この規律で動いてきた repo が、更新した日に法を失う。**
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  await corpusRepo(root, ['a'])
+  assert.match(compose(root), /# aim frame/)
+  await rm(root, { recursive: true, force: true })
+})
+
+test('aim を採っていない project では 1 byte も出さない', async () => {
+  // ⚠ **黙るとは、出力が短いことではない。** 毎セッション「この project は aim を採って
+  // いない」と述べる機構こそ、user スコープが外された理由そのものである。
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  execFileSync('git', ['init', '-q', root])
+  assert.equal(compose(root), '')
+  await rm(root, { recursive: true, force: true })
+})
+
+test('採っていない project でも、未読の baton だけは述べる', async () => {
+  // ⚠ **handoff は aim ではない。** baton は `docs/aims/` に何も依存せず、どの project でも
+  // 使える ∴ ここで黙るのは aim の沈黙ではなく handoff の欠落である。
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  execFileSync('git', ['init', '-q', root])
+  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await writeFile(
+    path.join(root, '.handoff', 'active.md'),
+    '---\ncomposed-at: 2026-09-03T00:00:00Z\ntask: x\n---\n\n本文\n',
+  )
+  const out = compose(root)
+  assert.match(out, /前回どこで止まったか/)
+  assert.doesNotMatch(out, /# aim frame/, "aim については 1 行も述べない")
+  assert.doesNotMatch(out, /open-todo/)
+  await rm(root, { recursive: true, force: true })
+})
+
+test('置かれた法の block が古ければ、その版を名指す', async () => {
+  // ⚠ **block は複製である ∴ 古い複製は正常に動いて見える。** 面に出さなければ誰も
+  // 気づかず、セッションは古い法を今の法だと思って読む。
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  await withAim(root, '0.0.1')
+  const out = compose(root)
+  assert.match(out, /block が古い/)
+  assert.match(out, /v0\.0\.1/)
+  await rm(root, { recursive: true, force: true })
+})
+
+test('人間が block を編集していれば、古さとは別物として述べる', async () => {
+  // ⚠ **畳めば、その編集は「古い」として上書きされる。**
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  await withAim(root)
+  const f = path.join(root, 'CLAUDE.md')
+  const { readFile } = await import('node:fs/promises')
+  await writeFile(f, (await readFile(f, 'utf8')).replace('迷ったら', 'X 迷ったら'))
+  const out = compose(root)
+  assert.match(out, /人間が手を入れている/)
+  assert.doesNotMatch(out, /block が古い/)
   await rm(root, { recursive: true, force: true })
 })
 
 test('no git at all is reported as a NEW project, not as an error', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  await withAim(root)
   const out = compose(root)
   assert.match(out, /git repository が無い/)
   await rm(root, { recursive: true, force: true })
 })
 
-test('git without a corpus is reported as an EXISTING project to attach to', async () => {
+test('採用済みだが corpus が空の project は、そう述べられる', async () => {
+  // ⚠ **これは「採っていない」とは別の状態である。** 前者では黙り、ここでは最初の node へ
+  // 導く —— 求められる act が違う ∴ 同じ顔で出してはならない。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   execFileSync('git', ['init', '-q', root])
+  await withAim(root)
   const out = compose(root)
-  assert.match(out, /git は在るが .docs\/aims\/. が無い/)
-  // ⚠ そして設置は、セッションが頼まれずに行うことでは**明示的に**ない。
-  assert.match(out, /頼まれずにあなたが行うもの/)
+  assert.match(out, /aim を採用済みだが/)
+  // ⚠ そして `aim:` を書くのは、セッションではなく人間である。
+  assert.match(out, /`aim:` を書くのは人間である/)
   await rm(root, { recursive: true, force: true })
 })
 
@@ -156,6 +234,7 @@ test('a corpus deviating from its own notation is surfaced, not silently dropped
 test('an unreadable corpus still exits 0 and still frames the session', async () => {
   // 規則 1: ここにあるどれも、情報を与えるべき当のセッションを妨げてはならない。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  await withAim(root)
   await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
   // record が在るはずの場所に directory がある: `readFile` はそこで失敗する。
   await mkdir(path.join(root, 'docs', 'aims', 'weird.md'), { recursive: true })

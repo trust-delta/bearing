@@ -168,6 +168,50 @@ project settings win over user settings.
 loaded, and **a mechanism that is not loaded cannot report its own absence** — but the shim
 lives outside the plugin, so it runs anyway and can say it.
 
+### aim is opt-in per project — so the rest can load everywhere
+
+bearing is not one unit. The two handoff skills and the status line's first
+row depend on nothing under `docs/aims/` and are useful in **any** project,
+while the aim discipline presumes a corpus and **gets in the way in a repo
+that has not adopted it**. So the plugin itself can be installed at user
+scope for every project, and only the aim discipline is opted into per
+project:
+
+```
+/bearing:with-aim
+```
+
+That inserts a marker-delimited block of the law at the **end** of the
+project-root `CLAUDE.md` (`--check` reports state only, `--remove` takes it
+out).
+
+Why `CLAUDE.md` rather than a hook: a SessionStart hook's output is
+summarized away with the conversation on compaction ("Context that hooks
+added earlier — Summarized with the rest of the conversation"), whereas the
+project-root `CLAUDE.md` is re-injected from disk. `CLAUDE.md` also loads
+into subagents (only the built-in Explore and Plan agents skip it), while the
+subagent lifecycle the docs name is `SubagentStart` / `SubagentStop`. Neither
+is "stronger" — the docs call both context rather than enforced
+configuration, and neither lands in the system prompt. The difference is
+position and persistence, and that is what decides the layer: the static law
+goes in `CLAUDE.md`, the facts that only exist at runtime stay in the hook.
+
+The markers are HTML comments. The docs state that block-level HTML comments
+in `CLAUDE.md` are stripped before the content is injected, so carrying an
+identifier, a version and a body hash costs no context at all — and a human
+still sees them when opening the file.
+
+Because the marker carries the body hash, two different things can be told
+apart: the block is **stale**, or a **human edited it**. In the second case
+nothing is rewritten — what a rewrite would erase is that edit. The same
+holds when the markers are broken (one side only, unreadable, or two pairs).
+
+The marker is also the opt-in declaration. The hook reads it and emits **not
+one byte** in a repo that has not opted in — except for an unread baton,
+which is handoff, not aim, and is useful anywhere. A repo that already has a
+corpus keeps speaking without a marker: the marker arrived later, and a repo
+already writing nodes is not silenced for lacking one.
+
 ## Status
 
 Early, and honest about it. The discipline grew inside a private project that ran
