@@ -269,6 +269,14 @@ export function renderBearing(state, facts, from = null) {
   counter('aim', facts.aimCount, null)
   counter('todo', facts.openTodo, C.blue)
   counter('観測待ち', facts.awaiting, C.blue)
+  // ⚠ **番が人間へ渡っている 2 つを隣に置く。** `観測待ち` は「見れば済む」、`escalation` は
+  // 「決めなければ誰も進めない」であり、**どちらも人間が動かない限り動かない** ∴ 離せば、
+  // 人間の側の残りが 1 箇所で読めなくなる。
+  //
+  // ⚠ **色は `todo` / `観測待ち` と同じ blue である。** escalation が他より重いかどうかは
+  // **注意予算の割り当て**であり、面がそれを述べれば、この repo が機械とエージェントに禁じて
+  // いる ranking を**色で**行うことになる。⚠ 重さの表明は人間の act ∴ 求められたときに変える。
+  counter('escalation', facts.escalation, C.blue)
 
   // ⚠ baton は「未読」だけを鳴らす。読み終えた baton も、baton が無いこと（fresh start）
   // も、構造的に正常な状態であって知らせるべき事実ではない。
@@ -307,6 +315,7 @@ export function foldRepos(perRepo) {
     aimCount: sum((r) => r.slugs.length),
     openTodo: sum((r) => r.backlog?.openTodoNodes ?? null),
     awaiting: sum((r) => r.backlog?.awaitingNodes?.length ?? null),
+    escalation: sum((r) => r.backlog?.escalationNodes?.length ?? null),
     working: sum((r) => (r.working === null ? null : r.working.length)),
     unpushed: sum((r) => (r.unpushed === null ? null : r.unpushed.length)),
     drift: sum((r) => (r.drift === null ? null : r.drift.intra.length + r.drift.inter.length)),

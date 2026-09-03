@@ -163,6 +163,22 @@ write_carrier "aim" \
 
 常時効く不変（frontmatter は人間のもの・body はあなたのもの 等）は \`$frame_ref\` にあり、通常はセッション開始時に自動で注入されている（plugin の SessionStart hook、または vendor ファイルの import）。**ここには複製しない** —— 同じ規則が context に二度入ることになり、しかも複製した側が先に古くなる。"
 
+# ── LICENSE ─────────────────────────────────────────────────────────────────
+# ⚠ **root の LICENSE は消費者に届かない。** marketplace entry の source は
+# `./carriers/claude/bearing` であり、cache へ複製されるのはその subtree だけである
+# （実測 2026-09-03: cache 直下は README 2 枚と bin / commands / hooks / lib / skills / test
+# のみ）。∴ MIT が要求する「複製に著作権表示を含める」を満たすには carrier 自身が 1 枚
+# 持つほかない —— **これは重複ではなく、配布物の一部である。**
+#
+# ⚠ **だからこそ生成物にする。** 手で置いた複製は、root の LICENSE が動いた日に黙って
+# 古くなる。ここで写せば、CI の `carriers are in sync` が食い違いを赤くする。
+if [ "$mode" = "plugin" ]; then
+  [ -f "$repo_root/LICENSE" ] || { echo "error: root に LICENSE が無い —— 著作権表示を欠いた plugin を出荷することになる。拒否する。" >&2; exit 1; }
+  plugin_root="$(dirname "$out_root")"
+  cp "$repo_root/LICENSE" "$plugin_root/LICENSE"
+  echo "  $plugin_root/LICENSE (bundled)"
+fi
+
 # ── carrier が名指す参照はすべて解決せねばならない ───────────────────────────
 # ⚠ **読み手が開けない file を指す carrier は、ここで最も重大な「黙った失敗」である**:
 # エージェントは framed されたと信じ、実際にはされていない。生成の時点が、それについて声を

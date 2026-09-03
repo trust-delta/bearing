@@ -188,4 +188,11 @@ out to build a place for coding agents to run. Two of its three pillars died whe
 the standard harnesses absorbed the job of being that place. What survived was
 never the place — it was the method. This repository is where the method lives now.
 
-*Licensing is not yet decided; until it is, all rights are reserved.*
+## License
+
+MIT. The single source of truth is [`LICENSE`](LICENSE); the copy inside the plugin is a
+generated artifact (`gen/claude-plugin.sh`) and CI fails on divergence — the marketplace
+entry sources `./carriers/claude/bearing`, so the root LICENSE never reaches a consumer’s
+cache (measured). That copy is not duplication; it is part of what ships.
+
+Copyright (c) 2026 TrustDelta

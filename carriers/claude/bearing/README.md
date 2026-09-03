@@ -25,7 +25,7 @@ Node が要る。build 手順も daemon も server も無い —— hook は fil
 
 | hook | いつ | 何を |
 | --- | --- | --- |
-| `SessionStart` | セッションが開いたとき | frame・未処理の baton・repo ごとの corpus fence・open-todo 数を注入する |
+| `SessionStart` | セッションが開いたとき | frame・未処理の baton・repo ごとの corpus fence・open-todo 数・escalation 数を注入する |
 | `UserPromptSubmit` | 最初の turn が動く前に一度だけ | baton を読む手順を述べる —— ⚠ `SessionStart` hook の出力は context であり、**context は turn ではない** ∴ 他の何も儀式の実行を保証しない |
 | `PostToolBatch` | セッションの足元で corpus が動いたとき | **実際に変わった事実だけ**を述べ直す |
 | `PreCompact` | 自動圧縮が起ころうとしているとき | **一度だけ**差し止める ∴ context が選ばれないまま捨てられる代わりに baton を著せる |
@@ -52,3 +52,10 @@ fence は git が言うことを報告し、そこで止まる。
 この plugin が出す文と、同梱される正本は**日本語**である。⚠ **ただし fence の tag と field 名
 （`bearing-drift-intra v1`、`slug | anchor_commit | …`）は機械が parse する契約であり、値も
 slug も英語である。** 判別線は「人が読む文か、機械が parse する token か」に引かれている。
+
+## ライセンス
+
+MIT —— 傍らの [`LICENSE`](LICENSE) を見よ。⚠ **この file は生成物である**
+（`gen/claude-plugin.sh` が repository の root から写す）。
+
+Copyright (c) 2026 TrustDelta

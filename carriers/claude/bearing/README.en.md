@@ -31,7 +31,7 @@ Requires Node. There is no build step, no daemon and no server — the hooks are
 
 | hook | when | what |
 | --- | --- | --- |
-| `SessionStart` | a session opens | injects the frame, the outstanding baton, per-repo corpus fences, the open-todo count |
+| `SessionStart` | a session opens | injects the frame, the outstanding baton, per-repo corpus fences, the open-todo and escalation counts |
 | `UserPromptSubmit` | once, before the first turn acts | states the baton's reading procedure — a `SessionStart` hook's output is context, and context is not a turn, so nothing else guarantees the ritual runs |
 | `PostToolBatch` | the corpus moved under the session | re-states only the facts that actually changed |
 | `PreCompact` | auto-compaction is about to happen | stops it **once**, so a baton can be authored instead of the context being dropped unchosen |
@@ -55,3 +55,10 @@ unavailable one are different facts.
 
 **It does not touch `aim:`, `parent:` or `state:`.** Those are the human's. The
 agent maintains the body, proposes changes to any purpose, and escalates.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE) next to this file. That file is a generated artifact:
+`gen/claude-plugin.sh` copies it from the repository root.
+
+Copyright (c) 2026 TrustDelta

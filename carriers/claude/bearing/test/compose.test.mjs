@@ -85,6 +85,27 @@ test('a corpus yields the fences and the open-todo count', async () => {
   assert.match(out, /\*\*open-todo: 2\*\*/)
   // 数は事実であり、composer はそれに順位を付けるのではなく、事実としてそう述べねばならない。
   assert.match(out, /拾うものを選ぶのは人間の act である/)
+  // ⚠ **3 つ目の数も同じ視野に在る。** 正本は「観測を可能にする作業は PROCESS、判断そのものは
+  // ESCALATION、そして観測と宣言は人間」と分けている ∴ 2 つだけを出す frame は分割の
+  // 3 分の 1 —— しかも**最も動かない側** —— を黙って落とす。
+  assert.match(out, /\*\*escalation: 0\*\*/)
+  await rm(dir, { recursive: true, force: true })
+})
+
+test('a node blocked on the human is counted, and it is not a todo', async () => {
+  // ⚠ **`open-todo` が 0 のまま人間で止まっている node は実在しうる。** frame が
+  // 「両方 0 ＝ 誰にも番が渡っていない」と読ませていた穴が、まさにこれである。
+  const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  const root = path.join(dir, 'proj')
+  await mkdir(root, { recursive: true })
+  await corpusRepo(root, ['alpha'])
+  await writeFile(
+    path.join(root, 'docs', 'aims', 'blocked.md'),
+    '---\naim: x\nstate: open\n---\n\n# ESCALATION\n\n- license を決める\n\n# PROCESS\n\n- [done] a\n',
+  )
+  const out = compose(root)
+  assert.match(out, /\*\*escalation: 1\*\*/)
+  assert.match(out, /\*\*open-todo: 1\*\*/)
   await rm(dir, { recursive: true, force: true })
 })
 

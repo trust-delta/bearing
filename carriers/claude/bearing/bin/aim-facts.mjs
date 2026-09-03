@@ -117,11 +117,15 @@ async function main() {
 
   const withCorpus = repos.filter((r) => r.corpus)
   const openTodo = withCorpus.reduce((n, r) => n + r.backlog.openTodoNodes, 0)
+  const escalation = withCorpus.reduce((n, r) => n + (r.backlog.escalationNodes?.length ?? 0), 0)
   const anomalies = withCorpus.flatMap((r) =>
     r.backlog.anomalies.map((a) => ({ repo: r.label, ...a })),
   )
   const unknown = withCorpus.flatMap((r) =>
     r.backlog.unknownNodes.map((slug) => `${r.label}/${slug}`),
+  )
+  const emptyEscalation = withCorpus.flatMap((r) =>
+    (r.backlog.escalationEmptyNodes ?? []).map((slug) => `${r.label}/${slug}`),
   )
   // ⚠ unit を横断して 1 枚に畳む。repo ごとに割ると、**番が渡っている node の総数**という
   // 唯一意味のある読み方が失われる —— 観測するのは人間であって、repo ではない。
@@ -218,6 +222,32 @@ async function main() {
         '⚠ **上の node はエージェントが尽くしている ∴ 残っているのは人間の観測と',
         '`state:` の宣言だけである。** これは「終わった aim」の一覧ではない —— **満足したか',
         'どうかを述べられるのは人間だけであり、この一覧はそれを一切先取りしない。**',
+        '',
+      )
+    }
+    // ⚠ **同じ視野に置く 3 つ目。** 正本は「観測を可能にする作業は PROCESS、判断そのものは
+    // ESCALATION、そして観測と宣言は人間」と分けている ∴ **上の 2 つだけを出す面は、その
+    // 分割の 3 分の 1 を黙って落とす** —— そして落ちるのは「人間が判断しなければ誰も進めない」
+    // という、最も動かない側である。
+    say(
+      `**escalation: ${escalation}** —— \`# ESCALATION\` に中身を持つ aim node の数`,
+      '（`state: dead` は除く）。1 node につき 1 回数える。**「Go だけでは進めない ＝ 人間の',
+      '判断が要る」点だけがそこに書かれる** ∴ ⚠ **この数は「エージェントが自力で進めない」',
+      'ものを数えており、`open-todo` とは別の側にある。**',
+      '',
+      '**この数も surface せよ。triage も ranking も、どれから片付けるべきかの提案もするな。**',
+      '⚠ **どの数がより重いかを述べることは、注意予算の割り当てであって観測ではない。**',
+      '',
+    )
+    if (emptyEscalation.length > 0) {
+      // ⚠ 見出しだけ在って中身が無い節。**上の数には入っていない** —— 読みに行っても何も
+      // 書かれていないものを「人間待ち」として数えれば、数は権威のまま別のものを数える。
+      // だが黙って落とすのも同じ嘘であり、`# PROCESS` の `unknown` と同じく名指す。
+      say(
+        `⚠ **\`# ESCALATION\` 見出しを持つが中身が空の node が ${emptyEscalation.length} 件**: ` +
+          emptyEscalation.join(', '),
+        '**上の数には入っていない。** 節を書き始めて止めたのか、既決を IS へ畳んだ後の残骸か',
+        'は、ここからは分からない —— どちらであるかを決めるのは、その node を読む者である。',
         '',
       )
     }

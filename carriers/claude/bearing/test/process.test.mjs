@@ -22,6 +22,7 @@ import path from 'node:path'
 import {
   splitProcess,
   parseProcessMarks,
+  parseEscalation,
   gatherBacklog,
   renderAwaitingFence,
 } from '../lib/process.mjs'
@@ -265,4 +266,98 @@ test('records render one per line, in the fixed field order', () => {
   ])
   assert.match(out, /\na \| 3 \| open\n/)
   assert.match(out, /\nb \| 1 \| open\n/)
+})
+
+// ── 番が人間へ渡る、もう 1 つの形: `# ESCALATION` ────────────────────────────
+//
+// ⚠ **`[todo]` と `# ESCALATION` は同じ 1 つの分割の両側である** —— 正本の「todo の完了条件」
+// は、エージェントが自力で閉じられないと分かったものを **ESCALATION へ出せ**と指示している。
+// ∴ 片側だけを数える面は、**閉じられない側だけを黙って落とす。**
+
+async function corpusBodies(nodes) {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-escalation-'))
+  await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
+  for (const [slug, state, text] of nodes) {
+    await writeFile(
+      path.join(root, 'docs', 'aims', slug + '.md'),
+      `---\naim: x\nstate: ${state}\n---\n\n${text}\n`,
+    )
+  }
+  return root
+}
+
+test('an ESCALATION section with content is a node blocked on the human', () => {
+  const r = parseEscalation(body('# IS', 'x', '# ESCALATION', '', '- license を決める', '', '# PROCESS'))
+  assert.equal(r.blocked, true)
+  assert.equal(r.empty, false)
+})
+
+test('a node with no ESCALATION section is blocking on nobody', () => {
+  const r = parseEscalation(body('# IS', 'x', '# PROCESS', '- [todo] a'))
+  assert.deepEqual(r, { blocked: false, empty: false })
+})
+
+test('an empty ESCALATION heading is `empty`, not `blocked` — and not silence either', () => {
+  // ⚠ 読みに行っても何も書かれていないものを「人間待ち」と数えれば、数は権威のまま別の
+  // ものを数える。⚠ **だが黙って落とすのは `unknown` を 0 に倒すのと同じ嘘である。**
+  const r = parseEscalation(body('# ESCALATION', '', '', '# PROCESS', '- [todo] a'))
+  assert.equal(r.blocked, false)
+  assert.equal(r.empty, true)
+})
+
+test('regression: an ESCALATION heading quoted inside a fence is not a claim', () => {
+  // ⚠ **これが scanner を 1 つに保つ理由である。** 2 枚目の scanner を書けば、fence の中の
+  // 見出しを引用と読む法は片方にだけ効き、もう片方はこの corpus 自身の doc が例示している
+  // 形を実在として数える。
+  const r = parseEscalation(
+    body('# IS', '', '```markdown', '# ESCALATION', '- 例示であって主張ではない', '```', ''),
+  )
+  assert.deepEqual(r, { blocked: false, empty: false })
+})
+
+test('escalation counts NODES, and is independent of open-todo', async () => {
+  // ⚠ 1 つの node が判断待ちを 3 つ抱えていても、人間が向き合う node としては 1 つである。
+  // ⚠ **そして同じ node が両側を持ちうる** —— 手段は進むが、ある一点で人間を待っている。
+  const root = await corpusBodies([
+    ['both', 'open', '# ESCALATION\n\n- a\n- b\n- c\n\n# PROCESS\n\n- [todo] 進められる手段'],
+    ['todo-only', 'open', '# PROCESS\n\n- [todo] a'],
+  ])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.escalationNodes, ['both'])
+  assert.equal(r.openTodoNodes, 2)
+  await rm(root, { recursive: true, force: true })
+})
+
+test('`state: dead` is excluded from escalation — and it is the only exclusion', async () => {
+  // ⚠ **todo と同じ除外規則である。** 撤回された目的に待つべき判断は無い。だが `state: done`
+  // の node に残った escalation は**述べるべき食い違い**であって、数える層が畳んでよいもの
+  // ではない —— 既決を IS へ畳むのはエージェントの act、宣言は人間の act である。
+  const root = await corpusBodies([
+    ['live', 'open', '# ESCALATION\n\n- a'],
+    ['abandoned', 'dead', '# ESCALATION\n\n- a'],
+    ['declared-done', 'done', '# ESCALATION\n\n- a'],
+  ])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.escalationNodes.sort(), ['declared-done', 'live'])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('an empty ESCALATION heading is named, not counted', async () => {
+  const root = await corpusBodies([['hollow', 'open', '# ESCALATION\n\n# PROCESS\n\n- [done] a']])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.escalationNodes, [])
+  assert.deepEqual(r.escalationEmptyNodes, ['hollow'])
+  // ⚠ 空の節は、その node が観測待ちであることを打ち消さない —— 別の事実である。
+  assert.deepEqual(r.awaitingNodes, [{ slug: 'hollow', doneMarks: 1, state: 'open' }])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('a corpus with no escalation anywhere yields empty lists, not undefined', async () => {
+  const root = await corpus([['a', 'open', ['- [todo] one']]])
+  const r = await gatherBacklog(root)
+  // ⚠ **`undefined` は 0 ではない。** 呼び手が `?? 0` で畳む先が無いと、面は数の代わりに
+  // 何も描かず、読み手はそこに事実が無いことを知りようがない。
+  assert.deepEqual(r.escalationNodes, [])
+  assert.deepEqual(r.escalationEmptyNodes, [])
+  await rm(root, { recursive: true, force: true })
 })
