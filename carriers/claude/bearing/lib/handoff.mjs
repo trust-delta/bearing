@@ -48,7 +48,8 @@
 // 引けば、同名 repo や複数 worktree が**黙って同じ baton を共有する** —— 別の対話の baton を
 // 読むことになり、これは baton が無いことより悪い。∴ **読める名 ＋ path の hash**にする。
 
-import { mkdir, readFile, readdir, rename, stat, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { constants } from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 
@@ -93,9 +94,17 @@ export const bearingHome = (env = process.env, home = os.homedir()) =>
  * 塞ぐ代わりに読めなくなる** ∴ 人間は読めるほうを選んだ。**衝突の検出は別に立てる**
  * （[[session-handoff]] の `[todo]`）—— 名前を安全にするのではなく、**衝突したときに
  * 述べる**ほうへ寄せる。
+ *
+ * ⚠ **`resolve` を引数に取る。** 平坦化の結果は platform で形が変わる —— win32 では
+ * drive letter が付き（`C:\works\api` → `C--works-api`）、POSIX では付かない。
+ * ⚠ **`process.platform` に暗黙に依存すると、片方の platform からしか片方の分岐を検査
+ * できない** —— 2026-09-04、実際にそうなっていた: POSIX 形を前提にした test が win32 では
+ * 常に赤く、CI（ubuntu）は緑のままだった。`lib/shell.mjs` が `platform` を引数に取るのと
+ * 同じ理由である。⚠ **win32 の形は Claude Code 自身の `~/.claude/projects/` と一致する**
+ * （実測: この repo は `D--trust-project-bearing`）∴ 馴染みという理由はそこでも保たれる。
  */
-export function unitSlug(unitRoot) {
-  return path.resolve(unitRoot).replace(/[^A-Za-z0-9-]/g, '-') || 'unit'
+export function unitSlug(unitRoot, resolve = path.resolve) {
+  return resolve(unitRoot).replace(/[^A-Za-z0-9-]/g, '-') || 'unit'
 }
 
 /**
@@ -265,4 +274,33 @@ export async function strandedBatons(unitRoot, env = process.env) {
     if (active || archived.length > 0) found.push({ dir, active, archived: archived.length })
   }
   return found
+}
+
+/**
+ * file を 1 つ移す。⚠ **device を跨げる。**
+ *
+ * ⚠ **`rename` は device を跨げない。** 2026-09-04、repo が `D:`・home が `C:` の Windows 機で
+ * `migrate` が `EXDEV` で落ちた —— **旧い置き場は unit root の傍らに在り、新しい置き場は home の
+ * 下に在る** ∴ **跨ぐことは移行の事故ではなく通常形の 1 つである**（別の drive に repo を置くのは
+ * ありふれている）。⚠ **落ちたのが 1 本目ゆえ何も移らずに止まったが、それは幸運であって設計では
+ * ない** —— 2 本目で落ちれば、baton は半分だけ移った状態になっていた。
+ *
+ * `rename` を先に試すのは、同一 device では atomic だからである。跨いだときだけ copy へ落ちる
+ * —— ⚠ **`COPYFILE_EXCL` を付ける** ∴ 落ちた先でも「既に在るものを潰さない」が保たれる
+ * （呼ぶ側の事前検査に頼らない: 検査と copy の間は開いている）。
+ *
+ * ⚠ **injection は test のためだけに在る。** EXDEV は同一 device の test 環境では起こせず、
+ * **起こせない条件は、書いた端から腐る。**
+ */
+export async function moveFile(from, to, deps = {}) {
+  const mv = deps.rename ?? rename
+  const cp = deps.copyFile ?? copyFile
+  const rm = deps.unlink ?? unlink
+  try {
+    await mv(from, to)
+  } catch (err) {
+    if (err?.code !== 'EXDEV') throw err
+    await cp(from, to, constants.COPYFILE_EXCL)
+    await rm(from)
+  }
 }
