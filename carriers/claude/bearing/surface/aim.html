@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>aim —— 目的の木</title>
+
+<script type="module" data-contract="aim-frontmatter">
+// aim の frontmatter を、人間の 3 欄（aim / parent / state）だけ動かして往復させる契約。
+//
+// ⚠ **この block が契約の正本であり、複製は 1 つも無い。** test（`test/aim-format.test.mjs`）は
+// この file から**この block を取り出して**走らせる ∴ **契約が 2 箇所に住むことは構造的に
+// 起こりえない。** 前身は Rust engine の write surface の "faithful TS mirror" を持ち、同じ契約が
+// 2 言語に住んでいた —— ここはそれを引き継がない。
+//
+// ⚠ **契約を別 file へ出す道は測って閉じている**（実測 2026-09-04、Google Chrome 140.0.7339.207、
+// `file://`、既定フラグ、headless=new と headed の両方）: `import('./x.mjs')`・
+// `<script type="module" src>`・`fetch('./x.mjs')` の 3 つとも TypeError で塞がれた。
+// ∴ 別 file にするには生成が要り、生成すれば「正本と生成物が一致しているか」を見る門が新たに
+// 要る —— **腐りうる対が 1 つ増える。** HTML の中に置けば、その門ごと不要になる。
+// ⚠ **測ったのは既定フラグである** —— `--allow-file-access-from-files` を渡せば変わりうるが、
+// 面は人間がそのまま開くものであり、フラグを要求する道は採れない。
+//
+// ⚠ **YAML library を使わない**（`bearing` が「build 手順も無い」を理由に既に拒んでいる）。
+// 扱うのは**単一行 scalar だけ**で、それが成り立つのは corpus の律による —— `aim:` /
+// `parent:` / `state:` はどれも 1 行である。⚠ **読めない形は畳まずに投げる** —— 「読めなかった」
+// と「空だった」を同じ顔で返さない。
+
+/** 契約が読めない形に出会ったときに投げるもの。⚠ **握り潰さず、面まで届かせる。** */
+class AimFormatError extends Error {
+  constructor(message, line) {
+    super(line == null ? message : `${line} 行目: ${message}`)
+    this.name = 'AimFormatError'
+    this.line = line ?? null
+  }
+}
+
+// ⚠ **`split('\n')` を使わない。** あれは改行の形（LF / CRLF）と末尾改行の有無を落とす ——
+// `bearing` の `with-aim` が踏んだ「末尾改行の伸長」はまさにその形であり、**置く側だけを見る
+// 試験では捕まらなかった。** ∴ この契約は最初から最後まで index で切り貼りする。
+
+/** 各行を {start, end, eolEnd, text} で押さえる。end は改行の直前、eolEnd は改行の直後。 */
+function scanLines(text) {
+  const lines = []
+  let i = 0
+  for (;;) {
+    const nl = text.indexOf('\n', i)
+    if (nl === -1) {
+      lines.push({ start: i, end: text.length, eolEnd: text.length, text: text.slice(i) })
+      return lines
+    }
+    const end = nl > i && text[nl - 1] === '\r' ? nl - 1 : nl
+    lines.push({ start: i, end, eolEnd: nl + 1, text: text.slice(i, end) })
+    i = nl + 1
+  }
+}
+
+/** `key: value` の 1 行。⚠ **corpus に在る形だけを見る** —— ネストも list も対象外である。 */
+const KEY_LINE = /^([A-Za-z_][A-Za-z0-9_-]*):([ \t]*)(.*)$/
+
+/**
+ * frontmatter の位置。⚠ **無ければ null を返す**（「空だった」ではない —— 呼ぶ側が
+ * その 2 つを分けられるようにする）。
+ */
+function locate(text) {
+  const lines = scanLines(text)
+  if (lines[0]?.text !== '---') return null
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i].text === '---') return { lines, open: 0, close: i }
+  }
+  return null
+}
+
+/** frontmatter 内で key を持つ行の index。無ければ -1。 */
+function findKey(loc, key) {
+  for (let i = loc.open + 1; i < loc.close; i++) {
+    const m = KEY_LINE.exec(loc.lines[i].text)
+    if (m && m[1] === key) return i
+  }
+  return -1
+}
+
+/** この file が使っている改行。⚠ **`---` の行から採る** —— 開き行は必ず改行を持つ。 */
+function eolOf(text, loc) {
+  return text.slice(loc.lines[loc.open].end, loc.lines[loc.open].eolEnd) || '\n'
+}
+
+/**
+ * 単一行 scalar を読む。
+ * ⚠ **quote を外すのは、書く側が付けうるからである** —— 付けない値をわざわざ quote しない
+ * 代わりに、付いていれば必ず外せねば往復が閉じない。
+ * ⚠ **扱わないと決めたもの: 行末コメント（`value # note`）。** corpus に 1 つも無く、
+ * 引用符の中の `#` と区別するには quote の解析が要る ∴ **値の一部として読む。**
+ */
+function readScalar(raw) {
+  const s = raw.replace(/[ \t]+$/, '')
+  if (s.length >= 2 && s.startsWith("'") && s.endsWith("'")) {
+    return s.slice(1, -1).split("''").join("'")
+  }
+  if (s.length >= 2 && s.startsWith('"') && s.endsWith('"')) {
+    try {
+      return JSON.parse(s)
+    } catch {
+      throw new AimFormatError('二重引用符の値が読めない')
+    }
+  }
+  return s
+}
+
+/**
+ * 単一行 scalar を書く。⚠ **必要なときだけ quote する** —— 無条件に quote すれば、
+ * 今 corpus に在る裸の値がすべて書き換わり、**「3 欄しか動かさない」が字面で嘘になる。**
+ * ⚠ **quote する条件は「踏んだ／踏みうる地雷の形」であって、YAML の完全な規則ではない**
+ * （`carrier-frontmatter.test.mjs` が `[` で始まる値について同じ立場を採っている）。
+ */
+function emitScalar(value) {
+  if (typeof value !== 'string') throw new AimFormatError('値は文字列でなければならない')
+  if (/[\r\n]/.test(value)) throw new AimFormatError('単一行 scalar に改行は入れられない')
+  const needsQuote =
+    value === '' ||
+    /^[-?:,[\]{}#&*!|>'"%@`]/.test(value) || // YAML の指示子で始まる
+    /:[ \t]/.test(value) || //                  `: ` は map の区切りに見える
+    /[ \t]#/.test(value) || //                  ` #` はコメントに見える
+    /^[ \t]|[ \t]$/.test(value) //              前後の空白は読み戻すと消える
+  if (!needsQuote) return value
+  return `'${value.split("'").join("''")}'`
+}
+
+/**
+ * frontmatter を読む。
+ * @returns {null | Record<string, string>} frontmatter が無ければ null
+ * @throws {AimFormatError} corpus の律から外れた行が在るとき —— ⚠ **畳んで黙らない。**
+ */
+function read(text) {
+  const loc = locate(text)
+  if (!loc) return null
+  const out = {}
+  for (let i = loc.open + 1; i < loc.close; i++) {
+    const line = loc.lines[i]
+    if (line.text.trim() === '' || line.text.trimStart().startsWith('#')) continue
+    const m = KEY_LINE.exec(line.text)
+    if (!m) throw new AimFormatError(`\`key: value\` の形をしていない: ${line.text}`, i + 1)
+    if (m[1] in out) throw new AimFormatError(`key \`${m[1]}\` が 2 度現れる`, i + 1)
+    out[m[1]] = readScalar(m[3])
+  }
+  return out
+}
+
+/**
+ * 人間の 3 欄だけを書き換える。**他の frontmatter 行と body は 1 byte も動かない。**
+ * @param {string} text 原文
+ * @param {{aim?: string, parent?: string|null, state?: string}} patch
+ *   ⚠ **key が無い = 触らない / `null` = 行ごと落とす（re-root）/ 文字列 = その値にする。**
+ *   `undefined` を渡すことは「触らない」と同義である。
+ * @returns {string} 書き換えた全文
+ */
+function edit(text, patch) {
+  const loc = locate(text)
+  if (!loc) throw new AimFormatError('frontmatter が無い')
+  if (patch.aim === null) throw new AimFormatError('`aim:` は落とせない —— 目的の無い node は無い')
+  if (patch.state === null) throw new AimFormatError('`state:` は落とせない')
+
+  const eol = eolOf(text, loc)
+  const spans = []
+  for (const key of ['aim', 'parent', 'state']) {
+    if (!(key in patch)) continue
+    const value = patch[key]
+    if (value === undefined) continue
+    const at = findKey(loc, key)
+
+    if (value === null) {
+      if (at === -1) continue // 既に無い ∴ 何もしない（re-root の冪等性）
+      spans.push({ start: loc.lines[at].start, end: loc.lines[at].eolEnd, text: '' })
+      continue
+    }
+
+    const emitted = emitScalar(value)
+    if (at !== -1) {
+      // ⚠ **置き換えるのは値の span だけである** —— key の綴りも、`:` の後ろの空白も残す。
+      const m = KEY_LINE.exec(loc.lines[at].text)
+      const valueStart = loc.lines[at].start + m[1].length + 1 + m[2].length
+      spans.push({ start: valueStart, end: loc.lines[at].end, text: emitted })
+    } else {
+      // ⚠ **新設は `aim:` の直後へ** —— 人間が読む順序（何のため → どこに居る → どの状態か）
+      // を保つ。`aim:` すら無い壊れた node では、frontmatter の先頭へ置く。
+      const anchor = findKey(loc, 'aim')
+      const after = anchor === -1 ? loc.lines[loc.open] : loc.lines[anchor]
+      spans.push({ start: after.eolEnd, end: after.eolEnd, text: `${key}: ${emitted}${eol}` })
+    }
+  }
+
+  // ⚠ **後ろから当てる** —— 前から当てると、以後の span の index がすべてずれる。
+  spans.sort((a, b) => b.start - a.start)
+  let out = text
+  for (const s of spans) out = out.slice(0, s.start) + s.text + out.slice(s.end)
+  return out
+}
+
+globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError }
+</script>
+
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fbfbfa; --fg: #1c1b19; --muted: #6b6862;
+    --line: #e2e0dc; --ok: #1f6f43; --ng: #a8331f; --card: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #171614; --fg: #e9e7e2; --muted: #9a958c;
+            --line: #33312d; --ok: #6fcf97; --ng: #ef8a76; --card: #201f1c; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 15px/1.7 system-ui, sans-serif; }
+  main { max-width: 62rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
+  h1 { font-size: 1.35rem; margin: 0 0 .25rem; letter-spacing: .02em; }
+  .lede { color: var(--muted); margin: 0 0 1.75rem; font-size: .9rem; }
+  button { font: inherit; padding: .55rem 1.1rem; border: 1px solid var(--line);
+           border-radius: .4rem; background: var(--card); color: var(--fg); cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  #note { margin: 1rem 0 0; font-size: .875rem; color: var(--muted); }
+  .warn { color: var(--ng); }
+  table { width: 100%; border-collapse: collapse; margin-top: 1.75rem; font-size: .875rem; }
+  th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line);
+           vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+  td.slug { font-family: ui-monospace, monospace; white-space: nowrap; }
+  td.aim { color: var(--muted); }
+  .ok { color: var(--ok); } .ng { color: var(--ng); font-weight: 600; }
+  .scroll { overflow-x: auto; }
+  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line);
+           color: var(--muted); font-size: .8rem; }
+</style>
+
+<main>
+  <h1>aim —— frontmatter 往復の検分</h1>
+  <p class="lede">
+    corpus の <code>docs/aims/</code> を選ぶと、各 node の frontmatter を読み、<strong>同じ値で書き戻したときに
+    1 byte も動かないか</strong>を確かめます。<strong>この面はまだ書き込みません</strong> —— 読んで照合するだけです。
+  </p>
+
+  <button id="pick" type="button">docs/aims を選ぶ</button>
+  <p id="note"></p>
+
+  <div class="scroll"><table id="table" hidden>
+    <thead><tr><th>slug</th><th>state</th><th>parent</th><th>往復</th><th>aim</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+
+  <footer>
+    ⚠ このページは File System Access API を使います —— 対応は Chromium 系に限られます
+    （<strong>我々の実測ではなく、API の対応状況から引き継いだ前提</strong>）。
+  </footer>
+</main>
+
+<script type="module">
+  const note = document.getElementById('note')
+  const table = document.getElementById('table')
+  const tbody = table.querySelector('tbody')
+
+  // ⚠ **不在を黙って示さない。** 面が出ないことと、corpus が空であることを同じ見た目にしない
+  // （`ambient-display` が「消えたものと元から無いものが同じ見た目になる」と警告した形）。
+  if (typeof window.showDirectoryPicker !== 'function') {
+    document.getElementById('pick').disabled = true
+    note.className = 'warn'
+    note.textContent =
+      'この browser は File System Access API を持っていません ∴ この面は動きません。' +
+      'Chromium 系（Chrome / Edge）で開いてください —— 空なのではなく、開けないのです。'
+  }
+
+  document.getElementById('pick').addEventListener('click', async () => {
+    let dir
+    try {
+      dir = await window.showDirectoryPicker({ mode: 'read' })
+    } catch (e) {
+      if (e?.name !== 'AbortError') note.textContent = `ディレクトリを開けませんでした: ${e.message}`
+      return
+    }
+
+    const rows = []
+    for await (const entry of dir.values()) {
+      if (entry.kind !== 'file' || !entry.name.endsWith('.md')) continue
+      const text = await (await entry.getFile()).text()
+      rows.push({ slug: entry.name.replace(/\.md$/, ''), ...inspect(text) })
+    }
+    rows.sort((a, b) => a.slug.localeCompare(b.slug))
+    render(rows)
+  })
+
+  /**
+   * 1 枚を読み、同じ値で書き戻して原文と突き合わせる。
+   * ⚠ **verdict は 3 値である** —— 「読めなかった」を「往復が壊れている」に畳まない。
+   * 前者は *この file が aim node ではない*ことを言い、後者は *契約が現実に追いついていない*
+   * ことを言う。**直す先が別なので、同じ顔で出してはならない。**
+   */
+  function inspect(text) {
+    const { read, edit } = globalThis.AimFrontmatter
+    let fm
+    try {
+      fm = read(text)
+    } catch (e) {
+      return { verdict: 'unreadable', detail: `読めない —— ${e.message}` }
+    }
+    if (fm === null) return { verdict: 'unreadable', detail: 'frontmatter が無い' }
+
+    // ⚠ **往復の恒等**: 読んだ値をそのまま書き戻したら、原文と 1 byte も違ってはならない。
+    // 置く側だけを見る試験はこれを捕まえない —— そこが `with-aim` の伸長を見逃した穴である。
+    const patch = {}
+    for (const k of ['aim', 'parent', 'state']) if (k in fm) patch[k] = fm[k]
+    let back
+    try {
+      back = edit(text, patch)
+    } catch (e) {
+      return { ...fm, readable: true, verdict: 'ng', detail: `書き戻せない —— ${e.message}` }
+    }
+    if (back === text) return { ...fm, readable: true, verdict: 'ok', detail: '一致' }
+    return { ...fm, readable: true, verdict: 'ng', detail: `${firstDiff(back, text)} 文字目から食い違う` }
+  }
+
+  function firstDiff(a, b) {
+    const n = Math.min(a.length, b.length)
+    for (let i = 0; i < n; i++) if (a[i] !== b[i]) return i + 1
+    return n + 1
+  }
+
+  function render(rows) {
+    tbody.replaceChildren()
+    for (const r of rows) {
+      const tr = document.createElement('tr')
+      // ⚠ **読めなかった node に `（root）` と書かない** —— 「親が無い」と「読めなかった」は
+      // 別の事実であり、後者を前者の顔で出せば、壊れた file が健全な root に見える。
+      const cells = [
+        ['slug', r.slug],
+        ['', r.readable ? (r.state ?? '—') : '—'],
+        ['', r.readable ? (r.parent ?? '（root）') : '—'],
+        [r.verdict === 'ok' ? 'ok' : 'ng', r.detail],
+        ['aim', r.readable ? (r.aim ?? '') : ''],
+      ]
+      for (const [cls, value] of cells) {
+        const td = document.createElement('td')
+        if (cls) td.className = cls
+        td.textContent = value
+        tr.append(td)
+      }
+      tbody.append(tr)
+    }
+    table.hidden = rows.length === 0
+    // ⚠ **2 つの数を分けて述べる。** 往復の破れは契約の欠陥、読めない file は corpus の側の
+    // 事実である —— 足し合わせると、どちらを直せばよいか読み手に分からなくなる。
+    const broken = rows.filter((r) => r.verdict === 'ng').length
+    const unreadable = rows.filter((r) => r.verdict === 'unreadable').length
+    note.className = broken || unreadable ? 'warn' : ''
+    const parts = []
+    parts.push(broken === 0 ? 'すべて往復が一致' : `往復が一致しないもの ${broken} 枚`)
+    if (unreadable > 0) parts.push(`aim として読めないもの ${unreadable} 枚`)
+    note.textContent = rows.length === 0
+      ? '選んだディレクトリに `.md` が 1 枚もありません —— 場所が違うかもしれません。'
+      : `${rows.length} 枚を読み、${parts.join('、')}。`
+  }
+</script>
