@@ -18,9 +18,11 @@
 // ⚠ **stdin を読む前に委譲する**（他の bin と同じ理由。ここは stdin を読まないが、規律を
 // 破る例外を 1 つ作れば、次に読む者はどれが例外かを毎回確かめねばならない）。
 
-import { readFile, writeFile, copyFile, chmod, rename, mkdir, access } from 'node:fs/promises'
-import { constants } from 'node:fs'
+import { readFile, writeFile, copyFile, chmod, rename, mkdir } from 'node:fs/promises'
+import { spawnSync } from 'node:child_process'
 import path from 'node:path'
+
+import { quotePathForShell } from '../lib/shell.mjs'
 
 import { delegateToCheckout } from '../lib/delegate.mjs'
 await delegateToCheckout(import.meta.url)
@@ -31,6 +33,24 @@ const SHIM = 'bearing-statusline.mjs'
 
 /** 装着後に settings が持つべき値。⚠ **形の正本はここ 1 箇所である。** */
 export const statusLineFor = (command) => ({ type: 'command', command })
+
+/**
+ * settings に書く 1 行。⚠ **これは path ではなく、シェルを通る文字列である。**
+ *
+ * ⚠ **2026-09-04、ここが生の path を書いていて面が消えた**（win32、実測）—— harness は
+ * statusLine をシェル経由で走らせ、**POSIX シェルは `\` を escape として食う** ∴
+ * `C:\Users\...` は `C:Usersumu_s...` に化けて `command not found`（exit 127）で終わり、
+ * ⚠ **statusline は失敗を描かない ∴ 画面からは黙って消える。**
+ *
+ * ⚠ **同じ罠は既に 1 度塞がれており、その正本が `lib/shell.mjs` である** —— 塞いだのに
+ * **新しい emission 地点がそこを通らなかった。** 法を 1 箇所に置くだけでは足りず、
+ * **通っていることを門が見ていなければならない**（`test/statusline-setup.test.mjs`）。
+ *
+ * ⚠ **`node` を前置する。** hook 4 枚も同じ形であり、**shebang と exec bit の扱いが
+ * シェルごとに違う**ことに依らない —— emission の時点で、どのシェルが受けるかは分からない。
+ */
+export const commandFor = (shimPath, platform = process.platform) =>
+  `node ${quotePathForShell(shimPath, platform)}`
 
 /**
  * 既存の `statusLine` をどう扱うか。
@@ -82,7 +102,7 @@ async function main(argv) {
   const configDir = resolveConfigDir()
   const settingsFile = path.join(configDir, 'settings.json')
   const shimPath = path.join(configDir, SHIM)
-  const command = shimPath
+  const command = commandFor(shimPath)
   const settings = await readJson(settingsFile)
 
   if (uninstall) {
@@ -119,10 +139,26 @@ async function main(argv) {
 
   // ⚠ **描画時に解決できるかを、ここで確かめて述べる。** 装着が失敗しても画面からは 2 行が
   // 消えるだけで理由は一言も出ない ∴ **述べられる最後の場所がここである。**
-  try {
-    await access(shimPath, constants.X_OK)
-  } catch {
-    log(`⚠ ${shimPath} が実行できない。statusline は黙って出なくなる。`)
+  //
+  // ⚠ **書いた 1 行を、書いた形のまま、シェルを通して走らせる。** 2026-09-04 まで、ここは
+  // `access(shimPath, X_OK)` を見ていた —— **win32 では常に成功する述語**であり、しかも
+  // **検査していたのは書いた文字列ではなく file の属性だった** ∴ 面が消えている間ずっと
+  // 緑を返していた。**門は、実際に通る経路の上に張らねばならない。**
+  //
+  // ⚠ **この probe が使うのは platform 既定のシェルであって、harness が使うシェルとは限らない**
+  // （win32 では cmd.exe が立つが、harness は Git Bash を使う —— 2026-09-04 の事故はまさに
+  // 後者で起きた）∴ **証明できるのは「どこでも走らない」ことであって「harness で走る」ことでは
+  // ない。** 形そのものをシェル非依存にするのは `lib/shell.mjs` の側の仕事であり、ここは
+  // **その形が壊れていたら気づく**ための門である。
+  const probe = spawnSync(command, {
+    shell: true, encoding: 'utf8', timeout: 15_000,
+    input: JSON.stringify({ cwd: process.cwd(), workspace: { current_dir: process.cwd() } }),
+  })
+  if (probe.status !== 0 || !probe.stdout) {
+    log(`⚠ **書いたその 1 行が、シェルで走らない** —— 画面には理由が一言も出ない:`)
+    log(`  ${command}`)
+    const why = (probe.stderr ?? '').trim().split('\n')[0] || probe.error?.message || '(出力なし)'
+    log(`  exit=${probe.status} ${why}`)
   }
   // ⚠ **`CLAUDE_PROJECT_DIR` は Bash tool の env に無い**（実測 2026-09-03）∴ setup は常に
   // それを欠いた状態で走る。⚠ **欠いたまま record を引くと「この project に効く record が

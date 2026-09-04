@@ -9,10 +9,40 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
-  classifyExisting, withStatusLine, withoutStatusLine, statusLineFor,
+  classifyExisting, withStatusLine, withoutStatusLine, statusLineFor, commandFor,
 } from '../bin/bearing-statusline-setup.mjs'
 
-const CMD = '/home/x/.claude/bearing-statusline.mjs'
+const CMD = commandFor('/home/x/.claude/bearing-statusline.mjs', 'linux')
+
+// ── 書く 1 行は path ではない —— シェルを通る文字列である ────────────────────
+//
+// ⚠ **2026-09-04、ここが生の path で書かれていて面が消えた**（win32）。harness は
+// statusLine をシェル経由で走らせ、**POSIX シェルは `\` を escape として食う** ∴
+// `C:\Users\...` は `command not found` で終わり、**statusline は失敗を描かない。**
+// ⚠ **同じ罠は `lib/shell.mjs` で既に塞がれていた** —— 塞がれた法を、新しい emission
+// 地点が通っていなかっただけである ∴ **ここが「通っていること」を見る門である。**
+
+test('win32 で書く 1 行に backslash を 1 つも残さない —— シェルが escape として食う', () => {
+  const cmd = commandFor('C:\\Users\\x\\.claude\\bearing-statusline.mjs', 'win32')
+  assert.equal(cmd, 'node "C:/Users/x/.claude/bearing-statusline.mjs"')
+  assert.ok(!cmd.includes('\\'), `シェルが食う文字が残っている: ${cmd}`)
+})
+
+test('POSIX では path に触らない —— あちらの filename に `\\` は合法に現れる', () => {
+  assert.equal(
+    commandFor('/home/x/we\\ird/bearing-statusline.mjs', 'linux'),
+    'node "/home/x/we\\\\ird/bearing-statusline.mjs"',
+  )
+})
+
+test('書いた 1 行は、POSIX シェルの unescape を 1 度通しても同じ 1 行である', () => {
+  // ⚠ **これが 2026-09-04 に破れた不変である。** 生の win32 path はここで別物になる。
+  const unescape = (s) => s.replace(/\\(.)/g, '$1')
+  const cmd = commandFor('C:\\Users\\x\\.claude\\bearing-statusline.mjs', 'win32')
+  assert.equal(unescape(cmd), cmd)
+  // 生の path は破れる —— 門が何を捕まえているかを、同じ場所で示しておく。
+  assert.notEqual(unescape('C:\\Users\\x\\.claude\\bearing-statusline.mjs'), 'C:\\Users\\x\\.claude\\bearing-statusline.mjs')
+})
 
 test('statusLine が無ければ absent、同じなら same、違えば foreign', () => {
   assert.equal(classifyExisting({}, CMD), 'absent')
