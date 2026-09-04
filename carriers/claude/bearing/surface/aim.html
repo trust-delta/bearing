@@ -271,7 +271,20 @@ globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError
     try {
       dir = await window.showDirectoryPicker({ mode: 'read' })
     } catch (e) {
-      if (e?.name !== 'AbortError') note.textContent = `ディレクトリを開けませんでした: ${e.message}`
+      // ⚠ **`AbortError` でも黙らない。** picker が閉じる理由は 2 つあり、**browser の拒否も
+      // ここへ来る** —— 拒否は browser 自身のダイアログで述べられ、そのダイアログを閉じた
+      // 瞬間、**画面からは拒まれたことが消える**。∴ ここで黙れば、面は「何も起きなかった」顔で
+      // 残り、**取り消したのか拒まれたのかが人間に分からなくなる。**
+      // ⚠ **実際に起きた**（人間の観測 2026-09-04、Windows の Chrome から
+      // `\\wsl.localhost\…` 越しに corpus を選ぼうとして「システムフォルダが含まれている」と
+      // 拒まれた）—— **私はこの経路を測っていない。**
+      note.className = 'warn'
+      note.textContent = e?.name === 'AbortError'
+        ? 'ディレクトリは選ばれませんでした —— ⚠ 取り消した場合と、browser が拒んだ場合の'
+          + '両方がここに来ます。拒否の理由は browser 自身のダイアログにしか出ません。'
+          + 'ネットワーク越しの path（Windows の `\\wsl.localhost\…` など）や system folder は'
+          + '拒まれます ∴ その場合は corpus をローカルの path として開き直してください。'
+        : `ディレクトリを開けませんでした: ${e.message}`
       return
     }
 
