@@ -141,6 +141,7 @@ async function main(argv) {
     // ⚠ **canon は述べるだけで、exit code は動かさない** —— この終了値は*法の block*に
     // ついての判定であり、そこへ別の軸を混ぜれば、呼ぶ側は何が赤いのか分からなくなる。
     if (wantCanon) await reportCanon(root, projectDir, chosen.dir, false, desired.version)
+    else log('⚠ --no-canon ∴ `_guide/` を見ていない —— canon が在るかどうかを、この実行は述べない。')
     return s.state === 'broken' || s.state === 'edited' ? 1 : 0
   }
 
@@ -173,6 +174,7 @@ async function main(argv) {
     // ⚠ **法が最新であることは、canon が在ることを意味しない。** 版の更新のために打ち直した
     // 人間が、ここで初めて canon を得ることは在りうる ∴ この分岐でも置く。
     if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true, desired.version)
+    else log('⚠ --no-canon ∴ `_guide/` を見ていない —— canon が在るかどうかを、この実行は述べない。')
     return 0
   }
   await writeAtomic(target, plan.text)
@@ -181,7 +183,7 @@ async function main(argv) {
   // ⚠ **法を置いた息で canon も置く。** 置かれた法の第 1 条は
   // `<corpus>/_guide/aim-authoring.md` を指しており、**無ければその条は最初から満たせない。**
   if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true, desired.version)
-  else log('⚠ --no-canon ∴ `_guide/` へは何も置かない —— 法が指す canon は無いままである。')
+  else log('⚠ --no-canon ∴ `_guide/` を見ていない —— canon が在るかどうかを、この実行は述べない。')
   log('外すときは: bearing-with-aim.mjs --remove')
   return 0
 }
