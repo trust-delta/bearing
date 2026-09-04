@@ -26,12 +26,17 @@ state: open
 
 ⚠ **例外は 1 つだけ在り、それは例外として明示されねばならない。** baton の未読は、採っていない project でも述べる —— handoff は `docs/aims/` に何も依存せず、そこで黙らせることは **aim の沈黙ではなく handoff の欠落**になる。hook も面も同じ例外を持つ。
 
+⚠ **宣言を置くことと、宣言した規律が働けることは別である**（2026-09-04、別 repo への適用で人間が踏んだ）。`with-aim` は `CLAUDE.md` の marker を置くが、**`_guide/` には何も置いていなかった** ∴ **置かれた法の第 1 条が、在らない file を指す**（`<corpus>/_guide/aim-authoring.md`）。⚠ **不在を述べる機構は在った。だが鳴るのは次のセッションの boot であり、相手はエージェントである** —— **人間が居合わせるのは `with-aim` の一度きりで、そこでは一言も無かった。** ⚠ **surface が在ることと、それが*居合わせる者*へ届くことは別である** —— 本 node が上段で述べている「面ごとに述語が違えば姿が食い違う」の、**時間軸における形**である。
+
+⚠ **∴ `with-aim` が canon も置く**（人間の決定 2026-09-04）。⚠ **`_guide/README.md` は長く「plugin は自分では置かない —— 置くかどうかはその repo が規律を採るかどうかの判断であって、道具が代行してよいものではない」と述べていた。理由は正しいが、`with-aim` には掛からない** —— **あの marker は「opt-in の宣言」そのものであり、判断は既に下されている。** ⚠ **加えて「人間が手で置く」道には腐る経路が在った**: 同梱の複製は version を含む path に住み、**cache は旧版を消さない**（実測 2026-09-04、1 台に 8 版。最古 `0.4.0`）∴ 手で辿らせれば黙って古い canon を置く日が来る —— [[ambient-display]] と [[human-domain]] が 2 度名指した腐り方である。**道具が置けば、人間は version を 1 度も見ない。**
+
 # PROCESS
 
 - [done] **hook 3 枚が、採用していない project で黙るようになった。** `aim-facts` / `boot-ritual` / `precompact` はいずれも出力 0 byte（実測）。⚠ **判定は `CLAUDE.md` の marker であり、`docs/aims/` の有無ではない** —— 後者では「aim と無関係な repo」と「採ったが node がまだ 0 の project」を区別できない
 - [done] **`/bearing:with-aim` が採用の宣言を置く。** marker 付きの block を `CLAUDE.md` へ差し込み、外すこともできる ∴ **採用は宣言であって、file の存在から推測されるものではない**
 - [done] **[[ambient-display]] の 2 行目を、hook と同じ述語で gate した。** 例外は baton 未読 1 つ。⚠ **面ごとに述語が違えば、同じ project が面ごとに別の姿を持つ**
 - [done] **user スコープの install で、汎用側を全 project へ供給した。** 装着は `/bearing:statusline-setup` の 1 手で、shim は install record を読むので 1 行に version が入らない
+- [done] **`/bearing:with-aim` が canon も置くようにした。** 置くのは 3 枚（`aim-authoring.md` / `aim-facts.md` / `handoff.md` ＝ carrier へ同梱される中立正本と同じ集合）。⚠ **`frame.md` と `_guide/README.md` は置かない** —— 前者は hook と block が運び、後者は `_guide/` を*著述する側*の doc である。⚠ **既に在って中身が違う枚は触らず、触っていないことと理由を同じ息で述べる** —— 置いた後の `_guide/` はその repo の doc である。⚠ **比較の前に改行を正規化する** —— `core.autocrlf=true` の機体では checkout が CRLF へ変え、素朴な比較は**中身が同じ file を「違う」と呼ぶ**。そして「違う」は人間を呼び出す合図ゆえ、**偽陽性はそのまま雑音になる**。⚠ **同梱物が読めないときはそう述べる**（「置かなかった」と「置く元が無かった」を同じ沈黙にしない）。断る道は `--no-canon`、⚠ **`--remove` は canon を消さない** —— opt-in を外すことと、その repo が持つ doc を捨てることは別の act である
 - [todo] **corpus が在っても「採用しない」を選べるようにする。** ⚠ **現在の述語は `corpus 在り || marker 在り` であり、corpus を持つ project は有効を降りられない** —— これは移行の便宜として入ったものだが、**`aim:` が述べる「選択できる」を満たしていない。** 降りる宣言をどの形で持つか（marker の変種か、settings の key か）を決めて、hook と面の両方がそれに従うようにする
 - [done] **baton を repo の外へ出した。** `~/.bearing/units/<path を平坦化したもの>/handoff/` へ移し、**unit root の下には何も作らない** ∴ `.gitignore` に頼らず、**痕跡になりようがない**形になった。⚠ **添える案（`.handoff/.gitignore`）は採らなかった** —— あれは「痕跡を残しうるが隠す」であって、`aim:` が述べる「痕跡を残さない」ではない。⚠ **引くのは unit root の path であって repo 名ではない**（同名 repo や複数 worktree が黙って同じ baton を共有する形を塞ぐ）。⚠ **旧い置き場に残ったものは機構がもう読まない** ∴ 在ることを述べ、`bearing-handoff.mjs migrate` を名指すところで止まる —— **移動は人間の act である**。⚠ **2026-09-03、bearing 自身の `.gitignore` からも `.handoff/` の行を落とした**（人間が移行完了を宣言した）—— **残せば「置き場は repo 側に在るが隠している」と読める** ∴ `.gitignore` に頼らない形と、ignore の記述そのものが食い違う
 
