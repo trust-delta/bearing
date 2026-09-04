@@ -1,13 +1,13 @@
-// `with-aim` が canon を置く振る舞いの test。
+// `with-aim` が canon を置き、追随させる振る舞いの test。
 //
-// ⚠ **ここで守っているのは 2 つである。** ⑴ **法を置いた repo に、法が指す canon が在る**
+// ⚠ **ここで守っているのは 3 つである。** ⑴ **法を置いた repo に、法が指す canon が在る**
 // —— 置かれた法の第 1 条は `<corpus>/_guide/aim-authoring.md` を指しており、無ければその条は
-// 最初から満たせない。⑵ **既に在るものを潰さない** —— 置いた後の `_guide/` はその repo の
-// doc であり、人間が直しているかもしれない。
+// 最初から満たせない。⑵ **我々が置いたままなら最新へ追随する** —— canon はエージェントが
+// 従う法であり、古いまま黙っていること自体が drift である。⑶ **人間が直したものは踏まない。**
 //
-// ⚠ **比較は改行を正規化してから行う。** `core.autocrlf=true` の機体では checkout が CRLF へ
-// 変える ∴ 素朴な比較は**中身が同じ file を「違う」と呼ぶ** —— そして「違う」は人間を呼び出す
-// 合図なので、偽陽性はそのまま雑音になる。
+// ⚠ **⑵ と ⑶ を同時に満たすには、「我々のまま」と「人間が直した」を分ける足場が要る。**
+// `CLAUDE.md` の block は marker がそれを持つが、canon の file に marker は挿せない
+// （挿せば bearing 自身の正本と食い違う）∴ **足場は file の外＝ manifest に置く。**
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -16,29 +16,61 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import {
-  CANON_FILES, normalizeEol, planCanonFile, planCanon, describeCanon, syncCanon,
+  CANON_FILES, MANIFEST, normalizeEol, classifyCanonFile, planCanon, describeCanon,
+  readManifest, syncCanon,
 } from '../lib/canon.mjs'
+import { bodySha } from '../lib/claude-md.mjs'
 
 const PLUGIN_ROOT = path.join(import.meta.dirname, '..')
-const fresh = () => mkdtemp(path.join(tmpdir(), 'bearing-canon-'))
+const V = 'test'
+const fresh = async () => path.join(await mkdtemp(path.join(tmpdir(), 'bearing-canon-')), 'docs', 'aims', '_guide')
+const srcOf = (name) => readFile(path.join(PLUGIN_ROOT, ...CANON_FILES.find((f) => f.name === name).from), 'utf8')
+const at = (guide, name) => readFile(path.join(guide, name), 'utf8')
 
-// ── 計画（純関数）─────────────────────────────────────────────────────────────
+// ── 状態の判別（純関数）──────────────────────────────────────────────────────
 
-test('在らなければ置く／同じなら何もしない／違えば触らない', () => {
-  assert.equal(planCanonFile({ present: false, same: false }), 'place')
-  assert.equal(planCanonFile({ present: true, same: true }), 'unchanged')
-  assert.equal(planCanonFile({ present: true, same: false }), 'differs')
+test('5 つの状態を分ける —— 「違う」の一語に畳まない', () => {
+  const s = (o) => classifyCanonFile({ present: true, sourceSha: 'NEW', ...o })
+  assert.equal(classifyCanonFile({ present: false, fileSha: null, sourceSha: 'NEW', recordedSha: null }), 'place')
+  assert.equal(s({ fileSha: 'NEW', recordedSha: null }), 'current')
+  assert.equal(s({ fileSha: 'OLD', recordedSha: 'OLD' }), 'stale') //   我々が置いたまま
+  assert.equal(s({ fileSha: 'MINE', recordedSha: 'OLD' }), 'edited') // 置いた後に人間が直した
+  assert.equal(s({ fileSha: 'OLD', recordedSha: null }), 'unknown') //  記録が無い
 })
 
-test('計画は 3 つの欄に分かれる —— 混ぜない', () => {
+test('中身が正本と同じなら、記録が無くても `current` である', () => {
+  // ⚠ **手で正しく置いた repo を「由来不明」と呼べば、正しい状態が警告を出し続ける。**
+  assert.equal(classifyCanonFile({ present: true, fileSha: 'NEW', sourceSha: 'NEW', recordedSha: null }), 'current')
+})
+
+test('書くのは place と stale だけ —— edited と unknown は触らない', () => {
   const p = planCanon([
-    { name: 'a', present: false, same: false },
-    { name: 'b', present: true, same: true },
-    { name: 'c', present: true, same: false },
+    { name: 'a', present: false, fileSha: null, sourceSha: 'N', recordedSha: null },
+    { name: 'b', present: true, fileSha: 'O', sourceSha: 'N', recordedSha: 'O' },
+    { name: 'c', present: true, fileSha: 'M', sourceSha: 'N', recordedSha: 'O' },
+    { name: 'd', present: true, fileSha: 'O', sourceSha: 'N', recordedSha: null },
+    { name: 'e', present: true, fileSha: 'N', sourceSha: 'N', recordedSha: 'N' },
   ])
-  assert.deepEqual(p.place, ['a'])
-  assert.deepEqual(p.unchanged, ['b'])
-  assert.deepEqual(p.differs, ['c'])
+  assert.deepEqual(p.write, ['a', 'b'])
+  assert.deepEqual(p.edited, ['c'])
+  assert.deepEqual(p.unknown, ['d'])
+  assert.deepEqual(p.current, ['e'])
+})
+
+test('5 つの状態は 5 つの文で述べられる —— 畳まない', () => {
+  const p = planCanon([
+    { name: 'a', present: false, fileSha: null, sourceSha: 'N', recordedSha: null },
+    { name: 'b', present: true, fileSha: 'O', sourceSha: 'N', recordedSha: 'O' },
+    { name: 'c', present: true, fileSha: 'M', sourceSha: 'N', recordedSha: 'O' },
+    { name: 'd', present: true, fileSha: 'O', sourceSha: 'N', recordedSha: null },
+  ])
+  const out = describeCanon(p, 'docs/aims/_guide', true).join('\n')
+  assert.match(out, /置いた.*a/)
+  assert.match(out, /更新した.*b/)
+  assert.match(out, /人間が手を入れている.*c/)
+  assert.match(out, /由来が分からない.*d/)
+  // ⚠ **上書きしてよい根拠を、同じ息で述べているか。**
+  assert.match(out, /置いたときのまま/)
 })
 
 test('CRLF の checkout を「違う」と呼ばない', () => {
@@ -46,24 +78,22 @@ test('CRLF の checkout を「違う」と呼ばない', () => {
   assert.equal(normalizeEol(lf.split('\n').join('\r\n')), lf)
 })
 
-test('何もしなかったことも述べる —— 無言で表さない', () => {
-  const p = planCanon([{ name: 'a', present: true, same: true }])
-  const out = describeCanon(p, 'docs/aims/_guide', true).join('\n')
-  assert.match(out, /既に同じ/)
-  assert.match(out, /a/)
-})
+// ── 台帳 ─────────────────────────────────────────────────────────────────────
 
-test('触らなかったときは、触っていないことと理由を同じ息で述べる', () => {
-  const p = planCanon([{ name: 'a', present: true, same: false }])
-  const out = describeCanon(p, 'docs/aims/_guide', true).join('\n')
-  assert.match(out, /触っていない/)
-  assert.match(out, /その repo の doc/)
+test('台帳が無いことと、壊れていることを分ける', async () => {
+  const guide = await fresh()
+  assert.deepEqual(await readManifest(guide), { files: {}, version: null, broken: false, present: false })
+  await mkdir(guide, { recursive: true })
+  await writeFile(path.join(guide, MANIFEST), '{ 壊れた JSON', 'utf8')
+  const m = await readManifest(guide)
+  assert.equal(m.broken, true)
+  assert.equal(m.present, true)
 })
 
 // ── 実際に置く ───────────────────────────────────────────────────────────────
 
 test('同梱の canon は、この repo の `_guide/` と byte 同一である', async () => {
-  // ⚠ **ここが崩れると、消費する repo に置かれるのは canon ではなく、その複製の亡霊になる。**
+  // ⚠ **ここが崩れると、置かれるのは canon ではなく、その複製の亡霊になる。**
   for (const f of CANON_FILES) {
     const bundled = await readFile(path.join(PLUGIN_ROOT, ...f.from), 'utf8')
     const source = await readFile(
@@ -72,64 +102,101 @@ test('同梱の canon は、この repo の `_guide/` と byte 同一である',
   }
 })
 
-test('空の repo に、法が指す canon が置かれる', async () => {
-  const dir = await fresh()
-  const guide = path.join(dir, 'docs', 'aims', '_guide')
-  const { plan, missing } = await syncCanon(PLUGIN_ROOT, guide, true)
-
+test('空の repo に canon が置かれ、台帳も残る', async () => {
+  const guide = await fresh()
+  const { plan, missing } = await syncCanon(PLUGIN_ROOT, guide, true, V)
   assert.deepEqual(missing, [])
   assert.deepEqual(plan.place, CANON_FILES.map((f) => f.name))
-  for (const f of CANON_FILES) {
-    const placed = await readFile(path.join(guide, f.name), 'utf8')
-    const src = await readFile(path.join(PLUGIN_ROOT, ...f.from), 'utf8')
-    assert.equal(placed, src, `${f.name} が同梱物と一致しない`)
-  }
-  // ⚠ **法の第 1 条が指す file がそこに在る**、が守りたかったことである。
-  await readFile(path.join(guide, 'aim-authoring.md'), 'utf8')
+  for (const f of CANON_FILES) assert.equal(await at(guide, f.name), await srcOf(f.name))
+  const m = await readManifest(guide)
+  assert.equal(m.version, V)
+  assert.equal(Object.keys(m.files).length, CANON_FILES.length)
 })
 
 test('2 度打っても何も起きない（冪等）', async () => {
-  const dir = await fresh()
-  const guide = path.join(dir, 'docs', 'aims', '_guide')
-  await syncCanon(PLUGIN_ROOT, guide, true)
-  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true)
-  assert.deepEqual(plan.place, [])
-  assert.deepEqual(plan.differs, [])
-  assert.equal(plan.unchanged.length, CANON_FILES.length)
+  const guide = await fresh()
+  await syncCanon(PLUGIN_ROOT, guide, true, V)
+  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true, V)
+  assert.deepEqual(plan.write, [])
+  assert.equal(plan.current.length, CANON_FILES.length)
 })
 
-test('人間が直した canon を黙って踏まない', async () => {
-  const dir = await fresh()
-  const guide = path.join(dir, 'docs', 'aims', '_guide')
+test('一部だけ在るとき、在らない枚だけが置かれる', async () => {
+  const guide = await fresh()
   await mkdir(guide, { recursive: true })
-  const mine = '# 私が直した canon\n'
-  await writeFile(path.join(guide, 'aim-authoring.md'), mine, 'utf8')
-
-  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true)
-  assert.deepEqual(plan.differs, ['aim-authoring.md'])
-  assert.equal(await readFile(path.join(guide, 'aim-authoring.md'), 'utf8'), mine)
-  // ⚠ **残りは置かれる** —— 1 枚が違うことは、他の 2 枚を置かない理由にならない。
+  await writeFile(path.join(guide, 'handoff.md'), await srcOf('handoff.md'), 'utf8')
+  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true, V)
+  assert.deepEqual(plan.current, ['handoff.md'])
   assert.equal(plan.place.length, CANON_FILES.length - 1)
 })
 
-test('`--check` の側（write=false）は 1 byte も書かない', async () => {
-  const dir = await fresh()
-  const guide = path.join(dir, 'docs', 'aims', '_guide')
-  const { plan } = await syncCanon(PLUGIN_ROOT, guide, false)
-  assert.equal(plan.place.length, CANON_FILES.length)
-  await assert.rejects(() => readFile(path.join(guide, 'aim-authoring.md'), 'utf8'))
+test('我々が置いたままの古い canon は、黙って最新へ追随する', async () => {
+  const guide = await fresh()
+  await mkdir(guide, { recursive: true })
+  const old = '# 古い canon\n'
+  await writeFile(path.join(guide, 'aim-authoring.md'), old, 'utf8')
+  // 我々が置いた記録 —— この sha であることが「触られていない」の証拠である。
+  await writeFile(path.join(guide, MANIFEST),
+    JSON.stringify({ version: 'old', files: { 'aim-authoring.md': bodySha(old) } }), 'utf8')
+
+  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true, V)
+  assert.deepEqual(plan.stale, ['aim-authoring.md'])
+  assert.equal(await at(guide, 'aim-authoring.md'), await srcOf('aim-authoring.md'))
 })
 
-test('CRLF で置かれた canon は「違う」ではなく「同じ」と読まれる', async () => {
+test('置いた後に人間が直した canon は踏まない', async () => {
+  const guide = await fresh()
+  await mkdir(guide, { recursive: true })
+  const placed = '# 我々が置いたもの\n'
+  await writeFile(path.join(guide, MANIFEST),
+    JSON.stringify({ version: 'old', files: { 'aim-authoring.md': bodySha(placed) } }), 'utf8')
+  const mine = '# 我々が置いたもの\n\n<!-- この repo 固有の追記 -->\n'
+  await writeFile(path.join(guide, 'aim-authoring.md'), mine, 'utf8')
+
+  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true, V)
+  assert.deepEqual(plan.edited, ['aim-authoring.md'])
+  assert.equal(await at(guide, 'aim-authoring.md'), mine)
+  // ⚠ **台帳に今の正本の sha を書いてはならない** —— 次の実行が「我々のまま」と読んで踏む。
+  const m = await readManifest(guide)
+  assert.equal(m.files['aim-authoring.md'], bodySha(placed))
+})
+
+test('台帳が無い古い canon は「由来不明」として触らない', async () => {
+  const guide = await fresh()
+  await mkdir(guide, { recursive: true })
+  await writeFile(path.join(guide, 'aim-authoring.md'), '# どこかから来た canon\n', 'utf8')
+  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true, V)
+  assert.deepEqual(plan.unknown, ['aim-authoring.md'])
+  assert.equal(await at(guide, 'aim-authoring.md'), '# どこかから来た canon\n')
+})
+
+test('台帳が壊れているときは、記録が無いものとして扱い、上書きしない', async () => {
+  const guide = await fresh()
+  await mkdir(guide, { recursive: true })
+  await writeFile(path.join(guide, 'aim-authoring.md'), '# 古い\n', 'utf8')
+  await writeFile(path.join(guide, MANIFEST), 'これは JSON ではない', 'utf8')
+  const { plan, manifest } = await syncCanon(PLUGIN_ROOT, guide, true, V)
+  assert.equal(manifest.broken, true)
+  assert.deepEqual(plan.unknown, ['aim-authoring.md'])
+  assert.equal(await at(guide, 'aim-authoring.md'), '# 古い\n')
+})
+
+test('`--check` の側（write=false）は 1 byte も書かない', async () => {
+  const guide = await fresh()
+  const { plan } = await syncCanon(PLUGIN_ROOT, guide, false, V)
+  assert.equal(plan.place.length, CANON_FILES.length)
+  await assert.rejects(() => at(guide, 'aim-authoring.md'))
+  await assert.rejects(() => at(guide, MANIFEST))
+})
+
+test('CRLF で置かれた canon は `current` と読まれる', async () => {
   // ⚠ **本機は `core.autocrlf=true` である** ∴ これは仮想の形ではない。
-  const dir = await fresh()
-  const guide = path.join(dir, 'docs', 'aims', '_guide')
+  const guide = await fresh()
   await mkdir(guide, { recursive: true })
   for (const f of CANON_FILES) {
-    const src = await readFile(path.join(PLUGIN_ROOT, ...f.from), 'utf8')
-    await writeFile(path.join(guide, f.name), src.split('\n').join('\r\n'), 'utf8')
+    await writeFile(path.join(guide, f.name), (await srcOf(f.name)).split('\n').join('\r\n'), 'utf8')
   }
-  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true)
-  assert.deepEqual(plan.differs, [], 'CRLF を「違う」と呼んだ')
-  assert.equal(plan.unchanged.length, CANON_FILES.length)
+  const { plan } = await syncCanon(PLUGIN_ROOT, guide, true, V)
+  assert.equal(plan.current.length, CANON_FILES.length)
+  assert.deepEqual(plan.write, [])
 })

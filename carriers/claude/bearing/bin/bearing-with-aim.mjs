@@ -33,7 +33,7 @@ import {
   planApply, planRemove, inspect, loadDesired, bodySha, declaredAimsDir,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR, normalizeAimsDir } from '../lib/corpus.mjs'
-import { syncCanon, describeCanon } from '../lib/canon.mjs'
+import { syncCanon, describeCanon, MANIFEST } from '../lib/canon.mjs'
 
 const log = (...a) => console.log(...a)
 
@@ -88,10 +88,16 @@ async function writeAtomic(file, text) {
 }
 
 /** canon を置き（または現況を述べ）、結果を人間の言葉にして出す。 */
-async function reportCanon(root, projectDir, aimsDir, write) {
+async function reportCanon(root, projectDir, aimsDir, write, version) {
+  const rel = `${aimsDir}/_guide`
   const guideDir = path.join(projectDir, ...aimsDir.split('/'), '_guide')
-  const { plan, missing } = await syncCanon(root, guideDir, write)
-  for (const line of describeCanon(plan, `${aimsDir}/_guide`, write)) log(line)
+  const { plan, missing, manifest } = await syncCanon(root, guideDir, write, version)
+  // ⚠ **壊れた台帳は「無い」に畳まない。** 畳めば、人間は「なぜ更新されないのか」を
+  // 探すことになる —— 答えは画面に無い。
+  if (manifest.broken) {
+    log(`⚠ ${rel}/${MANIFEST} が読めない —— 記録が無いものとして扱った（上書きはしない）。`)
+  }
+  for (const line of describeCanon(plan, rel, write)) log(line)
   if (missing.length > 0) {
     log(`⚠ 同梱の canon が読めない: ${missing.join('、')} —— この plugin の install が壊れている。`)
   }
@@ -134,7 +140,7 @@ async function main(argv) {
     log(`今の法: v${desired.version} sha=${bodySha(desired.law)}`)
     // ⚠ **canon は述べるだけで、exit code は動かさない** —— この終了値は*法の block*に
     // ついての判定であり、そこへ別の軸を混ぜれば、呼ぶ側は何が赤いのか分からなくなる。
-    if (wantCanon) await reportCanon(root, projectDir, chosen.dir, false)
+    if (wantCanon) await reportCanon(root, projectDir, chosen.dir, false, desired.version)
     return s.state === 'broken' || s.state === 'edited' ? 1 : 0
   }
 
@@ -166,7 +172,7 @@ async function main(argv) {
     log(plan.reason)
     // ⚠ **法が最新であることは、canon が在ることを意味しない。** 版の更新のために打ち直した
     // 人間が、ここで初めて canon を得ることは在りうる ∴ この分岐でも置く。
-    if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true)
+    if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true, desired.version)
     return 0
   }
   await writeAtomic(target, plan.text)
@@ -174,7 +180,7 @@ async function main(argv) {
   log('⚠ marker は HTML コメント ∴ context には乗らない。中身の法だけが載る。')
   // ⚠ **法を置いた息で canon も置く。** 置かれた法の第 1 条は
   // `<corpus>/_guide/aim-authoring.md` を指しており、**無ければその条は最初から満たせない。**
-  if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true)
+  if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true, desired.version)
   else log('⚠ --no-canon ∴ `_guide/` へは何も置かない —— 法が指す canon は無いままである。')
   log('外すときは: bearing-with-aim.mjs --remove')
   return 0
