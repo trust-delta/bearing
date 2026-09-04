@@ -83,10 +83,9 @@ even without the marker.**
 
 It drops a thin shim into `~/.claude/` and writes one line into user settings. ⚠ **The shim reads
 the install record on every run and bridges to the current version**, so no version is baked into
-that line and a bump never rots it. ⚠ **It writes user settings only** — an absolute path contains
-the home directory, so writing it into tracked project settings would commit a surface that breaks
-silently for everybody else. If another status line is already configured it **stops and says so
-rather than overwriting**. ⚠ **The status line alone needs no restart**: the setting is picked up live.
+that line and a bump never rots it. ⚠ **It writes user settings only** (the line holds an absolute
+path through your home directory, so it is not something a repository can share). If another status
+line is already configured it **stops and says so rather than overwriting**. ⚠ **The status line alone needs no restart**: the setting is picked up live.
 
 ### Updating
 
@@ -95,13 +94,14 @@ claude plugin marketplace update trust-delta
 claude plugin update bearing@trust-delta
 ```
 
-Then **start a fresh session**. ⚠ Declaring `"autoUpdate": true` on the `extraKnownMarketplaces`
-entry is supposed to pull at startup — but **two measurements disagree**: the same declaration went
-two days without a single pull, and on another day pulled 11 commits on its own. **Do not read the
-row as "declare it and it always happens".**
+Then **start a fresh session**.
 
-⚠ **Until the publishing side raises `version` in `plugin.json`, nothing the receiving side does
-replaces the cache.**
+⚠ **Do not count on the startup pull.** Even with `"autoUpdate": true` declared on the
+`extraKnownMarketplaces` entry, **there were days it pulled and days it did not** (measured, one
+machine) — so run the two commands above when you want an update.
+
+⚠ **If no update arrives, it may simply not be released yet** — the cache is not replaced until
+`version` in `plugin.json` goes up.
 
 > **Why it is shaped this way** — why supply splits into two layers (intent and fact), why the law
 > lives in `CLAUDE.md`, why attaching stays a human act, and the measurements behind each — is in
@@ -110,44 +110,27 @@ replaces the cache.**
 
 ## Development
 
-**Run this once per clone:**
+**Fork and open a pull request** — ⚠ **only someone with write access can push to `main` directly.**
+
+### Running it locally
 
 ```
 git config core.hooksPath .githooks
 ```
 
-⚠ **This repository carries no tracked `.claude/settings.json`**, so **a bare clone loads no
-skill, no hook and no surface at all** — run the Usage steps above once.
+⚠ **This repository carries no tracked `.claude/settings.json`**, so **a bare clone loads no skill,
+no hook and no surface at all** — run the Usage steps above once.
 
 ⚠ **What runs while you develop is the code in front of you.** The marketplace points at this
 repository's own remote, so the cache holds the **pushed** version — but every `bin` entry in the
 cache delegates to the working tree once `CLAUDE_PROJECT_DIR` shows it is inside a bearing
-checkout. Hooks and the status line take that same single route. ⚠ The delegation itself lives in
-the cached copy, so the version gate still bites when that shim changes. (To run the working tree
-without installing anything: `claude --plugin-dir ./carriers/claude/bearing`.)
+checkout. Hooks and the status line take that same single route. (To run the working tree without
+installing anything: `claude --plugin-dir ./carriers/claude/bearing`.)
 
-### The push rule
+### What your pull request is checked against
 
-**Documentation may be pushed directly; anything containing code needs a pull request.** The
-decision lives in exactly one place, `scripts/classify-paths.mjs`, and both the pre-push hook and
-the `push-policy` workflow call it — two implementations would drift apart, and silently.
-
-⚠ **GitHub cannot enforce this conditionally.** The *push ruleset* — the only rule that can reject
-a push by path — is refused for this repository because it is public and user-owned (measured
-2026-09-01). So enforcement is two layers, and neither is complete on its own:
-
-| | what it does | can it be bypassed |
-| --- | --- | --- |
-| `.githooks/pre-push` | stops the act **as it happens** | yes, `--no-verify` — and it does not exist at all in a clone that skipped the config above |
-| `.github/workflows/push-policy.yml` | leaves a violation **red and permanent** | no — but it cannot prevent anything |
-
-That the hook can be bypassed is deliberate, not a defect: bending the rule is the human's call,
-and a tool must not take that away. The bypass shows up in CI.
-
-### Gates
-
-CI fails on two things only: the **tests**, and the **carriers being in sync** with their canonical
-sources. The language measurement reports and never fails —
+CI fails on two things only — the **tests**, and the **carriers being in sync** with their canonical
+sources. ⚠ **The language measurement reports and never fails**: the premise behind
 [`native-language`](docs/aims/native-language.md) has not been measured yet, so making it a hard
 gate would be premature.
 
@@ -157,15 +140,17 @@ bash gen/claude-plugin.sh --plugin                    # regenerate the carriers
 node scripts/lang-report.mjs                          # language measurement (never fails)
 ```
 
-### Releasing
+### Conventions
 
-⚠ **Unless `version` in `plugin.json` goes up, a change lands quietly and reaches nobody**, so the
-bump is part of the release. ⚠ `claude plugin validate <path>` works as a gate whenever the
-manifest is touched.
-
-> What supply has cost us — intent and fact disagreeing for a whole day, the contradictory
-> `autoUpdate` measurements, a record appearing without anyone running install — is in
-> [`docs/aims/bearing.md`](docs/aims/bearing.md).
+- ⚠ **`carriers/**/skills/**` is generated** (`gen/claude-plugin.sh`) — edit `docs/aims/_guide/`
+  and regenerate rather than editing it by hand. CI turns any divergence red
+- ⚠ **Development is driven by the aim corpus** — **why a change exists belongs in the tree under
+  `docs/aims/`.** The purpose line (`aim:`) belongs to the human: **propose moving it, never
+  rewrite it**
+- **Japanese is canonical** (see Language below); this English README is subordinate and loses to
+  the Japanese one wherever they disagree
+- ⚠ **Until `version` in `plugin.json` goes up, a change reaches nobody** — the bump is part of a
+  release, and the maintainer does it
 
 ## Language
 
@@ -181,13 +166,8 @@ line is between prose a person reads and tokens a machine parses.
 Early, and honest about it. The discipline grew inside a private project that ran
 it on itself for months. The plugin has landed here and runs on the standard
 harness — but whether the standard harness plus this plugin is *enough* to develop
-with has not been measured yet. That is the root node's central open question.
-
-**The history was deliberately not carried over.** The three mechanisms grew
-inside `tmai`, whose history is written throughout on the premise of a role
-*within that place*. This repository asks a different question — how the method
-fares as an external graft — so the concepts were inherited and the history was
-not.
+with has not been measured yet. That is this project's central open question
+([`docs/aims/bearing.md`](docs/aims/bearing.md)).
 
 ## Provenance
 
@@ -196,11 +176,14 @@ out to build a place for coding agents to run. Two of its three pillars died whe
 the standard harnesses absorbed the job of being that place. What survived was
 never the place — it was the method. This repository is where the method lives now.
 
+**The history was deliberately not carried over.** That project's record is written
+throughout on the premise of a role *within that place*, while this repository asks
+how the method fares as an external graft — so the concepts were inherited and the
+history was not.
+
 ## License
 
-MIT. The single source of truth is [`LICENSE`](LICENSE); the copy inside the plugin is a
-generated artifact (`gen/claude-plugin.sh`) and CI fails on divergence — the marketplace
-entry sources `./carriers/claude/bearing`, so the root LICENSE never reaches a consumer’s
-cache (measured). That copy is not duplication; it is part of what ships.
+MIT. The single source of truth is [`LICENSE`](LICENSE); the copy shipped inside the plugin
+is generated from it, and CI fails on divergence.
 
 Copyright (c) 2026 TrustDelta

@@ -78,9 +78,8 @@ aim に依存しない）。⚠ **corpus が既に在れば、marker が無く�
 
 `~/.claude/` に薄い shim を置き、user settings に 1 行を書く。⚠ **shim は走るたびに install
 record を読んで今の版へ橋渡しする** ∴ **1 行に version が入らず、bump で腐らない。**
-⚠ **書き先は user settings に限る** —— 絶対 path は home を含む ∴ tracked な project settings へ
-書けば、他の人間の面が黙って壊れる形を repo に commit することになる。既に別の statusline が
-在れば**上書きせず述べて止まる**。⚠ **statusline だけは再起動を要さない**（設定は live に拾われる）。
+⚠ **書き先は user settings だけである**（1 行に home を含む絶対 path が入る ∴ repo で共有できる
+ものではない）。既に別の statusline が在れば**上書きせず述べて止まる**。⚠ **statusline だけは再起動を要さない**（設定は live に拾われる）。
 
 ### 更新
 
@@ -89,13 +88,14 @@ claude plugin marketplace update trust-delta
 claude plugin update bearing@trust-delta
 ```
 
-そして**セッションを開き直す**。⚠ **`extraKnownMarketplaces` に `"autoUpdate": true` を宣言
-すれば起動時に自動で引かれる** —— ただし**実測は 2 件あって食い違っている**（同じ宣言で、
-2 日間 1 度も引かれなかった日と、11 commit が自動で引かれた日がある）∴ **「宣言すれば必ず」
-とは読まないこと。**
+そして**セッションを開き直す**。
 
-⚠ **配る側が `plugin.json` の `version` を上げない限り、受ける側が何をしても cache は
-差し替わらない。**
+⚠ **起動時の自動 pull は当てにしないこと。** `extraKnownMarketplaces` に `"autoUpdate": true`
+を宣言していても、**引かれる日と引かれない日があった**（実測、1 台）∴ 更新が要るときは上の
+2 行を打つ。
+
+⚠ **更新が来ないときは、まだ release されていない可能性がある** —— cache は `plugin.json` の
+`version` が上がるまで差し替わらない。
 
 > **なぜこの形なのか** —— 供給が 2 層（宣言と実体）に分かれる理由、法を `CLAUDE.md` へ置いた
 > 理由、装着が人間の act として残る理由、そのそれぞれの実測は
@@ -104,7 +104,9 @@ claude plugin update bearing@trust-delta
 
 ## 開発
 
-**⚠ clone したら 1 度だけ:**
+**変更は fork して PR で出す** —— ⚠ **main へ直接 push できるのは write 権限を持つ者だけである。**
+
+### 手元で走らせる
 
 ```
 git config core.hooksPath .githooks
@@ -114,34 +116,15 @@ git config core.hooksPath .githooks
 hook も面も 1 枚も載らない** —— 上の「使い方」を 1 度通すこと。
 
 ⚠ **開発中に走るのは手元の code である。** marketplace は自分自身の remote を指す ∴ cache に
-入るのは push 済みの版だが、**cache 側の `bin/` はすべて、`CLAUDE_PROJECT_DIR` が bearing の
-checkout を指していると分かれば working tree へ委譲する** —— hook も statusline も同じ 1 経路
-である。⚠ **委譲は cache 側の code が担う** ∴ **その shim 自体を変えたときだけ、版の門が
-ふたたび効く。**（plugin を載せずに走らせるなら `claude --plugin-dir ./carriers/claude/bearing`。）
+入るのは push 済みの版だが、**cache 側の `bin/` は、`CLAUDE_PROJECT_DIR` が bearing の checkout
+を指していると分かれば working tree へ委譲する** —— hook も statusline も同じ 1 経路である。
+（plugin を載せずに走らせるなら `claude --plugin-dir ./carriers/claude/bearing`。）
 
-### push の規則
+### PR で見られるもの
 
-**非コードのドキュメント系は直プッシュ可、コードを含む場合は PR 必須。** 判定は
-`scripts/classify-paths.mjs` が 1 箇所で持ち、pre-push hook と CI の `push-policy` workflow の
-**両方がそれを呼ぶ** —— 別実装にすれば必ず乖離し、しかも乖離は黙って起きる。
-
-⚠ **GitHub 側でこの規則を条件付きで強制することはできない**（path 条件で push を弾ける *push
-ruleset* は、この repo が public かつ User 所有であるため拒否される —— 実測 2026-09-01）∴
-強制の実体は 2 段しかない:
-
-| | 何をするか | 破れるか |
-| --- | --- | --- |
-| `.githooks/pre-push` | **行為の瞬間に**止める | `--no-verify` で破れる。⚠ **上の設定をしていない clone では存在しないのと同じ** |
-| `.github/workflows/push-policy.yml` | 着地した違反を**赤く恒久的に残す** | 破れない。ただし**防げない** |
-
-⚠ **hook が破れるのは欠陥ではなく設計である** —— 規則を曲げる判断は人間のものであり、道具が
-それを奪ってはならない。破った事実は CI に残る。
-
-### 門
-
-CI が落とす門は 2 つだけ: **test** と、**carrier が正本と同期していること**。言語の測定は
-**報告であって門ではない**（[`native-language`](docs/aims/native-language.md) の前提がまだ
-実測されていない以上、規律を硬い門にするのは早い）。
+CI が落とす門は 2 つだけ —— **test** と、**carrier が正本と同期していること**。⚠ **言語の測定は
+報告であって門ではない**（[`native-language`](docs/aims/native-language.md) の前提がまだ実測
+されていない以上、硬い門にするのは早い）。
 
 ```
 node --test carriers/claude/bearing/test/*.test.mjs   # test
@@ -149,14 +132,15 @@ bash gen/claude-plugin.sh --plugin                    # carrier の再生成
 node scripts/lang-report.mjs                          # 言語の測定（落ちない）
 ```
 
-### release
+### この repo の作法
 
-⚠ **`plugin.json` の `version` を上げない限り、変更は静かに、誰にも届かないまま着地する**
-∴ bump は release の一部である。⚠ **`claude plugin validate <path>` は manifest を触ったときの
-門として使える。**
-
-> 供給で踏んだもの —— 宣言と実体が丸 1 日食い違った件、`autoUpdate` の食い違う実測、install を
-> 打たずに record が生まれた経路 —— は [`docs/aims/bearing.md`](docs/aims/bearing.md) に在る。
+- ⚠ **`carriers/**/skills/**` は生成物である**（`gen/claude-plugin.sh`）—— 手で直さず、
+  `docs/aims/_guide/` を直して再生成する。食い違いは CI が赤くする
+- ⚠ **開発は aim で駆動される** —— **なぜその変更なのかは `docs/aims/` の木に残す。**
+  目的（`aim:` の 1 行）は人間のものであり、**動かす提案はできるが、書き換えるのは人間である**
+- **正本は日本語である**（下の「言語」）—— 英語版の README は従属物で、食い違えば日本語が正
+- ⚠ **`plugin.json` の `version` を上げない限り、変更は誰にも届かない** —— bump は release の
+  一部であり、maintainer が行う
 
 ## 言語
 
@@ -172,26 +156,23 @@ README は併置してあるが従属物であり、食い違ったときは日�
 
 初期段階であり、それを正直に述べる。規律そのものは、ある private project の中で数か月に
 わたって自分自身に適用されながら育った。⚠ **plugin の実体はこの repo に移り、標準ハーネス上で
-動いている。だが「標準ハーネスとこの plugin だけで開発が成り立つか」はまだ実測していない。**
-それが root node の中心的な未検証項目である。
-
-**⚠ 履歴は運ばなかった。** 3 機構は前身プロジェクト `tmai`（*tactful multi agents interface*）
-の中で育ったが、あちらの履歴は一貫して「tmai という場所の中での役割・手段」を前提に書かれて
-いる。この repo が問うのは「外付け拡張としてどうか」であり、出発点が違う。∴ **概念は継承し、
-履歴は継承しない。**
+動いている。だが「標準ハーネスとこの plugin だけで開発が成り立つか」はまだ実測していない** ——
+それがこのプロジェクトの中心的な未検証項目である（[`docs/aims/bearing.md`](docs/aims/bearing.md)）。
 
 ## 来歴
 
-規律は `tmai` の中で育った。あれは coding agent が走るための**場**を作ろうとした project で
-あり、3 本の柱のうち 2 本は、標準ハーネスがその「場である」という仕事を吸収した時点で死んだ。
-⚠ **生き残ったのは場ではなく、方法だった。** この repository は、その方法が今住んでいる場所
-である。
+規律は前身プロジェクト `tmai`（*tactful multi agents interface*）の中で育った。あれは coding
+agent が走るための**場**を作ろうとした project であり、3 本の柱のうち 2 本は、標準ハーネスが
+その「場である」という仕事を吸収した時点で死んだ。⚠ **生き残ったのは場ではなく、方法だった。**
+この repository は、その方法が今住んでいる場所である。
+
+**⚠ 履歴は運ばなかった。** あちらの記録は一貫して「tmai という場所の中での役割・手段」を前提に
+書かれているが、この repo が問うのは「外付け拡張としてどうか」であり、出発点が違う。∴ **概念は
+継承し、履歴は継承しない。**
 
 ## ライセンス
 
-MIT。⚠ **正本は [`LICENSE`](LICENSE) 1 枚である。** plugin 側の複製は生成物であり
-（`gen/claude-plugin.sh`）、食い違いは CI が赤くする —— ⚠ **marketplace entry の source は
-`./carriers/claude/bearing` ∴ root の LICENSE は消費者の cache に届かない**（実測）。
-複製は重複ではなく、配布物の一部である。
+MIT。**正本は [`LICENSE`](LICENSE) 1 枚**で、plugin に同梱される複製はそこから生成される
+（食い違いは CI が赤くする）。
 
 Copyright (c) 2026 TrustDelta
