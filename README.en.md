@@ -41,6 +41,132 @@ that ask git questions.
 the tree and may propose changes to any purpose — but pinning a purpose, and
 declaring one achieved, are the human's acts. That asymmetry is the whole point.
 
+## Usage
+
+### Install — once, at user scope
+
+```
+claude plugin marketplace add https://github.com/trust-delta/bearing.git --scope user
+claude plugin install bearing@trust-delta --scope user
+```
+
+Then **start a fresh session** — the skill and hook inventories are fixed when a session starts.
+
+⚠ **Declaring `enabledPlugins` is not the same as loading it.** With no record in
+`installed_plugins.json`, not one skill or hook runs — and ⚠ **a mechanism that is not loaded
+cannot report its own absence**, so nothing appears on screen. **`claude plugin list` is what
+shows whether it is loaded**; `claude plugin details` enumerates versions, skills and hooks even
+with no record at all, so it is no evidence.
+
+### Adopting aim — opt-in per project
+
+```
+/bearing:with-aim                    # place the law block at the end of CLAUDE.md
+/bearing:with-aim --check            # report the state only
+/bearing:with-aim --remove           # take it out
+/bearing:with-aim --dir proj/aims    # declare where the corpus lives (default docs/aims)
+```
+
+⚠ **The marker is an HTML comment, so it costs the consumer's context nothing.** It carries the
+version and a hash of the body, so `--check` tells **"the version is old" apart from "a human
+edited the block"** — in the second case it stops and says so instead of replacing it.
+
+⚠ **In a project that has not opted in the hooks emit zero bytes** (one exception: an unread
+baton — handoff does not depend on aim). ⚠ **A project that already has a corpus keeps speaking
+even without the marker.**
+
+### Attaching the surface
+
+```
+/bearing:statusline-setup            # attach (--force to replace, --uninstall to remove)
+```
+
+It drops a thin shim into `~/.claude/` and writes one line into user settings. ⚠ **The shim reads
+the install record on every run and bridges to the current version**, so no version is baked into
+that line and a bump never rots it. ⚠ **It writes user settings only** — an absolute path contains
+the home directory, so writing it into tracked project settings would commit a surface that breaks
+silently for everybody else. If another status line is already configured it **stops and says so
+rather than overwriting**. ⚠ **The status line alone needs no restart**: the setting is picked up live.
+
+### Updating
+
+```
+claude plugin marketplace update trust-delta
+claude plugin update bearing@trust-delta
+```
+
+Then **start a fresh session**. ⚠ Declaring `"autoUpdate": true` on the `extraKnownMarketplaces`
+entry is supposed to pull at startup — but **two measurements disagree**: the same declaration went
+two days without a single pull, and on another day pulled 11 commits on its own. **Do not read the
+row as "declare it and it always happens".**
+
+⚠ **Until the publishing side raises `version` in `plugin.json`, nothing the receiving side does
+replaces the cache.**
+
+> **Why it is shaped this way** — why supply splits into two layers (intent and fact), why the law
+> lives in `CLAUDE.md`, why attaching stays a human act, and the measurements behind each — is in
+> [`docs/aims/bearing.md`](docs/aims/bearing.md) and
+> [`docs/aims/ambient-display.md`](docs/aims/ambient-display.md).
+
+## Development
+
+**Run this once per clone:**
+
+```
+git config core.hooksPath .githooks
+```
+
+⚠ **This repository carries no tracked `.claude/settings.json`**, so **a bare clone loads no
+skill, no hook and no surface at all** — run the Usage steps above once.
+
+⚠ **What runs while you develop is the code in front of you.** The marketplace points at this
+repository's own remote, so the cache holds the **pushed** version — but every `bin` entry in the
+cache delegates to the working tree once `CLAUDE_PROJECT_DIR` shows it is inside a bearing
+checkout. Hooks and the status line take that same single route. ⚠ The delegation itself lives in
+the cached copy, so the version gate still bites when that shim changes. (To run the working tree
+without installing anything: `claude --plugin-dir ./carriers/claude/bearing`.)
+
+### The push rule
+
+**Documentation may be pushed directly; anything containing code needs a pull request.** The
+decision lives in exactly one place, `scripts/classify-paths.mjs`, and both the pre-push hook and
+the `push-policy` workflow call it — two implementations would drift apart, and silently.
+
+⚠ **GitHub cannot enforce this conditionally.** The *push ruleset* — the only rule that can reject
+a push by path — is refused for this repository because it is public and user-owned (measured
+2026-09-01). So enforcement is two layers, and neither is complete on its own:
+
+| | what it does | can it be bypassed |
+| --- | --- | --- |
+| `.githooks/pre-push` | stops the act **as it happens** | yes, `--no-verify` — and it does not exist at all in a clone that skipped the config above |
+| `.github/workflows/push-policy.yml` | leaves a violation **red and permanent** | no — but it cannot prevent anything |
+
+That the hook can be bypassed is deliberate, not a defect: bending the rule is the human's call,
+and a tool must not take that away. The bypass shows up in CI.
+
+### Gates
+
+CI fails on two things only: the **tests**, and the **carriers being in sync** with their canonical
+sources. The language measurement reports and never fails —
+[`native-language`](docs/aims/native-language.md) has not been measured yet, so making it a hard
+gate would be premature.
+
+```
+node --test carriers/claude/bearing/test/*.test.mjs   # tests
+bash gen/claude-plugin.sh --plugin                    # regenerate the carriers
+node scripts/lang-report.mjs                          # language measurement (never fails)
+```
+
+### Releasing
+
+⚠ **Unless `version` in `plugin.json` goes up, a change lands quietly and reaches nobody**, so the
+bump is part of the release. ⚠ `claude plugin validate <path>` works as a gate whenever the
+manifest is touched.
+
+> What supply has cost us — intent and fact disagreeing for a whole day, the contradictory
+> `autoUpdate` measurements, a record appearing without anyone running install — is in
+> [`docs/aims/bearing.md`](docs/aims/bearing.md).
+
 ## Language
 
 **The canonical language of this project is Japanese.** That is a means, not a
@@ -49,212 +175,6 @@ two, and that premise has not yet been measured — see
 [`docs/aims/native-language.md`](docs/aims/native-language.md). Machine
 contracts — fence tags and field names, slugs, identifiers — stay English. The
 line is between prose a person reads and tokens a machine parses.
-
-## Development
-
-**Run this once per clone** — ⚠ **this repository carries no tracked `.claude/settings.json`**
-(removed 2026-09-04), so **a bare clone loads no skill, no hook and no surface at all**:
-
-```
-git config core.hooksPath .githooks                    # make the push rule bite locally
-claude plugin marketplace add https://github.com/trust-delta/bearing.git --scope user
-claude plugin install bearing@trust-delta --scope user
-```
-
-Then **start a fresh session** (the slash-command and hook inventories are fixed when a session
-starts) and run:
-
-```
-/bearing:with-aim            # place the aim law into CLAUDE.md (untracked in this repository)
-/bearing:statusline-setup    # attach the surface — this one takes effect immediately
-```
-
-⚠ To get `autoUpdate`, add `"autoUpdate": true` to `extraKnownMarketplaces.trust-delta` in
-`~/.claude/settings.json` by hand — `marketplace add` has no flag for it.
-
-⚠ **What runs while you develop is the code in front of you.** The marketplace points at this
-repository's own remote, so the cache holds the **pushed** version — but every `bin` entry in the
-cache delegates to the working tree once `CLAUDE_PROJECT_DIR` shows it is inside a bearing
-checkout. Hooks and the statusline take that same single route (measured: mark the cached copy and
-the mark never appears inside this repository, always outside it). ⚠ The delegation itself lives in
-the cached copy, so the version gate still bites when that shim changes.
-
-The rule for pushing to `main` is: **documentation may be pushed directly; anything
-containing code needs a pull request.** The decision lives in exactly one place,
-`scripts/classify-paths.mjs`, and both the pre-push hook and the `push-policy`
-workflow call it — two implementations would drift apart, and silently.
-
-**GitHub cannot enforce this conditionally.** The *push ruleset* — the only rule
-that can reject a push by path — is refused for this repository because it is
-public and user-owned (measured 2026-09-01). So enforcement is two layers, and
-neither is complete on its own:
-
-| | what it does | can it be bypassed |
-| --- | --- | --- |
-| `.githooks/pre-push` | stops the act **as it happens** | yes, `--no-verify` — and it does not exist at all in a clone that skipped the config above |
-| `.github/workflows/push-policy.yml` | leaves a violation **red and permanent** | no — but it cannot prevent anything |
-
-That the hook can be bypassed is deliberate, not a defect: bending the rule is the
-human's call, and a tool must not take that away. The bypass shows up in CI.
-
-CI fails on two things only: the **tests**, and the **carriers being in sync**
-with their canonical sources. The language measurement (`scripts/lang-report.mjs`)
-reports and never fails — the premise behind
-[`native-language`](docs/aims/native-language.md) has not been measured yet, so
-making it a hard gate would be premature.
-
-### Distribution — pushing alone reaches nobody
-
-There are three gates, two on the receiving side and one on the publishing
-side (docs plus measurement, 2026-09-01 / 09-03):
-
-| gate | who clears it |
-| --- | --- |
-| a marketplace clone is never pulled automatically at startup | **the receiving side** — declare `"autoUpdate": true` on the `extraKnownMarketplaces` entry, or run `/plugin marketplace update trust-delta` → `/plugin update bearing` → restart Two measurements disagree about how well the declaration holds (one machine, the clone reflog): from the `2026-09-01` clone through `09-03` **not a single pull happened** (14 commits were pushed in that window), while the `09-04` startup **pulled 11 commits on its own** — same project-scoped declaration both times. So a project-scoped entry is **not** excluded from the sweep (the second case rules that out), but **what separates the two is still unknown** — do not read this row as "declare it and it will always be pulled". |
-| the cache is not replaced unless `plugin.json` raises `version` | **the publishing side** — bump it on every release. Forget it and nothing the receiver does will help |
-| a tracked declaration **enables but never installs** — with no record in `installed_plugins.json`, not one piece of the plugin loads | **the receiving side** — run `claude plugin install bearing@trust-delta --scope project` once. ⚠ that file is machine-local and untracked, so **git holds the intent to load it, never the fact that it is loaded** On `2026-09-04` a record appeared without anyone running install: right after a `/plugin` update through the UI followed by a restart, a project-scoped record (at the then-current version) grew out of the tracked declaration. No observation separates the update from the restart, so the one command above is **a reliable route, not the only one**. |
-
-The second gate exists only because this repository declares a `version` at all;
-omitting the field falls back to a commit-derived one, and pushing would suffice.
-Keeping the declaration makes the bump *part of* a release — forget it and the
-change lands silently, reaching no one.
-
-⚠ The third gate sits ahead of the other two, and it is the only one whose
-failure says nothing on screen. Without the record not one skill and not one
-hook runs, yet **a mechanism that is not loaded cannot report its own absence** —
-nothing shows in the statusline or the fences, and even `/plugin update` stays
-silent. ⚠ `claude plugin details` lists the version, the skills and the hooks
-with no record present, so it is never evidence of being loaded — `claude plugin
-list` is the side that reflects it. ⚠ The *silence* is measured on a single
-machine (2026-09-03); the gate itself the docs back, as below.
-
-#### Intent and fact — a plugin is decided in two layers
-
-| layer | where it lives | tracked? | what it says |
-| --- | --- | --- | --- |
-| **intent** | `enabledPlugins` and `extraKnownMarketplaces` in `settings.json` (user / project / local) | **tracked** at project scope | which plugins should load, and where the marketplace is |
-| **fact** | the record in `~/.claude/plugins/installed_plugins.json` (`scope` / `projectPath` / `installPath` / `version`) plus what is in the cache | **untracked, machine-local** | what is actually loaded, at which version, from where |
-
-⚠ **`enabledPlugins` is a load switch, not an install** — the docs call it
-"necessary but not sufficient" and say it "alone doesn't install a plugin". So a
-declaration with no record means the plugin is *wanted*, not loaded. **Git holds
-the intent; the fact of being loaded lives only on the untracked side** — and the
-two can diverge in silence.
-
-⚠ **`--scope` is the scope of the install, not merely of the declaration.** There
-are three (user / project / local): a project-scoped record only counts inside
-its `projectPath`, a user-scoped one counts everywhere, and **the same plugin can
-hold records in both** — so "is it loaded" is not answerable from the plugin name
-alone, only from the plugin name *and the project you are asking from*.
-
-⚠ **The docs say a declaration in project settings installs with no separate
-prompt once the folder is trusted; that did not reproduce here.** Measured in an
-isolated config (2026-09-03, one machine): a **fresh clone that was already
-trusted**, carrying the tracked declaration, registered no marketplace and
-produced neither cache nor record simply by starting a session. ⚠ **Only
-non-interactive (`-p`) sessions were measured**, so what happens *at the moment
-the trust dialog is accepted* is **still untested** — that path needs a human at
-an interactive first run. This README therefore assumes the receiving side runs
-the install once.
-
-### Attaching the status line — the human writes one line, but not a path
-
-⚠ A plugin cannot declare a `statusLine` key (a plugin root's settings may only carry `agent`
-and `subagentStatusLine`), so **attaching stays a human act.** ⚠ And a plugin's `bin/` is not on
-the status line's `PATH` — the `PATH` the docs mean is **the Bash tool's**, which measurement
-confirmed — so **there is no bare command name to call.**
-
-One command does the attaching:
-
-```
-/bearing:statusline-setup
-```
-
-It drops a thin shim at `~/.claude/bearing-statusline.mjs` and writes one line into
-`~/.claude/settings.json`. ⚠ **The shim reads the install record on every run and bridges to
-whichever version is loaded**, so **the line carries no version and does not rot on a bump** —
-the cache never deletes old versions, so a versioned path written directly keeps silently
-drawing the old one.
-
-⚠ **It writes user settings only.** An absolute path contains a home directory, so writing it
-into tracked project settings would commit a surface that breaks silently for everybody else.
-If a different status line is already configured it **says so and stops** rather than
-overwriting (`--force` to replace, `--uninstall` to remove).
-
-⚠ **This repository needs nothing beyond that one line either** — its project settings were
-removed on 2026-09-04. Every `bin` entry in the cache reads `CLAUDE_PROJECT_DIR` and delegates
-to the working tree when it finds itself inside a bearing checkout, so the user-scope line alone
-renders the working tree while you develop; no absolute path has to live in the repo. Measured:
-mark the cached copy and run it — the mark never appears inside this repository (the working tree
-ran) and always appears outside it. The hooks behave the same way.
-
-⚠ **One thing is lost in exchange: a bare clone now draws nothing here either.** No surface, no
-hook, no skill loads until the receiving side installs once at user scope — so **"the fact that it
-is loaded lives only on the untracked side" now applies to this repository as much as any other.**
-
-⚠ **When nothing is loaded, the shim says so.** With no record not one piece of the plugin is
-loaded, and **a mechanism that is not loaded cannot report its own absence** — but the shim
-lives outside the plugin, so it runs anyway and can say it.
-
-### aim is opt-in per project — so the rest can load everywhere
-
-bearing is not one unit. The two handoff skills and the status line's first
-row depend on nothing under `docs/aims/` and are useful in **any** project,
-while the aim discipline presumes a corpus and **gets in the way in a repo
-that has not adopted it**. So the plugin itself can be installed at user
-scope for every project, and only the aim discipline is opted into per
-project:
-
-```
-/bearing:with-aim
-```
-
-That inserts a marker-delimited block of the law at the **end** of the
-project-root `CLAUDE.md` (`--check` reports state only, `--remove` takes it
-out).
-
-Where the corpus lives is the project's call. The default is `docs/aims/`,
-and `--dir` changes it:
-
-```
-/bearing:with-aim --dir proj/aims
-```
-
-The default itself never moves — moving it would make every existing corpus
-vanish at once. The declaration rides in the marker, so it is the same single
-declaration as opting in (no `dir=` means the default, so blocks written
-before this existed keep working untouched). Globs are refused: the value is
-handed to git as a pathspec, colliding slugs break `parent:` and `[[link]]`
-resolution, and "there is no corpus" stops being distinguishable from "we were
-looking somewhere else". Re-running without arguments keeps whatever the block
-already declares, so updating the version never silently relocates a corpus.
-
-Why `CLAUDE.md` rather than a hook: a SessionStart hook's output is
-summarized away with the conversation on compaction ("Context that hooks
-added earlier — Summarized with the rest of the conversation"), whereas the
-project-root `CLAUDE.md` is re-injected from disk. `CLAUDE.md` also loads
-into subagents (only the built-in Explore and Plan agents skip it), while the
-subagent lifecycle the docs name is `SubagentStart` / `SubagentStop`. Neither
-is "stronger" — the docs call both context rather than enforced
-configuration, and neither lands in the system prompt. The difference is
-position and persistence, and that is what decides the layer: the static law
-goes in `CLAUDE.md`, the facts that only exist at runtime stay in the hook.
-
-The markers are HTML comments. The docs state that block-level HTML comments
-in `CLAUDE.md` are stripped before the content is injected, so carrying an
-identifier, a version and a body hash costs no context at all — and a human
-still sees them when opening the file.
-
-Because the marker carries the body hash, two different things can be told
-apart: the block is **stale**, or a **human edited it**. In the second case
-nothing is rewritten — what a rewrite would erase is that edit. The same
-holds when the markers are broken (one side only, unreadable, or two pairs).
-
-The marker is also the opt-in declaration. The hook reads it and emits **not
-one byte** in a repo that has not opted in — except for an unread baton,
-which is handoff, not aim, and is useful anywhere. A repo that already has a
-corpus keeps speaking without a marker: the marker arrived later, and a repo
-already writing nodes is not silenced for lacking one.
 
 ## Status
 

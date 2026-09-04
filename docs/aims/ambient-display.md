@@ -18,6 +18,8 @@ state: open
 
 ⚠ **幅が確定した文字だけを使う。** 中黒・矢印・ギリシャ文字・絵文字は East Asian **Ambiguous** 幅であり、日本語フォントでは全角に描かれるのに terminal は半角として桁を進める ∴ **隣の文字と重なる**。使えるのは ASCII printable と Wide が確定した日本語だけで、**構造は記号ではなく色と余白が作る**。これは美意識ではなく、実際に画面が壊れて得た制約である。
 
+⚠ **plugin は `statusLine` key を宣言できない** —— plugin root の settings が持てるのは `agent` と `subagentStatusLine` だけである（docs）∴ **装着が人間の act として残るのは、我々の選択ではなく plugin の層の性質である。** ⚠ **そして下段のとおり `bin/` は statusline の PATH に入らない** ∴ **宣言もできず、裸の名でも呼べない** —— 装着の 1 行が人間の側に残る理由は、この 2 つで尽きている。
+
 ⚠ **この面は、描くものではなく装着そのものが黙って消えうる。** `statusLine.command` は `$CLAUDE_PROJECT_DIR` を含む絶対パスで node を呼んでおり、**この env が statusline の script に渡ることは docs に記述が無い** —— 2026-09-01 の実測で在ることを確かめただけである。⚠ **渡らなくなれば `node "/carriers/.../statusline.mjs"` を呼んで即死し、画面からは 2 行が消えるだけで理由は一言も出ない。** ⚠ **同じ形の罠は既に別の env で踏んでいる**（2026-09-02、`$CLAUDE_PLUGIN_ROOT` が Bash の env に無く、それを前提にした呼び出しが `/bin/...` を見て落ちた）—— **ハーネスが渡す env を path に埋める呼び出しは、渡されなかった日に path が壊れる**、という一つの類である。∴ 上の「不在を黙って消さない」は描画の中だけの規律では足りない —— **装着そのものが黙って消える経路を塞げるかが、この面の問いである。**
 
 ⚠ **2026-09-03、その経路は塞げないことが確定した（公式 docs ＋ 実測）。** plugin の `bin/` が PATH に入るのは **Bash tool に対してだけ**であり（docs の file locations 表が "Executables added to the Bash tool's `PATH`" と明記する）、**statusline の process には入らない** —— 実測でも、Bash tool の PATH 58 要素に対し statusline は 52 要素で、**差はちょうど 6 つの plugin `bin/`** だった。∴ **裸のコマンド名へ移す道は無く、装着の 1 行から path は消せない。** ⚠ **同じ実測が `$CLAUDE_PROJECT_DIR` は statusline に渡ることを再確認した** ∴ この面は「docs に無いが実在する env」1 つに依り続ける。⚠ **前段の「絶対パスを捨てれば依存ごと消せる」は取り下げる** —— あのまま実装していれば statusline は解決しないコマンド名を呼んで即死し、**画面からは 2 行が消えるだけで理由は一言も出なかった。この node が warn している壊れ方を、この node の todo が自分で踏むところだった。**
