@@ -102,45 +102,10 @@ claude plugin update bearing@trust-delta
 > [`docs/aims/bearing.md`](docs/aims/bearing.md) と
 > [`docs/aims/ambient-display.md`](docs/aims/ambient-display.md) に在る。
 
-## 開発
+## 開発に加わる
 
-**変更は fork して PR で出す** —— ⚠ **main へ直接 push できるのは write 権限を持つ者だけである。**
-
-### 手元で走らせる
-
-```
-git config core.hooksPath .githooks
-```
-
-⚠ **この repo は tracked な `.claude/settings.json` を持たない** ∴ **clone しただけでは skill も
-hook も面も 1 枚も載らない** —— 上の「使い方」を 1 度通すこと。
-
-⚠ **開発中に走るのは手元の code である。** marketplace は自分自身の remote を指す ∴ cache に
-入るのは push 済みの版だが、**cache 側の `bin/` は、`CLAUDE_PROJECT_DIR` が bearing の checkout
-を指していると分かれば working tree へ委譲する** —— hook も statusline も同じ 1 経路である。
-（plugin を載せずに走らせるなら `claude --plugin-dir ./carriers/claude/bearing`。）
-
-### PR で見られるもの
-
-CI が落とす門は 2 つだけ —— **test** と、**carrier が正本と同期していること**。⚠ **言語の測定は
-報告であって門ではない**（[`native-language`](docs/aims/native-language.md) の前提がまだ実測
-されていない以上、硬い門にするのは早い）。
-
-```
-node --test carriers/claude/bearing/test/*.test.mjs   # test
-bash gen/claude-plugin.sh --plugin                    # carrier の再生成
-node scripts/lang-report.mjs                          # 言語の測定（落ちない）
-```
-
-### この repo の作法
-
-- ⚠ **`carriers/**/skills/**` は生成物である**（`gen/claude-plugin.sh`）—— 手で直さず、
-  `docs/aims/_guide/` を直して再生成する。食い違いは CI が赤くする
-- ⚠ **開発は aim で駆動される** —— **なぜその変更なのかは `docs/aims/` の木に残す。**
-  目的（`aim:` の 1 行）は人間のものであり、**動かす提案はできるが、書き換えるのは人間である**
-- **正本は日本語である**（下の「言語」）—— 英語版の README は従属物で、食い違えば日本語が正
-- ⚠ **`plugin.json` の `version` を上げない限り、変更は誰にも届かない** —— bump は release の
-  一部であり、maintainer が行う
+**[`CONTRIBUTING.md`](CONTRIBUTING.md) を参照。** ⚠ **こちらは日本語のみである** —— 理由は
+下の「言語」に書いた。
 
 ## 言語
 
@@ -148,6 +113,8 @@ node scripts/lang-report.mjs                          # 言語の測定（落ち
 言語を統一した方が質が高い**という判断に基づく手段であり、その前提はまだ実測されていない
 （[`docs/aims/native-language.md`](docs/aims/native-language.md) を参照）。英語版の
 README は併置してあるが従属物であり、食い違ったときは日本語側が正である。
+
+⚠ **ただし外向きの英語は「読む面」に限る。** 開発に加わる面（[`CONTRIBUTING.md`](CONTRIBUTING.md)）は日本語のみで、翻訳を置かない —— **開発が日本語で進み、aim の木も canon も commit message も日本語である以上、手引きだけを訳しても拾えるのは表面であって変更の意図ではない。**
 
 機械が parse する契約 —— fence の tag と field 名、slug、識別子 —— は英語のままである。
 **判別線は「人が読む文か、機械が parse する token か」であって、内と外ではない。**

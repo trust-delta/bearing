@@ -108,49 +108,12 @@ machine) — so run the two commands above when you want an update.
 > [`docs/aims/bearing.md`](docs/aims/bearing.md) and
 > [`docs/aims/ambient-display.md`](docs/aims/ambient-display.md).
 
-## Development
+## Contributing
 
-**Fork and open a pull request** — ⚠ **only someone with write access can push to `main` directly.**
-
-### Running it locally
-
-```
-git config core.hooksPath .githooks
-```
-
-⚠ **This repository carries no tracked `.claude/settings.json`**, so **a bare clone loads no skill,
-no hook and no surface at all** — run the Usage steps above once.
-
-⚠ **What runs while you develop is the code in front of you.** The marketplace points at this
-repository's own remote, so the cache holds the **pushed** version — but every `bin` entry in the
-cache delegates to the working tree once `CLAUDE_PROJECT_DIR` shows it is inside a bearing
-checkout. Hooks and the status line take that same single route. (To run the working tree without
-installing anything: `claude --plugin-dir ./carriers/claude/bearing`.)
-
-### What your pull request is checked against
-
-CI fails on two things only — the **tests**, and the **carriers being in sync** with their canonical
-sources. ⚠ **The language measurement reports and never fails**: the premise behind
-[`native-language`](docs/aims/native-language.md) has not been measured yet, so making it a hard
-gate would be premature.
-
-```
-node --test carriers/claude/bearing/test/*.test.mjs   # tests
-bash gen/claude-plugin.sh --plugin                    # regenerate the carriers
-node scripts/lang-report.mjs                          # language measurement (never fails)
-```
-
-### Conventions
-
-- ⚠ **`carriers/**/skills/**` is generated** (`gen/claude-plugin.sh`) — edit `docs/aims/_guide/`
-  and regenerate rather than editing it by hand. CI turns any divergence red
-- ⚠ **Development is driven by the aim corpus** — **why a change exists belongs in the tree under
-  `docs/aims/`.** The purpose line (`aim:`) belongs to the human: **propose moving it, never
-  rewrite it**
-- **Japanese is canonical** (see Language below); this English README is subordinate and loses to
-  the Japanese one wherever they disagree
-- ⚠ **Until `version` in `plugin.json` goes up, a change reaches nobody** — the bump is part of a
-  release, and the maintainer does it
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). ⚠ **It is written in Japanese only, and deliberately so.**
+Development here happens in Japanese — the aim corpus, the canon and the commit messages are all
+Japanese — so a translated contributor guide would hand you the surface while the *intent* behind
+each change stayed out of reach. See Language below for the reasoning.
 
 ## Language
 
@@ -160,6 +123,11 @@ two, and that premise has not yet been measured — see
 [`docs/aims/native-language.md`](docs/aims/native-language.md). Machine
 contracts — fence tags and field names, slugs, identifiers — stay English. The
 line is between prose a person reads and tokens a machine parses.
+
+⚠ **The outward English stops at the reading surface.** [`CONTRIBUTING.md`](CONTRIBUTING.md)
+is Japanese only and stays that way: development happens in Japanese, and so do the aim corpus, the
+canon and every commit message — translating the guide alone would hand you the surface while the
+intent behind each change stayed out of reach.
 
 ## Status
 
