@@ -25,6 +25,7 @@ import {
   archiveDir,
   batonDir,
   bearingHome,
+  moveFile,
   unitSlug,
 } from '../lib/handoff.mjs'
 
@@ -222,25 +223,40 @@ test('unparseable hook input never interferes with the session', () => {
 test('unit slug は unit root の path を平坦化したものである —— Claude Code と同じ形', () => {
   // ⚠ **理由は一意性ではなく馴染みである**（人間が 2026-09-03 に決定）—— 人間が自力で
   // archive を見に行くとき、`~/.claude/projects/` で見慣れた形なら path から unit を読める。
-  assert.equal(unitSlug('/home/x/works/api'), '-home-x-works-api')
+  //
+  // ⚠ **resolver を明示して、両 platform の形をどちらの platform からも検査する。**
+  // 2026-09-04 まで、ここは POSIX 形を暗黙に前提にしており **win32 では常に赤かった**
+  // ——「CI が緑」は「その platform で通った」でしかない（`purpose-drift`）。
+  assert.equal(unitSlug('/home/x/works/api', path.posix.resolve), '-home-x-works-api')
+  // ⚠ **win32 では drive letter が付く。** 実測: この repo の unit は
+  // `D--trust-project-bearing` であり、Claude Code 自身の `~/.claude/projects/` と一致する。
+  assert.equal(unitSlug('C:\\works\\api', path.win32.resolve), 'C--works-api')
   // ⚠ 別の場所の同名 repo は、別の unit になる。
-  assert.notEqual(unitSlug('/home/x/works/api'), unitSlug('/home/x/other/api'))
+  assert.notEqual(
+    unitSlug('/home/x/works/api', path.posix.resolve),
+    unitSlug('/home/x/other/api', path.posix.resolve),
+  )
 })
 
 test('英数字以外はすべて潰す —— Claude Code の `~/.claude/projects/` と同じ規則である', () => {
-  assert.equal(unitSlug('/home/x/my repo'), '-home-x-my-repo')
+  assert.equal(unitSlug('/home/x/my repo', path.posix.resolve), '-home-x-my-repo')
   // ⚠ 実測: `/home/trustdelta/.claude` は `-home-trustdelta--claude` になっている。
-  assert.equal(unitSlug('/home/x/.claude'), '-home-x--claude')
+  assert.equal(unitSlug('/home/x/.claude', path.posix.resolve), '-home-x--claude')
+  // ⚠ win32 の `\` と `:` も同じ規則に含まれる。
+  assert.equal(unitSlug('C:\\w\\my repo', path.win32.resolve), 'C--w-my-repo')
 })
 
 test('⚠ 平坦化は単射でない —— 衝突は「起きない」ではなく「述べる」で塞ぐ', () => {
   // ⚠ **この test は欠陥を固定している。** 人間は一意性より読めることを選んだ ∴ ここで
   // 等しくなること自体は仕様である。**衝突したときに黙らないこと**が別に要る。
-  assert.equal(unitSlug('/w/a.b'), unitSlug('/w/a-b'))
+  assert.equal(unitSlug('/w/a.b', path.posix.resolve), unitSlug('/w/a-b', path.posix.resolve))
 })
 
 test('unit slug は同じ path に対して安定である —— 揺れれば baton は毎回行方不明になる', () => {
-  assert.equal(unitSlug('/home/x/works/api'), unitSlug('/home/x/works/api/'))
+  assert.equal(
+    unitSlug('/home/x/works/api', path.posix.resolve),
+    unitSlug('/home/x/works/api/', path.posix.resolve),
+  )
 })
 
 test('baton は repo の外に置かれる —— unit root の下に何も作らない', async (t) => {
@@ -305,4 +321,57 @@ test('migrate は移動先に在るものを黙って潰さない', async (t) =>
   const out = runCli(root, 'migrate')
   assert.match(out, /移さなかった: 1 本/)
   assert.match(await readFile(activePath(root), 'utf8'), /task: new/)
+})
+
+// ── 移動 —— device を跨ぐ ───────────────────────────────────────────────────
+//
+// ⚠ **この対は実機の故障から来ている**（2026-09-04）: repo が `D:`、home が `C:` の
+// Windows 機で `migrate` が `EXDEV` で落ちた。⚠ **同一 device の test 環境では EXDEV を
+// 起こせない** ∴ 落ち方だけを注入して、**分岐が在ること**を固定する。
+
+const exdev = () => {
+  const e = new Error('EXDEV: cross-device link not permitted')
+  e.code = 'EXDEV'
+  return e
+}
+
+test('moveFile は device を跨げる —— rename が EXDEV なら copy して消す', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'bearing-move-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const from = path.join(dir, 'a.md')
+  const to = path.join(dir, 'b.md')
+  await writeFile(from, 'baton\n')
+
+  await moveFile(from, to, { rename: async () => { throw exdev() } })
+
+  assert.equal(await readFile(to, 'utf8'), 'baton\n')
+  assert.equal(existsSync(from), false) // ⚠ **copy して残せば、2 つの baton が並ぶ。**
+})
+
+test('moveFile は EXDEV 以外を呑まない —— 落ちたことを落ちたと述べる', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'bearing-move-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const from = path.join(dir, 'a.md')
+  await writeFile(from, 'baton\n')
+
+  await assert.rejects(
+    () => moveFile(from, path.join(dir, 'b.md'), {
+      rename: async () => { const e = new Error('EACCES'); e.code = 'EACCES'; throw e },
+    }),
+    /EACCES/,
+  )
+  assert.equal(existsSync(from), true)
+})
+
+test('moveFile は跨いだ先でも、既に在るものを潰さない', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'bearing-move-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const from = path.join(dir, 'a.md')
+  const to = path.join(dir, 'b.md')
+  await writeFile(from, 'old\n')
+  await writeFile(to, 'new\n')
+
+  await assert.rejects(() => moveFile(from, to, { rename: async () => { throw exdev() } }))
+  assert.equal(await readFile(to, 'utf8'), 'new\n')
+  assert.equal(existsSync(from), true)
 })

@@ -23,13 +23,13 @@
 // である。**機械化すれば、要点ごと機械化して消すことになる。**
 
 import path from 'node:path'
-import { mkdir, readdir, rename, stat } from 'node:fs/promises'
+import { mkdir, readdir, stat } from 'node:fs/promises'
 import { readAimSlugs } from '../lib/corpus.mjs'
 import { resolveUnit } from '../lib/unit.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import {
-  ACTIVE, ARCHIVE, activePath, archiveDir, batonDir, listArchive, stampReadAt,
+  ACTIVE, ARCHIVE, activePath, archiveDir, batonDir, listArchive, moveFile, stampReadAt,
   strandedBatons, writeBaton,
 } from '../lib/handoff.mjs'
 import { readBaton } from '../lib/baton.mjs'
@@ -125,7 +125,7 @@ async function migrate(unitRoot) {
       kept.push(to) // ⚠ 既に在る ∴ 触らない。
       return
     } catch { /* 無い ∴ 移せる */ }
-    await rename(from, to)
+    await moveFile(from, to) // ⚠ **device を跨ぐ** —— repo と home が別 drive でありうる。
     moved.push(to)
   }
   for (const src of found) {
