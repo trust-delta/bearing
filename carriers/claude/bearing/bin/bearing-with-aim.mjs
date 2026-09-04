@@ -33,6 +33,7 @@ import {
   planApply, planRemove, inspect, loadDesired, bodySha, declaredAimsDir,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR, normalizeAimsDir } from '../lib/corpus.mjs'
+import { syncCanon, describeCanon, MANIFEST } from '../lib/canon.mjs'
 
 const log = (...a) => console.log(...a)
 
@@ -86,6 +87,22 @@ async function writeAtomic(file, text) {
   await rename(tmp, file)
 }
 
+/** canon を置き（または現況を述べ）、結果を人間の言葉にして出す。 */
+async function reportCanon(root, projectDir, aimsDir, write, version) {
+  const rel = `${aimsDir}/_guide`
+  const guideDir = path.join(projectDir, ...aimsDir.split('/'), '_guide')
+  const { plan, missing, manifest } = await syncCanon(root, guideDir, write, version)
+  // ⚠ **壊れた台帳は「無い」に畳まない。** 畳めば、人間は「なぜ更新されないのか」を
+  // 探すことになる —— 答えは画面に無い。
+  if (manifest.broken) {
+    log(`⚠ ${rel}/${MANIFEST} が読めない —— 記録が無いものとして扱った（上書きはしない）。`)
+  }
+  for (const line of describeCanon(plan, rel, write)) log(line)
+  if (missing.length > 0) {
+    log(`⚠ 同梱の canon が読めない: ${missing.join('、')} —— この plugin の install が壊れている。`)
+  }
+}
+
 async function main(argv) {
   const root = path.join(import.meta.dirname, '..')
   const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd()
@@ -108,6 +125,10 @@ async function main(argv) {
       (chosen.from === 'flag' ? '（--dir）' : chosen.from === 'declared' ? '（既に置かれた宣言）' : '（既定）'),
   )
 
+  // ⚠ **既定で置く**（人間の決定 2026-09-04）—— `with-aim` を打つことが opt-in の判断
+  // そのものであり、置くことは判断の代行にならない。断る道は残す。
+  const wantCanon = !argv.includes('--no-canon')
+
   if (await exists(path.join(projectDir, ALT))) {
     log(`⚠ ${ALT} も在るが触らない —— compaction 後に再注入されると docs が述べるのは`)
     log('  project-root の CLAUDE.md だけである。')
@@ -117,6 +138,9 @@ async function main(argv) {
     const s = inspect(before, desired)
     log(`状態: ${s.state} —— ${s.detail}`)
     log(`今の法: v${desired.version} sha=${bodySha(desired.law)}`)
+    // ⚠ **canon は述べるだけで、exit code は動かさない** —— この終了値は*法の block*に
+    // ついての判定であり、そこへ別の軸を混ぜれば、呼ぶ側は何が赤いのか分からなくなる。
+    if (wantCanon) await reportCanon(root, projectDir, chosen.dir, false, desired.version)
     return s.state === 'broken' || s.state === 'edited' ? 1 : 0
   }
 
@@ -133,6 +157,9 @@ async function main(argv) {
     await writeAtomic(target, plan.text)
     log(plan.reason)
     log('⚠ hook はこの project で黙るようになる（corpus はそのまま残っている）。')
+    // ⚠ **canon は消さない。** 置いた後の `_guide/` はその repo の doc であり、opt-in を
+    // 外すことと、その repo が持つ doc を捨てることは別の act である。
+    log(`⚠ ${chosen.dir}/_guide は残す —— 置いた後の canon はこの repo の doc である。`)
     return 0
   }
 
@@ -143,11 +170,18 @@ async function main(argv) {
   }
   if (plan.action === 'unchanged') {
     log(plan.reason)
+    // ⚠ **法が最新であることは、canon が在ることを意味しない。** 版の更新のために打ち直した
+    // 人間が、ここで初めて canon を得ることは在りうる ∴ この分岐でも置く。
+    if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true, desired.version)
     return 0
   }
   await writeAtomic(target, plan.text)
   log(`${plan.reason}（v${desired.version} / 法は ${desired.law.split('\n').length} 行）`)
   log('⚠ marker は HTML コメント ∴ context には乗らない。中身の法だけが載る。')
+  // ⚠ **法を置いた息で canon も置く。** 置かれた法の第 1 条は
+  // `<corpus>/_guide/aim-authoring.md` を指しており、**無ければその条は最初から満たせない。**
+  if (wantCanon) await reportCanon(root, projectDir, chosen.dir, true, desired.version)
+  else log('⚠ --no-canon ∴ `_guide/` へは何も置かない —— 法が指す canon は無いままである。')
   log('外すときは: bearing-with-aim.mjs --remove')
   return 0
 }
