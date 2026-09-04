@@ -16,6 +16,8 @@ state: done
 
 **外向きの英語は捨てず、従属物として残す。** README は日本語を正本とし、英語版を `README.en.md` として併置する。⚠ **2 枚は必ず drift する** —— 併記は同期の義務を人間に課す構造であり、機械はこれを検知しない（[[purpose-drift]] の fence は `docs/aims/` しか見ない）。∴ **食い違いを見つけたら日本語側が正**と決めておく。これは翻訳の質の問題ではなく、どちらが権威かを先に決めておかないと 2 枚とも信用できなくなるからである。
 
+⚠ **2026-09-04、外向きの英語に線が 1 本入った**（人間が決定）—— **貢献の面は英語版を作らない。** README は従属物として英語版を持ち続けるが、`CONTRIBUTING.md` は日本語のみである。⚠ **理由は到達範囲の放棄ではなく、翻訳が届かない層が在るからである**: 開発は日本語で進み、**aim の木も canon も commit message も日本語** ∴ **貢献の手引きだけを訳しても、拾えるのは表面であって変更の意図ではない。** ⚠ **∴ 上段の「外向きの英語は捨てず従属物として残す」は、*読む*面についての法であって、*加わる*面には及ばない** —— 2 つを同じ規則で扱えば、**実際には参加できない人に「参加できる」と告げる面**を作ることになる。
+
 ⚠ **既に push された commit message は書き換えない。** 履歴の rewrite は別の act であり、言語の統一がその理由になることはない。
 
 # PROCESS
@@ -23,4 +25,5 @@ state: done
 - [done] **実行時に注入される散文を日本語へ寄せた。** `bin/*.mjs` 5 枚・`lib/*.mjs` 11 枚が emit する文、5 枚の fence の `# none` / `# unavailable` コメント散文、`hooks.json` の `statusMessage` 4 件、`plugin.json` と `marketplace.json` の `description`、`gen/claude-plugin.sh` が書く `aim` skill の `description`。⚠ **fence のタグ・field 名・値（`true`/`false`/`unknown`/`unreadable`/`untracked`）は英語のまま据え置いた** —— 契約であって散文ではない。test の assertion 18 件が emit 文字列を見ていたので追随させ、123/123 green
 - [done] **code 内コメントを日本語へ寄せた。** `bin/` `lib/` `test/` `gen/claude-plugin.sh`。⚠ **翻訳のついでに、解決しない参照を 12 件落とした** —— code コメントが前身の node 名（`aim-upkeep` / `drift-git` / `aim-code-drift` / `neutral-source-vendor-carrier` 等）と存在しない path（`docs/runbook/windows.md`・`scripts/gen-carriers.sh`）を名指していた。導出の理由は前提として言い換えて残し、名だけを落とした
 - [done] **README を日本語正本にし、英語版を `README.en.md` として併置した**（root と plugin の 2 組、相互リンク付き）。⚠ **あわせて root README の Status 節が偽になっていたのを直した** —— 「移設が着地するまで、この repo は名前と README だけである」と書かれていたが、移設は着地済である
+- [done] **開発の手引きを `CONTRIBUTING.md` へ分離し、日本語のみにした。** README から「開発」節を抜き、公開面には**読む人**だけが残る形にした。⚠ **英語版の README には、日本語のみである*理由*まで書いた** —— **無いことを黙って示すのは、この repo が一貫して拒んできた沈黙の形である。** ⚠ **`scripts/classify-paths.mjs` の docs allowlist に名指しで足した**（既定 deny ∴ 足さなければ code 扱いで、doc の修正が PR 必須になる）
 - [done] **混在を測る手段を置いた** —— `scripts/lang-report.mjs`（層ごとの比率 ＋ 日本語が期待される `.mjs` の英語散文候補）を CI で毎回走らせる。⚠ **報告であって門ではない**: この node の前提がまだ実測されていない以上、規律を硬い門にするのは早い ∴ 落とさない。⚠ **heuristic であり、引用された英語の術語と英語の散文を区別できない** —— 出るのは候補であって違反ではない。書いた直後に本物の取りこぼしを 1 件検出した（[[purpose-drift]] の fence が届かない範囲を、別のセンサーが埋めている形）

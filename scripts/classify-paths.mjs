@@ -28,6 +28,7 @@
 const DOCS = [
   /^docs\//, //                      aim node と canon
   /(^|\/)README(\.[a-z]{2})?\.md$/, // 日本語正本と翻訳
+  /(^|\/)CONTRIBUTING\.md$/, //     開発に加わる人向け（日本語のみ）
   /(^|\/)LICENSE(\.[a-z]+)?$/i,
 ]
 
