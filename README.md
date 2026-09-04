@@ -50,11 +50,24 @@ README は併置してあるが従属物であり、食い違ったときは日�
 
 ## 開発
 
-**⚠ clone したら 1 度だけ、hook を設置すること:**
+**⚠ clone したら 1 度だけ、次を通すこと** —— ⚠ **この repo は tracked な `.claude/settings.json` を
+持たない**（2026-09-04 に外した）∴ **clone しただけでは skill も hook も面も 1 枚も載らない。**
 
 ```
-git config core.hooksPath .githooks
+git config core.hooksPath .githooks                    # push の規則を手元で効かせる
+claude plugin marketplace add https://github.com/trust-delta/bearing.git --scope user
+claude plugin install bearing@trust-delta --scope user
 ```
+
+ここで**セッションを開き直し**（slash command と hook の一覧は**セッション開始時に固まる**）、
+
+```
+/bearing:with-aim            # aim の法を CLAUDE.md へ差し込む（この repo の CLAUDE.md は untracked）
+/bearing:statusline-setup    # 面を装着する（⚠ こちらは即時に効く —— 設定は live に拾われる）
+```
+
+⚠ **`autoUpdate` を効かせたいなら、`~/.claude/settings.json` の `extraKnownMarketplaces.trust-delta`
+へ `"autoUpdate": true` を手で足す** —— `marketplace add` にその flag は無い。
 
 `main` への push の規則はこうである —— **非コードのドキュメント系は直プッシュ可、コードを
 含む場合は PR 必須。** 判定は `scripts/classify-paths.mjs` が 1 箇所で持ち、pre-push hook と
@@ -83,8 +96,13 @@ bash gen/claude-plugin.sh --plugin                    # carrier の再生成
 node scripts/lang-report.mjs                          # 言語の測定（落ちない）
 ```
 
-⚠ **作業ツリーの plugin を走らせるには** `claude --plugin-dir ./carriers/claude/bearing`。
-marketplace は自分自身の remote を指すので、通常のセッションは **push 済みの版**を読む。
+⚠ **開発中に走るのは手元の code である。** marketplace は自分自身の remote を指す ∴ cache に入るのは
+**push 済みの版**だが、**cache 側の `bin/` はすべて、`CLAUDE_PROJECT_DIR` が bearing の checkout を
+指していると分かれば working tree へ委譲する** —— hook も statusline も同じ 1 経路である（実測:
+cache の複製に印を入れると、この repo の中では印が出ず、外の project では出る）。⚠ **委譲は cache 側の
+code が担う** ∴ **その shim 自体を変えたときだけ、版の門がふたたび効く。**
+
+⚠ **plugin を載せずに working tree だけで走らせるなら** `claude --plugin-dir ./carriers/claude/bearing`。
 
 ### 配布 —— push しただけでは誰にも届かない
 
@@ -155,9 +173,15 @@ install を打つ」を前提に書いてある。
 書けば、他の人間の面が黙って壊れる形を repo に commit することになる。既に別の statusline が在れば
 **上書きせず述べて止まる**（差し替えるなら `--force`、外すのは `--uninstall`）。
 
-⚠ **bearing 自身の repo は、tracked な project settings で working tree を直に指している** ——
-これは重複ではない: あちらは **bearing が載っていなくても、clone しただけで描ける**（そして
-project settings は user settings に勝つ）。
+⚠ **bearing 自身の repo も、この 1 行だけで足りる**（2026-09-04 に project settings を外した）。
+**cache 側の bin はすべて `CLAUDE_PROJECT_DIR` を見て、bearing の checkout の中に居るときは
+working tree へ委譲する** ∴ **user スコープの 1 行で、開発中は working tree の面が出る** ——
+repo の中に絶対 path を書いた行を持つ必要は無い。⚠ **実測**: cache の複製に印を入れて走らせると、
+この repo の中では印が出ず（＝ working tree が走る）、外の project では出る。hook 側も同じ。
+
+⚠ **代わりに失うものが 1 つ在る —— clone しただけでは、この repo でも何も出ない。** 面も hook も
+skill も、受ける側が user スコープで 1 度 install するまで 1 枚も載らない ∴ **「載っている事実は
+untracked な側にしか無い」は、いまやこの repo 自身にも等しく当てはまる。**
 
 ⚠ **載っていなければ shim はそう描く。** record が無ければ本体は 1 枚も載っておらず、**載って
 いない機構は自分の不在を報告できない** —— だが shim は plugin の外に住む ∴ **載っていなくても
