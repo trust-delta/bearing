@@ -20,7 +20,24 @@ state: open
 
 ⚠ **人が自ら圧縮を指示したときは決して差し止めない。** 人の act を、その人のための儀式で上書きするのは体制の反転である。
 
+⚠ **この node は aim から独立していなければならない**（人間が 2026-09-04 に明示）—— **handoff は `/bearing:with-aim` 無しで動かねばならず、aim の側も handoff の機構を必要としない。** [[supply-scope]] が既にそれを法として持っている（baton の未読は、採っていない project でも述べる唯一の例外である）。
+
+⚠ **だが実装は 2 箇所でその分離を破っていた**（2026-09-04、人間が指摘し、実測で確かめた）。⑴ **hook が repo の中の path を正本として名指していた** —— `bin/boot-ritual.mjs` は **aim の gate を持たず**、baton が未読ならどの repo でも発火するのに、`docs/aims/_guide/handoff.md` を正本と述べていた。⚠ **corpus も `CLAUDE.md` も無い repo に baton だけ置いて走らせると、実際にそう述べた** —— そこには何も無い。⑵ **`/bearing:with-aim` が `handoff.md` を消費する repo の `_guide/` へ置いていた** ∴ **handoff の canon が aim の採用に依存する**形になっていた。
+
+⚠ **どちらも「skill が全部を運んでいる」ことを見落としたために起きた。** `handoff-r` / `handoff-w` の carrier は自分の同梱物を**裸の名**で指しており、**repo 側の `_guide/handoff.md` を 1 度も要求しない**（実測 2026-09-04）∴ 正しい名指し先は最初から skill の同梱物だった。
+
+# ESCALATION
+
+⚠ **`docs/aims/_guide/handoff.md` の置き場が未決である。** あの directory は自らの 1 文目で「**aim の規律そのもの**を持つ」と述べており、⚠ **handoff の canon がそこに在ることは、書かれた意図とその場で食い違っている。**
+
+⚠ **機能上の依存はもう無い**（hook も skill も同梱物を名指し、`with-aim` も置かない）∴ 残っているのは **file を物理的にどこへ置くか**だけである。今この file が果たす役割は **carrier 生成の源**の 1 つで、⚠ **人間向けの doc からは誰も path を指していない**（実測 2026-09-04）∴ 動かしても壊れるのは `gen/claude-plugin.sh` の 1 箇所だけ。
+
+⚠ **これは私の判断ではない。** 候補として `docs/handoff.md`（`docs/aims/` の兄弟・平ら）、`docs/handoff/handoff.md`（専用 dir）、`docs/_guide/handoff.md`（canon の置き場を docs 直下へ）を挙げたが、**人間はいずれも選ばず「handoff は skill のみで機能すると考えている」と述べた**（2026-09-04）—— ⚠ **その言葉が「置き場を変えずともよい」を意味するのか「そもそも docs に要らない」を意味するのかを、私は決められない。**
+
 # PROCESS
+
+- [done] **handoff の名指し先を、repo の path から skill の同梱物へ移した。** `boot-ritual.mjs` / `precompact.mjs` / `aim-facts.mjs` の 3 枚。⚠ **回帰の門も置いた** —— hook の出力が aim の repo path を 1 文字も含まないことを検査する（⚠ **先行の試験はその欠陥のほうを固定していた**: `/_guide\/handoff\.md/` に一致することを要求していた）。⚠ **門を鈍いままにするため、説明の文言からも path の字を落とした** —— 字が在れば、門は本物の回帰と説明を区別できない
+- [done] **`/bearing:with-aim` が `handoff.md` を置かないようにした。** ⚠ 置けば **handoff の canon が aim の採用に依存する** —— [[supply-scope]] の canon 集合は aim の 2 枚だけになった
 
 - [done] **面の側の検出漏れを塞いだ。** 旧い置き場に取り残された baton を、hook（SessionStart の facts・UserPromptSubmit の儀式）も CLI と**同じ検出**で見る。⚠ **2026-09-03、CLI だけ塞いで面を塞ぎ忘れ、実際に「fresh start」と嘘をついた** —— 在るのに無いと報告する形は、この機構が一貫して拒んできたものである。⚠ **述べるのは「読め」ではなく「移せ」である**: 機構はもうそこを読まない ∴ 読む手順を述べても実行できない。⚠ **2026-09-03、別マシンの実機で確認された**（人間の観測）—— 面が取り残しを述べ、人間が移し、**空になった旧 dir を人間が自分で消した**。⚠ **これは「旧い dir を我々が消さない」という判断の裏づけでもある**: 消す act は人間のものであり、実際に人間がそれを行った
 - [done] **CLI を `bearing-handoff.mjs` へ改名し、exec bit を付けた。** ⚠ **plugin の `bin/` は Bash tool の PATH に入り裸で呼べる** ∴ そこは全 plugin が共有する名前空間であり、`handoff.mjs` は一般名すぎた。⚠ **名前と exec bit は対である** —— 2026-09-03、PATH では解決したのに exec bit が無くて `Permission denied` で落ちた。`test/bin-namespace.test.mjs` がその対を固定する
