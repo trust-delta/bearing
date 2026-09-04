@@ -124,10 +124,18 @@ test('2 度打っても何も起きない（冪等）', async () => {
 test('一部だけ在るとき、在らない枚だけが置かれる', async () => {
   const guide = await fresh()
   await mkdir(guide, { recursive: true })
-  await writeFile(path.join(guide, 'handoff.md'), await srcOf('handoff.md'), 'utf8')
+  await writeFile(path.join(guide, 'aim-facts.md'), await srcOf('aim-facts.md'), 'utf8')
   const { plan } = await syncCanon(PLUGIN_ROOT, guide, true, V)
-  assert.deepEqual(plan.current, ['handoff.md'])
+  assert.deepEqual(plan.current, ['aim-facts.md'])
   assert.equal(plan.place.length, CANON_FILES.length - 1)
+})
+
+test('canon の集合に handoff は入らない —— aim と handoff は分かれている', () => {
+  // ⚠ **ここは `with-aim` ＝ aim の opt-in が置く場所である** ∴ handoff を入れれば
+  // **handoff の canon が aim の採用に依存する**（人間が 2026-09-04 に正した）。
+  // ⚠ **入れる必要も無い**: handoff の skill は自分の同梱物を裸の名で指しており、
+  // repo 側の `_guide/handoff.md` を 1 度も要求しない。
+  assert.deepEqual(CANON_FILES.map((f) => f.name), ['aim-authoring.md', 'aim-facts.md'])
 })
 
 test('我々が置いたままの古い canon は、黙って最新へ追随する', async () => {

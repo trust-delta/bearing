@@ -45,14 +45,21 @@ import { bodySha } from './claude-md.mjs'
 /**
  * 消費する repo の `_guide/` が持つべき正本と、plugin 内での在り処。
  *
- * ⚠ **`gen/claude-plugin.sh` が「中立正本」と呼ぶ 3 枚と同じ集合である。** ⚠ **`frame.md` と
- * `README.md` は入らない**: 前者は SessionStart hook と `CLAUDE.md` の block が運び、後者は
- * `_guide/` を*著述する側*の doc である。
+ * ⚠ **入るのは *aim の* canon だけである。** ここは `with-aim` ＝ **aim の opt-in** が置く
+ * 場所であり、置いたものは aim を採った repo にしか届かない。
+ *
+ * ⚠ **∴ `handoff.md` は入らない**（人間が 2026-09-04 に正した）—— **handoff は aim と明確に
+ * 分離されており、`with-aim` 無しで動かねばならない。** ここへ入れれば、**handoff の canon が
+ * aim の採用に依存する**ことになり、その分離を実装が破る。⚠ **そして入れる必要も無い**:
+ * `handoff-r` / `handoff-w` の skill は自分の同梱物を裸の名で指しており、**repo 側の
+ * `_guide/handoff.md` を 1 度も要求しない**（実測 2026-09-04）。
+ *
+ * ⚠ **`frame.md` と `README.md` も入らない**: 前者は SessionStart hook と `CLAUDE.md` の block が
+ * 運び、後者は `_guide/` を*著述する側*の doc である。
  */
 export const CANON_FILES = [
   { name: 'aim-authoring.md', from: ['skills', 'aim', 'aim-authoring.md'] },
   { name: 'aim-facts.md', from: ['skills', 'aim', 'aim-facts.md'] },
-  { name: 'handoff.md', from: ['skills', 'handoff-r', 'handoff.md'] },
 ]
 
 /** 我々が置いたものを記録する台帳。⚠ **canon の外に置く**（上の見出しを見よ）。 */

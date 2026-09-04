@@ -109,7 +109,7 @@ native な圧縮は反応的で不可視であり、**何が落ちたかを誰�
 何を「git と docs/aims/ から再導出できる」として省くか。
 
 今これを行うこと:
-  1. \`handoff-w\` skill に従う（正本: \`_guide/handoff.md\` § 書く）。
+  1. \`handoff-w\` skill に従う（正本: その skill が同梱する \`handoff.md\` § 書く）。
   2. 何を残し何を省いたかを 1〜2 行で人間に見せ、**land する前に**訂正させること。
   3. land はこれで:  node ${HANDOFF_CLI} write < <著した.md>
 

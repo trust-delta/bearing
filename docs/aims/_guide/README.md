@@ -6,7 +6,7 @@
 | :-- | :-- | :-- |
 | `frame.md` | 常時効く不変（所有の分割・escalate の線） | ✔ |
 | `aim-authoring.md` | aim の作成と保守の方法論（slug・section・木・drift） | ✔ |
-| `handoff.md` | セッション跨ぎの引き継ぎ儀式 | ✔ |
+| `handoff.md` | セッション跨ぎの引き継ぎ儀式 | ✔ ⚠ **ここに在るのは誤りである（下記）** |
 | `aim-facts.md` | セッションに注入される事実の読み方と、それが課す義務 | ✔ |
 
 ## 出荷される file は corpus を参照してはならない
@@ -14,6 +14,16 @@
 上の 4 枚は carrier（skill）として**生成・同梱**され、corpus を持たない場所へも届く。∴ **corpus 内部への `[[slug]]` cross-ref を持ってはならない** —— 届いた先にその node は存在せず、参照は必ず宙に浮く。
 
 ⚠ **これは行儀の問題ではなく、センサーの問題である。** 解決しない参照は「読むべき何かがある」と告げながら何処も指さない ＝ 読み手を無い情報の探索へ送る。現在 4 枚とも **0 件**で、これは実測して維持する不変である。
+
+## ⚠ `handoff.md` がここに在るのは誤りである
+
+**この directory の 1 文目が「aim の規律そのものを持つ」と述べている。** ⚠ **`handoff.md` はそれではない** —— **handoff は aim と明確に分離されており、`with-aim` 無しで動かねばならず、aim の側も handoff の機構を必要としない**（人間が 2026-09-04 に明示）。
+
+⚠ **実害は測れている。** `bin/boot-ritual.mjs` は **aim の gate を持たず**、baton が未読ならどの repo でも発火する。先行版はそこで `docs/aims/_guide/handoff.md` を正本として名指しており、**実測すると corpus も `CLAUDE.md` も無い repo でそう述べた**（2026-09-04）—— **そこには何も無い。** 今は hook も skill も **`handoff-r` / `handoff-w` の同梱物**を名指す。
+
+⚠ **`with-aim` は `handoff.md` を置かない。** ここは aim の opt-in が置く場所であり、入れれば**handoff の canon が aim の採用に依存する**。⚠ **入れる必要も無い** —— skill は自分の同梱物を裸の名で指しており、repo 側の `_guide/handoff.md` を 1 度も要求しない（実測 2026-09-04）。
+
+⚠ **残っているのは file の物理的な置き場だけであり、それは人間の判断である**（[[session-handoff]] の `# ESCALATION`）。今この file が果たしている役割は **carrier 生成の源**の 1 つだけで、人間向けの doc からは誰も指していない。
 
 **方法論の正当化は、この directory の中で閉じること。** 「なぜこの規約なのか」を corpus の node へ委ねると、出荷した瞬間に説明が欠ける。
 
@@ -36,7 +46,7 @@ gen/claude-plugin.sh --workspace <DIR>     # <DIR>/.claude/skills へ（machine-
 
 ⚠ **そして「人間が手で置く」道には腐る経路が在った。** 同梱の複製は `~/.claude/plugins/cache/<owner>/<plugin>/<version>/skills/aim/…` に住み、**path が version を含む。cache は旧版を消さない**（実測 2026-09-04、1 台に 8 版が並んでいた。最古 `0.4.0`）∴ 手で辿らせれば、**黙って古い canon を置く日が来る**。道具が置けば、人間は version を 1 度も見ない。
 
-置くのは **3 枚**（`aim-authoring.md` / `aim-facts.md` / `handoff.md` ＝ carrier へ同梱される中立正本と同じ集合）。⚠ **`frame.md` と この `README.md` は置かない** —— 前者は SessionStart hook と `CLAUDE.md` の block が運び、後者は `_guide/` を*著述する側*の doc である。
+置くのは **2 枚**（`aim-authoring.md` / `aim-facts.md`）—— ⚠ **aim の canon だけである。** `frame.md` は SessionStart hook と `CLAUDE.md` の block が運び、この `README.md` は `_guide/` を*著述する側*の doc、⚠ **`handoff.md` は aim の canon ではない**（上記）。
 
 ### 既に在るときどうなるか
 

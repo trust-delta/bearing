@@ -68,7 +68,15 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     assert.ok(r.stdout.includes(activePath(root)))
     // ⚠ 手順を再掲せず、正本と帳簿 CLI を指す —— 木の中に儀式についての第 3 の記述が
     // 置かれることは、「正本は 1 つ」の規則が禁じている複製である。
-    assert.match(r.stdout, /_guide\/handoff\.md/)
+    assert.match(r.stdout, /handoff-r.*handoff\.md/s)
+    // ⚠ **repo の中の path を名指してはならない**（人間が 2026-09-04 に正した）——
+    // **handoff は aim と別であり、`with-aim` 無しで動かねばならない** ∴ この hook は
+    // aim を採っていない repo でも発火する。⚠ **先行版は `docs/aims/_guide/handoff.md` を
+    // 正本として名指しており、実測すると corpus も `CLAUDE.md` も無い repo で
+    // そう述べた** —— そこには何も無い。⚠ **そしてこの試験は、その欠陥のほうを
+    // 固定していた。**
+    assert.doesNotMatch(r.stdout, /docs\/aims/,
+      'handoff の hook が aim の repo path を名指している')
     // ⚠ **CLI は解決済みの絶対 path で名指されねばならない。** hook の吐く text は
     // `${CLAUDE_PLUGIN_ROOT}` の inline 展開の対象では**ない**（対象は hook の `command`
     // field である）∴ placeholder を書けば文字列のまま届き、しかも Bash tool の env に
