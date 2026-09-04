@@ -23,11 +23,18 @@
 // ここでは `skills/**` を「docs 由来」として扱うが、⚠ **それが許されるのは、生成物が正本と
 // 同期しており、かつ他に code が動いていないときだけである。** 同期の検証は呼び出し側が
 // 行う（CI は再生成して diff を取る）—— この file は path しか見ないと述べておく。
+//
+// ⚠ **`CLAUDE.md` は「一部だけ生成物」だが `docs` に置く。** marker の内側は
+// `/bearing:with-aim` が置く法の block で、外側は人が書いた repo 固有の規律である ∴
+// **docs の変更が routinely 書き換えることはない**（置き直すのは人間の act）—— 上の
+// `skills/**` とはそこが違う。⚠ **block が古くなる問題は残る** ∴ 検めるのは
+// `bearing-with-aim.mjs --check` であって、この file ではない。
 
 /** docs の allowlist。ここに一致しないものは code。 */
 const DOCS = [
   /^docs\//, //                      aim node と canon
   /(^|\/)README(\.[a-z]{2})?\.md$/, // 日本語正本と翻訳
+  /(^|\/)CLAUDE\.md$/, //          repo 共通の初期注入プロンプト（人間の決定 2026-09-04）
   /(^|\/)CONTRIBUTING\.md$/, //     開発に加わる人向け（日本語のみ）
   /(^|\/)LICENSE(\.[a-z]+)?$/i,
 ]

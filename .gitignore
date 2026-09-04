@@ -13,3 +13,10 @@ node_modules/
 # `.claude/` は丸ごと ignore される —— **次に開けるときも、名指しで 1 行ずつ開けること。**
 .claude/*
 
+# ⚠ 締め出すのは machine-local な上書きだけである —— `CLAUDE.md` は tracked である
+# （人間の決定 2026-09-04）。repo 共通の初期注入プロンプトは共有されるべきもので、
+# 個人の上書きだけがここへ来る。⚠ `.claude/settings.local.json` は上の `.claude/*` が
+# 既に覆っている ∴ ここで名指ししない —— 同じ path を 2 度述べれば、片方を消した日に
+# 「消したつもりで消えていない」が起きる。
+CLAUDE.local.md
+
