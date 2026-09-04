@@ -52,11 +52,32 @@ line is between prose a person reads and tokens a machine parses.
 
 ## Development
 
-**Install the hook once per clone:**
+**Run this once per clone** — ⚠ **this repository carries no tracked `.claude/settings.json`**
+(removed 2026-09-04), so **a bare clone loads no skill, no hook and no surface at all**:
 
 ```
-git config core.hooksPath .githooks
+git config core.hooksPath .githooks                    # make the push rule bite locally
+claude plugin marketplace add https://github.com/trust-delta/bearing.git --scope user
+claude plugin install bearing@trust-delta --scope user
 ```
+
+Then **start a fresh session** (the slash-command and hook inventories are fixed when a session
+starts) and run:
+
+```
+/bearing:with-aim            # place the aim law into CLAUDE.md (untracked in this repository)
+/bearing:statusline-setup    # attach the surface — this one takes effect immediately
+```
+
+⚠ To get `autoUpdate`, add `"autoUpdate": true` to `extraKnownMarketplaces.trust-delta` in
+`~/.claude/settings.json` by hand — `marketplace add` has no flag for it.
+
+⚠ **What runs while you develop is the code in front of you.** The marketplace points at this
+repository's own remote, so the cache holds the **pushed** version — but every `bin` entry in the
+cache delegates to the working tree once `CLAUDE_PROJECT_DIR` shows it is inside a bearing
+checkout. Hooks and the statusline take that same single route (measured: mark the cached copy and
+the mark never appears inside this repository, always outside it). ⚠ The delegation itself lives in
+the cached copy, so the version gate still bites when that shim changes.
 
 The rule for pushing to `main` is: **documentation may be pushed directly; anything
 containing code needs a pull request.** The decision lives in exactly one place,
@@ -160,9 +181,16 @@ into tracked project settings would commit a surface that breaks silently for ev
 If a different status line is already configured it **says so and stops** rather than
 overwriting (`--force` to replace, `--uninstall` to remove).
 
-⚠ **This repository points at its own working tree from tracked project settings.** That is not
-a duplicate: that line draws from a bare clone even when bearing is not installed at all, and
-project settings win over user settings.
+⚠ **This repository needs nothing beyond that one line either** — its project settings were
+removed on 2026-09-04. Every `bin` entry in the cache reads `CLAUDE_PROJECT_DIR` and delegates
+to the working tree when it finds itself inside a bearing checkout, so the user-scope line alone
+renders the working tree while you develop; no absolute path has to live in the repo. Measured:
+mark the cached copy and run it — the mark never appears inside this repository (the working tree
+ran) and always appears outside it. The hooks behave the same way.
+
+⚠ **One thing is lost in exchange: a bare clone now draws nothing here either.** No surface, no
+hook, no skill loads until the receiving side installs once at user scope — so **"the fact that it
+is loaded lives only on the untracked side" now applies to this repository as much as any other.**
 
 ⚠ **When nothing is loaded, the shim says so.** With no record not one piece of the plugin is
 loaded, and **a mechanism that is not loaded cannot report its own absence** — but the shim
