@@ -92,9 +92,9 @@ marketplace は自分自身の remote を指すので、通常のセッション
 
 | 門 | 誰が外すか |
 | --- | --- |
-| marketplace の clone は起動時に自動 pull されない | **受ける側** —— `extraKnownMarketplaces` に `"autoUpdate": true` を宣言すれば起動時に自動。しなければ `/plugin marketplace update trust-delta` → `/plugin update bearing` → 再起動の 3 手 |
+| marketplace の clone は起動時に自動 pull されない | **受ける側** —— `extraKnownMarketplaces` に `"autoUpdate": true` を宣言すれば起動時に自動。しなければ `/plugin marketplace update trust-delta` → `/plugin update bearing` → 再起動の 3 手 ⚠ **宣言の効きには実測が 2 件あり、食い違っている**（1 台、clone の reflog）: `2026-09-01` の clone から `09-03` まで **2 日間 pull が 1 本も無く**（その間に 14 commit が push されている）、一方 `09-04` の起動では **11 commit 分が自動で引かれた** —— どちらも同じ project スコープの宣言である。∴ ⚠ **「project スコープの entry は対象外」ではない**（それなら後者が起きない）が、**何が 2 つを分けているかはまだ分かっていない** ∴ **この行は「宣言すれば必ず引かれる」とまでは読まないこと。** |
 | `plugin.json` の `version` を上げない限り cache は差し替わらない | **配る側** —— 毎リリース bump する。⚠ これを忘れると、受ける側が何をしても届かない |
-| tracked な宣言は **enable であって install ではない** —— `installed_plugins.json` に record が無い限り、plugin は 1 枚も載らない | **受ける側** —— `claude plugin install bearing@trust-delta --scope project` を 1 度打つ。⚠ この file は machine-local かつ untracked ∴ **載せる意志は git に残り、載っている事実は残らない** |
+| tracked な宣言は **enable であって install ではない** —— `installed_plugins.json` に record が無い限り、plugin は 1 枚も載らない | **受ける側** —— `claude plugin install bearing@trust-delta --scope project` を 1 度打つ。⚠ この file は machine-local かつ untracked ∴ **載せる意志は git に残り、載っている事実は残らない** ⚠ **2026-09-04、install を打たずに record が生まれる経路が観測された**: `/plugin` の UI で更新 → 再起動、の直後に、tracked な宣言から project スコープの record（当時の最新版）が生えた —— **install コマンドは打たれていない**。⚠ **UI の更新と再起動のどちらが生んだかを分ける観測は無い** ∴ **この 1 手は確実な道であって、唯一の道ではない。** |
 
 ⚠ **2 つ目が在るのは、この repo が `version` を宣言しているからである** —— 宣言を省けば
 commit 由来の resolved version に落ち、「push すれば届く」挙動になる。宣言を残す以上、
