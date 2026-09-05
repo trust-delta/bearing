@@ -11,10 +11,13 @@
 | `aim/` | `SKILL.md`・`aim-authoring.md`・`aim-facts.md`・`frame.md`・`setup-aim.md` | `templates/aim/`（前 4 枚）・`commands/setup-aim.md` |
 | `handoff/` | `SKILL.md`・`read.md`・`write.md` | `skills/handoff/` |
 | `statusline/` | `setup-statusline.md` | `commands/setup-statusline.md` |
+| `surface/` | `setup-surface.md` | `commands/setup-surface.md` |
 
 ⚠ **aim の規律は plugin の skill として載らない。** `templates/aim/` は `setup-aim` が消費者の `.claude/skills/aim/` へ置くための template であり、Claude Code の skill 一覧には出ない。**aim の規律は project ごとに置かれるものであって、user scope に住むものではない**（`docs/aims/adoption-declaration.md`）。⚠ **`frame.md` は置かれない** —— `CLAUDE.md` の法の block と SessionStart hook が運ぶ ∴ 置けば同じ 6 箇条が 3 箇所に住む。
 
 ⚠ **handoff は plugin の skill として載る。** baton は repo に痕跡を残さない ∴ 宣言を要求せず、どの project でも `/bearing:handoff r` / `w` で使える。
+
+⚠ **面そのもの（`carriers/claude/bearing/surface/aim.html`）はここに正本を持たない。** あれは build も生成も持たない 1 枚であり、`original/` に置けば**同じ HTML が 2 枚**になる —— この directory が塞いでいるのは、まさにその形である。∴ ここが持つのは**面を home へ置くコマンドの正本だけ**であり、面は carrier に住む。
 
 ## 置いた後は、その repo のものである
 
