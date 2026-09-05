@@ -8,7 +8,7 @@
 // ═══ なぜ SessionStart ではなく UserPromptSubmit なのか ═════════════════════
 //
 // ⚠ **`SessionStart` は虚空へ向けて発火する。** その stdout は context になるが、
-// **context は turn ではない。** handoff canon（`handoff-r` skill の同梱物）§ 読む の手順 2〜6 は**エージェントの
+// **context は turn ではない。** handoff の手順（`handoff` skill の `read.md`）2〜6 は**エージェントの
 // act** である —— `read-at` を刻む・未 push aim を surface する・pointers を読む・現在地を
 // 報告する —— そして **一度も呼ばれないエージェントは何の act も行わない。** ∴「baton が
 // context に在る」と「baton が読まれた」の間に、際限のない窓が開く: 人間が入力するのに
@@ -146,7 +146,7 @@ SessionStart hook はこの baton を surface したが、\`read-at\` は**意�
   4. 今どこに立っていて何を拾うかを人間に伝え（手順 6）、そのうえで人間が
      実際に頼んだことへ進むこと。
 
-正本: \`handoff-r\` skill が同梱する \`handoff.md\` の § 読む。⚠ **repo の中を探さないこと** —— handoff は aim と別であり、aim corpus に依存しない。これはセッションにつき一度だけ発火する。${seen}`
+正本: \`handoff\` skill が同梱する \`read.md\`（\`/bearing:handoff r\`）。⚠ **repo の中を探さないこと** —— handoff は aim と別であり、aim corpus に依存しない。これはセッションにつき一度だけ発火する。${seen}`
 }
 
 const raw = await readStdin()

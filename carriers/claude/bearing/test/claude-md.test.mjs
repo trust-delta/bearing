@@ -23,7 +23,7 @@ import { DEFAULT_AIMS_DIR, normalizeAimsDir } from '../lib/corpus.mjs'
 
 const ROOT = path.join(import.meta.dirname, '..')
 const CR = String.fromCharCode(13)
-const frameText = await readFile(path.join(ROOT, 'skills', 'aim', 'frame.md'), 'utf8')
+const frameText = await readFile(path.join(ROOT, 'templates', 'aim', 'frame.md'), 'utf8')
 const LAW = renderLaw(frameText)
 const V = '1.2.3'
 const desired = { version: V, law: LAW }
@@ -36,10 +36,17 @@ test('実物の frame から法を組み立てられる —— 変換の前提�
   assert.ok(LAW.length > 0)
 })
 
-test('canon への link は、消費者の repo で解決しない形のまま配られない', () => {
+test('法は読み手を `aim` skill へ送り、path も version も不在の手当ても持たない', () => {
   assert.ok(!LAW.includes(']('), 'markdown の link が残っている')
-  assert.ok(LAW.includes('`docs/aims/_guide/aim-authoring.md`'))
-  assert.ok(LAW.includes('`aim` skill が同梱する複製'), 'canon が無い repo 向けの逃げ道が要る')
+  assert.ok(LAW.includes('`aim` skill'), '法が skill を名指していない')
+  assert.ok(!LAW.includes('_guide'), '廃された path を指している')
+  // ⚠ **path を書けば version で腐る** —— plugin の cache path は version を含み、cache は旧版を
+  // 消さない（実測 2026-09-04、1 台に 9 版）。skill 名は version を持たない。
+  assert.doesNotMatch(LAW, /\d+\.\d+\.\d+/, 'version が法に載っている')
+  assert.ok(!LAW.includes('plugins/cache'), 'plugin の cache path が法に載っている')
+  // ⚠ **skill が無いときの手当ては書かない** —— それは開示であり、repo のものである
+  // （人間の決定 2026-09-05）。plugin が repo の開示を肩代わりしない。
+  assert.ok(!LAW.includes('claude plugin install'), '不在の手当てが法に載っている')
 })
 
 test('全角の閉じ括弧の直後に半角空白を残さない', () => {
@@ -57,12 +64,8 @@ test('条件文は落とさない —— 採用は corpus の存在を意味し�
 })
 
 test('前提が崩れたら黙って no-op にせず throw する', () => {
-  const P = AIMS_PLACEHOLDER
-  assert.throws(() => renderLaw('# 見出しだけで link が無い\n\n本文\n'), /link が 0 個/)
-  assert.throws(
-    () => renderLaw(`見出しが無い [\`${P}/_guide/aim-authoring.md\`](aim-authoring.md) 本文\n`),
-    /見出しが無い/,
-  )
+  assert.throws(() => renderLaw('# 見出しだけで skill を名指さない\n\n本文\n'), /`aim` skill を名指していない/)
+  assert.throws(() => renderLaw('見出しが無い `aim` skill 本文\n'), /見出しが無い/)
 })
 
 test('placeholder の埋め残しは throw する —— 存在しない path を正本として配らない', () => {
@@ -72,7 +75,6 @@ test('placeholder の埋め残しは throw する —— 存在しない path �
 
 test('法の本文は、宣言された在り処を名乗る', () => {
   const law = renderLaw(frameText, 'proj/aims')
-  assert.ok(law.includes('`proj/aims/_guide/aim-authoring.md`'))
   assert.ok(law.includes('proj/aims/<slug>.md'))
   assert.ok(!law.includes('docs/aims'), '既定が残っている')
 })

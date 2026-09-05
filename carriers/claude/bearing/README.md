@@ -33,7 +33,7 @@ Node が要る。build 手順も daemon も server も無い —— hook は fil
 ⚠ **`PreCompact` は、人間が求めた圧縮を決して遮断しない。** 人に仕えるための儀式で、その人
 自身の act を上書きすることは、この plugin が拒む反転である。
 
-3 つの skill が同梱される: `/bearing:aim`・`/bearing:handoff-r`・`/bearing:handoff-w`。
+skill は `/bearing:handoff`（`r` で読み、`w` で書く）。⚠ **aim の規律は plugin の skill ではない** —— `/bearing:setup-aim` が採用した project の `.claude/skills/aim/` へ置く project skill であり、置いた後はその repo のものである。
 
 ### aim は project ごとの opt-in
 
@@ -42,17 +42,17 @@ Node が要る。build 手順も daemon も server も無い —— hook は fil
 baton だけは述べる —— handoff は aim ではない）。使う project で 1 度だけ:
 
 ```
-/bearing:with-aim
+/bearing:setup-aim
 ```
 
-project-root の `CLAUDE.md` の末尾へ、marker で挟んだ法を差し込む（`--check` / `--remove`
-も在る）。⚠ **marker は HTML コメント ∴ context には 1 token も乗らない** —— docs が
+実行した project の `CLAUDE.md` の末尾へ marker で挟んだ法を差し込み、`.claude/skills/aim/` へ aim
+skill を置く（`--check` / `--remove` も在る）。⚠ **置いた後はどちらもその repo のもの** —— plugin は追随させない。⚠ **marker は HTML コメント ∴ context には 1 token も乗らない** —— docs が
 「block-level の HTML コメントは注入前に除かれる」と明記している。⚠ **hook はこの marker を
 読み、置かれた法が古ければそう述べる。人間が block の中を編集していれば、置き直さず止まる。**
 
 ⚠ **corpus が既に在る repo では、marker が無くても従来どおり動く。**
 
-⚠ **在り処は `--dir` で変えられる**（既定 `docs/aims/`）—— `/bearing:with-aim --dir proj/aims`。
+⚠ **在り処は `--dir` で変えられる**（既定 `docs/aims/`）—— `/bearing:setup-aim --dir proj/aims`。
 宣言は marker が運ぶ ∴ **採用の宣言と同じ 1 つの宣言**で、`dir=` が無ければ既定である。
 ⚠ **引数なしで打ち直せば、既に置かれた宣言が正** —— 版の更新が corpus を引っ越させない。
 

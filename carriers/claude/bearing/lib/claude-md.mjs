@@ -21,7 +21,7 @@
 //
 // ⚠ **本文 sha を持つのは、2 つの別物を別物として述べるためである。** sha が無ければ
 // 「人間が手を入れた」も「版が古い」も等しく「中身が違う」に畳まれ、**前者を後者として
-// 上書きする**ことになる。どちらの場合も置き直さず、述べて止まる —— `bearing-statusline-setup`
+// 上書きする**ことになる。どちらの場合も置き直さず、述べて止まる —— `bearing-setup-statusline`
 // が既存の statusLine を上書きしないのと同じ規律で、**どれが正かを機械が決めてよい場面では
 // ない。**
 //
@@ -101,36 +101,34 @@ export const bodySha = (body) =>
 /**
  * `frame.md` を、他人の `CLAUDE.md` の中で成り立つ形へ変換する。
  *
- * 変換は 2 つだけで、**どちらも一致しなければ throw する**。⚠ **黙って no-op にしてはならない**
- * —— 前提が崩れたまま生成すれば、**他人の repo に解決しない link と H1 を配ることになり、
- * 壊れたことは誰にも告げられない。**
+ * 変換は 1 つだけ —— 見出しを 1 段下げる（他人の doc で H1 を名乗らない）—— と、placeholder の
+ * 充填である。⚠ **前提が崩れたら黙って no-op にせず throw する**: frame が `aim` skill を名指して
+ * いなければ、法は読み手をどこへも送らない。
+ *
+ * ⚠ **法は path も version も持たない**（人間の決定 2026-09-05）。plugin の cache path は version を
+ * 含み cache は旧版を消さない ∴ path を書けば bump で腐る。skill 名は version を持たない ∴ commit
+ * しても嘘にならない。⚠ **skill が無いときの手当ても持たない** —— それは開示であり、repo のもの
+ * である。
  *
  * ⚠ **条件文（「この repo が aim corpus を持つなら」）は落とさない。** marker が在ることは
  * *採用した*ことであって *corpus が在る*ことではない —— 採ったが node がまだ 0 の project
  * では、あの条件は今も真である。
  *
- * @param {string} frameText `skills/aim/frame.md` の中身
+ * @param {string} frameText `templates/aim/frame.md` の中身
  * @returns {string} block の本文（LF・末尾空白なし）
  */
 export function renderLaw(frameText, dir = DEFAULT_AIMS_DIR) {
-  // ⚠ **後ろの半角空白まで含めて置き換える。** 全角の閉じ括弧の直後に半角空白が残ると、
-  // 差し込んだ 1 行だけが他人の doc の中で組版を外す。
-  const P = AIMS_PLACEHOLDER
-  const LINK = `[\`${P}/_guide/aim-authoring.md\`](aim-authoring.md) `
-  const LINK_TO = `\`${P}/_guide/aim-authoring.md\`（無ければ \`aim\` skill が同梱する複製）`
-
   const text = normalize(frameText).trimEnd()
-  const hits = text.split(LINK).length - 1
-  if (hits !== 1) {
+  if (!text.includes('`aim` skill')) {
     throw new Error(
-      `frame の canon への link が ${hits} 個（1 個であるべき）—— 変換の前提が崩れている。` +
-        'この link は消費者の repo では解決しない ∴ 書き換えずに配ってはならない。',
+      'frame が `aim` skill を名指していない —— 変換の前提が崩れている。' +
+        '法は読み手を skill へ送らねばならず、path を書けば version で腐る。',
     )
   }
 
   let inFence = false
   let demoted = 0
-  const lines = text.replace(LINK, LINK_TO).split('\n').map((line) => {
+  const lines = text.split('\n').map((line) => {
     if (FENCE_LINE.test(line)) {
       inFence = !inFence
       return line
@@ -169,15 +167,16 @@ export function substituteAims(text, dir) {
 /**
  * 差し込む法と、それが名乗る版。
  *
- * ⚠ **法の正本は `skills/aim/frame.md` 1 枚である。** ここで別に書き起こせば、同じ 6 箇条が
- * 2 つの正本を持つ —— そして片方だけが直される日が必ず来る。⚠ **CLI と hook の両方がこれを
+ * ⚠ **plugin の中で法の text を持つのは `templates/aim/frame.md` 1 枚である**（正本は
+ * `original/aim/frame.md`、生成で写される）。ここで別に書き起こせば、同じ 6 箇条が 2 つの
+ * text を持つ —— そして片方だけが直される日が必ず来る。⚠ **CLI と hook の両方がこれを
  * 呼ぶ**（置く側と、置かれたものの版を突き合わせる側）∴ **導出は 1 箇所に置く。**
  *
  * @param {string} root plugin root
  * @returns {Promise<{version: string, law: string}>}
  */
 export async function loadDesired(root, dir = DEFAULT_AIMS_DIR) {
-  const frame = await readFile(path.join(root, 'skills', 'aim', 'frame.md'), 'utf8')
+  const frame = await readFile(path.join(root, 'templates', 'aim', 'frame.md'), 'utf8')
   const manifest = JSON.parse(await readFile(path.join(root, '.claude-plugin', 'plugin.json'), 'utf8'))
   return { version: manifest.version, law: renderLaw(frame, dir), dir }
 }

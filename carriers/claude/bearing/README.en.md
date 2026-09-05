@@ -39,8 +39,9 @@ Requires Node. There is no build step, no daemon and no server — the hooks are
 ⚠ `PreCompact` never blocks a compaction a human asked for. Overriding a person's
 own act with a ritual meant to serve them is the inversion this refuses.
 
-Three skills ship with it: `/bearing:aim`, `/bearing:handoff-r`,
-`/bearing:handoff-w`.
+One skill ships with it: `/bearing:handoff` (`r` to read, `w` to write). ⚠ **The aim discipline is
+not a plugin skill** — `/bearing:setup-aim` places it under the adopting project's `.claude/skills/aim/`
+as a project skill, and from then on it belongs to that repo.
 
 ### aim is opt-in per project
 
@@ -50,7 +51,7 @@ not opted in, the SessionStart hook emits **not one byte** (except an unread
 baton, which is handoff, not aim). Once, in a project that wants it:
 
 ```
-/bearing:with-aim
+/bearing:setup-aim
 ```
 
 That inserts a marker-delimited block of the law at the end of the
@@ -63,7 +64,7 @@ of rewriting it.
 A repo that already has a corpus keeps working without a marker.
 
 Where the corpus lives is configurable with `--dir` (default `docs/aims/`):
-`/bearing:with-aim --dir proj/aims`. The declaration rides in the marker, so
+`/bearing:setup-aim --dir proj/aims`. The declaration rides in the marker, so
 it is the same declaration as opting in, and a missing `dir=` means the
 default. Re-running with no arguments keeps whatever the block declares, so a
 version update never relocates a corpus.

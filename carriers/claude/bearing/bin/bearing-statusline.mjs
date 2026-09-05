@@ -7,7 +7,7 @@
 // 道は無い。** 残る手は絶対 path だが、cache の path は version を含み、**cache は旧版を
 // 消さない** ∴ bump しても 1 行は壊れず、黙って古い版を描き続ける。
 //
-// ∴ この file が `~/.claude/` に住み（`bin/statusline-setup.mjs` が置く）、**走るたびに
+// ∴ この file が `~/.claude/` に住み（`bin/bearing-setup-statusline.mjs` が置く）、**走るたびに
 // install record を読んで今の版へ橋渡しする。** 1 行は `~/.claude/bearing-statusline.mjs`
 // で固定され、bump で腐らない。
 //
@@ -118,7 +118,9 @@ export async function readInstallRecord({ configDir, projectDir } = {}) {
  * 描く行ゆえ、規律は literal として守るほかない —— **test がそれを見張っている。**
  */
 export function absentLine(reason) {
-  return `bearing  載っていない（${reason}）。claude plugin install bearing@trust-delta --scope project`
+  // ⚠ scope は勧めない —— どの scope で載せるかは install する人間の問いであり、plugin の範囲外である
+  //（人間の決定 2026-09-05）。
+  return `bearing  載っていない（${reason}）。claude plugin install bearing@trust-delta`
 }
 
 export async function run({ env = process.env, write = (s) => process.stdout.write(s) } = {}) {

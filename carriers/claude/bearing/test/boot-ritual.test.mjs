@@ -68,7 +68,7 @@ test('an outstanding baton is surfaced with the procedure that owns it', async (
     assert.ok(r.stdout.includes(activePath(root)))
     // ⚠ 手順を再掲せず、正本と帳簿 CLI を指す —— 木の中に儀式についての第 3 の記述が
     // 置かれることは、「正本は 1 つ」の規則が禁じている複製である。
-    assert.match(r.stdout, /handoff-r.*handoff\.md/s)
+    assert.match(r.stdout, /handoff.*read\.md/s)
     // ⚠ **repo の中の path を名指してはならない**（人間が 2026-09-04 に正した）——
     // **handoff は aim と別であり、`with-aim` 無しで動かねばならない** ∴ この hook は
     // aim を採っていない repo でも発火する。⚠ **先行版は `docs/aims/_guide/handoff.md` を

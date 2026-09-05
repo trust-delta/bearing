@@ -1,172 +1,59 @@
 #!/usr/bin/env bash
-# aim ＋ handoff の方法を運ぶ vendor carrier を、`docs/aims/_guide/` の中立正本から生成する。
+# `original/` の正本から、vendor carrier（Claude Code plugin）を生成する。
 #
-# なぜ: ⚠ **実体は commit された中立正本 1 つに住み、vendor への配置はすべて*生成物*である。**
+# なぜ: ⚠ **実体は commit された正本 1 つに住み、vendor への配置はすべて*生成物*である。**
 # 手で書かれた carrier は drift し、しかもその drift は書かれた瞬間に入り込む: **要約は選択で
 # あり、選択は既に judgment を運んでいる。** この script が、「drift しない」を約束ではなく
 # 機械的な事実にしている。
 #
-# 宛先は 2 つ、carrier の本体は 1 組:
+# ⚠ **生成は純粋な複製である。** substitution も合成も無い —— 正本の text がそのまま carrier に
+# 載る。以前は `docs/aims/_guide/` から `--plugin` と `--workspace` の 2 mode で生成し、mode ごとに
+# 参照 path を書き換えていたが、⚠ **正本が同時に bearing 自身の消費者側 canon でもあったことが、
+# 複製の矢印を消費者から見て逆に向けた**（`docs/aims/adoption-declaration.md` の `# HISTORY`）。
+# `original/` は bearing にしか存在せず、出荷も配置もされない ∴ 書き換える参照が無い。
 #
-#   --plugin              carriers/claude/bearing/skills/   commit される build 生成物
-#   --workspace <DIR>     <DIR>/.claude/skills/             非 tracked・machine-local
+# 配布機能の単位ごとに、正本がどこへ写されるかを下の配置表が 1 行ずつ述べる。
 #
-# 本体が違うのは 1 点だけであり、それは topology によって強制されている: **carrier が自らの
-# source をどう名指すか。**
+# ⚠ **aim の規律は `skills/` ではなく `templates/` へ写す。** `skills/` に置けば Claude Code が
+# `bearing:aim` として登録し、`setup-aim` が消費者の `.claude/skills/aim/` へ置いた `aim` と
+# **同じ規律が 2 つの skill として並ぶ** —— どちらが正か誰にも決められない。aim の規律は project
+# ごとに置かれるものであって user scope に住まない ∴ plugin の中では template でしかない。
 #
-#   workspace —— commit された doc への相対 path（ここで計算する）。doc は同じ workspace に
-#                在るので carrier はそれを指せ、単一の正本が直接読まれる。何も複製しない。
-#   plugin   —— plugin は、消費する側の workspace がこの repository をどこへ置いたかを知ら
-#                ない ∴ 相対 path を書きようがない。代わりに中立正本を skill directory へ
-#                **同梱**し、carrier は自分の同梱物を指す。⚠ **その複製は生成物であって著述
-#                物ではなく、同期していることは CI が検証する。**
-#
-# `--plugin` の出力は**意図して commit される。** plugin は clone した時点で install 手順
-# 無しに動かねばならず、それが plugin をより良い配布手段にしている性質である
-# （人間が 2026-08-31 に判断した）。⚠ **commit された生成物が安全なのは、両者の一致を何かが検査して
-# いる場合だけである**: CI の `carriers are in sync` step を参照。
+# 出力は**意図して commit される。** plugin は clone した時点で install 手順無しに動かねばならず、
+# それが plugin をより良い配布手段にしている性質である（人間が 2026-08-31 に判断した）。
+# ⚠ **commit された生成物が安全なのは、両者の一致を何かが検査している場合だけである**:
+# CI の `carriers-in-sync` step と `test/original-sync.test.mjs` を参照。
 
 set -euo pipefail
 
 repo_root="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
-guide="$repo_root/docs/aims/_guide"
+src="$repo_root/original"
+plugin="$repo_root/carriers/claude/bearing"
 
-mode="plugin"
-target=""
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --plugin) mode="plugin"; shift ;;
-    --workspace) mode="workspace"; target="${2:-}"; shift 2 ;;
-    *) echo "使い方: $0 [--plugin | --workspace <DIR>]" >&2; exit 2 ;;
-  esac
-done
+[ -d "$src" ] || { echo "error: 正本が無い: $src" >&2; exit 1; }
 
-if [ "$mode" = "workspace" ]; then
-  [ -n "$target" ] || { echo "error: --workspace には directory が要る" >&2; exit 2; }
-  [ -d "$target" ] || { echo "error: そのような directory は無い: $target" >&2; exit 1; }
-  out_root="$target/.claude/skills"
-else
-  out_root="$repo_root/carriers/claude/bearing/skills"
-fi
-
-# ── 中立正本 ─────────────────────────────────────────────────────────────────
-for f in handoff.md aim-facts.md aim-authoring.md; do
-  [ -f "$guide/$f" ] || { echo "error: 中立正本が無い: $guide/$f" >&2; exit 1; }
-done
-
-# carrier が handoff CLI をどう名指すか。CLI は plugin の生成物なので、2 つの mode は別の
-# 経路でそこへ届く —— ⚠ **そしてこの言及は装飾ではない**: どの carrier も名指さない道具は
-# 誰も走らせない道具であり、儀式は手作業へ戻る。そのとき archive の退避と read-at の順序は
-# 記憶任せになる。
-#
-# ⚠ **plugin mode は裸のコマンド名を書く。** plugin の `bin/` は **Bash tool の PATH に入り、
-# 裸のコマンド名で呼べる**（公式 docs が明記する唯一の経路）∴ env にも path にも依らない。
-# ⚠ **`${CLAUDE_PLUGIN_ROOT}` でも動く**（skill content は inline 展開の対象であり、実測でも
-# 展開された）**が、env が渡らなかった日に壊れる形をわざわざ選ぶ理由が無い。**
-# ⚠ **裸で呼べるには exec bit が要る** —— 2026-09-03、PATH では解決したのに exec bit が
-# 無くて落ちた。`test/bin-namespace.test.mjs` がその対を固定している。
-cli_ref() {
-  local rel="carriers/claude/bearing/bin/$1"
-  if [ "$mode" = "plugin" ]; then
-    printf '%s' "$1"
-  else
-    printf 'node %s' "$(realpath --relative-to="$target" "$repo_root/$rel")"
-  fi
+placed=()
+place() {
+  local from="$src/$1" to="$plugin/$2"
+  [ -f "$from" ] || { echo "error: 正本が無い: $from" >&2; exit 1; }
+  mkdir -p "$(dirname "$to")"
+  cp "$from" "$to"
+  placed+=("$to")
+  echo "  $2"
 }
 
-# この mode の carrier が正本の 1 つをどう名指すか。
-#   plugin    -> 裸の file 名。file は SKILL.md の隣に同梱される
-#   workspace -> エージェントが走る workspace からの相対 path
-source_ref() {
-  local file="$1"
-  if [ "$mode" = "plugin" ]; then
-    printf '%s' "$file"
-  else
-    realpath --relative-to="$target" "$guide/$file"
-  fi
-}
+echo "carrier を生成中 → $plugin"
 
-# carrier を 1 つ書く。plugin mode では、body が名指す正本を**すべて**傍らに同梱する ——
-# ⚠ **同梱していない file を指す carrier は、この規律が警告するとおりの壊れ方をする**:
-# 黙って壊れ、読み手は自分が framed されたと信じたままになる。同梱一覧と body が使う参照は
-# 決して乖離してはならない。
-#   $1 skill 名   $2 description   $3 同梱する正本（空白区切り）   $4 body
-write_carrier() {
-  local name="$1" desc="$2" srcs="$3" body="$4"
-  local dir="$out_root/$name"
-  mkdir -p "$dir"
-  {
-    printf -- '---\n'
-    printf 'name: %s\n' "$name"
-    printf 'description: %s\n' "$desc"
-    printf -- '---\n\n'
-    printf '# %s\n\n' "$name"
-    printf '%s\n' "$body"
-    printf '\n⚠ **この file は生成物である**（`gen/claude-plugin.sh`）。手で編集しても次の生成で消える —— 実体は `docs/aims/_guide/` にある。\n'
-  } > "$dir/SKILL.md"
-  echo "  $dir/SKILL.md"
-  if [ "$mode" = "plugin" ]; then
-    for s in $srcs; do
-      cp "$guide/$s" "$dir/$s"
-      echo "  $dir/$s (bundled)"
-    done
-  fi
-}
+# ── 配置表 ──────────────────────────────────────────────────────────────────
+# aim: template（skill として登録しない）＋ command
+for f in SKILL.md aim-authoring.md aim-facts.md frame.md; do place "aim/$f" "templates/aim/$f"; done
+place "aim/setup-aim.md" "commands/setup-aim.md"
 
-# ── carrier 群 ───────────────────────────────────────────────────────────────
-handoff_ref="$(source_ref handoff.md)"
-facts_ref="$(source_ref aim-facts.md)"
-guide_ref="$(source_ref aim-authoring.md)"
-frame_ref="$(source_ref frame.md)"
+# handoff: skill（baton は痕跡を残さない ∴ どの project でも使える）
+for f in SKILL.md read.md write.md; do place "handoff/$f" "skills/handoff/$f"; done
 
-echo "carrier を生成中 ($mode) → $out_root"
-
-# ⚠ **description に baton の置き場を書かない。** 置き場は動きうるが（2026-09-03 に 2 度
-# 動いた）**machine-local であることは目的の帰結ゆえ動かない** —— path を書けば次の移動で
-# 黙って嘘になり、実際に旧い `.handoff/active.md` を名乗ったまま腐った。**述べてよいのは
-# 不変のほうだけである。**
-write_carrier "handoff-r" \
-  "直前のセッションが残した baton（machine-local な会話の引き継ぎ）を読み込み、未プッシュの aim を surface して作業を再開する。新しいセッションの最初に実行する。" \
-  "handoff.md" \
-  "手順の正本は **\`$handoff_ref\`** の「## 読む」節。**まずそれを読み、そこに書かれた通りに実行すること。**
-
-手順 2〜4（前回 read-at の報告 → 新しい read-at の刻印 → 未 push/未 commit aim の trace）は**機械であって判断ではない**。次のコマンドが正しい順序で行う —— 手で刻むと、報告すべき旧 read-at を先に潰す事故が起きる:
-
-\`\`\`bash
-$(cli_ref bearing-handoff.mjs) read
-\`\`\`
-
-残り（baton を読むこと・Pointers の slug を読むこと・今どこに立っているかを人間に伝えること）は**あなたの仕事**である。
-
-この file は carrier であって手順ではない。ここに手順を複製しない —— 正本が動けば追従する。"
-
-write_carrier "handoff-w" \
-  "このセッションの baton（会話引き継ぎ）を authoring して machine-local な置き場へ書き出す。context を使い切る前、あるいは区切りの良いところで実行する。" \
-  "handoff.md" \
-  "手順の正本は **\`$handoff_ref\`** の「## 書く」節。**まずそれを読み、そこに書かれた通りに実行すること。**
-
-**何を残し何を省くかの judgment があなたの仕事の全てであり**、それを機械に渡してはならない —— それが native な圧縮に欠けているものだからだ。⚠ **人間に見せて確認を得てから land すること。**
-
-land だけは機械である（旧 baton の archive 退避 → \`composed-at\` の刻印 → 配置）:
-
-\`\`\`bash
-$(cli_ref bearing-handoff.mjs) write < <あなたが著した baton>
-\`\`\`
-
-⚠ \`read-at\` は書かない —— 新しい baton は「まだ読まれていない」が正で、この経路は書かれていても除去する。
-
-この file は carrier であって手順ではない。ここに手順を複製しない —— 正本が動けば追従する。"
-
-write_carrier "aim" \
-  "aim corpus（docs/aims/）—— この project を駆動する purpose＝means の木 —— を読み・書き・保守する方法。aim node を読む／作る／編集する前、boot 時の drift / unpushed / checkpoint-stale の record が slug を名指したとき、open todo やこの project が何のためかを問われたとき、あるいは repository にまだ aim corpus が無く設置すべきときに使う。" \
-  "aim-facts.md aim-authoring.md frame.md" \
-  "\`docs/aims/<slug>.md\` の各ファイルが 1 つの **aim**（目的とその手段）であり、親子で目的を分解した木を成す。
-
-**aim の作成と保守の正本は \`$guide_ref\`。aim に触れる前に読むこと。** slug の付け方・body の section・木の保守・drift の検出と修復は、そこが唯一の source である。⚠ この repo に \`docs/aims/_guide/\` が無い場合、**設置は人間の act である** —— plugin は不在を surface するところで止まり、自分では置かない。この skill には正本が同梱されているので、置かれるまではそれを読むこと。⚠ **multi-repo wrapper が cwd の場合、guide は member repo の側にある** —— cwd 直下を見て無いと決めつけないこと。
-
-**セッション開始時に注入される事実の読み方の正本は \`$facts_ref\`。** fence の schema、各 fence が課すもの、open-todo 数の扱い、\`# PROCESS\` の機械 parse 形、CLI —— これらを知る必要が出たらそこを読む。⚠ **fence を parse せよ。prose を scrape するな。**
-
-常時効く不変（frontmatter は人間のもの・body はあなたのもの 等）は \`$frame_ref\` にあり、通常はセッション開始時に自動で注入されている（plugin の SessionStart hook、または vendor ファイルの import）。**ここには複製しない** —— 同じ規則が context に二度入ることになり、しかも複製した側が先に古くなる。"
+# statusline: command
+place "statusline/setup-statusline.md" "commands/setup-statusline.md"
 
 # ── LICENSE ─────────────────────────────────────────────────────────────────
 # ⚠ **root の LICENSE は消費者に届かない。** marketplace entry の source は
@@ -176,44 +63,53 @@ write_carrier "aim" \
 # 持つほかない —— **これは重複ではなく、配布物の一部である。**
 #
 # ⚠ **だからこそ生成物にする。** 手で置いた複製は、root の LICENSE が動いた日に黙って
-# 古くなる。ここで写せば、CI の `carriers are in sync` が食い違いを赤くする。
-if [ "$mode" = "plugin" ]; then
-  [ -f "$repo_root/LICENSE" ] || { echo "error: root に LICENSE が無い —— 著作権表示を欠いた plugin を出荷することになる。拒否する。" >&2; exit 1; }
-  plugin_root="$(dirname "$out_root")"
-  cp "$repo_root/LICENSE" "$plugin_root/LICENSE"
-  echo "  $plugin_root/LICENSE (bundled)"
-fi
+# 古くなる。ここで写せば、CI の `carriers-in-sync` が食い違いを赤くする。
+[ -f "$repo_root/LICENSE" ] || { echo "error: root に LICENSE が無い —— 著作権表示を欠いた plugin を出荷することになる。拒否する。" >&2; exit 1; }
+cp "$repo_root/LICENSE" "$plugin/LICENSE"
+echo "  LICENSE"
+
+# ── 正本の無い生成物が残っていないか ────────────────────────────────────────
+# ⚠ **改名や削除の跡が carrier に残れば、それは誰も更新しない file として出荷される** ——
+# 2026-09-05、`skills/handoff-r/` と `skills/handoff-w/` が 1 枚の `skills/handoff/` へ
+# 畳まれたとき、旧 dir を消し忘れれば 3 つの handoff skill が並ぶ形になった。
+stale=0
+for d in skills templates commands; do
+  [ -d "$plugin/$d" ] || continue
+  while IFS= read -r f; do
+    hit=0
+    for p in "${placed[@]}"; do [ "$p" = "$f" ] && hit=1 && break; done
+    if [ "$hit" -eq 0 ]; then
+      echo "error: 正本の無い生成物が残っている: ${f#"$plugin/"}" >&2
+      stale=1
+    fi
+  done < <(find "$plugin/$d" -type f)
+done
+[ "$stale" -eq 0 ] || { echo "error: 正本に対応しない file が carrier に在る。消してから再生成すること。" >&2; exit 1; }
 
 # ── carrier が名指す参照はすべて解決せねばならない ───────────────────────────
 # ⚠ **読み手が開けない file を指す carrier は、ここで最も重大な「黙った失敗」である**:
 # エージェントは framed されたと信じ、実際にはされていない。生成の時点が、それについて声を
 # 上げられる最後の場所である ∴ CI だけでなくここでも走らせる。これは既に本物の破損を 2 件
 # 捕まえている: `aim-authoring.md` が参照されているのに同梱されていなかった件と、`frame.md`
-# が裸の名で hard-code されていて plugin mode では解決し workspace mode で宙に浮いた件。
+# が裸の名で hard-code されていて workspace mode で宙に浮いた件。
 fail=0
-for d in "$out_root"/*/; do
+for d in "$plugin"/skills/*/ "$plugin"/templates/*/; do
   [ -d "$d" ] || continue
   name="$(basename "$d")"
-
-  # carrier の body: その中の `backtick 付き .md` はすべて、読み手に「開け」と告げた名で
-  # ある。この text はまさにここで著されているので、広く読んで安全である。
+  # SKILL.md の body: その中の `backtick 付き .md` はすべて、読み手に「開け」と告げた名である。
   for ref in $(grep -oE '`[A-Za-z0-9_./-]+\.md`' "$d/SKILL.md" | tr -d '`' | sort -u); do
-    case "$mode" in
-      plugin)    probe="$d/$ref" ;;
-      workspace) probe="$target/$ref" ;;
-    esac
-    if [ ! -f "$probe" ]; then
-      echo "error: $name/SKILL.md が '$ref' を指しているが、解決しない（$probe）" >&2
+    # ⚠ `CLAUDE.md` は消費者の file であって同梱物ではない —— SKILL.md が法の block の在り処として
+    # 名指すのは正しく、ここで「同梱されていない」と呼ぶのは誤検知である。
+    [ "$ref" = "CLAUDE.md" ] && continue
+    if [ ! -f "$d/$ref" ]; then
+      echo "error: $name/SKILL.md が '$ref' を指しているが、同梱されていない" >&2
       fail=1
     fi
   done
-
-  # 同梱された正本については、本物の markdown link だけを見る。backtick 付きの名は見ない。
-  # ⚠ 中立正本は我々が制御していない散文であり、**開くべき file ではない path** を言及する
-  # —— `handoff.md` は baton の file 名（`active.md`）や退避先の形を名指す —— ∴ 広い pattern は
-  # 完全に正しい text の上で失敗することになる。
+  # 同梱された正本については、本物の markdown link だけを見る。⚠ 正本は我々が制御していない
+  # 散文であり、開くべき file ではない path を言及する —— baton の file 名（`active.md`）等 ——
+  # ∴ 広い pattern は完全に正しい text の上で失敗することになる。
   for f in "$d"*.md; do
-    [ -f "$f" ] || continue
     [ "$(basename "$f")" = "SKILL.md" ] && continue
     for ref in $(grep -oE '\]\([A-Za-z0-9_./-]+\.md\)' "$f" | tr -d ']()' | sort -u); do
       if [ ! -f "$d$ref" ]; then

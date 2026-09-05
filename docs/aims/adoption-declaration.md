@@ -38,6 +38,8 @@ state: open
 
 ⚠ **規律が corpus の中に住まなくなる。** `.claude/skills/aim/` は「repo が自分のエージェントに与える指示」の置き場であり、`docs/aims/_guide/` のように corpus の中へ規律を混ぜない。⚠ **`docs/aims/_guide/` は廃される** —— あそこは bearing の build の源でありながら、bearing 自身の消費者側 canon でもあった。**同じ dir が 2 つの役を持っていたことが、複製の矢印が逆を向いた原因である**（`# HISTORY`）。正本は `original/<単位>/` へ集め（`aim` / `handoff` / `statusline`）、carrier の `skills/` と `commands/` はすべてそこからの生成物になる ∴ **bearing 自身の `.claude/skills/aim/` も置かれたものになり、bearing は自分の消費者の 1 つになる。**
 
+⚠ **置かれた project skill は、同じプロセスの中で live に登録される**（実測 2026-09-05、Claude Code、bearing の checkout で `setup-aim` を打った直後、再起動なしに harness の skill 一覧へ `aim` が現れた）。⚠ **plugin の skill 一覧はプロセスが最初に解決した時点で固まる**（[[bearing]] の実測 2026-09-04）のと対照的である ∴ **同じ機体で 2 つの一覧が別々の時点を指しうる** —— 旧版の plugin が `bearing:aim` を持ったまま、project の `aim` が新しい、という並びは起こる。**単一観測であり、どの時点で拾われるか（file の出現か、次の turn か）は分けられていない。** 再測は安い: 別 repo で `setup-aim` を打ち、skill 一覧を見る。
+
 ⚠ **`setup-*` は、どこへ書くかを説明文で明示する**（人間の決定 2026-09-05）。`setup-aim` は実行した project の `CLAUDE.md` と `.claude/skills/aim/` へ、`setup-statusline` は人間の home（`~/.claude/`）へ書く。⚠ **これは scope の選択ではなく、置くものの性質である** —— aim の採用は repo の corpus についての宣言ゆえ repo にしか置けず、statusline の shim は home を含む path ゆえ home にしか置けない。**同じ `setup-*` の名で並ぶことが、並行に見せる** ∴ 説明文が層の違いを述べる。
 
 # PROCESS
@@ -49,11 +51,11 @@ state: open
 - [done] **baton を repo の外へ出した。** `~/.bearing/units/<path を平坦化したもの>/handoff/` へ移し、**unit root の下には何も作らない** ∴ `.gitignore` に頼らず、**痕跡になりようがない**形になった。⚠ **添える案（`.handoff/.gitignore`）は採らなかった** —— あれは「痕跡を残しうるが隠す」であって、`aim:` が述べる「痕跡を残さない」ではない。⚠ **引くのは unit root の path であって repo 名ではない**（同名 repo や複数 worktree が黙って同じ baton を共有する形を塞ぐ）。⚠ **旧い置き場に残ったものは機構がもう読まない** ∴ 在ることを述べ、`bearing-handoff.mjs migrate` を名指すところで止まる —— **移動は人間の act である**。⚠ **2026-09-03、bearing 自身の `.gitignore` からも `.handoff/` の行を落とした**（人間が移行完了を宣言した）—— **残せば「置き場は repo 側に在るが隠している」と読める** ∴ `.gitignore` に頼らない形と、ignore の記述そのものが食い違う
 
 
-- [todo] **`with-aim` を `setup-aim` へ改め、canon 置きをやめ、`.claude/skills/aim/` の template と block を置く。** ⚠ **既に置かれた `_guide/` の複製と台帳は消さない** —— opt-in を外すことと、その repo が持つ doc を捨てることは別の act である。`--remove` も消さない。⚠ **既に在る `.claude/skills/aim/` は潰さずに述べて止まる** —— 置いた後は repo のものであり、2 度目の `setup-aim` はそれを「我々のもの」として扱えない
-- [todo] **block が skill 名を指し、path も version も、不在の手当ても持たない。**
-- [todo] **`setup-aim` / `setup-statusline` の説明文が、どこへ書くかを述べる。** aim は実行した project へ、statusline は home へ —— 層が違うことを字面に出す
-- [todo] **statusline の shim が「載っていない」と描くとき、install の scope を勧めない。** `absentLine()` の `--scope project` を落とす —— scope は install する人間のものである
-- [todo] **正本を `original/<単位>/` へ集め、`docs/aims/_guide/` を廃し、carrier の `skills/` と `commands/` を生成物にする。** ⚠ `scripts/classify-paths.mjs` の `GENERATED` に `commands/` を足すこと —— さもないと生成物の変更が code 扱いで PR を要求する
+- [done] **`with-aim` を `setup-aim` へ改め、canon 置きをやめ、`.claude/skills/aim/` の template と block を置く。** ⚠ **既に置かれた `_guide/` の複製と台帳は消さない** —— opt-in を外すことと、その repo が持つ doc を捨てることは別の act である。`--remove` も消さない。⚠ **既に在る `.claude/skills/aim/` は潰さずに述べて止まる** —— 置いた後は repo のものであり、2 度目の `setup-aim` はそれを「我々のもの」として扱えない。`bin/bearing-setup-aim.mjs` の `placeSkill()`、`test/setup-aim.test.mjs` が「既に在れば 1 byte も触らない」を固定する
+- [done] **block が skill 名を指し、path も version も、不在の手当ても持たない。** `renderLaw` が「`aim` skill を名指していなければ throw」を持ち、`test/claude-md.test.mjs` が version・cache path・導入コマンドの不在を固定する
+- [done] **`setup-aim` / `setup-statusline` の説明文が、どこへ書くかを述べる。** aim は実行した project へ、statusline は home へ —— 層が違うことを字面に出す
+- [done] **statusline の shim が「載っていない」と描くとき、install の scope を勧めない。** `absentLine()` の `--scope project` を落とす —— scope は install する人間のものである
+- [done] **正本を `original/<単位>/` へ集め、`docs/aims/_guide/` を廃し、carrier の `skills/` と `commands/` を生成物にする。** ⚠ **aim の規律は `skills/` ではなく `templates/` へ写す** —— `skills/` に置けば `bearing:aim` として登録され、`setup-aim` が置いた `aim` と同じ規律が 2 つの skill として並ぶ。`gen/claude-plugin.sh` は純粋な複製になり、正本の無い生成物が残っていれば拒む。`test/original-sync.test.mjs` が byte 同一を見る。 ⚠ `scripts/classify-paths.mjs` の `GENERATED` に `commands/` を足すこと —— さもないと生成物の変更が code 扱いで PR を要求する
 
 # HISTORY
 

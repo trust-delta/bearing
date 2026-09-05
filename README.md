@@ -59,11 +59,14 @@ details` は record が無くても版も skill も hook も列挙する ∴ 載
 ### aim を採る —— project ごとの opt-in
 
 ```
-/bearing:with-aim                    # 法の block を CLAUDE.md の末尾へ差し込む
-/bearing:with-aim --check            # 状態だけ述べる
-/bearing:with-aim --remove           # 外す
-/bearing:with-aim --dir proj/aims    # corpus の在り処を宣言する（既定は docs/aims）
+/bearing:setup-aim                   # 法の block を CLAUDE.md の末尾へ差し込み、.claude/skills/aim/ へ aim skill を置く
+/bearing:setup-aim --check           # 状態だけ述べる
+/bearing:setup-aim --remove          # block を外す（skill は残す —— 置いた後はこの repo のもの）
+/bearing:setup-aim --dir proj/aims   # corpus の在り処を宣言する（既定は docs/aims）
 ```
+
+⚠ **書き先は実行した project である** —— aim の採用はその repo の corpus についての宣言ゆえ、repo にしか置けない。
+⚠ **置いた後は block も skill もこの repo のもの** —— track するか・直すか・古いままにするかは repo が決め、plugin は追随させない。
 
 ⚠ **marker は HTML コメント ∴ context を 1 token も食わない。** 版と本文 sha を運ぶので、
 `--check` は**「版が古い」と「人間が block を編集した」を別のものとして述べる** —— 後者では
@@ -75,10 +78,10 @@ aim に依存しない）。⚠ **corpus が既に在れば、marker が無く�
 ### 面を付ける
 
 ```
-/bearing:statusline-setup            # 装着（--force で差し替え、--uninstall で外す）
+/bearing:setup-statusline            # 装着（--force で差し替え、--uninstall で外す）
 ```
 
-`~/.claude/` に薄い shim を置き、user settings に 1 行を書く。⚠ **shim は走るたびに install
+⚠ **書き先は人間の home（`~/.claude/`）であり、project には何も書かない。** 薄い shim を置き、user settings に 1 行を書く。⚠ **shim は走るたびに install
 record を読んで今の版へ橋渡しする** ∴ **1 行に version が入らず、bump で腐らない。**
 ⚠ **書き先は user settings だけである**（1 行に home を含む絶対 path が入る ∴ repo で共有できる
 ものではない）。既に別の statusline が在れば**上書きせず述べて止まる**。⚠ **statusline だけは再起動を要さない**（設定は live に拾われる）。

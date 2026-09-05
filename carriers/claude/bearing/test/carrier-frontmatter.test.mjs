@@ -27,9 +27,13 @@ async function carriers() {
   for (const e of await readdir(commands, { withFileTypes: true })) {
     if (e.isFile() && e.name.endsWith('.md')) found.push(path.join(commands, e.name))
   }
-  const skills = path.join(ROOT, 'skills')
-  for (const d of await readdir(skills, { withFileTypes: true })) {
-    if (d.isDirectory()) found.push(path.join(skills, d.name, 'SKILL.md'))
+  // ⚠ `templates/` は skill として登録されないが、`setup-aim` が消費者の `.claude/skills/aim/` へ
+  // 置く ∴ 置かれた先で同じ壊れ方をする —— 同じ門を通す。
+  for (const base of ['skills', 'templates']) {
+    const dir = path.join(ROOT, base)
+    for (const d of await readdir(dir, { withFileTypes: true })) {
+      if (d.isDirectory()) found.push(path.join(dir, d.name, 'SKILL.md'))
+    }
   }
   return found
 }

@@ -10,7 +10,7 @@ import assert from 'node:assert/strict'
 
 import {
   classifyExisting, withStatusLine, withoutStatusLine, statusLineFor, commandFor,
-} from '../bin/bearing-statusline-setup.mjs'
+} from '../bin/bearing-setup-statusline.mjs'
 
 const CMD = commandFor('/home/x/.claude/bearing-statusline.mjs', 'linux')
 

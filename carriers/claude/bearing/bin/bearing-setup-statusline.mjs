@@ -8,11 +8,11 @@
 // 3 つとも setup コマンドを持ち、1 行を*生成*している（2026-09-03 に実測）。ここも同じ形を採る。
 //
 // 置くのは `bin/bearing-statusline.mjs` の複製 1 枚と、settings.json の 1 行だけである。
-// ⚠ **書き先は user settings に限る。** 絶対 path は home を含む ∴ tracked な project
+// ⚠ **書き先は人間の home（user settings）に限る。** これは scope の選択ではなく置くものの性質による —— 絶対 path は home を含む ∴ tracked な project
 // settings へ書けば、他の人間の面が黙って壊れる形を repo に commit することになる。
 //
 // ⚠ **名前に `bearing-` を冠している。** plugin の `bin/` は Bash tool の PATH に入り、
-// **裸のコマンド名で呼べる** ∴ そこは全 plugin が共有する名前空間である —— `statusline-setup`
+// **裸のコマンド名で呼べる** ∴ そこは全 plugin が共有する名前空間である —— `setup-statusline`
 // のような一般名を置くのは、path の一致を実行の根拠にするのと同じ弱さである。
 //
 // ⚠ **stdin を読む前に委譲する**（他の bin と同じ理由。ここは stdin を読まないが、規律を
@@ -44,7 +44,7 @@ export const statusLineFor = (command) => ({ type: 'command', command })
  *
  * ⚠ **同じ罠は既に 1 度塞がれており、その正本が `lib/shell.mjs` である** —— 塞いだのに
  * **新しい emission 地点がそこを通らなかった。** 法を 1 箇所に置くだけでは足りず、
- * **通っていることを門が見ていなければならない**（`test/statusline-setup.test.mjs`）。
+ * **通っていることを門が見ていなければならない**（`test/setup-statusline.test.mjs`）。
  *
  * ⚠ **`node` を前置する。** hook 4 枚も同じ形であり、**shebang と exec bit の扱いが
  * シェルごとに違う**ことに依らない —— emission の時点で、どのシェルが受けるかは分からない。
@@ -172,12 +172,14 @@ async function main(argv) {
     log(`今この shim が橋渡しする先: ${record.installPath}（${record.scope} / ${record.version}）`)
   } else {
     log(`⚠ install record が無い（${record.reason}）∴ shim は「載っていない」と描く。`)
-    log('  載せるには: claude plugin install bearing@trust-delta --scope project')
+    // ⚠ scope は勧めない —— どの scope で載せるかは install する人間の問いであり、plugin の範囲外である
+    //（人間の決定 2026-09-05）。
+    log('  載せるには: claude plugin install bearing@trust-delta')
   }
   log('⚠ project の settings.json に別の statusLine が在れば、そちらが勝つ。')
   return 0
 }
 
-if (process.argv[1] && path.basename(process.argv[1]) === 'bearing-statusline-setup.mjs') {
+if (process.argv[1] && path.basename(process.argv[1]) === 'bearing-setup-statusline.mjs') {
   process.exit(await main(process.argv.slice(2)))
 }
