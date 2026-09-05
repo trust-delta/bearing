@@ -23,6 +23,7 @@ export const MAP = [
   ['handoff/read.md', 'skills/handoff/read.md'],
   ['handoff/write.md', 'skills/handoff/write.md'],
   ['statusline/setup-statusline.md', 'commands/setup-statusline.md'],
+  ['surface/setup-surface.md', 'commands/setup-surface.md'],
 ]
 
 const hasOriginal = await access(ORIGINAL).then(() => true, () => false)

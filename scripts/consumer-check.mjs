@@ -406,6 +406,51 @@ async function main() {
     return (r.stdout ?? '').trim().split('\n')[0]
   })
 
+  // ── E. 面 —— 人間が握る path に version が入らない ────────────────────────
+
+  await check('面へ辿り着く path は home の固定名で、version を含まない', async () => {
+    const r = runBin(env0, shipped, 'bearing-setup-surface.mjs', { cwd: adopted })
+    must(r.status === 0, `exit=${r.status} ${r.stderr}`)
+    const dest = path.join(env0.CLAUDE_CONFIG_DIR, 'bearing-aim.html')
+    must(r.stdout.includes(dest), `置き先を述べていない: ${r.stdout}`)
+    // ⚠ **これが人間の bookmark になる 1 行である** —— ここに版が入れば、cache が旧版を
+    // 消さない以上、bump 後も黙って古い面が開く。
+    must(!/\d+\.\d+\.\d+/.test(dest), `置き先が版を含む: ${dest}`)
+    must(/file:\/\//.test(r.stdout), 'browser で開く URL を述べていない')
+    const placed = await readFile(dest)
+    const source = await readFile(path.join(shipped, 'surface', 'aim.html'))
+    must(placed.equals(source), '置いた 1 枚が出荷された面と byte 同一でない')
+    return `${placed.length} byte、${path.basename(dest)}`
+  })
+
+  await check('面の --check は、置いた直後に byte 同一と述べ exit 0 で終わる', async () => {
+    const r = runBin(env0, shipped, 'bearing-setup-surface.mjs', { cwd: adopted, args: ['--check'] })
+    must(r.status === 0, `exit=${r.status} ${r.stdout}`)
+    must(/byte 同一/.test(r.stdout), `同一と述べていない: ${r.stdout}`)
+    return 'byte 同一'
+  })
+
+  await check('出荷された command は、実在して裸で呼べる bin だけを名指す', async () => {
+    // ⚠ **誰も名指さない道具は誰も走らせない道具である**（`original/README.md`）—— 逆に、
+    // 在らない道具を名指す command は、人間を `command not found` へ送る。
+    const dir = path.join(shipped, 'commands')
+    const named = []
+    for (const f of await listing(dir)) {
+      const text = await readFile(path.join(dir, f), 'utf8')
+      for (const m of text.matchAll(/^\s*(bearing-[A-Za-z0-9-]+\.mjs)\b/gm)) {
+        const bin = path.join(shipped, 'bin', m[1])
+        const st = await stat(bin).catch(() => null)
+        must(st !== null, `${f} が名指す ${m[1]} が同梱されていない`)
+        // ⚠ **名前と exec bit は対である** —— `bearing-` を冠した名は「裸で呼んでよい」という
+        // 約束であり、exec bit が無ければその約束は `Permission denied` で破れる。
+        must((st.mode & 0o111) !== 0, `${m[1]} に exec bit が無い —— 裸で呼べば Permission denied`)
+        named.push(m[1])
+      }
+    }
+    must(named.length > 0, 'command が bin を 1 つも名指していない')
+    return [...new Set(named)].join('・')
+  })
+
   // ── 報告 ─────────────────────────────────────────────────────────────────
 
   const failed = results.filter((r) => !r.ok)
