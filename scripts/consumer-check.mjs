@@ -185,6 +185,7 @@ async function main() {
   const hasMd = await consumer(base, 'has-claude-md')
   const hasSkill = await consumer(base, 'has-skill')
   const withBaton = await consumer(base, 'with-baton')
+  const declined = await consumer(base, 'declined', { corpus: true })
 
   const setupAim = (cwd, ...args) => runBin(env0, shipped, 'bearing-setup-aim.mjs', { cwd, args })
 
@@ -200,7 +201,7 @@ async function main() {
   })
 
   await check('委譲は構造的に起こりえない —— 消費者は carrier の manifest を持たない', async () => {
-    for (const c of [plain, adopted, hasMd, hasSkill, withBaton]) {
+    for (const c of [plain, adopted, hasMd, hasSkill, withBaton, declined]) {
       const there = await stat(path.join(c, CARRIER, '.claude-plugin', 'plugin.json')).then(() => true, () => false)
       must(!there, `${path.basename(c)} が carrier manifest を持つ —— 委譲が起きうる`)
     }
@@ -379,6 +380,75 @@ async function main() {
     }
     must(/baton:/.test(r.stdout), 'baton を名指していない')
     return 'baton のみ'
+  })
+
+  await check('corpus を持つ repo が降りると、hook も面も黙る', async () => {
+    // ⚠ **corpus が在ることは*使っている証拠*であって、この機構を通したいという宣言では
+    // ない** —— 降りられなければ `aim:` が述べる「選択できる」を満たさない。
+    const before = runBin(env0, shipped, 'aim-facts.mjs', { cwd: declined })
+    must(before.stdout.length > 0, '降りる前から黙っている —— この検査は何も測っていない')
+
+    const d = runBin(env0, shipped, 'bearing-setup-aim.mjs', { cwd: declined, args: ['--decline'] })
+    must(d.status === 0, `--decline exit=${d.status} ${d.stderr}`)
+
+    const said = []
+    for (const h of HOOKS) {
+      const r = runBin(env0, shipped, h, { cwd: declined })
+      if (r.stdout.length + r.stderr.length > 0) said.push(`${h}: ${r.stdout.length}+${r.stderr.length} byte`)
+    }
+    must(said.length === 0, `降りたのに述べた hook: ${said.join('、')}`)
+
+    // ⚠ **面も同じ述語を通らねばならない** —— 2 つが違う条件で黙れば、同じ project が
+    // 面ごとに別の姿を持つ（2026-09-03 に実際に起きた形）。
+    const sl = runBin(env0, shipped, 'statusline.mjs', {
+      cwd: declined, input: { cwd: declined, workspace: { current_dir: declined } },
+    })
+    must(!/aim \d|todo/.test(sl.stdout), `面が aim の事実を描いた: ${JSON.stringify(sl.stdout)}`)
+
+    // corpus は残っている —— 降りることは、持っている corpus を捨てることではない。
+    const still = await stat(path.join(declined, 'docs', 'aims', 'root.md')).catch(() => null)
+    must(still !== null, 'corpus が消えた')
+    return `hook 4 枚と面が黙り、corpus は残った`
+  })
+
+  await check('降りた repo でも、未読の baton だけは述べる', async () => {
+    const baton = '---\ncomposed-at: 2026-01-01T00:00:00Z\ntask: 合成\n---\n\n## ▶ Task\n\n合成である。\n'
+    const w = runBin(env0, shipped, 'bearing-handoff.mjs', { cwd: declined, args: ['write'], input: baton })
+    must(w.status === 0, `baton を書けなかった: ${w.stderr}`)
+    const facts = runBin(env0, shipped, 'aim-facts.mjs', { cwd: declined })
+    must(facts.stdout.length > 0, '降りた repo で baton の未読を黙った —— aim の沈黙ではなく handoff の欠落である')
+    for (const leak of ['open-todo', 'bearing-drift-intra', '# aim frame']) {
+      must(!facts.stdout.includes(leak), `降りた repo へ「${leak}」が漏れた`)
+    }
+    const boot = runBin(env0, shipped, 'boot-ritual.mjs', { cwd: declined })
+    must(boot.stdout.length > 0, '降りた repo で boot-ritual が baton を黙った')
+    // ⚠ **precompact は handoff の機構である** —— baton が在ることは handoff 自身の証拠
+    // ∴ aim を降りても発火し続ける。**2 つの条件は対等ではない。**
+    const pc = runBin(env0, shipped, 'precompact.mjs', { cwd: declined, input: { trigger: 'auto' } })
+    must(pc.status === 2, `降りた repo で precompact が黙った（exit=${pc.status}）—— baton が在れば handoff は生きている`)
+    return `baton のみ ${facts.stdout.length} byte / boot-ritual ${boot.stdout.length} byte / precompact 遮断`
+  })
+
+  await check('宣言を外せば戻る —— 降りることは不可逆ではない', async () => {
+    const r = runBin(env0, shipped, 'bearing-setup-aim.mjs', { cwd: declined, args: ['--remove'] })
+    must(r.status === 0, `--remove exit=${r.status}`)
+    const facts = runBin(env0, shipped, 'aim-facts.mjs', { cwd: declined })
+    must(/# aim facts —— unit: declined/.test(facts.stdout), `戻らなかった: ${facts.stdout.slice(0, 160)}`)
+    return '戻った'
+  })
+
+  await check('corpus を持つ repo への --remove は「黙る」と断言しない', async () => {
+    // ⚠ **2026-09-05 まで、ここは黙ると*断言*していた** —— 述語は corpus 在り || marker 在り
+    // であり、corpus を持つ repo は block を外しても黙らない。
+    const s2 = runBin(env0, shipped, 'bearing-setup-aim.mjs', { cwd: adopted })
+    must(s2.status === 0, `setup-aim exit=${s2.status}`)
+    const r = runBin(env0, shipped, 'bearing-setup-aim.mjs', { cwd: adopted, args: ['--remove'] })
+    must(r.status === 0, `--remove exit=${r.status}`)
+    must(/だが hook も面も黙らない/.test(r.stdout), `黙ると断言した: ${r.stdout}`)
+    must(/--decline/.test(r.stdout), '降りる手を名指していない')
+    // 検査のあいだに採用を戻しておく（後続の検査が採った状態を前提にする）。
+    runBin(env0, shipped, 'bearing-setup-aim.mjs', { cwd: adopted })
+    return '断言せず、--decline を名指した'
   })
 
   // ── D. statusline —— 装着した 1 行が、その形のまま走る ────────────────────

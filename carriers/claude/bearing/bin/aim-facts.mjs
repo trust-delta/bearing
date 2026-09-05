@@ -46,6 +46,7 @@ import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
 import {
   findBlocks, inspect as inspectBlock, loadDesired, substituteAims, declaredAimsDir,
+  readDeclaration, isEngaged,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { strandedBatons } from '../lib/handoff.mjs'
@@ -206,8 +207,13 @@ async function main() {
   // ── この project は aim を採ったか ────────────────────────────────────────
   // ⚠ **corpus が在れば、印の有無に関わらず採っている。** 印は後から入った機構であり、
   // **既に node を書いている project を、印が無いという理由で黙らせてはならない。**
+  // ⚠ **∴ 降りるには宣言が要る** —— corpus を消す以外に降りる手が無ければ、`aim:` が
+  // 述べる「選択できる」を満たさない（`docs/aims/adoption-declaration.md`）。
   const optIn = await readOptIn(unit.root)
-  aimEngaged = withCorpus.length > 0 || optIn.state !== 'absent'
+  // ⚠ **述語は `lib/claude-md.mjs` の `isEngaged` 1 箇所である** —— ここで組み直せば、
+  // statusline との間に 2 つ目の結論が生まれる（2026-09-03 に実際に食い違った形）。
+  const declaration = await readDeclaration(unit.root)
+  aimEngaged = isEngaged({ ...declaration, hasCorpus: withCorpus.length > 0 })
   const baton = await readBatonSafe(unit.root)
 
   if (!aimEngaged) {

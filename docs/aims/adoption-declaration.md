@@ -26,6 +26,16 @@ state: open
 
 ⚠ **同じ事実を運ぶ面が複数あるなら、黙る述語は 1 つでなければならない。** 2026-09-03、hook は marker を見て黙るのに statusline は corpus の有無しか見ておらず、**採っていない全 project に 2 行目を描いていた** —— **同じ project が面ごとに別の姿を持つ**形である。⚠ **そしてそれは user スコープで載せるまで見えなかった**: 採った repo でしか面を見ていなかったからである。
 
+⚠ **降りる宣言を置いた**（2026-09-05）。字面は `CLAUDE.md` の単独行 `<!-- bearing:aim declined -->` で、`/bearing:setup-aim --decline` が置く。⚠ **`.claude/settings.json` の key は測って落ちた** —— この repo の `.gitignore` は `.claude/*` を**例外 0 個**で ignore しており（2026-09-04 の人間の決定）、settings に置いた宣言は **clone から見えない machine-local な事実**になる。⚠ **降りることは repo の宣言であって、1 台の設定ではない** ∴ 採用と同じ file に置く。HTML コメントゆえ context は 1 token も食わない。
+
+⚠ **述語を 1 箇所へ集めた**（`lib/claude-md.mjs` の `isEngaged`）。上段が「黙る述語は 1 つでなければならない」と述べていたのに、**実装は同じ結論を 2 つの形で書いていた** —— hook は `corpus 在り || marker 在り`、面は `readAdopted` と corpus の有無を別々に組み立てていた。**同値だったのは偶然ではなく注意の産物であり、それは腐る。** ∴ 結論そのものを 1 つの関数にし、全面がそこを通る。
+
+⚠ **そして面は 2 つではなく 4 つだった**（実測 2026-09-05）。hook と statusline を通した時点で緑に見えたが、**合成した消費者の job が `corpus-delta` と `precompact` を捕まえた** —— 降りた repo で**この 2 つだけが喋り続けていた**。⚠ **「面ごとに姿が食い違う」を塞ぐには、面を数え落とさないことが先である** —— 数え落とした面は、塞いだつもりの側からは見えない。
+
+⚠ **`precompact` の 2 条件は対等ではない。** baton が在ることは **handoff 自身の証拠**であり、corpus が在ることは **aim の証拠**でしかない ∴ **aim を降りても、baton が在れば発火し続ける。** 上段の唯一の例外が、この面における形である —— ここで黙らせることは aim の沈黙ではなく handoff の欠落になる。
+
+⚠ **`--remove` は嘘をついていた**（2026-09-05 に直した）。block を外したあと「hook はこの project で黙るようになる」と*断言*していたが、⚠ **述語が `corpus 在り || marker 在り` である以上、corpus を持つ repo は外しても黙らない。** 今は corpus を数えて、黙らないなら黙らないと述べ、`--decline` を名指す。**降りることと、宣言を外すことは別の act である** —— 外せば「宣言していない」へ戻り、corpus を持つ repo はそこで再び有効になる。
+
 ⚠ **例外は 1 つだけ在り、それは例外として明示されねばならない。** baton の未読は、採っていない project でも述べる —— handoff は `docs/aims/` に何も依存せず、そこで黙らせることは **aim の沈黙ではなく handoff の欠落**になる。hook も面も同じ例外を持つ。
 
 ⚠ **宣言を置くことと、宣言した規律が働けることは別である**（2026-09-04、別 repo への適用で人間が踏んだ）。`with-aim` は `CLAUDE.md` の marker を置くが、**`_guide/` には何も置いていなかった** ∴ **置かれた法の第 1 条が、在らない file を指す**（`<corpus>/_guide/aim-authoring.md`）。⚠ **不在を述べる機構は在った。だが鳴るのは次のセッションの boot であり、相手はエージェントである** —— **人間が居合わせるのは `with-aim` の一度きりで、そこでは一言も無かった。** ⚠ **surface が在ることと、それが*居合わせる者*へ届くことは別である** —— 本 node が上段で述べている「面ごとに述語が違えば姿が食い違う」の、**時間軸における形**である。
@@ -47,7 +57,7 @@ state: open
 - [done] **hook 3 枚が、採用していない project で黙るようになった。** `aim-facts` / `boot-ritual` / `precompact` はいずれも出力 0 byte（実測）。⚠ **判定は `CLAUDE.md` の marker であり、`docs/aims/` の有無ではない** —— 後者では「aim と無関係な repo」と「採ったが node がまだ 0 の project」を区別できない
 - [done] **`/bearing:with-aim`（現 `setup-aim`）が採用の宣言を置く。** marker 付きの block を `CLAUDE.md` へ差し込み、外すこともできる ∴ **採用は宣言であって、file の存在から推測されるものではない**
 - [done] **[[ambient-display]] の 2 行目を、hook と同じ述語で gate した。** 例外は baton 未読 1 つ。⚠ **面ごとに述語が違えば、同じ project が面ごとに別の姿を持つ**
-- [todo] **corpus が在っても「採用しない」を選べるようにする。** ⚠ **現在の述語は `corpus 在り || marker 在り` であり、corpus を持つ project は有効を降りられない** —— これは移行の便宜として入ったものだが、**`aim:` が述べる「選択できる」を満たしていない。** 降りる宣言をどの形で持つか（marker の変種か、settings の key か）を決めて、hook と面の両方がそれに従うようにする
+- [done] **corpus が在っても「採用しない」を選べるようになった。** 宣言は `CLAUDE.md` の `<!-- bearing:aim declined -->`（`--decline` が置く）—— ⚠ **settings の key は採れない**（`.claude/*` は例外 0 個で ignore ∴ clone から見えない machine-local な事実になる）。述語は `lib/claude-md.mjs` の `isEngaged` **1 箇所**で、**4 つの面すべてがそこを通る**（`aim-facts` / `statusline` / `corpus-delta` / `precompact`）。⚠ **`precompact` だけは baton が在れば降りても発火する** —— baton は handoff 自身の証拠であり、2 条件は対等ではない。⚠ **`--remove` の「黙るようになる」という断言も直した** —— corpus を持つ repo は外しても黙らない。`test/aim-decline.test.mjs` の 15 件と、合成消費者の job の 4 件が固定する
 - [done] **baton を repo の外へ出した。** `~/.bearing/units/<path を平坦化したもの>/handoff/` へ移し、**unit root の下には何も作らない** ∴ `.gitignore` に頼らず、**痕跡になりようがない**形になった。⚠ **添える案（`.handoff/.gitignore`）は採らなかった** —— あれは「痕跡を残しうるが隠す」であって、`aim:` が述べる「痕跡を残さない」ではない。⚠ **引くのは unit root の path であって repo 名ではない**（同名 repo や複数 worktree が黙って同じ baton を共有する形を塞ぐ）。⚠ **旧い置き場に残ったものは機構がもう読まない** ∴ 在ることを述べ、`bearing-handoff.mjs migrate` を名指すところで止まる —— **移動は人間の act である**。⚠ **2026-09-03、bearing 自身の `.gitignore` からも `.handoff/` の行を落とした**（人間が移行完了を宣言した）—— **残せば「置き場は repo 側に在るが隠している」と読める** ∴ `.gitignore` に頼らない形と、ignore の記述そのものが食い違う
 
 

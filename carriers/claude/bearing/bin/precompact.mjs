@@ -46,6 +46,7 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { readAimSlugs } from '../lib/corpus.mjs'
+import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 import os from 'node:os'
 import path from 'node:path'
 import { resolveUnit } from '../lib/unit.mjs'
@@ -89,16 +90,26 @@ function readStdin() {
 /**
  * そもそもこの規律はここに適用されるのか。
  *
- * corpus が在るか、この unit の baton が既に在るか。⚠ **どちらも無ければ、この
- * project は体制を採ったことが無く、その儀式を課すことは「人間が決めていないことを
- * plugin が決める」ことになる。**
+ * baton が既に在るか、aim が有効か。⚠ **どちらも無ければ、この project は体制を採ったことが
+ * 無く、その儀式を課すことは「人間が決めていないことを plugin が決める」ことになる。**
+ *
+ * ⚠ **2 つの条件は対等ではない。** baton が在ることは **handoff 自身の証拠**であり、
+ * **handoff は aim に依存しない** ∴ **aim を降りても、baton が在れば発火し続ける** ——
+ * ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。
+ *
+ * ⚠ **一方 corpus が在ることは aim の証拠でしかない** ∴ 降りる宣言に従う。
+ * `lib/claude-md.mjs` の `isEngaged` を通す —— **結論を組み直せば面ごとに姿が食い違う。**
  */
 async function inScope(unit) {
   if (existsSync(batonDir(unit.root))) return true
+  let hasCorpus = false
   for (const repo of unit.repos) {
-    if ((await readAimSlugs(repo.root, repo.aimsDir)).length > 0) return true
+    if ((await readAimSlugs(repo.root, repo.aimsDir)).length > 0) {
+      hasCorpus = true
+      break
+    }
   }
-  return false
+  return isEngaged({ ...(await readDeclaration(unit.root)), hasCorpus })
 }
 
 const MESSAGE = `⚠ 自動圧縮を**一度だけ**遮断した。この対話が静かに破棄されることを防ぐためである。
