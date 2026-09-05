@@ -14,34 +14,44 @@
 // 直プッシュ可になる —— 「悪いセンサーはセンサーが無いことに劣る」の、この規則における形。
 // 過剰に PR を要求する方は目に見えて直せるが、取りこぼしは見えない。
 //
-// ═══ 生成物という罠 ═════════════════════════════════════════════════════════
+// ═══ carrier の md は正本である（2026-09-05 に反転した）═══════════════════════
 //
-// ⚠ **`carriers/**/{skills,templates,commands}/**` は `original/` からの生成物である**（`gen/claude-plugin.sh`）
-// ∴ **正本を直しただけの docs 変更が、routinely それらを書き換える。** 素朴な path
-// 判定はこれを code と呼び、正当な docs 直プッシュを弾く。
+// ⚠ **2026-09-05 まで `carriers/**/{skills,templates,commands}/**` は `original/` からの生成物
+// だった** ∴ ここでは「docs 由来の生成物」として扱い、同期の検証を呼び出し側へ要求していた。
+// **人間が `original/` を畳み、carrier を正本にした** —— 生成は純粋な複製でしかなく、複製が
+// 複製であることを守るためだけに門を 3 つ持っていたからである（`CONTRIBUTING.md`）。
+// ∴ carrier の md は**ただの docs** になった。
 //
-// ここでは `skills/**` を「docs 由来」として扱うが、⚠ **それが許されるのは、生成物が正本と
-// 同期しており、かつ他に code が動いていないときだけである。** 同期の検証は呼び出し側が
-// 行う（CI は再生成して diff を取る）—— この file は path しか見ないと述べておく。
+// ═══ 置かれた複製という罠 ═══════════════════════════════════════════════════
+//
+// ⚠ **代わりに、罠は `.claude/skills/` へ移った。** あそこは `setup-aim` が
+// `carriers/claude/bearing/templates/aim/` から**置いた複製**であり、**bearing は自分の消費者の
+// 1 つである** ∴ 正本を直せば置かれた複製も routinely 動く。素朴な path 判定はこれを code と
+// 呼び、正当な docs 直プッシュを弾く。
+//
+// ここでは `.claude/skills/**` を「docs 由来」として扱うが、⚠ **それが許されるのは、置かれた
+// 複製が正本と同期しており、かつ他に code が動いていないときだけである。** 同期の検証は
+// 呼び出し側が行う（`test/placed-skill-sync.test.mjs` が byte 同一を見る）—— この file は path
+// しか見ないと述べておく。
 //
 // ⚠ **`CLAUDE.md` は「一部だけ生成物」だが `docs` に置く。** marker の内側は
-// `/bearing:with-aim` が置く法の block で、外側は人が書いた repo 固有の規律である ∴
+// `/bearing:setup-aim` が置く法の block で、外側は人が書いた repo 固有の規律である ∴
 // **docs の変更が routinely 書き換えることはない**（置き直すのは人間の act）—— 上の
-// `skills/**` とはそこが違う。⚠ **block が古くなる問題は残る** ∴ 検めるのは
-// `bearing-with-aim.mjs --check` であって、この file ではない。
+// `.claude/skills/**` とはそこが違う。⚠ **block が古くなる問題は残る** ∴ 検めるのは
+// `bearing-setup-aim.mjs --check` であって、この file ではない。
 
 /** docs の allowlist。ここに一致しないものは code。 */
 const DOCS = [
   /^docs\//, //                      aim node
-  /^original\//, //                  配布する規律の正本（md のみ）
+  /(^|\/)carriers\/[^/]+\/[^/]+\/(skills|templates|commands)\//, // 配布する規律の正本（md のみ）
   /(^|\/)README(\.[a-z]{2})?\.md$/, // 日本語正本と翻訳
   /(^|\/)CLAUDE\.md$/, //          repo 共通の初期注入プロンプト（人間の決定 2026-09-04）
   /(^|\/)CONTRIBUTING\.md$/, //     開発に加わる人向け（日本語のみ）
   /(^|\/)LICENSE(\.[a-z]+)?$/i,
 ]
 
-/** docs 由来の生成物。docs 扱いだが、同期の検証を呼び出し側に要求する。 */
-const GENERATED = [/(^|\/)carriers\/[^/]+\/[^/]+\/(skills|templates|commands)\//]
+/** 置かれた複製。docs 扱いだが、正本との同期の検証を呼び出し側に要求する。 */
+const GENERATED = [/^\.claude\/skills\//]
 
 export function classify(paths) {
   const docs = []
@@ -56,9 +66,9 @@ export function classify(paths) {
     docs,
     generated,
     code,
-    /** PR が必須か。⚠ 生成物だけが動いた場合は false —— ただし同期の検証が前提。 */
+    /** PR が必須か。⚠ 置かれた複製だけが動いた場合は false —— ただし同期の検証が前提。 */
     needsPullRequest: code.length > 0,
-    /** 生成物が動いた ∴ 呼び出し側は正本との同期を確かめねばならない。 */
+    /** 置かれた複製が動いた ∴ 呼び出し側は正本との同期を確かめねばならない。 */
     needsSyncCheck: generated.length > 0,
   }
 }
@@ -83,7 +93,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
     if (xs.length > 30) console.log(`  … 他 ${xs.length - 30} 件`)
   }
   list('docs', r.docs)
-  list('生成物（docs 由来 — 正本との同期が前提）', r.generated)
+  list('置かれた複製（docs 由来 — 正本との同期が前提）', r.generated)
   list('code', r.code)
 
   console.log('')
@@ -94,7 +104,7 @@ if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith
   console.log('docs のみ ∴ main への直プッシュが可能である。')
   if (r.needsSyncCheck) {
     console.log(
-      '⚠ ただし生成物が動いている。`gen/claude-plugin.sh --plugin` を走らせた結果と' +
+      '⚠ ただし置かれた複製が動いている。`carriers/claude/bearing/templates/` の正本と' +
         '一致していることを確かめること —— この判定は path しか見ていない。',
     )
   }

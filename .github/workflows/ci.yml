@@ -1,7 +1,7 @@
 name: ci
 
-# PR と main への push で走る。⚠ **落ちる門は 3 つだけである** —— test、生成物の同期、
-# そして合成した消費者。
+# PR と main への push で走る。⚠ **落ちる門は 3 つだけである** —— test、carrier が閉じている
+# こと、そして合成した消費者。
 # 言語の測定は報告であって門ではない（`docs/aims/native-language.md` の前提がまだ実測
 # されていない以上、硬い門にするのは早い）。
 
@@ -23,28 +23,17 @@ jobs:
         working-directory: carriers/claude/bearing
         run: node --test test/*.test.mjs
 
-  carriers-in-sync:
-    name: carrier が正本と同期している
+  carrier-closed:
+    name: carrier が自分の中で閉じている
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: carrier を再生成する
-        run: bash gen/claude-plugin.sh
-      - name: 再生成の結果と commit 済みの生成物を突き合わせる
-        run: |
-          if ! git diff --quiet -- carriers/; then
-            echo '::error::commit された carrier が original/ の正本と食い違っている。'
-            echo ''
-            echo '⚠ carrier は生成物である。手で編集してはならない —— 実体は original/ にある。'
-            echo '  直し方:  bash gen/claude-plugin.sh  を走らせて、その結果を commit する。'
-            echo ""
-            git --no-pager diff --stat -- carriers/
-            exit 1
-          fi
-          echo 'carrier は正本と同期している。'
+      # ⚠ **2026-09-05 まで、この job は再生成して diff を取っていた。** 人間が `original/` を
+      # 畳み、carrier が正本になった ∴ **突き合わせる相手がもう無い。**
+      # ⚠ **消えたのは複製であって、検査ではない** —— むしろ重みが増した: 再生成が無くなった
+      # 以上、手編集は直に着地し、**壊れたまま commit される。**
+      - name: carrier を検める
+        run: bash scripts/carrier-check.sh
 
   consumer:
     name: 合成した消費者の前で出荷物が何を言うか

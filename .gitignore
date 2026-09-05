@@ -1,22 +1,24 @@
 node_modules/
 .DS_Store
 
-# ⚠ `.claude/` は既定 deny —— 載せるものだけを名指しで開ける。
-# 逆にすると、次にここへ増えたものが黙って公開される（2026-09-02、調査ノートが実際にそうなった。
-# `.claude/` を丸ごと ignore している他の repo では偶然守られており、settings.json を tracked に
-# する理由を持つこの repo でだけ毛布が無かった）。`scripts/classify-paths.mjs` が push の判定で
-# 採っているのと同じ原則である —— **知らないものは安全側へ倒す。**
+# ⚠ `.claude/` は tracked である —— machine-local な上書きだけを名指しで閉じる
+# （人間の決定 2026-09-05）。⚠ **2026-09-02 から 2026-09-05 まで、極性は逆だった**:
+# 既定 deny・例外 0 個で丸ごと ignore しており、理由は「知らないものは安全側へ倒す」だった
+# （2026-09-02、調査ノートが黙って公開されかけた実例に基づく）。
 #
-# ⚠ 2026-09-04、名指しで開けていた 1 つ（`settings.json`）が消えた。tracked にしていた理由は
-# 「clone しただけで project スコープの plugin が有効になる」ことだけであり、供給を user スコープ
-# 1 本へ寄せた時点で理由ごと無くなった（手順は README の「使い方」が持つ）。∴ 例外は 0 個で、
-# `.claude/` は丸ごと ignore される —— **次に開けるときも、名指しで 1 行ずつ開けること。**
-.claude/*
+# ⚠ **極性を反転した以上、その理由が指していた危険はこちら側へ移る** —— 次に `.claude/` へ
+# 増えたものは、名指しで閉じないかぎり**黙って tracked になる。** 同じ事故が、今度は
+# 「開け忘れ」ではなく**「閉じ忘れ」**として起きる ∴ **harness が新しい machine-local な
+# file を持ち込んだら、ここへ 1 行足すこと。**
+#
+# 閉じるのは名に `.local.` を持つもの —— Claude Code 自身が machine-local に使う規約である
+# （`settings.local.json`）。⚠ **`skills/` は閉じない** —— `setup-aim` が置いた aim skill は
+# この repo が**消費者として受け取ったもの**であり、独特な読み方を要する corpus を採る repo が
+# その読み方を開示するかどうかは repo が決める（`docs/aims/adoption-declaration.md`）。
+# **この repo は開示する側を選んだ。**
+.claude/**/*.local.json
 
 # ⚠ 締め出すのは machine-local な上書きだけである —— `CLAUDE.md` は tracked である
 # （人間の決定 2026-09-04）。repo 共通の初期注入プロンプトは共有されるべきもので、
-# 個人の上書きだけがここへ来る。⚠ `.claude/settings.local.json` は上の `.claude/*` が
-# 既に覆っている ∴ ここで名指ししない —— 同じ path を 2 度述べれば、片方を消した日に
-# 「消したつもりで消えていない」が起きる。
+# 個人の上書きだけがここへ来る。
 CLAUDE.local.md
-
