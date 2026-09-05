@@ -14,6 +14,8 @@ state: open
 
 ⚠ **だが退化は残る。** `setup-aim` が置くものは 2 つになり（block と `.claude/skills/aim/`）、**置いた後は repo のもの** ∴ bearing が検められるのは*置く瞬間*だけである —— 置かれた 2 つが template と一致し、marker が正しく、既に在るものを潰していないこと。⚠ **plugin が無い場でそれがどう読まれるかは repo の開示であって、検査の対象ではない**（人間の決定 2026-09-05）。⚠ **一方で bearing 自身が消費者の 1 つになる** —— `docs/aims/_guide/` が廃され、bearing の `.claude/skills/aim/` も置かれたものになる ∴ 「正本を持つがゆえに退化している」の前提が 1 つ崩れ、**置く経路を bearing 自身で 1 度は通せる。** ⚠ **2026-09-05、実際に通した** —— `setup-aim` が bearing の `CLAUDE.md` の block を置き直し、`.claude/skills/aim/` を置いた。⚠ **bearing の `.claude/*` は ignore されている**（`.gitignore`、2026-09-04 に例外 0 個へ）∴ 置かれた skill は untracked であり、**それは bearing 自身の repo policy である** —— 置く側の原則が、置かれる側としての bearing にそのまま掛かる。
 
+⚠ **出荷 copy は 0.17.0 で手で検めた**（実測 2026-09-05、`~/.claude/plugins/cache/trust-delta/bearing/0.17.0/` を名指し、委譲を通さず、temp repo で 8 点）: ⑴ 素の消費者へ block と `.claude/skills/aim/` を置く ⑵ block に `_guide` / cache path / 導入コマンドは 0 件で `aim` skill を名指す ⑶ 置かれた 3 枚は template と byte 同一 ⑷ 2 度目は「既に在る ∴ 触らない」 ⑸ `--check` は `current`・skill 在り・exit 0 ⑹ `--remove` は skill を残し `CLAUDE.md` を原文へ戻す ⑺ 採っていない repo で hook は 0 byte ⑻ shim は走る。⚠ **これは手検査であって job ではない** —— 下の `[todo]` は 1 つも閉じない。再測はこの 8 点を temp repo で打ち直すこと。
+
 ⚠ **そして正本そのものは、正常系からは生まれていない。** canon 4 枚を数えると、規則の根拠は事故の観測に偏っている（実測 2026-09-04、`docs/aims/_guide/` の 4 枚）: 「**黙って**」＝ 沈黙で嘘をつく形が **7 箇所**、「実測」7、「嘘をつく」2、「壊れた記録」「実際に起きた」各 1。[[aim-tree]] の `[todo]` の法は「`open-todo` が嘘をつく」から、fence の parse 規約は「厳格な parser は静かに数え落とし、寛容な parser は静かに埋める —— **どちらの沈黙も嘘をつく**」から生まれている。∴ **生成の源（異常系の観測）と保持の場（この repo）は別であり、後者は前者を再現できない。**
 
 ⚠ **実証は同じ日に 4 つ揃った。** どれも「bearing で確認する」では出ようがなかった:
