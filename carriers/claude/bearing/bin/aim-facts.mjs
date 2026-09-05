@@ -73,7 +73,7 @@ let aimEngaged = null
 /**
  * この project が aim を採ったか、そして置かれた法が今の版か。
  *
- * ⚠ **印は `CLAUDE.md` の marker である**（`/bearing:with-aim` が置く）。marker は HTML
+ * ⚠ **印は `CLAUDE.md` の marker である**（`/bearing:setup-aim` が置く）。marker は HTML
  * コメント ∴ 消費者の context には乗らないが、**我々は file を読むので見える。**
  *
  * ⚠ **「今の法を組み立てられない」を「印が無い」に畳まない。** 畳めば、採用済みの project が
@@ -110,13 +110,13 @@ async function readOptIn(root) {
 
 /** 常時効く規律。静的な text であり、binary を必要としたことは一度も無い。 */
 async function frame(dir = DEFAULT_AIMS_DIR) {
-  // `gen/claude-plugin.sh` が `aim` skill の傍らに同梱する。その複製が
-  // `docs/aims/_guide/frame.md` と同期していることは CI が検査する。
+  // `gen/claude-plugin.sh` が `original/aim/frame.md` から `templates/aim/` へ写す。
+  // 同期していることは CI と `test/original-sync.test.mjs` が検査する。
   // ⚠ **placeholder を埋めてから注入する。** `{{aims}}` を残したまま出せば、セッションは
   // 存在しない path を正本として読む —— そして placeholder は prose の中では意味ありげな
   // 記号にしか見えないので、誰も壊れたと気づかない。
   try {
-    const raw = await readFile(path.join(PLUGIN_ROOT, 'skills', 'aim', 'frame.md'), 'utf8')
+    const raw = await readFile(path.join(PLUGIN_ROOT, 'templates', 'aim', 'frame.md'), 'utf8')
     return substituteAims(raw, dir)
   } catch {
     return null
@@ -185,7 +185,7 @@ function sayBatonPresent(unit, baton) {
       (baton.composedAt ? ` · composed-at \`${baton.composedAt}\`` : '') +
       (baton.readAt ? ` · **read-at \`${baton.readAt}\`（既に一度読まれている）**` : ''),
     '',
-    '**`handoff-r` skill が同梱する `handoff.md` の § 読む、手順 2〜6 に従うこと**（⚠ handoff は',
+    '**`handoff` skill が同梱する `read.md`（`/bearing:handoff r`）の手順 2〜6 に従うこと**（⚠ handoff は',
     'aim と別であり、aim corpus には依存しない）—— この hook は baton を surface',
     'したが `read-at` は**刻んでいない**。手順 4〜6（未 push aim の surface・pointers の',
     '読み込み・現在地の報告）はあなたの仕事である。',
@@ -285,7 +285,7 @@ async function main() {
   if (optIn.state === 'stale') {
     say(
       `⚠ **CLAUDE.md に置かれた法の block が古い** —— ${optIn.detail}。`,
-      '`/bearing:with-aim` で置き直せる。⚠ **古い複製は正常に動いて見える** ∴ 今この',
+      '`/bearing:setup-aim` で置き直せる。⚠ **古い複製は正常に動いて見える** ∴ 今この',
       'セッションが読んでいる法は、この plugin の今の法ではない。',
       '',
     )
@@ -436,36 +436,9 @@ async function main() {
     }
   }
 
-  // ── canon ─────────────────────────────────────────────────────────────────
-  // canon はセッションが立っている場所から**到達可能**でなければならない。⚠ multi-repo の
-  // unit では、canon は cwd ではなく member repo の側に在る。
-  const guides = []
-  for (const r of withCorpus) {
-    const g = path.join(r.root, ...r.aimsDir.split('/'), '_guide', 'aim-authoring.md')
-    try {
-      await readFile(g, 'utf8')
-      guides.push(path.relative(unit.root, g) || g)
-    } catch {
-      /* 在らず */
-    }
-  }
-  if (withCorpus.length > 0) {
-    say('## canon', '')
-    if (guides.length > 0) {
-      say(`canon あり: ${guides.map((g) => `\`${g}\``).join('、')}。**aim node に触れる前に`,
-          '読むこと。**', '')
-    } else {
-      // ⚠ **どこを見たかを言う。** 在り処が宣言で動く以上、「無い」だけでは、canon が
-      // 本当に無いのか、宣言が誤っているのかを人間が切り分けられない。
-      const looked = [...new Set(withCorpus.map((r) => `${r.aimsDir}/_guide/aim-authoring.md`))]
-      say(
-        `⚠ **この unit に canon が無い** —— 見たのは ${looked.map((p) => `\`${p}\``).join('、')}。`,
-        '`aim` skill は canon の複製を同梱している —— それを使い、ここでの不在は人間に',
-        '上げるべきこととして扱うこと。',
-        '',
-      )
-    }
-  }
+  // ⚠ **canon の在否はもう述べない**（人間の決定 2026-09-05）。aim skill は `setup-aim` が
+  // `.claude/skills/aim/` へ置き、置いた後はその repo のものである —— 在るか、直されたか、
+  // 消されたかは repo の policy であって、hook が毎セッション検める対象ではない。
   return { unit, repos: withCorpus }
 }
 

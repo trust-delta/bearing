@@ -36,7 +36,7 @@ node scripts/lang-report.mjs                          # 言語の測定（落ち
 ## この repo の作法
 
 - ⚠ **`carriers/**/skills/**` は生成物である**（`gen/claude-plugin.sh`）—— 手で直さず、
-  `docs/aims/_guide/` を直して再生成する。食い違いは CI が赤くする
+  `original/` を直して再生成する。食い違いは CI が赤くする
 - ⚠ **開発は aim で駆動される** —— **なぜその変更なのかは `docs/aims/` の木に残す。**
   目的（`aim:` の 1 行）は人間のものであり、**動かす提案はできるが、書き換えるのは人間である**
 - **正本は日本語である**（[README の「言語」](README.md#言語)）—— 英語版の README は従属物で、食い違えば日本語が正

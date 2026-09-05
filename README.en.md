@@ -63,11 +63,14 @@ with no record at all, so it is no evidence.
 ### Adopting aim — opt-in per project
 
 ```
-/bearing:with-aim                    # place the law block at the end of CLAUDE.md
-/bearing:with-aim --check            # report the state only
-/bearing:with-aim --remove           # take it out
-/bearing:with-aim --dir proj/aims    # declare where the corpus lives (default docs/aims)
+/bearing:setup-aim                   # place the law block at the end of CLAUDE.md and the aim skill under .claude/skills/aim/
+/bearing:setup-aim --check           # report the state only
+/bearing:setup-aim --remove          # take the block out (the skill stays — once placed it belongs to this repo)
+/bearing:setup-aim --dir proj/aims   # declare where the corpus lives (default docs/aims)
 ```
+
+⚠ **It writes into the project you run it in** — adopting aim is a declaration about this repo's corpus, so there is nowhere else it could go.
+⚠ **Once placed, both the block and the skill belong to this repo** — whether to track, edit, or leave them stale is the repo's call; the plugin does not keep them in sync.
 
 ⚠ **The marker is an HTML comment, so it costs the consumer's context nothing.** It carries the
 version and a hash of the body, so `--check` tells **"the version is old" apart from "a human
@@ -80,10 +83,10 @@ even without the marker.**
 ### Attaching the surface
 
 ```
-/bearing:statusline-setup            # attach (--force to replace, --uninstall to remove)
+/bearing:setup-statusline            # attach (--force to replace, --uninstall to remove)
 ```
 
-It drops a thin shim into `~/.claude/` and writes one line into user settings. ⚠ **The shim reads
+⚠ **It writes into your home (`~/.claude/`) and nothing into the project.** It drops a thin shim there and writes one line into user settings. ⚠ **The shim reads
 the install record on every run and bridges to the current version**, so no version is baked into
 that line and a bump never rots it. ⚠ **It writes user settings only** (the line holds an absolute
 path through your home directory, so it is not something a repository can share). If another status

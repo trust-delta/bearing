@@ -31,14 +31,14 @@ jobs:
         with:
           node-version: '22'
       - name: carrier を再生成する
-        run: bash gen/claude-plugin.sh --plugin
+        run: bash gen/claude-plugin.sh
       - name: 再生成の結果と commit 済みの生成物を突き合わせる
         run: |
           if ! git diff --quiet -- carriers/; then
-            echo '::error::commit された carrier が docs/aims/_guide/ の正本と食い違っている。'
+            echo '::error::commit された carrier が original/ の正本と食い違っている。'
             echo ''
-            echo '⚠ carrier は生成物である。手で編集してはならない —— 実体は docs/aims/_guide/ にある。'
-            echo '  直し方:  bash gen/claude-plugin.sh --plugin  を走らせて、その結果を commit する。'
+            echo '⚠ carrier は生成物である。手で編集してはならない —— 実体は original/ にある。'
+            echo '  直し方:  bash gen/claude-plugin.sh  を走らせて、その結果を commit する。'
             echo ""
             git --no-pager diff --stat -- carriers/
             exit 1

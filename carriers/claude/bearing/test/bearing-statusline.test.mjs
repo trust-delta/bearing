@@ -123,3 +123,9 @@ test('record は在るのに本体が無い場合も述べる —— 「読め�
 test('不在の行も幅の規律に従う —— 本体を import できない場面で描くので、literal で守るほかない', () => {
   assert.deepEqual(widthUnsafeChars(absentLine('record が無い')), [])
 })
+
+test('absentLine は install の scope を勧めない —— scope は install する人間の問いである', () => {
+  // ⚠ どの scope で載せるかは plugin の範囲外（人間の決定 2026-09-05）。
+  assert.ok(!absentLine('x').includes('--scope'))
+  assert.ok(absentLine('x').includes('claude plugin install bearing@trust-delta'))
+})

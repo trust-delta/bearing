@@ -16,8 +16,8 @@
 //
 // ═══ 生成物という罠 ═════════════════════════════════════════════════════════
 //
-// ⚠ **`carriers/**/skills/**` は `docs/aims/_guide/` からの生成物である**（`gen/claude-plugin.sh`）
-// ∴ **canon を直しただけの docs 変更が、routinely `skills/**` を書き換える。** 素朴な path
+// ⚠ **`carriers/**/{skills,templates,commands}/**` は `original/` からの生成物である**（`gen/claude-plugin.sh`）
+// ∴ **正本を直しただけの docs 変更が、routinely それらを書き換える。** 素朴な path
 // 判定はこれを code と呼び、正当な docs 直プッシュを弾く。
 //
 // ここでは `skills/**` を「docs 由来」として扱うが、⚠ **それが許されるのは、生成物が正本と
@@ -32,7 +32,8 @@
 
 /** docs の allowlist。ここに一致しないものは code。 */
 const DOCS = [
-  /^docs\//, //                      aim node と canon
+  /^docs\//, //                      aim node
+  /^original\//, //                  配布する規律の正本（md のみ）
   /(^|\/)README(\.[a-z]{2})?\.md$/, // 日本語正本と翻訳
   /(^|\/)CLAUDE\.md$/, //          repo 共通の初期注入プロンプト（人間の決定 2026-09-04）
   /(^|\/)CONTRIBUTING\.md$/, //     開発に加わる人向け（日本語のみ）
@@ -40,7 +41,7 @@ const DOCS = [
 ]
 
 /** docs 由来の生成物。docs 扱いだが、同期の検証を呼び出し側に要求する。 */
-const GENERATED = [/(^|\/)carriers\/[^/]+\/[^/]+\/skills\//]
+const GENERATED = [/(^|\/)carriers\/[^/]+\/[^/]+\/(skills|templates|commands)\//]
 
 export function classify(paths) {
   const docs = []

@@ -7,13 +7,13 @@
 //   対話の単一性人間が 1 度に対話するエージェントは常に単一である
 //   早期化のための安さ  区切りの良いところで早めに引き継げるよう、コストを低く保つ
 //
-// 置き場は `~/.bearing/units/<unit>/active.md`、machine-local。これは `_guide/handoff.md` の
-// 正本であり、⚠ **制約の受容ではなく目的の帰結である**: baton が守っているのは
+// 置き場は `~/.bearing/units/<unit>/active.md`、machine-local。これは handoff skill
+// （正本 `original/handoff/`）の定めであり、⚠ **制約の受容ではなく目的の帰結である**: baton が守っているのは
 // **人間と 1 つのセッションの間にある対話の継続**であって、別マシンの別セッションは
 // そもそも別の対話だからである。
 //
 // ⚠ **読む側と書く側は baton の在り処について一致していなければならない。**
-// `handoff-r` / `handoff-w` skill は正本の path へ書き、この reader はそこを読む。
+// `handoff` skill（`w`）は正本の path へ書き、この reader はそこを読む。
 // **この plugin の skill で書かれた baton を、その plugin 自身の hook が見つけられない
 // 状態は、baton が無いことより悪い**: 儀式は成功を報告し、次のセッションは盲目で始まる。
 //
