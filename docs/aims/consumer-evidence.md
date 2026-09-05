@@ -14,7 +14,15 @@ state: open
 
 ⚠ **だが退化は残る。** `setup-aim` が置くものは 2 つになり（block と `.claude/skills/aim/`）、**置いた後は repo のもの** ∴ bearing が検められるのは*置く瞬間*だけである —— 置かれた 2 つが template と一致し、marker が正しく、既に在るものを潰していないこと。⚠ **plugin が無い場でそれがどう読まれるかは repo の開示であって、検査の対象ではない**（人間の決定 2026-09-05）。⚠ **一方で bearing 自身が消費者の 1 つになる** —— `docs/aims/_guide/` が廃され、bearing の `.claude/skills/aim/` も置かれたものになる ∴ 「正本を持つがゆえに退化している」の前提が 1 つ崩れ、**置く経路を bearing 自身で 1 度は通せる。** ⚠ **2026-09-05、実際に通した** —— `setup-aim` が bearing の `CLAUDE.md` の block を置き直し、`.claude/skills/aim/` を置いた。⚠ **bearing の `.claude/*` は ignore されている**（`.gitignore`、2026-09-04 に例外 0 個へ）∴ 置かれた skill は untracked であり、**それは bearing 自身の repo policy である** —— 置く側の原則が、置かれる側としての bearing にそのまま掛かる。
 
-⚠ **出荷 copy は 0.17.0 で手で検めた**（実測 2026-09-05、`~/.claude/plugins/cache/trust-delta/bearing/0.17.0/` を名指し、委譲を通さず、temp repo で 8 点）: ⑴ 素の消費者へ block と `.claude/skills/aim/` を置く ⑵ block に `_guide` / cache path / 導入コマンドは 0 件で `aim` skill を名指す ⑶ 置かれた 3 枚は template と byte 同一 ⑷ 2 度目は「既に在る ∴ 触らない」 ⑸ `--check` は `current`・skill 在り・exit 0 ⑹ `--remove` は skill を残し `CLAUDE.md` を原文へ戻す ⑺ 採っていない repo で hook は 0 byte ⑻ shim は走る。⚠ **これは手検査であって job ではない** —— 下の `[todo]` は 1 つも閉じない。再測はこの 8 点を temp repo で打ち直すこと。
+⚠ **出荷 copy は 0.17.0 で手で検めた**（実測 2026-09-05、`~/.claude/plugins/cache/trust-delta/bearing/0.17.0/` を名指し、委譲を通さず、temp repo で 8 点）: ⑴ 素の消費者へ block と `.claude/skills/aim/` を置く ⑵ block に `_guide` / cache path / 導入コマンドは 0 件で `aim` skill を名指す ⑶ 置かれた 3 枚は template と byte 同一 ⑷ 2 度目は「既に在る ∴ 触らない」 ⑸ `--check` は `current`・skill 在り・exit 0 ⑹ `--remove` は skill を残し `CLAUDE.md` を原文へ戻す ⑺ 採っていない repo で hook は 0 byte ⑻ shim は走る。⚠ **これは手検査であって job ではない** —— 下の `[todo]` は、これでは 1 つも閉じなかった。**閉じたのは次段の job である。**
+
+⚠ **2026-09-05、その 8 点は job になった**（`scripts/consumer-check.mjs`、CI の `consumer` job）。carrier の **tracked file だけ**を mode ごと **checkout の外**の temp dir へ写して出荷 copy とし、合成した消費者 5 形（素／corpus を採った／既に `CLAUDE.md` 在り／既に skill 在り／baton だけ在り）を相手に 19 件を検める。⚠ **checkout の外へ出すことが要点である** —— `original/` も corpus も `.git` も伴わない場所に立たせなければ *path に依る振る舞い*は測れず、そこが cache と working tree の唯一のずれだからである。⚠ **`BEARING_DELEGATED` を立てるだけでは委譲を塞いだことにならない** ∴ **合成消費者が carrier の manifest を持たないこと**も併せて見る —— env は消えうるが、manifest の不在は構造である。
+
+⚠ **cwd を消費者へ倒さなければ、この job は bearing 自身を測る**（実測 2026-09-05、この job を書く途中で踏んだ）—— hook は `process.cwd()` から unit を解決する（`CLAUDE_PROJECT_DIR` でも stdin の `cwd` でもない）∴ 倒し忘れた最初の実行は、**「採っていない消費者」について bearing の open-todo 9 を報告した。** ∴ 肯定側の検査は**合成消費者を名指していること**（`unit: adopted` と `open-todo: 1`）まで見る —— ⚠ **「空でないこと」だけを見る門は、bearing を測りながら緑になる。**
+
+⚠ **落ちることを 6 つの変異で確かめた**（実測 2026-09-05、使い捨ての clone 上）: 法が cache path を名乗る／`placeSkill` が既存を潰す／`--remove` が skill も消す／装着する 1 行が版を含む／`aim-facts` の gate が壊れて採っていない repo でも述べる／**job 自身が cwd を倒し忘れる**。⚠ **6 つとも赤くなり exit 1 で終わった。** **落ちない門は門ではない** ∴ 再測は同じ 6 つを clone 上で当て直すこと。
+
+⚠ **CI 側に罠が 1 つ在り、塞いだ**（実測 2026-09-05、`bash -e` で `false | tee` は exit 0）—— pipeline の exit code は `tee` のものである ∴ 素朴に `| tee "$GITHUB_STEP_SUMMARY"` と書けば**落ちた検査が緑の job になる。** `set -o pipefail` を置いた。⚠ **報告だけの `language` job と違い、ここは落ちる門である** —— 同じ書き方が、片方では正しく片方では嘘になる。
 
 ⚠ **そして正本そのものは、正常系からは生まれていない。** canon 4 枚を数えると、規則の根拠は事故の観測に偏っている（実測 2026-09-04、`docs/aims/_guide/` の 4 枚）: 「**黙って**」＝ 沈黙で嘘をつく形が **7 箇所**、「実測」7、「嘘をつく」2、「壊れた記録」「実際に起きた」各 1。[[aim-tree]] の `[todo]` の法は「`open-todo` が嘘をつく」から、fence の parse 規約は「厳格な parser は静かに数え落とし、寛容な parser は静かに埋める —— **どちらの沈黙も嘘をつく**」から生まれている。∴ **生成の源（異常系の観測）と保持の場（この repo）は別であり、後者は前者を再現できない。**
 
@@ -27,7 +35,7 @@ state: open
 | 面が picker の拒否を握り潰す／UNC 越しに拒まれる | **人間が別マシン・別 browser で踏んだ** |
 | 面が読めない file を「親が無い」と描く | **stub した描画経路** |
 
-**手段は、合成した消費者を機械にすることである。** temp repo を作り（aim を採った ＝ `CLAUDE.md` に block 在り／採っていない、の 2 形）、`BEARING_DELEGATED` を立てて**出荷 layout の carrier をそのまま**走らせ、**出力を突き合わせる**。⚠ **これは既存の `node --test` とは別の層である** —— あちらは*関数*を検め、こちらは**出荷物が消費者の前で何を言うか**を検める。
+**手段は、合成した消費者を機械にすることである。** temp repo を作り（**採った／採っていない**の 2 形から始め、置く経路を検めるうちに **5 形**へ増えた —— 素／corpus を採った／既に `CLAUDE.md` 在り／既に skill 在り／baton だけ在り）、`BEARING_DELEGATED` を立てて**出荷 layout の carrier をそのまま**走らせ、**出力を突き合わせる**。⚠ **これは既存の `node --test` とは別の層である** —— あちらは*関数*を検め、こちらは**出荷物が消費者の前で何を言うか**を検める。
 
 ⚠ **委譲（`lib/delegate.mjs`）はこの落差の原因ではなく、別の落差への対処である。** あの file 自身が「ドッグフーディングのための機構であって、便利のためではない」と述べ、無ければこの repo が**自分自身の古い版を食べる**ことを記録している（2026-09-02、statusline は新しく hook は cache `0.5.0` を走らせて同じ flag を出し続けた）。⚠ **∴ 委譲は外せない。** 残る死角は限定的で、**cache は released commit の clone ゆえ内容はリリース時点で一致し、ずれるのは *path に依る振る舞い* だけである** —— そして 2026-09-04 の不具合はまさにそこに居た（version を含む cache path、cache から走ると exec bit が読めない、面へ辿り着く手段）。
 
@@ -35,9 +43,9 @@ state: open
 
 # PROCESS
 
-- [todo] **合成した消費者を CI の job にする。** temp repo を 2 形（aim を採った ＝ `CLAUDE.md` に block 在り／採っていない）作り、`BEARING_DELEGATED` を立てて出荷 layout の carrier を走らせ、出力を突き合わせる。⚠ **委譲を通した実行は証拠にならない** —— 通せば走るのは working tree であって出荷物ではない
-- [todo] **`setup-aim` を temp repo に打ち、置かれた block と `.claude/skills/aim/` が template と一致することを job が固定する。** 既に `CLAUDE.md` が在る／既に `.claude/skills/aim/` が在る、の 2 形も通す —— **潰さずに述べて止まる**こと
-- [todo] **その job が「何を覆っていないか」も同じ出力で述べる。** ⚠ **browser・OS・ハーネスの変異は覆えない**（2026-09-04 の 4 件のうち 2 件はそこで出た）—— 覆った範囲だけを述べれば、この機構が「覆ったように読ませる」側になる
+- [done] **合成した消費者を CI の job にした。** `scripts/consumer-check.mjs` と CI の `consumer` job。carrier の tracked file だけを mode ごと checkout の外へ写して出荷 copy とし、`BEARING_DELEGATED` を立て、**消費者が carrier の manifest を持たないこと**も併せて見る。⚠ **各 bin の cwd は消費者へ倒す** —— 倒さなければ bearing 自身を測る（`# IS`）。⚠ **session id は毎回新しくする** —— `precompact` は `os.tmpdir()` の marker で「セッションにつき一度」を守る ∴ 使い回せば 2 度目以降は黙り、**その沈黙は検査の成功に見える**
+- [done] **`setup-aim` を temp repo に打ち、置かれた block と `.claude/skills/aim/` が出荷 template と byte 同一であることを job が固定した。** 既に `CLAUDE.md` が在る／既に `.claude/skills/aim/` が在る、の 2 形も通る。⚠ **2 度目は中身も mtime も動かないことまで見る** —— 書き直して同じ byte を置く実装は「触らない」ではない。⚠ **足りない枚を補わないことも見る** —— 何を持つかはその repo が決めている
+- [done] **その job が「何を覆っていないか」を同じ出力で述べる。** 6 つを名指す: cache そのものではないこと（出荷 copy は checkout からの複製である）／走ったのは 1 platform・1 node 版だけであること／statusline の probe が通るのは platform 既定のシェルであって harness のそれではないこと／ハーネスの登録（置いた skill・`$ARGUMENTS`・plugin の skill 一覧が固まる時点）は覆えないこと／plugin 不在の場で block がどう読まれるかは検査の対象ではないこと（repo の開示である）／browser の面は 1 行も走らせていないこと
 
 # DAG
 

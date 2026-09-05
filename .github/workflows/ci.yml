@@ -1,6 +1,7 @@
 name: ci
 
-# PR と main への push で走る。⚠ **落ちる門は 2 つだけである** —— test と、生成物の同期。
+# PR と main への push で走る。⚠ **落ちる門は 3 つだけである** —— test、生成物の同期、
+# そして合成した消費者。
 # 言語の測定は報告であって門ではない（`docs/aims/native-language.md` の前提がまだ実測
 # されていない以上、硬い門にするのは早い）。
 
@@ -44,6 +45,29 @@ jobs:
             exit 1
           fi
           echo 'carrier は正本と同期している。'
+
+  consumer:
+    name: 合成した消費者の前で出荷物が何を言うか
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # ⚠ **これは `node --test` とは別の層である** —— あちらは*関数*を検め、こちらは
+      # **出荷物が消費者の前で何を言うか**を検める。carrier の tracked file だけを checkout の
+      # 外へ写し、合成した消費者 repo を相手に走らせる（`docs/aims/consumer-evidence.md`）。
+      #
+      # ⚠ **この job は覆っていない範囲も同じ出力で述べる。** 覆った範囲だけを述べれば、
+      # 機構そのものが「覆ったように読ませる」側になる。
+      # ⚠ **`pipefail` が要る。** pipeline の exit code は `tee` のものである ∴ 付けなければ
+      # **落ちた検査が緑の job になる**（実測 2026-09-05、`bash -e`: `false | tee` は exit 0）——
+      # 報告のためだけの `language` job と違い、ここは落ちる門である。
+      - name: 合成した消費者を走らせる
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/consumer-check.mjs | tee -a "$GITHUB_STEP_SUMMARY"
 
   language:
     name: 言語の測定（報告のみ・落とさない）
