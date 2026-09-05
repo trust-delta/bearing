@@ -45,7 +45,6 @@
 // **1 度の中断は促しであり、立ち続ける拒否は檻である。**
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { readAimSlugs } from '../lib/corpus.mjs'
 import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 import os from 'node:os'
 import path from 'node:path'
@@ -97,19 +96,13 @@ function readStdin() {
  * **handoff は aim に依存しない** ∴ **aim を降りても、baton が在れば発火し続ける** ——
  * ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。
  *
- * ⚠ **一方 corpus が在ることは aim の証拠でしかない** ∴ 降りる宣言に従う。
- * `lib/claude-md.mjs` の `isEngaged` を通す —— **結論を組み直せば面ごとに姿が食い違う。**
+ * ⚠ **一方 corpus が在ることは aim の証拠ですらない** —— *使っている証拠*であって、この機構を
+ * 通したいという宣言ではない（2026-09-05）∴ **corpus は見ない。** `lib/claude-md.mjs` の
+ * `isEngaged` を通す —— **結論を組み直せば面ごとに姿が食い違う。**
  */
 async function inScope(unit) {
   if (existsSync(batonDir(unit.root))) return true
-  let hasCorpus = false
-  for (const repo of unit.repos) {
-    if ((await readAimSlugs(repo.root, repo.aimsDir)).length > 0) {
-      hasCorpus = true
-      break
-    }
-  }
-  return isEngaged({ ...(await readDeclaration(unit.root)), hasCorpus })
+  return isEngaged(await readDeclaration(unit.root))
 }
 
 const MESSAGE = `⚠ 自動圧縮を**一度だけ**遮断した。この対話が静かに破棄されることを防ぐためである。

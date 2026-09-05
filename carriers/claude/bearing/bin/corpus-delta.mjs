@@ -147,7 +147,7 @@ try {
   // *使っている証拠*であって、この機構を通したいという宣言ではない。
   // ⚠ **この面を忘れていた**（2026-09-05、合成消費者の job が捕まえた）—— hook と statusline
   // だけを通したとき、**降りた repo でこの面だけが喋り続けた。**
-  if (!isEngaged({ ...(await readDeclaration(unit.root)), hasCorpus: true })) process.exit(0)
+  if (!isEngaged(await readDeclaration(unit.root))) process.exit(0)
 
   const file = deltaStatePath(input.session_id)
   const prev = existsSync(file) ? readState(file) : null

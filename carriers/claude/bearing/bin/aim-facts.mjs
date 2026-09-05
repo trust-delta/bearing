@@ -205,15 +205,14 @@ async function main() {
   const withCorpus = repos.filter((r) => r.corpus)
 
   // ── この project は aim を採ったか ────────────────────────────────────────
-  // ⚠ **corpus が在れば、印の有無に関わらず採っている。** 印は後から入った機構であり、
-  // **既に node を書いている project を、印が無いという理由で黙らせてはならない。**
-  // ⚠ **∴ 降りるには宣言が要る** —— corpus を消す以外に降りる手が無ければ、`aim:` が
-  // 述べる「選択できる」を満たさない（`docs/aims/adoption-declaration.md`）。
+  // ⚠ **corpus が在ることは採用ではない。** `docs/aims/` は*使っている証拠*であって、この
+  // 機構を通したいという宣言ではない —— 共同開発の repo で、team が採っていない機構が黙って
+  // 喋る形になる（人間の決定 2026-09-05、`docs/aims/adoption-declaration.md`）。
   const optIn = await readOptIn(unit.root)
   // ⚠ **述語は `lib/claude-md.mjs` の `isEngaged` 1 箇所である** —— ここで組み直せば、
   // statusline との間に 2 つ目の結論が生まれる（2026-09-03 に実際に食い違った形）。
   const declaration = await readDeclaration(unit.root)
-  aimEngaged = isEngaged({ ...declaration, hasCorpus: withCorpus.length > 0 })
+  aimEngaged = isEngaged(declaration)
   const baton = await readBatonSafe(unit.root)
 
   if (!aimEngaged) {

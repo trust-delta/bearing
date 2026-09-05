@@ -50,11 +50,19 @@ async function withAim(root, version = VERSION, dir = DEFAULT_AIMS_DIR) {
   await writeFile(path.join(root, 'CLAUDE.md'), `# doc\n\n${renderBlock(version, LAW, dir)}\n`)
 }
 
+/**
+ * **aim を採り、かつ corpus を持つ repo。**
+ *
+ * ⚠ **採用を fixture に畳んでいるのは、それが既定の姿だからである** —— 2026-09-05 に述語から
+ * corpus が落ち、**採用していない repo は corpus が在っても黙る。** 採っていない側を測る test
+ * は、この helper を使わずに自分で組むこと（すぐ下の 2 件がそれである）。
+ */
 async function corpusRepo(root, slugs, dir = DEFAULT_AIMS_DIR) {
   execFileSync('git', ['init', '-q', root])
   git(root, ['config', 'user.email', 'test@example.invalid'])
   git(root, ['config', 'user.name', 'aim-facts test'])
   await mkdir(path.join(root, ...dir.split('/')), { recursive: true })
+  await withAim(root, VERSION, dir)
   for (const slug of slugs) {
     await writeFile(
       path.join(root, ...dir.split('/'), slug + '.md'),
@@ -76,12 +84,16 @@ test('aim を採った project では、frame は必ず注入される', async (
   await rm(root, { recursive: true, force: true })
 })
 
-test('corpus が在れば、印が無くても frame は注入される', async () => {
-  // ⚠ **印は後から入った機構である。** 既に node を書いている project を、印が無いという
-  // 理由で黙らせれば、**この規律で動いてきた repo が、更新した日に法を失う。**
+test('corpus が在っても、採用していなければ 1 byte も出さない', async () => {
+  // ⚠ **2026-09-05 に反転した。** それまでは「corpus が在れば印が無くても注入される」で、
+  // **既に node を書いている repo を印の無さで黙らせない**ことが理由だった。⚠ **だがその
+  // 推測は、共同開発の repo で team が採っていない機構を黙って喋らせる** —— corpus が在る
+  // ことは*使っている証拠*であって、この機構を通したいという宣言ではない（人間の決定）。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
-  await corpusRepo(root, ['a'])
-  assert.match(compose(root), /# aim frame/)
+  execFileSync('git', ['init', '-q', root])
+  await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
+  await writeFile(path.join(root, 'docs', 'aims', 'a.md'), '---\naim: x\nstate: open\n---\n')
+  assert.equal(compose(root), '')
   await rm(root, { recursive: true, force: true })
 })
 
@@ -227,6 +239,7 @@ test('a corpus deviating from its own notation is surfaced, not silently dropped
   const root = path.join(dir, 'proj')
   await mkdir(path.join(root, 'docs', 'aims'), { recursive: true })
   execFileSync('git', ['init', '-q', root])
+  await withAim(root)
   await writeFile(
     path.join(root, 'docs', 'aims', 'a.md'),
     '---\naim: x\nstate: open\n---\n\n# PROCESS\n\n* [todo] written the other way\n',

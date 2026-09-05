@@ -47,25 +47,20 @@ export const MARKER = 'bearing:aim'
 const FENCE_LINE = /^ {0,3}(```+|~~~+)/
 
 /**
- * **降りる宣言。** 採用の block と同じ file に住む、単独行の HTML コメントである。
+ * **旧い「降りる宣言」の字面。** ⚠ **もう誰も書かない —— 読むためだけに残っている。**
  *
- * ⚠ **`.claude/settings.json` は採れない。理由は 2 つあり、片方は足元が動いた。**
- * 2026-09-04 の時点で bearing の `.gitignore` は `.claude/*` を例外 0 個で ignore しており、
- * settings に置いた宣言は **clone から見えない machine-local な事実**になった —— ⚠ **その観測は
- * 今も真だが、2026-09-05 に人間が `.claude/` を tracked へ反転させた** ∴ **bearing については
- * もう成り立たない。**
- * ⚠ **残るもう 1 つのほうが強い**: **消費者の `.gitignore` は消費者のものであって当てにできない。**
- * `.claude/` を丸ごと ignore する repo は珍しくなく、settings に置けば**宣言が見えるかどうかが
- * repo ごとに変わる。** そして **降りることは repo の宣言であって、1 台の設定ではない**
- * ∴ 採用と同じ file に置く。
+ * ⚠ **2026-09-05 まで、述語は `adopted || hasCorpus` だった** ∴ corpus を持つ repo は
+ * 採用を宣言していなくても機構が口を開き、**降りるには専用の宣言が要った**（`--decline`）。
+ * 同日、人間が述語を `adopted` だけに絞った（`isEngaged`）—— **推測をやめれば、推測を覆す
+ * 手も要らない。**
  *
- * ⚠ **HTML コメント ∴ 消費者の context を 1 token も食わない**（採用の marker と同じ理由）——
- * そして `Read` tool で開けば人間には見える。
+ * ⚠ **∴ 旧い宣言は、今や既定と同じ意味を持つ**（＝ 採用していない ＝ 黙る）—— 消さなくても
+ * 正しく働く。**残っているのは、それを「壊れた marker」と読まないためである**: `bearing:aim`
+ * で始まる行ゆえ、除外しなければ「読めない marker」＝ anomaly と判定され、
+ * ⚠ **anomaly は採用の事実として数えられる** ∴ **降りたはずの repo が有効になる** ——
+ * 意味がちょうど反転する。
  */
 const DECLINED_LINE = /^<!--\s*bearing:aim\s+declined\s*-->\s*$/
-
-/** 降りる宣言の字面。⚠ **書き出しの正本はここ 1 箇所である。** */
-export const DECLINED_MARKER = '<!-- bearing:aim declined -->'
 
 const BEGIN_ANY = /^<!--\s*bearing:aim\s+(.*?)\s*-->\s*$/
 const BEGIN_LOOSE = /^<!--\s*bearing:aim(\s|-->)/
@@ -311,21 +306,24 @@ export function findDeclined(text) {
 }
 
 /**
- * その unit root の `CLAUDE.md` が述べている 2 つの事実。**読むのはここ 1 箇所である。**
+ * その unit root の `CLAUDE.md` が述べている事実。**読むのはここ 1 箇所である。**
+ *
+ * ⚠ **旧い「降りる宣言」だけを持つ file は、ここで自然に `adopted: false` になる** ——
+ * `findBlocks` があの行を除外するからである（除外しなければ anomaly として採用に数えられ、
+ * **意味が反転する**）。∴ **移行のための特別扱いは要らない。**
  *
  * @param {string} root unit root
- * @returns {Promise<{adopted: boolean, declined: boolean}>}
+ * @returns {Promise<{adopted: boolean}>}
  */
 export async function readDeclaration(root) {
   let text
   try {
     text = await readFile(path.join(root, 'CLAUDE.md'), 'utf8')
   } catch {
-    return { adopted: false, declined: false }
+    return { adopted: false }
   }
-  if (findDeclined(text)) return { adopted: false, declined: true }
   const { blocks, anomalies } = findBlocks(text)
-  return { adopted: blocks.length > 0 || anomalies.length > 0, declined: false }
+  return { adopted: blocks.length > 0 || anomalies.length > 0 }
 }
 
 /**
@@ -336,20 +334,26 @@ export async function readDeclaration(root) {
  * に 2 行目を描いていた**（`docs/aims/adoption-declaration.md`）—— 同じ結論を 2 つの形で
  * 書いていたことが原因である ∴ **結論そのものを 1 箇所に置く。**
  *
- * ⚠ **降りる宣言が最優先である。** corpus が在ることは*使っている証拠*であって、この機構を
- * 通したいという宣言ではない —— **corpus を持つ project が有効を降りられなければ、
- * `aim:` が述べる「選択できる」を満たさない。**
+ * ⚠ **corpus の有無を見てはならない。** `docs/aims/` が在ることは*使っている証拠*であって、
+ * **この機構を通したいという宣言ではない。** 2026-09-05 まで述語は `adopted || hasCorpus`
+ * であり、**採用を宣言していない repo でも corpus さえ在れば口を開いていた** —— 共同開発の
+ * repo で、team が採っていない機構が黙って喋る形である。⚠ **その推測を覆すために専用の
+ * 「降りる宣言」が要り、`--remove` は「黙るようになる」と言えず、状態が 3 つに増えていた**
+ * ∴ **推測をやめたことで、そのすべてが同時に消えた**（人間の決定 2026-09-05）。
+ *
+ * ⚠ **代償は発見面である** —— 採用するまで機構は完全に黙る ∴ **黙る機構は自分の存在を
+ * 告げられない。** それは [[ambient-display]] の 2 行目が引き受ける（corpus を見つけたが
+ * 採用されていない、と 1 行で述べる）。
  *
  * ⚠ **baton はこの述語に掛からない。** handoff は `docs/aims/` に何も依存せず、どの project
  * でも使える ∴ ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。呼ぶ側が
  * baton をこの gate の外で読むこと。
  *
- * @param {{adopted: boolean, declined: boolean, hasCorpus: boolean}} facts
+ * @param {{adopted: boolean}} facts
  * @returns {boolean}
  */
-export function isEngaged({ adopted, declined, hasCorpus }) {
-  if (declined) return false
-  return Boolean(adopted || hasCorpus)
+export function isEngaged({ adopted }) {
+  return Boolean(adopted)
 }
 
 /**
@@ -467,7 +471,13 @@ export function planRemove(text) {
   // 状態へ戻す act ゆえ、どちらの宣言でも外す。**片方だけ外せば、外したつもりの人間が
   // 降りたままになる。**
   if (findDeclined(text)) {
-    return { action: 'remove', reason: '降りる宣言を外した', text: stripDeclined(text) }
+    // ⚠ **旧い「降りる宣言」は、今は既定と同じ意味しか持たない**（`DECLINED_LINE` の説明）
+    // ∴ 残っていても正しく黙る。ここで落とすのは掃除であって、意味の変更ではない。
+    return {
+      action: 'remove',
+      reason: '旧い「降りる宣言」を外した —— 今は既定と同じ意味である（採用していない ∴ 黙る）',
+      text: stripDeclined(text),
+    }
   }
   const { blocks, anomalies } = findBlocks(text)
   if (anomalies.length > 0) {
@@ -494,37 +504,6 @@ export function planRemove(text) {
   return { action: 'remove', reason: `v${found.version} の block を外した`, text: restore(next, text) }
 }
 
-/**
- * **降りると宣言する計画。** 書き込みは行わない。
- *
- * ⚠ **法の block が在れば、先に外す。** 採用と辞退が同じ file に並べば、読み手も機構も
- * どちらが今の宣言か決められない —— **2 つの宣言は同時に立たない。**
- *
- * ⚠ **人間が block に手を入れていれば、外さずに止まる**（`planRemove` と同じ理由）——
- * 消えるのはその編集だからである。
- *
- * @param {string} text
- * @returns {{action: 'decline'|'unchanged'|'refuse', reason: string, text?: string}}
- */
-export function planDecline(text) {
-  if (findDeclined(text)) {
-    return { action: 'unchanged', reason: '既に降りると宣言している' }
-  }
-  const { blocks } = findBlocks(text)
-  let base = text
-  let removed = ''
-  if (blocks.length > 0) {
-    const plan = planRemove(text)
-    if (plan.action === 'refuse') return { action: 'refuse', reason: plan.reason }
-    base = plan.text ?? text
-    removed = '法の block を外し、'
-  }
-  return {
-    action: 'decline',
-    reason: `${removed}降りると宣言した`,
-    text: appendAtEnd(base, DECLINED_MARKER),
-  }
-}
 
 /**
  * 置かれた block の状態を述べる（書き込まない）。hook もこれを使う。
