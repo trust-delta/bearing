@@ -48,6 +48,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { readAimGraph, readAimSlugs, DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
+import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
 import { renderCorpusDelta } from '../lib/corpus-delta.mjs'
 import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.mjs'
@@ -140,6 +141,13 @@ try {
   // unit のどこにも corpus が無い: この project は規律を採ったことが無く、空の corpus を
   // 報告することは「人間が決めていないことを plugin が決める」ことになる。
   if (sig === null) process.exit(0)
+
+  // ⚠ **述語は `lib/claude-md.mjs` の `isEngaged` 1 つである。** ここは aim の事実を述べ直す
+  // 面であり、**降りると宣言した project では黙らねばならない** —— corpus が在ることは
+  // *使っている証拠*であって、この機構を通したいという宣言ではない。
+  // ⚠ **この面を忘れていた**（2026-09-05、合成消費者の job が捕まえた）—— hook と statusline
+  // だけを通したとき、**降りた repo でこの面だけが喋り続けた。**
+  if (!isEngaged({ ...(await readDeclaration(unit.root)), hasCorpus: true })) process.exit(0)
 
   const file = deltaStatePath(input.session_id)
   const prev = existsSync(file) ? readState(file) : null

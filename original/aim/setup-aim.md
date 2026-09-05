@@ -1,6 +1,6 @@
 ---
 description: この project で aim の規律を採る —— 書き先は実行した project。CLAUDE.md の末尾へ marker 付きの法を差し込み、.claude/skills/aim/ へ aim skill を置く。置いた後はどちらもこの repo のもの
-argument-hint: "[--dir <path>] [--check | --remove]"
+argument-hint: "[--dir <path>] [--check | --decline | --remove]"
 allowed-tools: Bash(bearing-setup-aim.mjs:*)
 disable-model-invocation: true
 ---
@@ -12,6 +12,8 @@ bearing-setup-aim.mjs $ARGUMENTS
 ```
 
 ⚠ **書き先は、これを実行した project である** —— `CLAUDE.md` の末尾（marker 付きの法の block）と `.claude/skills/aim/`（aim skill）。これは scope の選択ではなく置くものの性質による: aim の採用はその repo の corpus についての宣言ゆえ、repo にしか置けない。⚠ **置いた後はどちらもこの repo のものである。** track するか・直すか・古いままにするかは repo が決め、plugin は追随させない。
+
+⚠ **`--decline` は「この repo では aim 機構を通さない」という宣言である。** corpus を持っていても黙る —— **corpus が在ることは*使っている証拠*であって、この機構を通したいという宣言ではない。** ⚠ **`--remove`（宣言を外す）とは別の act である**: 外せば「宣言していない」状態へ戻り、corpus を持つ repo はそこで再び有効になる。⚠ **降りても baton の未読だけは述べ続ける** —— handoff は aim に依存せず、どの project でも使える。
 
 ⚠ **裸のコマンド名で呼ぶ。** plugin の `bin/` は **Bash tool の PATH に入り、裸のコマンド名で呼べる**（公式 docs が明記している唯一の経路）∴ path も env も要らない。
 

@@ -31,7 +31,7 @@ import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherDrift } from '../lib/drift.mjs'
 import { readBaton } from '../lib/baton.mjs'
-import { readAdopted } from '../lib/claude-md.mjs'
+import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
 // （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
@@ -394,11 +394,17 @@ async function gatherFacts(input) {
   const batonUnread = Boolean(baton && !baton.readAt)
   const notEngaged = { state: 'not-engaged', facts: { batonUnread }, branch }
 
+  // ⚠ **述語は hook と同じ 1 つを通る**（`lib/claude-md.mjs` の `isEngaged`）—— 結論を
+  // ここで組み直せば、同じ project が面ごとに別の姿を持つ。
+  const declaration = await readDeclaration(unit.root)
+
   // ⚠ **repo が 1 つも無い場所は、採用の宣言が在るときだけ「未取得」と言ってよい。**
   // user スコープで載せた plugin は非 git の directory でも走る ∴ ここで黙らなければ、
   // 関係のない場所で毎ターン警告色が出る。
   if (unit.repos.length === 0) {
-    return (await readAdopted(unit.root)) ? { state: 'unavailable', facts: null, branch } : notEngaged
+    return isEngaged({ ...declaration, hasCorpus: false })
+      ? { state: 'unavailable', facts: null, branch }
+      : notEngaged
   }
 
   const perRepo = (await Promise.all(unit.repos.map(async (repo) => {
@@ -421,10 +427,14 @@ async function gatherFacts(input) {
   // ⚠ **`corpus 無し` は「採用済みだが空」のためだけの言葉である。** 採っていない project で
   // それを描けば、警告でも事実でもない行が全 project に居座る。
   if (perRepo.length === 0) {
-    if (!(await readAdopted(unit.root))) return notEngaged
+    if (!isEngaged({ ...declaration, hasCorpus: false })) return notEngaged
     const aimsDirs = [...new Set(unit.repos.map((r) => r.aimsDir ?? DEFAULT_AIMS_DIR))]
     return { state: 'no-corpus', facts: { batonUnread }, branch, aimsDirs }
   }
+
+  // ⚠ **corpus が在る経路にも同じ gate を通す。** ここを素通りさせれば、降りると宣言した
+  // project でも corpus さえ在れば 2 行目が描かれ、**hook は黙るのに面だけが喋る。**
+  if (!isEngaged({ ...declaration, hasCorpus: true })) return notEngaged
 
   // ⚠ baton は unit に 1 つである（repo ではなく unit root に置かれる）∴ 畳まない。
   return { state: 'ok', branch, facts: { ...foldRepos(perRepo), batonUnread } }

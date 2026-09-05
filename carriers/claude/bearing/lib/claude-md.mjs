@@ -46,6 +46,22 @@ export const MARKER = 'bearing:aim'
 // ⚠ **片方だけが引用を主張として読めば、我々は他人の doc に載った例示を書き換える。**
 const FENCE_LINE = /^ {0,3}(```+|~~~+)/
 
+/**
+ * **降りる宣言。** 採用の block と同じ file に住む、単独行の HTML コメントである。
+ *
+ * ⚠ **`.claude/settings.json` は採れなかった**（測って落ちた）—— bearing の `.gitignore` は
+ * `.claude/*` を**例外 0 個**で ignore しており（2026-09-04 の人間の決定）、settings に置いた
+ * 宣言は **clone から見えない machine-local な事実**になる。⚠ **降りることは repo の宣言で
+ * あって、1 台の設定ではない** ∴ 採用と同じ file に置く。
+ *
+ * ⚠ **HTML コメント ∴ 消費者の context を 1 token も食わない**（採用の marker と同じ理由）——
+ * そして `Read` tool で開けば人間には見える。
+ */
+const DECLINED_LINE = /^<!--\s*bearing:aim\s+declined\s*-->\s*$/
+
+/** 降りる宣言の字面。⚠ **書き出しの正本はここ 1 箇所である。** */
+export const DECLINED_MARKER = '<!-- bearing:aim declined -->'
+
 const BEGIN_ANY = /^<!--\s*bearing:aim\s+(.*?)\s*-->\s*$/
 const BEGIN_LOOSE = /^<!--\s*bearing:aim(\s|-->)/
 const END = /^<!--\s*\/bearing:aim\s*-->\s*$/
@@ -220,6 +236,10 @@ export function findBlocks(text) {
     }
     if (inFence) return
 
+    // ⚠ **降りる宣言は「読めない marker」ではない。** ここで弾かなければ anomaly になり、
+    // `readAdopted` が anomaly を採用と読む ∴ **降りたことが採用に化ける。**
+    if (DECLINED_LINE.test(line)) return
+
     const begin = BEGIN_LOOSE.test(line) && !END.test(line) ? parseBegin(line) : null
     if (begin) {
       if (open) anomalies.push(`${open.from + 1} 行目の開始 marker が閉じられないまま、${i + 1} 行目で次が開いている`)
@@ -261,14 +281,70 @@ export function findBlocks(text) {
  * @returns {Promise<boolean>}
  */
 export async function readAdopted(root) {
+  return (await readDeclaration(root)).adopted
+}
+
+/**
+ * その `CLAUDE.md` は**降りると宣言している**か。
+ *
+ * ⚠ **fenced code block の中の marker は引用である** —— 採用の marker と同じ法を当てる。
+ * 他人の doc に載った例示を、降りる宣言として読んではならない。
+ *
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function findDeclined(text) {
+  let inFence = false
+  for (const line of normalize(text).split('\n')) {
+    if (FENCE_LINE.test(line)) {
+      inFence = !inFence
+      continue
+    }
+    if (!inFence && DECLINED_LINE.test(line)) return true
+  }
+  return false
+}
+
+/**
+ * その unit root の `CLAUDE.md` が述べている 2 つの事実。**読むのはここ 1 箇所である。**
+ *
+ * @param {string} root unit root
+ * @returns {Promise<{adopted: boolean, declined: boolean}>}
+ */
+export async function readDeclaration(root) {
   let text
   try {
     text = await readFile(path.join(root, 'CLAUDE.md'), 'utf8')
   } catch {
-    return false
+    return { adopted: false, declined: false }
   }
+  if (findDeclined(text)) return { adopted: false, declined: true }
   const { blocks, anomalies } = findBlocks(text)
-  return blocks.length > 0 || anomalies.length > 0
+  return { adopted: blocks.length > 0 || anomalies.length > 0, declined: false }
+}
+
+/**
+ * **この project で aim の機構は口を開くか。** hook も面も、必ずこの 1 つを通る。
+ *
+ * ⚠ **述語が 2 箇所に住めば、同じ project が面ごとに別の姿を持つ。** 2026-09-03、hook は
+ * marker を見て黙るのに statusline は corpus の有無しか見ておらず、**採っていない全 project
+ * に 2 行目を描いていた**（`docs/aims/adoption-declaration.md`）—— 同じ結論を 2 つの形で
+ * 書いていたことが原因である ∴ **結論そのものを 1 箇所に置く。**
+ *
+ * ⚠ **降りる宣言が最優先である。** corpus が在ることは*使っている証拠*であって、この機構を
+ * 通したいという宣言ではない —— **corpus を持つ project が有効を降りられなければ、
+ * `aim:` が述べる「選択できる」を満たさない。**
+ *
+ * ⚠ **baton はこの述語に掛からない。** handoff は `docs/aims/` に何も依存せず、どの project
+ * でも使える ∴ ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。呼ぶ側が
+ * baton をこの gate の外で読むこと。
+ *
+ * @param {{adopted: boolean, declined: boolean, hasCorpus: boolean}} facts
+ * @returns {boolean}
+ */
+export function isEngaged({ adopted, declined, hasCorpus }) {
+  if (declined) return false
+  return Boolean(adopted || hasCorpus)
 }
 
 /**
@@ -297,6 +373,40 @@ export function declaredAimsDir(text) {
 const restore = (lines, source) => lines.join(detectEol(source))
 
 /**
+ * 末尾へ 1 つ足す。⚠ **前に空行をちょうど 1 つ置く** —— 人間が書いた最後の行にくっつけない。
+ *
+ * ⚠ **末尾改行の有無は原文に従う** —— 持っていなかった file に足せば、我々とは無関係な
+ * 1 行が diff に出る。file が無かった場合だけは、足す側が既定である。
+ *
+ * ⚠ **法の block と降りる宣言が同じ経路を通る。** 別々に書けば、片方だけが末尾改行を
+ * 伸ばす日が来る —— それは既に 1 度起きている（round-trip の試験が捕まえた）。
+ */
+function appendAtEnd(text, piece) {
+  const lines = normalize(text).split('\n')
+  const kept = [...lines]
+  while (kept.length > 0 && kept.at(-1).trim() === '') kept.pop()
+  const body = kept.length === 0 ? piece.split('\n') : [...kept, '', ...piece.split('\n')]
+  const trailing = text === '' || /\n$/.test(normalize(text))
+  return restore(trailing ? [...body, ''] : body, text || '\n')
+}
+
+/** 降りる宣言の行を落とす。⚠ 直前の空行も、我々が置いたものであれば一緒に落とす。 */
+function stripDeclined(text) {
+  const lines = normalize(text).split('\n')
+  const out = []
+  let inFence = false
+  for (const line of lines) {
+    if (FENCE_LINE.test(line)) inFence = !inFence
+    if (!inFence && DECLINED_LINE.test(line)) {
+      if (out.length > 0 && out.at(-1).trim() === '') out.pop()
+      continue
+    }
+    out.push(line)
+  }
+  return restore(out, text)
+}
+
+/**
  * block を置く／置き直す計画。**書き込みは行わない。**
  *
  * @param {string} text 現在の `CLAUDE.md`（無ければ空文字）
@@ -313,18 +423,7 @@ export function planApply(text, { version, law, dir = DEFAULT_AIMS_DIR }) {
   const lines = normalize(text).split('\n')
 
   if (blocks.length === 0) {
-    // 末尾へ足す。⚠ **前に空行をちょうど 1 つ置く** —— 人間が書いた最後の行にくっつけない。
-    const kept = [...lines]
-    while (kept.length > 0 && kept.at(-1).trim() === '') kept.pop()
-    const body = kept.length === 0 ? block.split('\n') : [...kept, '', ...block.split('\n')]
-    // ⚠ **末尾改行の有無は原文に従う** —— 持っていなかった file に足せば、我々の block とは
-    // 無関係な 1 行が diff に出る。file が無かった場合だけは、足す側が既定である。
-    const trailing = text === '' || /\n$/.test(normalize(text))
-    return {
-      action: 'create',
-      reason: '末尾へ置いた',
-      text: restore(trailing ? [...body, ''] : body, text || '\n'),
-    }
+    return { action: 'create', reason: '末尾へ置いた', text: appendAtEnd(text, block) }
   }
 
   const [found] = blocks
@@ -359,6 +458,12 @@ export function planApply(text, { version, law, dir = DEFAULT_AIMS_DIR }) {
  * @returns {{action: 'remove'|'absent'|'refuse', reason: string, text?: string}}
  */
 export function planRemove(text) {
+  // ⚠ **降りる宣言も「置かれた宣言」である** —— `--remove` はこの repo を*宣言していない*
+  // 状態へ戻す act ゆえ、どちらの宣言でも外す。**片方だけ外せば、外したつもりの人間が
+  // 降りたままになる。**
+  if (findDeclined(text)) {
+    return { action: 'remove', reason: '降りる宣言を外した', text: stripDeclined(text) }
+  }
   const { blocks, anomalies } = findBlocks(text)
   if (anomalies.length > 0) {
     return { action: 'refuse', reason: `marker が壊れている ∴ 触らない —— ${anomalies.join('。')}` }
@@ -382,6 +487,38 @@ export function planRemove(text) {
   if (from > 0 && lines[from - 1].trim() === '') from -= 1
   const next = [...lines.slice(0, from), ...lines.slice(found.to + 1)]
   return { action: 'remove', reason: `v${found.version} の block を外した`, text: restore(next, text) }
+}
+
+/**
+ * **降りると宣言する計画。** 書き込みは行わない。
+ *
+ * ⚠ **法の block が在れば、先に外す。** 採用と辞退が同じ file に並べば、読み手も機構も
+ * どちらが今の宣言か決められない —— **2 つの宣言は同時に立たない。**
+ *
+ * ⚠ **人間が block に手を入れていれば、外さずに止まる**（`planRemove` と同じ理由）——
+ * 消えるのはその編集だからである。
+ *
+ * @param {string} text
+ * @returns {{action: 'decline'|'unchanged'|'refuse', reason: string, text?: string}}
+ */
+export function planDecline(text) {
+  if (findDeclined(text)) {
+    return { action: 'unchanged', reason: '既に降りると宣言している' }
+  }
+  const { blocks } = findBlocks(text)
+  let base = text
+  let removed = ''
+  if (blocks.length > 0) {
+    const plan = planRemove(text)
+    if (plan.action === 'refuse') return { action: 'refuse', reason: plan.reason }
+    base = plan.text ?? text
+    removed = '法の block を外し、'
+  }
+  return {
+    action: 'decline',
+    reason: `${removed}降りると宣言した`,
+    text: appendAtEnd(base, DECLINED_MARKER),
+  }
 }
 
 /**

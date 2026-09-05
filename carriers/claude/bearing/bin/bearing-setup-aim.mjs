@@ -50,9 +50,10 @@ import { delegateToCheckout } from '../lib/delegate.mjs'
 await delegateToCheckout(import.meta.url)
 
 import {
-  planApply, planRemove, inspect, loadDesired, bodySha, declaredAimsDir,
+  planApply, planRemove, planDecline, inspect, loadDesired, bodySha, declaredAimsDir,
+  findDeclined, isEngaged,
 } from '../lib/claude-md.mjs'
-import { DEFAULT_AIMS_DIR, normalizeAimsDir } from '../lib/corpus.mjs'
+import { DEFAULT_AIMS_DIR, normalizeAimsDir, readAimSlugs } from '../lib/corpus.mjs'
 
 const log = (...a) => console.log(...a)
 
@@ -180,6 +181,14 @@ async function main(argv) {
   }
 
   if (argv.includes('--check')) {
+    // ⚠ **降りる宣言は block の状態より先に述べる。** 降りている repo で「block が無い」
+    // とだけ言えば、**まだ採っていない repo と、降りると決めた repo が同じ言葉を受け取る。**
+    if (findDeclined(before)) {
+      log('状態: declined —— この repo は降りると宣言している ∴ hook も面も黙る。')
+      log('（corpus はそのままでよい —— 降りることは、持っている corpus を捨てることではない。）')
+      log('戻すには: bearing-setup-aim.mjs --remove（宣言を外す）／ bearing-setup-aim.mjs（採る）')
+      return 0
+    }
     const s = inspect(before, desired)
     log(`状態: ${s.state} —— ${s.detail}`)
     log(`今の法: v${desired.version} sha=${bodySha(desired.law)}`)
@@ -189,6 +198,27 @@ async function main(argv) {
       ? `aim skill: 在る（${SKILL_DIR}）—— 中身はこの repo のものであり、この実行は見ない。`
       : `aim skill: 無い（${SKILL_DIR}）—— setup-aim が置く。`)
     return s.state === 'broken' || s.state === 'edited' ? 1 : 0
+  }
+
+  if (argv.includes('--decline')) {
+    const plan = planDecline(before)
+    if (plan.action === 'refuse') {
+      log(`降りると宣言しない: ${plan.reason}`)
+      return 1
+    }
+    if (plan.action === 'unchanged') {
+      log(plan.reason)
+    } else {
+      await writeAtomic(target, plan.text)
+      log(plan.reason)
+    }
+    // ⚠ **corpus が在っても黙る。それがこの宣言の全目的である** —— corpus が在ることは
+    // *使っている証拠*であって、この機構を通したいという宣言ではない。
+    log('⚠ hook も面も、この project では黙るようになる（corpus が在っても）。')
+    log('⚠ **baton の未読だけは述べ続ける** —— handoff は aim に依存せず、どの project でも使える。')
+    log(`⚠ ${SKILL_DIR} は残す —— 置いた後はこの repo のものである。`)
+    log('戻すには: bearing-setup-aim.mjs --remove（宣言を外す）／ bearing-setup-aim.mjs（採る）')
+    return 0
   }
 
   if (argv.includes('--remove')) {
@@ -203,21 +233,42 @@ async function main(argv) {
     }
     await writeAtomic(target, plan.text)
     log(plan.reason)
-    log('⚠ hook はこの project で黙るようになる（corpus はそのまま残っている）。')
+    // ⚠ **「黙るようになる」と述べてよいのは、実際に黙るときだけである。** 述語は
+    // `corpus 在り || marker 在り` ∴ **corpus を持つ repo は block を外しても黙らない** ——
+    // ここは 2026-09-05 まで、その場合にも黙ると*断言*していた。
+    const slugs = await readAimSlugs(projectDir, chosen.dir).catch(() => [])
+    const stillEngaged = isEngaged({ adopted: false, declined: false, hasCorpus: slugs.length > 0 })
+    if (stillEngaged) {
+      log(`⚠ **だが hook も面も黙らない** —— ${chosen.dir} に aim node が ${slugs.length} 枚在り、`)
+      log('  corpus が在ることそのものが有効の条件だからである（既に書いている project を、')
+      log('  印が無いという理由で黙らせないため）。**降りるなら宣言が要る:**')
+      log('    bearing-setup-aim.mjs --decline')
+    } else {
+      log('⚠ hook も面も、この project で黙るようになる。')
+    }
     // ⚠ **skill は消さない。** opt-in を外すことと、その repo が持つものを捨てることは別の act である。
     log(`⚠ ${SKILL_DIR} は残す —— 置いた後はこの repo のものである。`)
     return 0
   }
 
-  const plan = planApply(before, desired)
+  // ⚠ **採ることは、降りる宣言を取り消すことである** —— だが黙って取り消さない。
+  // `planApply` は宣言の行を見ないので、ここで先に外して述べる。
+  let base = before
+  if (findDeclined(before)) {
+    const undo = planRemove(before)
+    base = undo.text ?? before
+    log('⚠ 降りる宣言が在ったので外した —— 採ることと降りることは同時に立たない。')
+  }
+
+  const plan = planApply(base, desired)
   if (plan.action === 'refuse') {
     log(`置き直さない: ${plan.reason}`)
     return 1
   }
-  if (plan.action === 'unchanged') {
+  if (plan.action === 'unchanged' && base === before) {
     log(plan.reason)
   } else {
-    await writeAtomic(target, plan.text)
+    await writeAtomic(target, plan.action === 'unchanged' ? base : plan.text)
     log(`${plan.reason}（v${desired.version} / 法は ${desired.law.split('\n').length} 行）`)
     log('⚠ marker は HTML コメント ∴ context には乗らない。中身の法だけが載る。')
   }
