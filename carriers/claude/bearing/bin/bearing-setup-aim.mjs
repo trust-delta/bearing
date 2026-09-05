@@ -50,8 +50,8 @@ import { delegateToCheckout } from '../lib/delegate.mjs'
 await delegateToCheckout(import.meta.url)
 
 import {
-  planApply, planRemove, planDecline, inspect, loadDesired, bodySha, declaredAimsDir,
-  findDeclined, isEngaged,
+  planApply, planRemove, inspect, loadDesired, bodySha, declaredAimsDir,
+  findDeclined,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR, normalizeAimsDir, readAimSlugs } from '../lib/corpus.mjs'
 
@@ -181,13 +181,13 @@ async function main(argv) {
   }
 
   if (argv.includes('--check')) {
-    // ⚠ **降りる宣言は block の状態より先に述べる。** 降りている repo で「block が無い」
-    // とだけ言えば、**まだ採っていない repo と、降りると決めた repo が同じ言葉を受け取る。**
+    // ⚠ **旧い「降りる宣言」が在れば述べる —— だが状態としては扱わない。** 2026-09-05 に
+    // 述語から corpus が落ち、**採用していないことがそのまま沈黙を意味するようになった** ∴
+    // あの行はもう既定と同じことしか言っていない。**黙って無視もしない**: 置いた人間は
+    // それが今も効いていると信じうる。
     if (findDeclined(before)) {
-      log('状態: declined —— この repo は降りると宣言している ∴ hook も面も黙る。')
-      log('（corpus はそのままでよい —— 降りることは、持っている corpus を捨てることではない。）')
-      log('戻すには: bearing-setup-aim.mjs --remove（宣言を外す）／ bearing-setup-aim.mjs（採る）')
-      return 0
+      log('⚠ 旧い「降りる宣言」が在る（`<!-- bearing:aim declined -->`）—— 今は既定と同じ意味である。')
+      log('  採用していない project は、その行が無くても黙る。--remove で掃除できる。')
     }
     const s = inspect(before, desired)
     log(`状態: ${s.state} —— ${s.detail}`)
@@ -200,25 +200,15 @@ async function main(argv) {
     return s.state === 'broken' || s.state === 'edited' ? 1 : 0
   }
 
+  // ⚠ **消えた flag を黙って無視してはならない。** `--decline` は 2026-09-05 に撤去された ——
+  // 素通りさせれば adopt の経路へ落ち、**降りるつもりで打った repo が採用される**（意味が
+  // ちょうど反転する）。⚠ **黙って何もしないのも駄目である**: 打った人間は降りたと信じる。
   if (argv.includes('--decline')) {
-    const plan = planDecline(before)
-    if (plan.action === 'refuse') {
-      log(`降りると宣言しない: ${plan.reason}`)
-      return 1
-    }
-    if (plan.action === 'unchanged') {
-      log(plan.reason)
-    } else {
-      await writeAtomic(target, plan.text)
-      log(plan.reason)
-    }
-    // ⚠ **corpus が在っても黙る。それがこの宣言の全目的である** —— corpus が在ることは
-    // *使っている証拠*であって、この機構を通したいという宣言ではない。
-    log('⚠ hook も面も、この project では黙るようになる（corpus が在っても）。')
-    log('⚠ **baton の未読だけは述べ続ける** —— handoff は aim に依存せず、どの project でも使える。')
-    log(`⚠ ${SKILL_DIR} は残す —— 置いた後はこの repo のものである。`)
-    log('戻すには: bearing-setup-aim.mjs --remove（宣言を外す）／ bearing-setup-aim.mjs（採る）')
-    return 0
+    log('⚠ --decline は撤去された（2026-09-05）—— 述語から corpus が落ち、')
+    log('  **採用していない project は、それだけで黙る**ようになったからである。')
+    log('  降りるには: bearing-setup-aim.mjs --remove （採用の宣言を外す）')
+    log('  ⚠ 何も書き換えていない。')
+    return 1
   }
 
   if (argv.includes('--remove')) {
@@ -233,31 +223,27 @@ async function main(argv) {
     }
     await writeAtomic(target, plan.text)
     log(plan.reason)
-    // ⚠ **「黙るようになる」と述べてよいのは、実際に黙るときだけである。** 述語は
-    // `corpus 在り || marker 在り` ∴ **corpus を持つ repo は block を外しても黙らない** ——
-    // ここは 2026-09-05 まで、その場合にも黙ると*断言*していた。
+    // ⚠ **今は断言してよい。** 2026-09-05 まで述語は `corpus 在り || marker 在り` であり、
+    // **corpus を持つ repo は block を外しても黙らなかった** ∴ ここは述べ分けを必要としていた。
+    // 述語が `adopted` だけになった今、**外すことはそのまま黙ることである。**
+    log('⚠ hook も面も、この project で黙るようになる。')
     const slugs = await readAimSlugs(projectDir, chosen.dir).catch(() => [])
-    const stillEngaged = isEngaged({ adopted: false, declined: false, hasCorpus: slugs.length > 0 })
-    if (stillEngaged) {
-      log(`⚠ **だが hook も面も黙らない** —— ${chosen.dir} に aim node が ${slugs.length} 枚在り、`)
-      log('  corpus が在ることそのものが有効の条件だからである（既に書いている project を、')
-      log('  印が無いという理由で黙らせないため）。**降りるなら宣言が要る:**')
-      log('    bearing-setup-aim.mjs --decline')
-    } else {
-      log('⚠ hook も面も、この project で黙るようになる。')
+    if (slugs.length > 0) {
+      log(`（${chosen.dir} の aim node ${slugs.length} 枚はそのまま —— 外すことは corpus を捨てることではない。`)
+      log('  statusline の 2 行目だけは「aim 未採用」と述べ続ける。）')
     }
     // ⚠ **skill は消さない。** opt-in を外すことと、その repo が持つものを捨てることは別の act である。
     log(`⚠ ${SKILL_DIR} は残す —— 置いた後はこの repo のものである。`)
     return 0
   }
 
-  // ⚠ **採ることは、降りる宣言を取り消すことである** —— だが黙って取り消さない。
-  // `planApply` は宣言の行を見ないので、ここで先に外して述べる。
+  // ⚠ **採るとき、旧い「降りる宣言」は落とす** —— 意味としては既に無害だが、採用の block と
+  // 並べば**読み手には矛盾した 2 文が見える。** 黙って落とさず、述べてから落とす。
   let base = before
   if (findDeclined(before)) {
     const undo = planRemove(before)
     base = undo.text ?? before
-    log('⚠ 降りる宣言が在ったので外した —— 採ることと降りることは同時に立たない。')
+    log('⚠ 旧い「降りる宣言」が在ったので外した —— 採用の宣言と並べば読み手が矛盾を読む。')
   }
 
   const plan = planApply(base, desired)

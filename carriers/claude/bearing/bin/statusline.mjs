@@ -232,7 +232,7 @@ export function renderSession(input, branch, now = Date.now()) {
  * 一貫して拒んできた誤読を、statusline でだけ許していた**。行は必ず在り、*何が言えないのか*
  * を述べる。行数が跳ねなくなるのは、その副産物にすぎない。
  *
- * @param {'ok'|'no-corpus'|'unavailable'} state
+ * @param {'ok'|'not-engaged'|'unadopted'|'no-corpus'|'unavailable'} state
  */
 /**
  * 走っている複製はどちらか。**working tree なら `'repo'`、cache なら `null`。**
@@ -267,6 +267,16 @@ export function renderBearing(state, facts, from = null, aimsDirs = []) {
   // 使える ∴ **ここで baton を黙らせることは、aim の沈黙ではなく handoff の欠落になる。**
   if (state === 'not-engaged') {
     return facts?.batonUnread ? [...seg, paint(C.yellow, 'baton 未読')] : []
+  }
+
+  // ⚠ **corpus は在るが採用されていない。** 2026-09-05 に述語から corpus を落とした ∴
+  // ここは**黙る**のが正しい —— だが **黙る機構は自分の存在を告げられない**（`isEngaged`）。
+  // ⚠ **告げるのは 1 行だけで、警告色は与えない**: 採っていないことは構造的に正常であり、
+  // 色で重さを付ければ、**採用を促す面**になる —— それは注意予算の割り当てであって観測では
+  // ない。⚠ **この行が居る場所そのものが「採用すればここに事実が出る」を語っている。**
+  if (state === 'unadopted') {
+    const line = [...seg, field('aim', paint(C.faint, '未採用')), field('corpus', paint(C.faint, facts?.aimCount ?? '?'))]
+    return facts?.batonUnread ? [...line, paint(C.yellow, 'baton 未読')] : line
   }
 
   // ⚠ `docs/aims/` を持たない repo は**構造的に正常**である ∴ 警告色を与えない。
@@ -401,10 +411,9 @@ async function gatherFacts(input) {
   // ⚠ **repo が 1 つも無い場所は、採用の宣言が在るときだけ「未取得」と言ってよい。**
   // user スコープで載せた plugin は非 git の directory でも走る ∴ ここで黙らなければ、
   // 関係のない場所で毎ターン警告色が出る。
+  const engaged = isEngaged(declaration)
   if (unit.repos.length === 0) {
-    return isEngaged({ ...declaration, hasCorpus: false })
-      ? { state: 'unavailable', facts: null, branch }
-      : notEngaged
+    return engaged ? { state: 'unavailable', facts: null, branch } : notEngaged
   }
 
   const perRepo = (await Promise.all(unit.repos.map(async (repo) => {
@@ -427,14 +436,18 @@ async function gatherFacts(input) {
   // ⚠ **`corpus 無し` は「採用済みだが空」のためだけの言葉である。** 採っていない project で
   // それを描けば、警告でも事実でもない行が全 project に居座る。
   if (perRepo.length === 0) {
-    if (!isEngaged({ ...declaration, hasCorpus: false })) return notEngaged
+    if (!engaged) return notEngaged
     const aimsDirs = [...new Set(unit.repos.map((r) => r.aimsDir ?? DEFAULT_AIMS_DIR))]
     return { state: 'no-corpus', facts: { batonUnread }, branch, aimsDirs }
   }
 
-  // ⚠ **corpus が在る経路にも同じ gate を通す。** ここを素通りさせれば、降りると宣言した
+  // ⚠ **corpus が在る経路にも同じ gate を通す。** ここを素通りさせれば、採用していない
   // project でも corpus さえ在れば 2 行目が描かれ、**hook は黙るのに面だけが喋る。**
-  if (!isEngaged({ ...declaration, hasCorpus: true })) return notEngaged
+  // ⚠ **ただし完全な沈黙にはしない** —— corpus を見つけたことだけは述べる（`renderAim`）。
+  if (!engaged) {
+    const aimCount = perRepo.reduce((n, r) => n + r.slugs.length, 0)
+    return { state: 'unadopted', facts: { batonUnread, aimCount }, branch }
+  }
 
   // ⚠ baton は unit に 1 つである（repo ではなく unit root に置かれる）∴ 畳まない。
   return { state: 'ok', branch, facts: { ...foldRepos(perRepo), batonUnread } }

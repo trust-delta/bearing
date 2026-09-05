@@ -18,9 +18,11 @@ import { fileURLToPath } from 'node:url'
 
 import { factsDigest, deltaStatePath } from '../lib/corpus-signature.mjs'
 import { renderCorpusDelta } from '../lib/corpus-delta.mjs'
+import { loadDesired, renderBlock } from '../lib/claude-md.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const HOOK = path.join(HERE, '..', 'bin', 'corpus-delta.mjs')
+const { version: VERSION, law: LAW } = await loadDesired(path.join(HERE, '..'))
 
 let seq = 0
 const freshSession = () => `test-${process.pid}-${Date.now()}-${seq++}`
@@ -45,9 +47,16 @@ function context(r) {
 const node = (aim, process_) =>
   `---\naim: ${aim}\nparent: root\nstate: open\n---\n\n# IS\n\nsomething\n\n# PROCESS\n\n${process_}\n`
 
-/** corpus を持つ repo を 1 つ抱えた unit directory。 */
+/**
+ * corpus を持つ repo を 1 つ抱えた unit directory。**aim は採用済みである。**
+ *
+ * ⚠ **採用を畳んでいるのは、それが既定の姿だからである** —— 2026-09-05 に述語から corpus が
+ * 落ち、**採用していない unit は corpus が在ってもこの hook が黙る**（`isEngaged`）。
+ * ⚠ **宣言は unit root の `CLAUDE.md` に住む**（repo ではない）—— hook が読むのはそこである。
+ */
 async function unit() {
   const root = await mkdtemp(path.join(tmpdir(), 'aim-delta-'))
+  await writeFile(path.join(root, 'CLAUDE.md'), `# doc\n\n${renderBlock(VERSION, LAW)}\n`)
   const repo = path.join(root, 'repo')
   await mkdir(path.join(repo, 'docs', 'aims'), { recursive: true })
   git(repo, ['init', '-q', '-b', 'main'])
