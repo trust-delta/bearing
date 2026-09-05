@@ -1,4 +1,4 @@
-<!-- bearing:aim v0.18.0 dir=docs/aims sha=941df49f0cdaa3b2 -->
+<!-- bearing:aim v0.19.0 dir=docs/aims sha=941df49f0cdaa3b2 -->
 ## aim frame
 
 ⚠ **この repo が aim corpus を持つなら、開発はそれによって駆動される。** `docs/aims/<slug>.md` の各ファイルが 1 つの aim（目的とその手段）であり、親子で目的を分解した木を成す。
