@@ -29,7 +29,7 @@ state: open
 
 - [done] **2 つの経路が持つ UI を実測し、非対称を上の表にした。** 出典は docs（statusline / interactive-mode / desktop）と実際の画面である。⚠ **記録は上の表そのものであって、別の file ではない** —— 実測の作業ログは machine-local に在るが repo には載らない（#6）∴ ここから名指すと、clone した者には辿れない参照になる
 - [done] **CLI 側に欠けていた context / plan usage / branch を埋めた** —— 手段は [[ambient-display]] が持つ
-- [done] **同じ事実を運ぶ 2 つの面が、同じ述語で黙るようにした。** hook は `CLAUDE.md` の marker を見て黙るのに、statusline は corpus の有無しか見ておらず、**aim を採っていない全 project に 2 行目を描いていた**。⚠ **何を基準に揃えるかは [[supply-scope]] が持ち、本 node はどこが揃っていないかを述べる。** ⚠ **これは「どの面に何が出るか」の非対称ではなく、*同じ面同士の食い違い*である** —— この node が測ってきた欠落とは別の種であり、**user スコープで載せるまで見えなかった**（採った repo でしか面を見ていなかった）。手段は [[ambient-display]] が持つ
+- [done] **同じ事実を運ぶ 2 つの面が、同じ述語で黙るようにした。** hook は `CLAUDE.md` の marker を見て黙るのに、statusline は corpus の有無しか見ておらず、**aim を採っていない全 project に 2 行目を描いていた**。⚠ **何を基準に揃えるかは [[adoption-declaration]] が持ち、本 node はどこが揃っていないかを述べる。** ⚠ **これは「どの面に何が出るか」の非対称ではなく、*同じ面同士の食い違い*である** —— この node が測ってきた欠落とは別の種であり、**user スコープで載せるまで見えなかった**（採った repo でしか面を見ていなかった）。手段は [[ambient-display]] が持つ
 - [todo] **デスクトップ側から aim / baton / drift へ届く経路を用意する。** あの面には statusline が無く、2 行目が運ぶ事実は**現状どこにも出ていない**
 - [todo] **CI の通過 / 失敗を CLI 側でも見られるようにする。** ⚠ statusline の stdin JSON に CI は無く、`gh` を自分で叩くしかない ∴ in-flight cancel を踏まないよう、statusline の外で採って読むだけにする形が要る
 

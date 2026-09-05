@@ -10,7 +10,7 @@ state: open
 
 **発火点は圧縮の直前である。** ⚠ **hook から使用率メーターを見る術は無い**（どの hook event の入力にも context の欄が無い）が、ハーネスは圧縮を決めた瞬間にそれを告げる。⚠ **これは閾値の代用ではなく閾値そのもの**で、しかも [[bearing]] の言う「置き換えない」に適う —— 圧縮を禁じるのではなく、**沈黙の破棄を 1 度だけ差し止めて選択を人へ返す**。
 
-⚠ **baton が痕跡を残さないことは、この node の外にも効いている** —— [[supply-scope]] は「痕跡を残さない機能は user 単位で有効になる」の側に handoff を置く。⚠ **2026-09-03、その要求に合わせて置き場を repo の外へ出した**（人間が決定）: `~/.bearing/units/<unit>/`。以前は cwd の傍らの `.handoff/` に置き、「どの repo にも属さないので commit されえない」と述べていたが、⚠ **それが真だったのは multi-repo wrapper が cwd のときだけである** —— 単一 repo で使えば repo の中に生まれ、**ignore しているのは bearing 自身の `.gitignore` だけだった。** home の下へ出せば、commit されえないことが**どの使い方でも**構造として保たれる。
+⚠ **baton が痕跡を残さないことは、この node の外にも効いている** —— [[adoption-declaration]] は「痕跡を残さない機能は user 単位で有効になる」の側に handoff を置く。⚠ **2026-09-03、その要求に合わせて置き場を repo の外へ出した**（人間が決定）: `~/.bearing/units/<unit>/`。以前は cwd の傍らの `.handoff/` に置き、「どの repo にも属さないので commit されえない」と述べていたが、⚠ **それが真だったのは multi-repo wrapper が cwd のときだけである** —— 単一 repo で使えば repo の中に生まれ、**ignore しているのは bearing 自身の `.gitignore` だけだった。** home の下へ出せば、commit されえないことが**どの使い方でも**構造として保たれる。
 
 ⚠ **越境しない不変は 1 文字も動いていない。** 動いたのは*どこに置くか*であって*誰の間に立つか*ではない —— machine-local は今も目的の帰結である。⚠ **引くのは unit root の path であって repo 名ではない**: 名前だけで引けば、同名 repo や複数 worktree が黙って同じ baton を共有する ∴ **別の対話の baton を読む**ことになり、それは baton が無いことより悪い。⚠ **置き場は `handoff/` の下に入れ子にした**（人間が 2026-09-03 に決定）—— `~/.bearing/units/<unit>/handoff/`。**baton はこの unit の持ち物の 1 つでしかない** ∴ 次に増えるものが baton の隣へ雑に積まれない。⚠ **平坦化の規則は Claude Code の `~/.claude/projects/` と同じにした**（人間が決定）—— **理由は一意性ではなく馴染みである**: 人間が自力で archive を見に行くときに読める。∴ **単射ではないことを承知で採っており、衝突は名前ではなく検出で塞ぐ。**
 
@@ -20,24 +20,22 @@ state: open
 
 ⚠ **人が自ら圧縮を指示したときは決して差し止めない。** 人の act を、その人のための儀式で上書きするのは体制の反転である。
 
-⚠ **この node は aim から独立していなければならない**（人間が 2026-09-04 に明示）—— **handoff は `/bearing:with-aim` 無しで動かねばならず、aim の側も handoff の機構を必要としない。** [[supply-scope]] が既にそれを法として持っている（baton の未読は、採っていない project でも述べる唯一の例外である）。
+⚠ **この node は aim から独立していなければならない**（人間が 2026-09-04 に明示）—— **handoff は `/bearing:with-aim` 無しで動かねばならず、aim の側も handoff の機構を必要としない。** [[adoption-declaration]] が既にそれを法として持っている（baton の未読は、採っていない project でも述べる唯一の例外である）。
 
 ⚠ **だが実装は 2 箇所でその分離を破っていた**（2026-09-04、人間が指摘し、実測で確かめた）。⑴ **hook が repo の中の path を正本として名指していた** —— `bin/boot-ritual.mjs` は **aim の gate を持たず**、baton が未読ならどの repo でも発火するのに、`docs/aims/_guide/handoff.md` を正本と述べていた。⚠ **corpus も `CLAUDE.md` も無い repo に baton だけ置いて走らせると、実際にそう述べた** —— そこには何も無い。⑵ **`/bearing:with-aim` が `handoff.md` を消費する repo の `_guide/` へ置いていた** ∴ **handoff の canon が aim の採用に依存する**形になっていた。
 
 ⚠ **どちらも「skill が全部を運んでいる」ことを見落としたために起きた。** `handoff-r` / `handoff-w` の carrier は自分の同梱物を**裸の名**で指しており、**repo 側の `_guide/handoff.md` を 1 度も要求しない**（実測 2026-09-04）∴ 正しい名指し先は最初から skill の同梱物だった。
 
-# ESCALATION
+⚠ **2026-09-05、`_guide/handoff.md` の置き場という問いは消滅した**（人間の決定）—— **`docs/aims/_guide/` そのものが廃されるからである。** 配布する md の正本は `original/<単位>/` に集まり（`aim` / `handoff` / `statusline`）、carrier の `skills/` と `commands/` はすべてそこからの生成物になる。∴ **handoff の正本は `original/handoff/` に住み、aim の dir に間借りしない** —— ⚠ **上段が述べてきた分離が、説明ではなく配置で保たれる形になった。**
 
-⚠ **`docs/aims/_guide/handoff.md` の置き場が未決である。** あの directory は自らの 1 文目で「**aim の規律そのもの**を持つ」と述べており、⚠ **handoff の canon がそこに在ることは、書かれた意図とその場で食い違っている。**
+**そして skill は 2 枚から 1 枚になる。** `/bearing:handoff r` / `w` の引数で分岐し、共通事項を `skill.md` に置き、`read.md` / `write.md` を追加で読む。⚠ **分岐はハーネスではなくエージェントが行う** —— 今の `handoff-r` が既にその形で動いている（実測 2026-09-05: SKILL.md が「同梱の `handoff.md` の § 読む を読め」と述べ、エージェントがそれを読んで実行した）∴ **新しい機構は要らない。** ⚠ **`$ARGUMENTS` が `skills/` で展開されるかは測っていない**（`commands/` では実働している —— `commands/with-aim.md` と `statusline-setup.md`）∴ **展開されなくても壊れない形にする**: SKILL.md が「どちらで呼ばれたかを見よ。判別できなければ問え」と述べれば、⚠ **失敗は沈黙ではなく質問として出る。** 再測は `/bearing:handoff-r foo` を 1 度打つこと。
 
-⚠ **機能上の依存はもう無い**（hook も skill も同梱物を名指し、`with-aim` も置かない）∴ 残っているのは **file を物理的にどこへ置くか**だけである。今この file が果たす役割は **carrier 生成の源**の 1 つで、⚠ **人間向けの doc からは誰も path を指していない**（実測 2026-09-04）∴ 動かしても壊れるのは `gen/claude-plugin.sh` の 1 箇所だけ。
-
-⚠ **これは私の判断ではない。** 候補として `docs/handoff.md`（`docs/aims/` の兄弟・平ら）、`docs/handoff/handoff.md`（専用 dir）、`docs/_guide/handoff.md`（canon の置き場を docs 直下へ）を挙げたが、**人間はいずれも選ばず「handoff は skill のみで機能すると考えている」と述べた**（2026-09-04）—— ⚠ **その言葉が「置き場を変えずともよい」を意味するのか「そもそも docs に要らない」を意味するのかを、私は決められない。**
+⚠ **2 枚が同じ 110 行を運んでいたのは、内容が 1 つの儀式だからである。** `## 置き場` は両方が要り、**読む側は書く側の原則を要る** —— 手順 4 の trace は「baton は forward に選ぶ」から導かれた対処であり、**過少報告することを知らなければ、ただの儀式に見える。** ⚠ **∴ 答えは分割ではなく 1 skill 化である** —— 割れば共有部分が 2 正本になり、この repo が一貫して拒んできた形になる。
 
 # PROCESS
 
 - [done] **handoff の名指し先を、repo の path から skill の同梱物へ移した。** `boot-ritual.mjs` / `precompact.mjs` / `aim-facts.mjs` の 3 枚。⚠ **回帰の門も置いた** —— hook の出力が aim の repo path を 1 文字も含まないことを検査する（⚠ **先行の試験はその欠陥のほうを固定していた**: `/_guide\/handoff\.md/` に一致することを要求していた）。⚠ **門を鈍いままにするため、説明の文言からも path の字を落とした** —— 字が在れば、門は本物の回帰と説明を区別できない
-- [done] **`/bearing:with-aim` が `handoff.md` を置かないようにした。** ⚠ 置けば **handoff の canon が aim の採用に依存する** —— [[supply-scope]] の canon 集合は aim の 2 枚だけになった
+- [done] **`/bearing:with-aim` が `handoff.md` を置かないようにした。** ⚠ 置けば **handoff の canon が aim の採用に依存する** —— [[adoption-declaration]] の canon 集合は aim の 2 枚だけになった
 
 - [done] **面の側の検出漏れを塞いだ。** 旧い置き場に取り残された baton を、hook（SessionStart の facts・UserPromptSubmit の儀式）も CLI と**同じ検出**で見る。⚠ **2026-09-03、CLI だけ塞いで面を塞ぎ忘れ、実際に「fresh start」と嘘をついた** —— 在るのに無いと報告する形は、この機構が一貫して拒んできたものである。⚠ **述べるのは「読め」ではなく「移せ」である**: 機構はもうそこを読まない ∴ 読む手順を述べても実行できない。⚠ **2026-09-03、別マシンの実機で確認された**（人間の観測）—— 面が取り残しを述べ、人間が移し、**空になった旧 dir を人間が自分で消した**。⚠ **これは「旧い dir を我々が消さない」という判断の裏づけでもある**: 消す act は人間のものであり、実際に人間がそれを行った
 - [done] **CLI を `bearing-handoff.mjs` へ改名し、exec bit を付けた。** ⚠ **plugin の `bin/` は Bash tool の PATH に入り裸で呼べる** ∴ そこは全 plugin が共有する名前空間であり、`handoff.mjs` は一般名すぎた。⚠ **名前と exec bit は対である** —— 2026-09-03、PATH では解決したのに exec bit が無くて `Permission denied` で落ちた。`test/bin-namespace.test.mjs` がその対を固定する
@@ -45,3 +43,4 @@ state: open
 - [todo] **baton の dir 名が衝突したときに、黙って他所の baton を渡さないようにする。** ⚠ **平坦化は単射でない**（`/w/a.b` と `/w/a-b` は同じ dir 名になる）—— 読めることを取った帰結であり、名前の側では塞がない。∴ **その dir がどの unit root のものかを記録し、食い違ったら述べる。** ⚠ **黙って「baton は無い」に畳んではならない** —— 在るのに無いと報告する形は、この機構が一貫して拒んできたものである
 
 - [done] plugin の handoff 機構（baton の読み書き・退避・刻印・圧縮直前の介入）を移設した。読む手順は 2026-09-01 のセッション開始時に端から端まで走っている
+- [todo] **skill を 1 枚にし、`r` / `w` を引数で分ける。** 正本は `original/handoff/`（`skill.md` ＋ `read.md` ＋ `write.md`）、carrier は生成物。⚠ **hook 3 枚が名指す先も追随させること** —— 今は `handoff-r` / `handoff-w` の同梱物を名指しており、**skill が 1 枚になれば、その名は在らないものを指す**（本 node が上段で 2 度記録した欠陥と、同じ形である）
