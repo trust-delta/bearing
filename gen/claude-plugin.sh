@@ -55,6 +55,10 @@ for f in SKILL.md read.md write.md; do place "handoff/$f" "skills/handoff/$f"; d
 # statusline: command
 place "statusline/setup-statusline.md" "commands/setup-statusline.md"
 
+# surface: command。⚠ **面そのもの（`surface/aim.html`）は正本が carrier 側に在る** ——
+# あれは build も生成も持たない 1 枚であり、`original/` に置けば複製が 2 枚になる。
+place "surface/setup-surface.md" "commands/setup-surface.md"
+
 # ── LICENSE ─────────────────────────────────────────────────────────────────
 # ⚠ **root の LICENSE は消費者に届かない。** marketplace entry の source は
 # `./carriers/claude/bearing` であり、cache へ複製されるのはその subtree だけである
