@@ -49,10 +49,15 @@ const FENCE_LINE = /^ {0,3}(```+|~~~+)/
 /**
  * **降りる宣言。** 採用の block と同じ file に住む、単独行の HTML コメントである。
  *
- * ⚠ **`.claude/settings.json` は採れなかった**（測って落ちた）—— bearing の `.gitignore` は
- * `.claude/*` を**例外 0 個**で ignore しており（2026-09-04 の人間の決定）、settings に置いた
- * 宣言は **clone から見えない machine-local な事実**になる。⚠ **降りることは repo の宣言で
- * あって、1 台の設定ではない** ∴ 採用と同じ file に置く。
+ * ⚠ **`.claude/settings.json` は採れない。理由は 2 つあり、片方は足元が動いた。**
+ * 2026-09-04 の時点で bearing の `.gitignore` は `.claude/*` を例外 0 個で ignore しており、
+ * settings に置いた宣言は **clone から見えない machine-local な事実**になった —— ⚠ **その観測は
+ * 今も真だが、2026-09-05 に人間が `.claude/` を tracked へ反転させた** ∴ **bearing については
+ * もう成り立たない。**
+ * ⚠ **残るもう 1 つのほうが強い**: **消費者の `.gitignore` は消費者のものであって当てにできない。**
+ * `.claude/` を丸ごと ignore する repo は珍しくなく、settings に置けば**宣言が見えるかどうかが
+ * repo ごとに変わる。** そして **降りることは repo の宣言であって、1 台の設定ではない**
+ * ∴ 採用と同じ file に置く。
  *
  * ⚠ **HTML コメント ∴ 消費者の context を 1 token も食わない**（採用の marker と同じ理由）——
  * そして `Read` tool で開けば人間には見える。
@@ -183,8 +188,8 @@ export function substituteAims(text, dir) {
 /**
  * 差し込む法と、それが名乗る版。
  *
- * ⚠ **plugin の中で法の text を持つのは `templates/aim/frame.md` 1 枚である**（正本は
- * `original/aim/frame.md`、生成で写される）。ここで別に書き起こせば、同じ 6 箇条が 2 つの
+ * ⚠ **plugin の中で法の text を持つのは `templates/aim/frame.md` 1 枚である**（正本であり、
+ * 生成物ではない —— 2026-09-05 に `original/` は畳まれた）。ここで別に書き起こせば、同じ 6 箇条が 2 つの
  * text を持つ —— そして片方だけが直される日が必ず来る。⚠ **CLI と hook の両方がこれを
  * 呼ぶ**（置く側と、置かれたものの版を突き合わせる側）∴ **導出は 1 箇所に置く。**
  *

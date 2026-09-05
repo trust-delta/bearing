@@ -85,7 +85,8 @@ agent maintains the body, proposes changes to any purpose, and escalates.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE) next to this file. That file is a generated artifact:
-`gen/claude-plugin.sh` copies it from the repository root.
+MIT — see [`LICENSE`](LICENSE) next to this file. This is not a duplicate but part of the
+distribution: only the carrier subtree is copied into the plugin cache, so the repository
+root's `LICENSE` never reaches you. CI checks that the two match.
 
 Copyright (c) 2026 TrustDelta

@@ -111,8 +111,8 @@ async function readOptIn(root) {
 
 /** 常時効く規律。静的な text であり、binary を必要としたことは一度も無い。 */
 async function frame(dir = DEFAULT_AIMS_DIR) {
-  // `gen/claude-plugin.sh` が `original/aim/frame.md` から `templates/aim/` へ写す。
-  // 同期していることは CI と `test/original-sync.test.mjs` が検査する。
+  // 法の text は `templates/aim/frame.md` に住む —— **正本であって生成物ではない**
+  // （2026-09-05 に `original/` は畳まれた）。
   // ⚠ **placeholder を埋めてから注入する。** `{{aims}}` を残したまま出せば、セッションは
   // 存在しない path を正本として読む —— そして placeholder は prose の中では意味ありげな
   // 記号にしか見えないので、誰も壊れたと気づかない。

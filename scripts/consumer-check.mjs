@@ -11,7 +11,7 @@
 // marketplace entry の source は `./carriers/claude/bearing` であり、cache へ複製されるのは
 // **その subtree だけ**である（実測 2026-09-03）∴ ここでは *tracked な file だけ*を、mode ごと、
 // **checkout の外の temp dir へ**写して出荷 copy とする。⚠ **checkout の外へ出すことが要点で
-// ある** —— `original/` も `docs/aims/` も `.git` も伴わない場所に立たせなければ、*path に依る
+// ある** —— `docs/aims/` も `scripts/` も `.git` も伴わない場所に立たせなければ、*path に依る
 // 振る舞い*は測れず、そこが cache と working tree の唯一のずれである（`lib/delegate.mjs`）。
 //
 // ⚠ **これは cache そのものではない。** 本物の cache は released commit の clone であり、ここが
@@ -191,9 +191,11 @@ async function main() {
 
   // ── A. 前提 ───────────────────────────────────────────────────────────────
 
-  await check('出荷 copy は checkout の外に立ち、original/ も corpus も伴わない', async () => {
+  // ⚠ **名指す dir は、実在して checkout にしか無いものであること。** 2026-09-05 まで `original/`
+  // を数えていたが、あれは同日に畳まれた —— **消えた dir を禁じる検査は、常に真で何も見ていない。**
+  await check('出荷 copy は checkout の外に立ち、corpus も scripts も伴わない', async () => {
     must(!shipped.startsWith(ROOT + path.sep), '出荷 copy が checkout の中に在る')
-    for (const forbidden of ['original', 'docs', '.git']) {
+    for (const forbidden of ['docs', 'scripts', '.git']) {
       const there = await stat(path.join(shipped, forbidden)).then(() => true, () => false)
       must(!there, `出荷 copy が ${forbidden}/ を伴っている —— cache には無いものである`)
     }
@@ -501,7 +503,7 @@ async function main() {
   })
 
   await check('出荷された command は、実在して裸で呼べる bin だけを名指す', async () => {
-    // ⚠ **誰も名指さない道具は誰も走らせない道具である**（`original/README.md`）—— 逆に、
+    // ⚠ **誰も名指さない道具は誰も走らせない道具である**（`CONTRIBUTING.md`）—— 逆に、
     // 在らない道具を名指す command は、人間を `command not found` へ送る。
     const dir = path.join(shipped, 'commands')
     const named = []

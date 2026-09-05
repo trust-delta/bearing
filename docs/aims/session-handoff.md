@@ -26,7 +26,7 @@ state: open
 
 ⚠ **どちらも「skill が全部を運んでいる」ことを見落としたために起きた。** `handoff-r` / `handoff-w` の carrier は自分の同梱物を**裸の名**で指しており、**repo 側の `_guide/handoff.md` を 1 度も要求しない**（実測 2026-09-04）∴ 正しい名指し先は最初から skill の同梱物だった。
 
-⚠ **2026-09-05、`_guide/handoff.md` の置き場という問いは消滅した**（人間の決定）—— **`docs/aims/_guide/` そのものが廃されるからである。** 配布する md の正本は `original/<単位>/` に集まり（`aim` / `handoff` / `statusline`）、carrier の `skills/` と `commands/` はすべてそこからの生成物になる。∴ **handoff の正本は `original/handoff/` に住み、aim の dir に間借りしない** —— ⚠ **上段が述べてきた分離が、説明ではなく配置で保たれる形になった。**
+⚠ **2026-09-05、`_guide/handoff.md` の置き場という問いは消滅した**（人間の決定）—— **`docs/aims/_guide/` そのものが廃されるからである。** 配布する md の正本は単位ごとに分かれ、handoff は自分の dir を持つ。∴ **handoff の正本は `skills/handoff/` に住み、aim の dir に間借りしない**（⚠ **2026-09-05 に一度 `original/handoff/` を経由した** —— 同日 `original/` が畳まれ、carrier が正本になった。**分離は置き場が動いても保たれている**） —— ⚠ **上段が述べてきた分離が、説明ではなく配置で保たれる形になった。**
 
 **そして skill は 2 枚から 1 枚になる。** `/bearing:handoff r` / `w` の引数で分岐し、共通事項を `skill.md` に置き、`read.md` / `write.md` を追加で読む。⚠ **分岐はハーネスではなくエージェントが行う** —— 今の `handoff-r` が既にその形で動いている（実測 2026-09-05: SKILL.md が「同梱の `handoff.md` の § 読む を読め」と述べ、エージェントがそれを読んで実行した）∴ **新しい機構は要らない。** ⚠ **`$ARGUMENTS` は `skills/` でも展開された**（実測 2026-09-05、Claude Code、cache `0.17.0` から `/bearing:handoff r` を打った初回 —— 同梱の SKILL.md の字面は `$ARGUMENTS` だが、harness が渡した本文では `r` に置き換わっていた）。⚠ **それでも「展開されなくても壊れない形」は落とさない** —— **これは他人の系の振る舞いであり、向こうが変えた瞬間に黙って偽になる。** SKILL.md は今も「どちらで呼ばれたかを見よ。判別できなければ問え」と述べており、⚠ **失敗は沈黙ではなく質問として出る。** 再測は `/bearing:handoff r` を 1 度打ち、渡された本文に `$ARGUMENTS` の字が残っているかを見ること。
 
@@ -43,4 +43,4 @@ state: open
 - [todo] **baton の dir 名が衝突したときに、黙って他所の baton を渡さないようにする。** ⚠ **平坦化は単射でない**（`/w/a.b` と `/w/a-b` は同じ dir 名になる）—— 読めることを取った帰結であり、名前の側では塞がない。∴ **その dir がどの unit root のものかを記録し、食い違ったら述べる。** ⚠ **黙って「baton は無い」に畳んではならない** —— 在るのに無いと報告する形は、この機構が一貫して拒んできたものである
 
 - [done] plugin の handoff 機構（baton の読み書き・退避・刻印・圧縮直前の介入）を移設した。読む手順は 2026-09-01 のセッション開始時に端から端まで走っている
-- [done] **skill を 1 枚にし、`r` / `w` を引数で分ける。** 正本は `original/handoff/`（`skill.md` ＋ `read.md` ＋ `write.md`）、carrier は生成物。⚠ **hook 3 枚が名指す先も追随させること** —— 今は `handoff-r` / `handoff-w` の同梱物を名指しており、**skill が 1 枚になれば、その名は在らないものを指す**（本 node が上段で 2 度記録した欠陥と、同じ形である）
+- [done] **skill を 1 枚にし、`r` / `w` を引数で分ける。** 正本は `skills/handoff/`（`SKILL.md` ＋ `read.md` ＋ `write.md`）—— ⚠ **2026-09-05 に一度 `original/handoff/` へ置かれ、同日 carrier が正本になった。**⚠ **hook 3 枚が名指す先も追随させること** —— 今は `handoff-r` / `handoff-w` の同梱物を名指しており、**skill が 1 枚になれば、その名は在らないものを指す**（本 node が上段で 2 度記録した欠陥と、同じ形である）

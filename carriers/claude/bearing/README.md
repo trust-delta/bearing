@@ -76,7 +76,8 @@ slug も英語である。** 判別線は「人が読む文か、機械が parse
 
 ## ライセンス
 
-MIT —— 傍らの [`LICENSE`](LICENSE) を見よ。⚠ **この file は生成物である**
-（`gen/claude-plugin.sh` が repository の root から写す）。
+MIT —— 傍らの [`LICENSE`](LICENSE) を見よ。⚠ **これは重複ではなく、配布物の一部である**
+—— cache へ複製されるのは carrier の subtree だけであり、root の `LICENSE` は届かない。
+repository の root の 1 枚と一致していることは CI が検める。
 
 Copyright (c) 2026 TrustDelta
