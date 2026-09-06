@@ -68,3 +68,15 @@ jobs:
           node-version: '22'
       - name: 混在を測る
         run: node scripts/lang-report.mjs | tee "$GITHUB_STEP_SUMMARY"
+
+  provenance:
+    name: 出所の測定（報告のみ・落とさない）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # ⚠ 日付を持たない実測は**候補**であって違反ではない ∴ この job は決して落とさない。
+      - name: 日付を持たない実測を挙げる
+        run: node scripts/provenance-report.mjs | tee "$GITHUB_STEP_SUMMARY"

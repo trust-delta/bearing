@@ -57,7 +57,7 @@ import { runGit } from '../lib/git.mjs'
 import { gatherBacklog } from '../lib/process.mjs'
 import { gatherUnpushed, renderUnpushedFence } from '../lib/unpushed.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
-import { resolveUnit } from '../lib/unit.mjs'
+import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
 // （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
@@ -119,8 +119,10 @@ async function historyFences(repo) {
         '# ⚠ clean ではなく「不在」である: これを「drift 無し」と読まないこと。\n```',
     )
   } else {
-    blocks.push(renderIntraFence(drift.intra).trimEnd())
-    blocks.push(renderInterFence(drift.inter, drift.brokenCollations).trimEnd())
+    blocks.push(renderIntraFence(drift.intra, drift.scanned?.intra ?? null).trimEnd())
+    blocks.push(
+      renderInterFence(drift.inter, drift.brokenCollations, drift.scanned?.inter ?? null).trimEnd(),
+    )
   }
   blocks.push(renderUnpushedFence(unpushed).trimEnd())
   blocks.push(renderCheckpointFence(checkpoint).trimEnd())
@@ -136,7 +138,7 @@ try {
 }
 
 try {
-  const unit = await resolveUnit(input.cwd || process.cwd())
+  const unit = await resolveUnit(resolveCwd(input))
   const { sig, heads } = await corpusSignature(unit)
   // unit のどこにも corpus が無い: この project は規律を採ったことが無く、空の corpus を
   // 報告することは「人間が決めていないことを plugin が決める」ことになる。

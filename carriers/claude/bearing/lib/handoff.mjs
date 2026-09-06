@@ -118,6 +118,59 @@ export const unitHome = (unitRoot, env = process.env) =>
 export const batonDir = (unitRoot, env = process.env) =>
   path.join(unitHome(unitRoot, env), 'handoff')
 
+/** この dir がどの unit root のものかを書き留めた 1 行。 */
+export const UNIT_ROOT_RECORD = 'unit-root'
+
+export const unitRootRecordPath = (unitRoot, env = process.env) =>
+  path.join(unitHome(unitRoot, env), UNIT_ROOT_RECORD)
+
+/**
+ * この dir の持ち主を記録する。**平坦化が単射でないことへの応答である。**
+ *
+ * 🔴 **既に在れば決して上書きしない。** 上書きは、衝突の唯一の証拠を我々自身の手で
+ * 消す act である —— 後から来た unit が記録を自分の名で塗り替えれば、**2 つの対話が
+ * 同じ dir を共有していることは、以後どこからも読めなくなる。**
+ *
+ * ⚠ `wx` flag に判定を任せる。**「在るか調べてから書く」形は、その隙間で相手に書かれる。**
+ *
+ * @returns {Promise<'written'|'kept'>}
+ */
+export async function recordUnitRoot(unitRoot, env = process.env, resolve = path.resolve) {
+  const file = unitRootRecordPath(unitRoot, env)
+  await mkdir(path.dirname(file), { recursive: true })
+  try {
+    await writeFile(file, resolve(unitRoot) + '\n', { flag: 'wx' })
+    return 'written'
+  } catch (e) {
+    if (e?.code === 'EEXIST') return 'kept'
+    throw e
+  }
+}
+
+/**
+ * 記録と、いま解決した unit root を突き合わせる。
+ *
+ * ⚠ **`absent` を `mismatch` に畳んではならない。** 記録は 2026-09-06 に足したものであり、
+ * **それ以前に生まれた dir は正当に記録を持たない** —— 不在を衝突と読めば、既存の baton が
+ * すべて他所のものに見える。**知らないことは、知らないと述べる。**
+ *
+ * ⚠ **読めない記録も `match` に畳まない**（`unreadable`）—— 読めない証言は証言ではない、
+ * という `drift.mjs` の照合記録と同じ規律である。
+ *
+ * @returns {Promise<{state:'match'|'absent'|'mismatch'|'unreadable', recorded: string|null, actual: string}>}
+ */
+export async function checkUnitRoot(unitRoot, env = process.env, resolve = path.resolve) {
+  const actual = resolve(unitRoot)
+  let recorded
+  try {
+    recorded = (await readFile(unitRootRecordPath(unitRoot, env), 'utf8')).trim()
+  } catch (e) {
+    return { state: e?.code === 'ENOENT' ? 'absent' : 'unreadable', recorded: null, actual }
+  }
+  if (recorded === '') return { state: 'unreadable', recorded: null, actual }
+  return { state: recorded === actual ? 'match' : 'mismatch', recorded, actual }
+}
+
 export const activePath = (unitRoot, env = process.env) => path.join(batonDir(unitRoot, env), ACTIVE)
 export const archiveDir = (unitRoot, env = process.env) =>
   path.join(batonDir(unitRoot, env), ARCHIVE)
@@ -199,6 +252,9 @@ export function stampComposedAt(markdown, date = new Date()) {
 export async function writeBaton(unitRoot, markdown, date = new Date()) {
   const archived = await archiveActive(unitRoot, date)
   await mkdir(batonDir(unitRoot), { recursive: true })
+  // ⚠ **持ち主は、書く側が刻む。** 読む側に刻ませれば、他所の unit が先に読んだだけで
+  // 記録がその名になり、**衝突の検出そのものが衝突に汚染される。**
+  await recordUnitRoot(unitRoot)
   const text = stampComposedAt(markdown, date)
   await writeFile(activePath(unitRoot), text.endsWith('\n') ? text : text + '\n', 'utf8')
   return { path: activePath(unitRoot), archived }

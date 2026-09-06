@@ -27,7 +27,11 @@ import {
   bearingHome,
   moveFile,
   unitSlug,
+  recordUnitRoot,
+  checkUnitRoot,
+  unitRootRecordPath,
 } from '../lib/handoff.mjs'
+import { readBaton } from '../lib/baton.mjs'
 
 // ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
 // baton** —— を読み書きする。`activePath` 等は呼ばれた時点の env を見る ∴ import より後、
@@ -374,4 +378,64 @@ test('moveFile は跨いだ先でも、既に在るものを潰さない', async
   await assert.rejects(() => moveFile(from, to, { rename: async () => { throw exdev() } }))
   assert.equal(await readFile(to, 'utf8'), 'new\n')
   assert.equal(existsSync(from), true)
+})
+
+// ── dir の持ち主 —— 平坦化が単射でないことへの応答 ─────────────────────────────
+//
+// 🔴 **`/w/a.b` と `/w/a-b` は同じ dir 名を得る。** 名前の側では塞がない（読めることを取った
+// 帰結である）∴ 検出だけが残された手であり、これらはその検出を固定する。
+
+test('the owner record is written once and never overwritten', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'unit-a-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+
+  assert.equal(await recordUnitRoot(root), 'written')
+  // ⚠ **2 度目は保持する** —— 上書きは、衝突の唯一の証拠を我々の手で消す act である。
+  assert.equal(await recordUnitRoot(root), 'kept')
+  assert.equal((await readFile(unitRootRecordPath(root), 'utf8')).trim(), path.resolve(root))
+})
+
+test('a collision is named, not silently handed over', async (t) => {
+  // 陽性対照つき: この 2 つが同じ dir 名になることを、まず確かめる。
+  const base = await mkdtemp(path.join(tmpdir(), 'collide-'))
+  t.after(() => rm(base, { recursive: true, force: true }))
+  const first = path.join(base, 'a.b')
+  const second = path.join(base, 'a-b')
+  await mkdir(first, { recursive: true })
+  await mkdir(second, { recursive: true })
+  assert.equal(unitSlug(first), unitSlug(second), '前提: この 2 つは同じ dir 名を得る')
+
+  await writeBaton(first, '---\ncomposed-at: x\n---\n\n本文\n')
+  assert.equal((await checkUnitRoot(first)).state, 'match')
+
+  const trespass = await checkUnitRoot(second)
+  assert.equal(trespass.state, 'mismatch')
+  assert.equal(trespass.recorded, path.resolve(first))
+  assert.equal(trespass.actual, path.resolve(second))
+
+  // ⚠ **baton は隠さない。** 在るものを無いと報告する形は、この機構が一貫して拒んできた。
+  const baton = await readBaton(second)
+  assert.ok(baton, 'baton は返る —— 「無い」に畳んではならない')
+  assert.equal(baton.unitRoot.state, 'mismatch')
+})
+
+test('a dir predating the record is unknown, never a collision', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'unit-old-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  // 記録を書かずに baton dir だけ作る —— 2026-09-06 より前に生まれた dir の形。
+  await mkdir(batonDir(root), { recursive: true })
+  await writeFile(activePath(root), '---\ncomposed-at: x\n---\n\n本文\n', 'utf8')
+
+  const check = await checkUnitRoot(root)
+  assert.equal(check.state, 'absent')
+  assert.equal(check.recorded, null)
+  assert.equal((await readBaton(root)).unitRoot.state, 'absent')
+})
+
+test('an unreadable owner record is not collapsed into a match', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'unit-blank-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await recordUnitRoot(root)
+  await writeFile(unitRootRecordPath(root), '   \n', 'utf8')
+  assert.equal((await checkUnitRoot(root)).state, 'unreadable')
 })

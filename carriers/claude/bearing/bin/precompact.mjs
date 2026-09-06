@@ -48,7 +48,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 import os from 'node:os'
 import path from 'node:path'
-import { resolveUnit } from '../lib/unit.mjs'
+import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
 import { batonDir } from '../lib/handoff.mjs'
 import { quotePathForShell } from '../lib/shell.mjs'
 
@@ -137,7 +137,7 @@ const marker = path.join(os.tmpdir(), `aim-precompact-${sessionId}`)
 if (existsSync(marker)) process.exit(0)
 
 try {
-  const unit = await resolveUnit(input.cwd || process.cwd())
+  const unit = await resolveUnit(resolveCwd(input))
   if (!(await inScope(unit))) process.exit(0)
   mkdirSync(path.dirname(marker), { recursive: true })
   writeFileSync(marker, new Date().toISOString(), 'utf8')

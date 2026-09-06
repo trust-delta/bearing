@@ -198,6 +198,86 @@ function edit(text, patch) {
 globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError }
 </script>
 
+<script type="module" data-contract="aim-tree">
+// `parent:` から木を組む契約。⚠ **前の block と同じ理由で、正本はここ 1 つである** ——
+// test（`test/aim-tree-shape.test.mjs`）がこの block を取り出して走らせる。
+//
+// 🔴 **壊れた形を「木が描けない」の一言に畳んではならない。** 畳めば、読み手は corpus が
+// 健全だと読む —— この機構が他のすべての面で拒んできた誤読と同じ形である。∴ **壊れ方は
+// 種類ごとに別の名で述べる**: 自己参照 / 存在しない親 / 循環 / root から辿り着けない。
+//
+// ⚠ **これは判定ではなく記述である。** 「root が 2 つある corpus は誤りか」は目的の問いで
+// あって、この契約は答えない —— **幾つあるかまでを述べ、良し悪しは述べない。**
+
+/**
+ * @param {{slug: string, parent: string|null}[]} nodes
+ * @returns {{roots: string[], children: Map<string, string[]>,
+ *   problems: {slug: string, kind: 'self'|'missing-parent'|'cycle'|'unreachable', detail: string}[]}}
+ */
+function buildTree(nodes) {
+  const bySlug = new Map(nodes.map((n) => [n.slug, n]))
+  const children = new Map()
+  const roots = []
+  const problems = []
+  const add = (slug, kind, detail) => problems.push({ slug, kind, detail })
+
+  for (const n of [...nodes].sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0))) {
+    const p = n.parent == null || n.parent === '' ? null : n.parent
+    if (p === null) {
+      roots.push(n.slug)
+      continue
+    }
+    if (p === n.slug) {
+      add(n.slug, 'self', '自分自身を親にしている')
+      continue
+    }
+    if (!bySlug.has(p)) {
+      // ⚠ **「親が空欄」と「親が居ない」を同じ顔にしない。** 前者は root、後者は壊れである。
+      add(n.slug, 'missing-parent', `親 \`${p}\` が corpus に無い`)
+      continue
+    }
+    if (!children.has(p)) children.set(p, [])
+    children.get(p).push(n.slug)
+  }
+  for (const list of children.values()) list.sort()
+
+  // 循環: 親を辿って既に見た node へ戻るもの。⚠ **辿れる親だけを辿る** —— 存在しない親は
+  // 既に別の名で述べており、そこで鎖は切れる。
+  for (const n of nodes) {
+    const seen = new Set()
+    let cur = n.slug
+    for (;;) {
+      if (seen.has(cur)) {
+        add(n.slug, 'cycle', '親を辿ると自分の通った node へ戻る')
+        break
+      }
+      seen.add(cur)
+      const p = bySlug.get(cur)?.parent
+      if (!p || p === cur || !bySlug.has(p)) break
+      cur = p
+    }
+  }
+
+  // ⚠ **到達可能性は、上の 3 つとは別の事実である。** 循環の中の node も、存在しない親に
+  // ぶら下がる node も root から辿り着けないが、**なぜ辿り着けないかは同じではない** ∴
+  // 重ねて述べる。**片方に畳めば、原因か症状のどちらかが消える。**
+  const reached = new Set()
+  const walk = (slug) => {
+    if (reached.has(slug)) return
+    reached.add(slug)
+    for (const c of children.get(slug) ?? []) walk(c)
+  }
+  for (const r of roots) walk(r)
+  for (const n of [...nodes].sort((a, b) => (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0))) {
+    if (!reached.has(n.slug)) add(n.slug, 'unreachable', 'root から辿り着けない')
+  }
+
+  return { roots: roots.sort(), children, problems }
+}
+
+globalThis.AimTree = { buildTree }
+</script>
+
 <style>
   :root {
     color-scheme: light dark;
@@ -228,48 +308,125 @@ globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError
   .scroll { overflow-x: auto; }
   footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line);
            color: var(--muted); font-size: .8rem; }
+
+  /* 木と詳細を並べる。⚠ 狭い画面では縦に落とす —— 面が読めなくなれば、面ではない。 */
+  .cols { display: grid; grid-template-columns: minmax(14rem, 22rem) 1fr; gap: 1.5rem; align-items: start; }
+  @media (max-width: 52rem) { .cols { grid-template-columns: 1fr; } }
+  nav#tree ul { list-style: none; margin: 0; padding-left: 1rem; }
+  nav#tree > ul { padding-left: 0; }
+  nav#tree li { margin: .15rem 0; }
+  nav#tree button { background: none; border: 0; padding: .1rem .3rem; cursor: pointer;
+                    font: inherit; color: inherit; border-radius: 3px; text-align: left; }
+  nav#tree button:hover { background: var(--line); }
+  nav#tree button[aria-current="true"] { background: var(--line); font-weight: 600; }
+  nav#tree .st { color: var(--muted); font-size: .8em; }
+  section#detail { background: var(--card); border: 1px solid var(--line);
+                   border-radius: 6px; padding: 1rem 1.2rem; }
+  section#detail label { display: block; margin: .8rem 0 .2rem; color: var(--muted); font-size: .85rem; }
+  section#detail textarea, section#detail select, section#detail input {
+    width: 100%; font: inherit; padding: .35rem .5rem;
+    border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--fg); }
+  section#detail textarea { min-height: 4.5rem; resize: vertical; }
+  pre#d-body { white-space: pre-wrap; word-break: break-word; max-height: 26rem; overflow-y: auto;
+               background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
+               padding: .8rem; font-size: .85rem; }
+  #problems { border: 1px solid var(--ng); border-radius: 6px; padding: .6rem 1rem; margin: 1rem 0; }
+  #problems h2 { font-size: .95rem; margin: .2rem 0 .5rem; color: var(--ng); }
+  #problems li { margin: .2rem 0; }
+  .row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+  details.check { margin-top: 2rem; }
+  details.check summary { cursor: pointer; color: var(--muted); }
 </style>
 
 <main>
-  <h1>aim —— frontmatter 往復の検分</h1>
+  <h1>aim —— 目的の木</h1>
   <p class="lede">
-    corpus の <code>docs/aims/</code> を選ぶと、各 node の frontmatter を読み、<strong>同じ値で書き戻したときに
-    1 byte も動かないか</strong>を確かめます。<strong>この面はまだ書き込みません</strong> —— 読んで照合するだけです。
+    corpus の <code>docs/aims/</code> を選ぶと、<strong><code>parent:</code> から木を組んで描き</strong>、
+    node を選べば body を読み、<strong>人間の 3 欄（aim / parent / state）だけを書き戻せます</strong>。
+    ⚠ <strong>body はここでは編集しません</strong> —— body はエージェントの領分です。
   </p>
 
-  <button id="pick" type="button">docs/aims を選ぶ</button>
-  <p id="note"></p>
+  <div class="row">
+    <button id="pick" type="button">docs/aims を選ぶ</button>
+    <span id="note"></span>
+  </div>
 
-  <div class="scroll"><table id="table" hidden>
-    <thead><tr><th>slug</th><th>state</th><th>parent</th><th>往復</th><th>aim</th></tr></thead>
-    <tbody></tbody>
-  </table></div>
+  <div id="problems" hidden>
+    <h2>木が組めなかった形</h2>
+    <ul id="problem-list"></ul>
+    <p class="lede">
+      ⚠ <strong>これらを「木が描けない」の一言に畳んでいません</strong> —— 畳めば、読み手は
+      corpus が健全だと読みます。<strong>自己参照・存在しない親・循環・root から辿り着けない
+      —— 直す先が違うので、別の名で述べています。</strong>
+    </p>
+  </div>
+
+  <div class="cols">
+    <nav id="tree" aria-label="aim の木"></nav>
+
+    <section id="detail" hidden>
+      <h2 id="d-slug"></h2>
+      <label for="d-aim">aim —— 目的 1 文</label>
+      <textarea id="d-aim" spellcheck="false"></textarea>
+      <label for="d-parent">parent —— 木の位置</label>
+      <select id="d-parent"></select>
+      <label for="d-state">state</label>
+      <select id="d-state">
+        <option value="open">open</option>
+        <option value="done">done</option>
+        <option value="dead">dead</option>
+      </select>
+      <div class="row">
+        <button id="save" type="button">この 3 欄を書き戻す</button>
+        <span id="d-note"></span>
+      </div>
+      <label>body —— 読むだけ</label>
+      <pre id="d-body"></pre>
+    </section>
+  </div>
+
+  <details class="check">
+    <summary>frontmatter 往復の検分（読んだ値をそのまま書き戻して 1 byte も動かないか）</summary>
+    <div class="scroll"><table id="table" hidden>
+      <thead><tr><th>slug</th><th>state</th><th>parent</th><th>往復</th><th>aim</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </details>
 
   <footer>
     ⚠ このページは File System Access API を使います —— 対応は Chromium 系に限られます
-    （<strong>我々の実測ではなく、API の対応状況から引き継いだ前提</strong>）。
+    （<strong>我々の実測ではなく、API の対応状況から引き継いだ前提</strong>）。<br>
+    ⚠ <strong>書き戻す前に、必ず disk を読み直します。</strong> 選んだあとに誰かが（エージェントが）
+    その file を動かしていれば、<strong>書かずに述べて止まります</strong> —— 黙って上書きしません。
   </footer>
 </main>
 
 <script type="module">
-  const note = document.getElementById('note')
-  const table = document.getElementById('table')
-  const tbody = table.querySelector('tbody')
+  const $ = (id) => document.getElementById(id)
+  const note = $('note'), table = $('table'), tbody = table.querySelector('tbody')
+  const treeEl = $('tree'), detail = $('detail'), dNote = $('d-note')
+
+  /** 選んだ dir の handle と、読み込んだ node。⚠ **原文を握り続ける** —— 衝突の検出に要る。 */
+  let dirHandle = null
+  /** slug -> { handle, text, fm, verdict, detail } */
+  let nodes = new Map()
+  let current = null
 
   // ⚠ **不在を黙って示さない。** 面が出ないことと、corpus が空であることを同じ見た目にしない
   // （`ambient-display` が「消えたものと元から無いものが同じ見た目になる」と警告した形）。
   if (typeof window.showDirectoryPicker !== 'function') {
-    document.getElementById('pick').disabled = true
+    $('pick').disabled = true
     note.className = 'warn'
     note.textContent =
       'この browser は File System Access API を持っていません ∴ この面は動きません。' +
       'Chromium 系（Chrome / Edge）で開いてください —— 空なのではなく、開けないのです。'
   }
 
-  document.getElementById('pick').addEventListener('click', async () => {
-    let dir
+  $('pick').addEventListener('click', async () => {
     try {
-      dir = await window.showDirectoryPicker({ mode: 'read' })
+      // ⚠ **`readwrite` で訊く。** 読むだけの権限で開いてから書こうとすれば、書く瞬間に
+      // 改めて訊かれる —— **人間が編集を終えた後に拒まれるのが、最も高くつく形である。**
+      dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' })
     } catch (e) {
       // ⚠ **`AbortError` でも黙らない。** picker が閉じる理由は 2 つあり、**browser の拒否も
       // ここへ来る** —— 拒否は browser 自身のダイアログで述べられ、そのダイアログを閉じた
@@ -287,16 +444,229 @@ globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError
         : `ディレクトリを開けませんでした: ${e.message}`
       return
     }
-
-    const rows = []
-    for await (const entry of dir.values()) {
-      if (entry.kind !== 'file' || !entry.name.endsWith('.md')) continue
-      const text = await (await entry.getFile()).text()
-      rows.push({ slug: entry.name.replace(/\.md$/, ''), ...inspect(text) })
-    }
-    rows.sort((a, b) => a.slug.localeCompare(b.slug))
-    render(rows)
+    await load()
   })
+
+  async function load() {
+    nodes = new Map()
+    for await (const entry of dirHandle.values()) {
+      if (entry.kind !== 'file' || !entry.name.endsWith('.md') || entry.name === 'README.md') continue
+      const text = await (await entry.getFile()).text()
+      const slug = entry.name.replace(/\.md$/, '')
+      nodes.set(slug, { slug, handle: entry, text, ...inspect(text) })
+    }
+    renderAll()
+  }
+
+  function renderAll() {
+    const rows = [...nodes.values()].sort((a, b) => a.slug.localeCompare(b.slug))
+    renderTree(rows)
+    renderCheck(rows)
+    if (current && nodes.has(current)) select(current)
+    else { detail.hidden = true; current = null }
+  }
+
+  // ── 木 ─────────────────────────────────────────────────────────────────────
+
+  function renderTree(rows) {
+    const { buildTree } = globalThis.AimTree
+    // ⚠ **読めなかった node も木へ渡す。** 落とせば「読めない file が在る」ことが木からは
+    // 見えなくなり、**壊れが健全に見える。** parent は読めていなければ null 扱いになるが、
+    // 往復の欄と `problems` がその事実を別に述べている。
+    const t = buildTree(rows.map((r) => ({ slug: r.slug, parent: r.readable ? (r.parent ?? null) : null })))
+    renderProblems(t.problems)
+
+    treeEl.replaceChildren()
+    const list = (slugs) => {
+      const ul = document.createElement('ul')
+      for (const slug of slugs) {
+        const li = document.createElement('li')
+        const b = document.createElement('button')
+        b.type = 'button'
+        b.dataset.slug = slug
+        const r = nodes.get(slug)
+        b.textContent = slug
+        if (r?.readable && r.state) {
+          const st = document.createElement('span')
+          st.className = 'st'
+          st.textContent = ` ${r.state}`
+          b.append(st)
+        }
+        b.addEventListener('click', () => select(slug))
+        li.append(b)
+        const kids = t.children.get(slug)
+        if (kids?.length) li.append(list(kids))
+        ul.append(li)
+      }
+      return ul
+    }
+    treeEl.append(list(t.roots))
+    // ⚠ **root から辿り着けない node も描く。** 木に出ないだけでは、消えたのか元から無いのか
+    // 区別できない —— それはこの面が一貫して拒んできた畳み方である。
+    const stray = rows.map((r) => r.slug).filter((s) => !t.roots.includes(s) && !isReachable(t, s))
+    if (stray.length > 0) {
+      const h = document.createElement('p')
+      h.className = 'st'
+      h.textContent = 'root から辿り着けない node:'
+      treeEl.append(h, list(stray))
+    }
+    note.className = ''
+    note.textContent = rows.length === 0
+      ? '選んだディレクトリに aim の `.md` が 1 枚もありません —— 場所が違うかもしれません。'
+      : `${rows.length} 枚 · root ${t.roots.length} 本` +
+        (t.problems.length ? ` · ⚠ 木が組めなかった形 ${t.problems.length} 件` : '')
+  }
+
+  function isReachable(t, slug) {
+    const seen = new Set()
+    const walk = (s) => {
+      if (seen.has(s)) return
+      seen.add(s)
+      for (const c of t.children.get(s) ?? []) walk(c)
+    }
+    for (const r of t.roots) walk(r)
+    return seen.has(slug)
+  }
+
+  function renderProblems(problems) {
+    const ul = $('problem-list')
+    ul.replaceChildren()
+    for (const p of problems) {
+      const li = document.createElement('li')
+      li.innerHTML = ''
+      li.append(document.createTextNode(`${p.slug} —— ${p.detail}（${p.kind}）`))
+      ul.append(li)
+    }
+    $('problems').hidden = problems.length === 0
+  }
+
+  // ── 1 枚の詳細 ──────────────────────────────────────────────────────────────
+
+  function select(slug) {
+    const r = nodes.get(slug)
+    if (!r) return
+    current = slug
+    detail.hidden = false
+    for (const b of treeEl.querySelectorAll('button')) {
+      b.setAttribute('aria-current', String(b.dataset.slug === slug))
+    }
+    $('d-slug').textContent = slug
+    dNote.className = ''
+    dNote.textContent = ''
+
+    // ⚠ **読めない file を編集させない。** 3 欄を空欄で見せれば、書き戻した瞬間に
+    // **読めなかったことが「空だった」として disk へ落ちる。**
+    const editable = r.readable
+    $('d-aim').value = editable ? (r.aim ?? '') : ''
+    $('d-state').value = editable ? (r.state ?? 'open') : 'open'
+    fillParents(slug, editable ? (r.parent ?? '') : '')
+    for (const el of ['d-aim', 'd-state', 'd-parent', 'save']) $(el).disabled = !editable
+    if (!editable) {
+      dNote.className = 'warn'
+      dNote.textContent = `この file は aim として読めません（${r.detail}）∴ 編集できません。`
+    }
+    $('d-body').textContent = bodyOf(r.text)
+  }
+
+  /** frontmatter の後ろ全部。⚠ **切り出しに失敗したら、全文を見せる** —— 隠さない。 */
+  function bodyOf(text) {
+    const m = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(text)
+    return m ? text.slice(m[0].length) : text
+  }
+
+  function fillParents(slug, currentParent) {
+    const sel = $('d-parent')
+    sel.replaceChildren()
+    const none = document.createElement('option')
+    none.value = ''
+    none.textContent = '（root —— 親を持たない）'
+    sel.append(none)
+    for (const s of [...nodes.keys()].sort()) {
+      if (s === slug) continue // ⚠ 自分を親には選ばせない
+      const o = document.createElement('option')
+      o.value = s
+      o.textContent = s
+      sel.append(o)
+    }
+    sel.value = currentParent
+    // ⚠ **corpus に無い親が書かれていたら、選択肢として残す** —— 黙って root へ倒せば、
+    // **壊れた参照が「元から root だった」ことにされる。**
+    if (currentParent && sel.value !== currentParent) {
+      const o = document.createElement('option')
+      o.value = currentParent
+      o.textContent = `${currentParent}（corpus に無い）`
+      sel.append(o)
+      sel.value = currentParent
+    }
+  }
+
+  // ── 書き戻す ────────────────────────────────────────────────────────────────
+
+  $('save').addEventListener('click', async () => {
+    const r = nodes.get(current)
+    if (!r) return
+    const { edit } = globalThis.AimFrontmatter
+    dNote.className = ''
+    dNote.textContent = '書き戻しています…'
+
+    // 🔴 **書く前に disk を読み直す。** この面を開いてから今までの間に、エージェントが
+    // その file を動かしているかもしれない —— **握っている原文の上に書けば、その変更は
+    // 一言も出ずに消える。** ⚠ **変わっていたら、書かずに止めて述べる。**
+    let fresh
+    try {
+      fresh = await (await r.handle.getFile()).text()
+    } catch (e) {
+      dNote.className = 'warn'
+      dNote.textContent = `読み直せませんでした ∴ 書いていません: ${e.message}`
+      return
+    }
+    if (fresh !== r.text) {
+      dNote.className = 'warn'
+      dNote.textContent =
+        '⚠ この file は、面が読んでから disk 側で変わっています ∴ 書いていません。' +
+        '（エージェントが動かした可能性があります。もう一度読み込んでから編集してください。）'
+      r.text = fresh
+      Object.assign(r, inspect(fresh))
+      renderAll()
+      return
+    }
+
+    const parent = $('d-parent').value
+    const patch = {
+      aim: $('d-aim').value.trim(),
+      // ⚠ **空文字は `null`（行ごと落とす ＝ re-root）である** —— 契約がそう定めている。
+      parent: parent === '' ? null : parent,
+      state: $('d-state').value,
+    }
+    let next
+    try {
+      next = edit(fresh, patch)
+    } catch (e) {
+      dNote.className = 'warn'
+      dNote.textContent = `書き戻せません ∴ 書いていません: ${e.message}`
+      return
+    }
+    if (next === fresh) {
+      dNote.textContent = '変更はありません —— 1 byte も書いていません。'
+      return
+    }
+    try {
+      const w = await r.handle.createWritable()
+      await w.write(next)
+      await w.close()
+    } catch (e) {
+      dNote.className = 'warn'
+      dNote.textContent = `書けませんでした: ${e.message}`
+      return
+    }
+    r.text = next
+    Object.assign(r, inspect(next))
+    renderAll()
+    dNote.className = 'ok'
+    dNote.textContent = '書き戻しました。'
+  })
+
+  // ── 往復の検分（読むだけ） ──────────────────────────────────────────────────
 
   /**
    * 1 枚を読み、同じ値で書き戻して原文と突き合わせる。
@@ -334,7 +704,7 @@ globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError
     return n + 1
   }
 
-  function render(rows) {
+  function renderCheck(rows) {
     tbody.replaceChildren()
     for (const r of rows) {
       const tr = document.createElement('tr')
@@ -356,16 +726,5 @@ globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError
       tbody.append(tr)
     }
     table.hidden = rows.length === 0
-    // ⚠ **2 つの数を分けて述べる。** 往復の破れは契約の欠陥、読めない file は corpus の側の
-    // 事実である —— 足し合わせると、どちらを直せばよいか読み手に分からなくなる。
-    const broken = rows.filter((r) => r.verdict === 'ng').length
-    const unreadable = rows.filter((r) => r.verdict === 'unreadable').length
-    note.className = broken || unreadable ? 'warn' : ''
-    const parts = []
-    parts.push(broken === 0 ? 'すべて往復が一致' : `往復が一致しないもの ${broken} 枚`)
-    if (unreadable > 0) parts.push(`aim として読めないもの ${unreadable} 枚`)
-    note.textContent = rows.length === 0
-      ? '選んだディレクトリに `.md` が 1 枚もありません —— 場所が違うかもしれません。'
-      : `${rows.length} 枚を読み、${parts.join('、')}。`
   }
 </script>

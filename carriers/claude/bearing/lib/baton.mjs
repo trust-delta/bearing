@@ -26,13 +26,18 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 
-import { activePath } from './handoff.mjs'
+import { activePath, checkUnitRoot } from './handoff.mjs'
 
 /**
  * unit の baton を、在れば読む。
  *
  * @param {string} unitRoot
- * @returns {Promise<{path: string, text: string, composedAt: string|null, readAt: string|null, task: string|null}|null>}
+ * ⚠ **`unitRoot` の食い違いは、baton を隠す理由にしない。** 平坦化は単射でない ∴ 別の
+ * unit が同じ dir 名を得ることがありうるが、**「baton は無い」に畳めば、在るものを無いと
+ * 報告する形になる** —— この機構が一貫して拒んできたものである。∴ **baton は返し、
+ * 食い違いを `unitRoot` に載せて呼び出し側へ渡す。述べるのは面の仕事である。**
+ *
+ * @returns {Promise<{path: string, text: string, composedAt: string|null, readAt: string|null, task: string|null, unitRoot: {state: string, recorded: string|null, actual: string}}|null>}
  */
 export async function readBaton(unitRoot) {
   // ⚠ **置き場の正本は `lib/handoff.mjs` 1 箇所である。** 読む側と書く側が別々に path を
@@ -55,5 +60,6 @@ export async function readBaton(unitRoot) {
     composedAt: field('composed-at'),
     readAt: field('read-at'),
     task: field('task'),
+    unitRoot: await checkUnitRoot(unitRoot),
   }
 }
