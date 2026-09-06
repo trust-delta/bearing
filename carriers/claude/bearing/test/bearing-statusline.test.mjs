@@ -12,6 +12,7 @@ import path from 'node:path'
 
 import {
   chooseRecord, compareVersions, readInstallRecord, resolveConfigDir, absentLine, run,
+  shimDiffers, staleLine,
 } from '../bin/bearing-statusline.mjs'
 import { widthUnsafeChars } from '../bin/statusline.mjs'
 
@@ -128,4 +129,39 @@ test('absentLine は install の scope を勧めない —— scope は install 
   // ⚠ どの scope で載せるかは plugin の範囲外（人間の決定 2026-09-05）。
   assert.ok(!absentLine('x').includes('--scope'))
   assert.ok(absentLine('x').includes('claude plugin install bearing@trust-delta'))
+})
+
+// ── 置かれた複製の版の門 ────────────────────────────────────────────────────
+//
+// 🔴 **shim は複製である ∴ 古い複製は正常に動いて見える。** `bin/` を変えても
+// `~/.claude/` の写しは setup を打ち直すまで古く、面からは何も変わったように見えない。
+
+test('置かれた shim が配られたものと違えば、そう述べる', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'shim-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  const install = path.join(dir, 'install')
+  await mkdir(path.join(install, 'bin'), { recursive: true })
+  await writeFile(path.join(install, 'bin', 'bearing-statusline.mjs'), '新しい中身\n')
+
+  const self = path.join(dir, 'placed.mjs')
+  await writeFile(self, '古い中身\n')
+  assert.equal(await shimDiffers(self, install), true)
+
+  // 陽性対照: 同じ byte なら「違う」と言わない。
+  await writeFile(self, '新しい中身\n')
+  assert.equal(await shimDiffers(self, install), false)
+})
+
+test('比べられないときは黙る —— 知らないことを鳴らさない', async (t) => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'shim-none-'))
+  t.after(() => rm(dir, { recursive: true, force: true }))
+  // ⚠ **`null` であって `true` ではない。** 「違うかもしれない」を鳴らせば、比較できない
+  // だけの環境すべてに常駐する行になる。
+  assert.equal(await shimDiffers(path.join(dir, 'nope.mjs'), dir), null)
+  assert.equal(await shimDiffers(null, dir), null)
+  assert.equal(await shimDiffers(path.join(dir, 'nope.mjs'), null), null)
+})
+
+test('版の門の行も幅の規律に従う —— 本体を import する前に描く行である', () => {
+  assert.deepEqual(widthUnsafeChars(staleLine()), [])
 })

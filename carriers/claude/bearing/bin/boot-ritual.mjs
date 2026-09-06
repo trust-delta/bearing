@@ -43,7 +43,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { readBaton } from '../lib/baton.mjs'
 import { strandedBatons } from '../lib/handoff.mjs'
-import { resolveUnit } from '../lib/unit.mjs'
+import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
 import { quotePathForShell } from '../lib/shell.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -176,7 +176,7 @@ const marker = path.join(os.tmpdir(), `aim-boot-ritual-${sessionId}`)
 if (existsSync(marker)) process.exit(0)
 
 try {
-  const unit = await resolveUnit(input.cwd || process.cwd())
+  const unit = await resolveUnit(resolveCwd(input))
   const baton = await readBaton(unit.root)
   // ⚠ **取り残された baton も「未処理の baton」である。** 儀式が在るのは、未処理の baton が
   // 無視されないためであって、それが**どこに置かれているか**は理由ではない ∴ 旧い置き場に

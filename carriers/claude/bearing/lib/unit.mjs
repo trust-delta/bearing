@@ -100,6 +100,34 @@ async function resolveAimsDirs(root, repos) {
 }
 
 /**
+ * hook / statusline の入力から、unit の root に取るべき directory を決める。
+ *
+ * 🔴 **これは「今どこに立っているか」ではなく「このセッションが何を対象にしているか」で
+ * ある。** agent が `cd` した先を root と読めば、[[resolveUnit]] は cwd から*下*しか
+ * 探さないため **corpus は在るのに見失う** —— 机上の懸念ではなく、statusline の 2 行目が
+ * 実際に `corpus 未取得` へ落ちて発覚した（2026-09-01）。
+ *
+ * 🔴 **正本をここ 1 つにしたのは、面ごとに解決が違っていたからである**（2026-09-06）——
+ * `aim-facts` は `process.cwd()`、`boot-ritual` / `corpus-delta` / `precompact` は
+ * `input.cwd || process.cwd()`、statusline は `project_dir` 優先。**同じセッションの
+ * 同じ瞬間に、面ごとに別の unit を読む形が実在していた。**
+ *
+ * ⚠ **連鎖は上位が欠けても壊れない** —— `workspace` を渡されない呼び出しでは
+ * `input.cwd` へ、それも無ければ `fallback` へ落ちる ∴ **揃えても、揃える前の挙動を
+ * 下回る面は 1 つも無い。**
+ *
+ * ⚠ **branch のような「今どこで作業しているか」の問いには、これを使ってはならない。**
+ * あちらは `current_dir` が正しい —— 2 つは別の問いである。
+ *
+ * @param {{workspace?: {project_dir?: string, current_dir?: string}, cwd?: string}|null|undefined} input
+ * @param {string} fallback
+ * @returns {string}
+ */
+export function resolveCwd(input, fallback = process.cwd()) {
+  return input?.workspace?.project_dir || input?.workspace?.current_dir || input?.cwd || fallback
+}
+
+/**
  * `cwd` を root とする unit を解決する。
  *
  * @param {string} cwd

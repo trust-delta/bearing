@@ -123,7 +123,50 @@ export function absentLine(reason) {
   return `bearing  載っていない（${reason}）。claude plugin install bearing@trust-delta`
 }
 
-export async function run({ env = process.env, write = (s) => process.stdout.write(s) } = {}) {
+/**
+ * 置かれた shim が、載っている版が配る shim と違うか。
+ *
+ * 🔴 **shim は複製である ∴ 版の門が 1 つ増えている。** `bin/bearing-statusline.mjs` を
+ * 変えても、`~/.claude/` の複製は setup を打ち直すまで古いままで、⚠ **古い複製は正常に
+ * 動いて見える** —— 面からは何も変わったように見えない。
+ *
+ * ⚠ **述べられるのは「違う」までであって、「古い」でも「手で書き換えられた」でもない。**
+ * byte 比較は原因を区別しない ∴ **区別できないものを区別したふりをしない。**
+ *
+ * ⚠ **読めなければ `null` を返し、面は黙る。** ここで「違うかもしれない」と述べれば、
+ * 比較できないだけの環境すべてに常駐する行になる —— [[ambient-display]] が明文で拒んだ形
+ * である。⚠ **不在を黙って消さないことと、知らないことを鳴らさないことは両立する。**
+ *
+ * @returns {Promise<boolean|null>} true = 違う / false = 同じ / null = 比べられない
+ */
+export async function shimDiffers(selfPath, installPath) {
+  if (!selfPath || !installPath) return null
+  try {
+    const shipped = path.join(installPath, 'bin', 'bearing-statusline.mjs')
+    const [a, b] = await Promise.all([readFile(selfPath), readFile(shipped)])
+    return !a.equals(b)
+  } catch {
+    return null // 片方でも読めなければ、違うとも同じとも言えない。
+  }
+}
+
+/**
+ * ⚠ **幅の規律は `absentLine` と同じ理由で literal として守る。** test が見張っている。
+ */
+export function staleLine() {
+  return 'bearing  置かれた shim が、載っている版のものと違う。/bearing:setup-statusline'
+}
+
+/**
+ * @param {{env?: object, write?: (s: string) => void, self?: string|null}} opts
+ *   `self` は**この shim 自身の path**。⚠ 既定は `import.meta.filename` ——
+ *   置かれた複製として走るときは `~/.claude/bearing-statusline.mjs` を指す。
+ */
+export async function run({
+  env = process.env,
+  write = (s) => process.stdout.write(s),
+  self = import.meta.filename,
+} = {}) {
   const record = await readInstallRecord({
     configDir: resolveConfigDir(env),
     // ⚠ **statusline には `CLAUDE_PROJECT_DIR` が渡る**（実測）が、**Bash tool から直に
@@ -135,6 +178,10 @@ export async function run({ env = process.env, write = (s) => process.stdout.wri
     write(absentLine(record.reason) + '\n')
     return
   }
+
+  // ⚠ **本体へ委譲する前に述べる。** 委譲は `process.exit()` しうる（working tree への
+  // 委譲経路）∴ 後ろに置けば、その場合だけ黙る面ができる。
+  if ((await shimDiffers(self, record.installPath)) === true) write(staleLine() + '\n')
 
   const entry = path.join(record.installPath, 'bin', 'statusline.mjs')
   let main

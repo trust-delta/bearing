@@ -37,7 +37,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { readAimGraph, readAimSlugs } from '../lib/corpus.mjs'
 import { runGit } from '../lib/git.mjs'
-import { resolveUnit } from '../lib/unit.mjs'
+import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
 import { gatherBacklog, renderAwaitingFence } from '../lib/process.mjs'
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { gatherWorkingDelta, renderWorkingDeltaFence } from '../lib/working-delta.mjs'
@@ -199,8 +199,11 @@ function sayBatonPresent(unit, baton) {
   )
 }
 
-async function main() {
-  const cwd = process.cwd()
+async function main(input) {
+  // ⚠ **他の 4 面と同じ解決を通る。** ここだけ `process.cwd()` を直に読んでいた ∴
+  // agent が `cd` した先を unit と読み、**同じセッションの同じ瞬間に、面ごとに別の
+  // corpus を見る形**が実在していた（`lib/unit.mjs` の `resolveCwd`）。
+  const cwd = resolveCwd(input)
   const unit = await resolveUnit(cwd)
   const repos = []
   for (const repo of unit.repos) repos.push(await repoFacts(repo))
@@ -514,7 +517,10 @@ const hookInput = readHookInput()
 
 let composed = null
 try {
-  composed = await main()
+  // ⚠ **ここで stdin を待つ。** 読み始めは `main()` より前であり、⚠ **待ちの上限は
+  // 変わらない** —— 下段の `await hookInput` が、どの経路でも同じ待ちを既に払っている。
+  // 失うのは git 作業との重なり（数十 ms）だけで、得るのは面 5 つの解決の一致である。
+  composed = await main(await hookInput)
   // ⚠ **空なら 1 byte も書かない。** 裸の改行 1 つでも、それは「aim を採っていない
   // project では黙る」を破っている —— 黙るとは、出力が短いことではない。
   if (out.length > 0) process.stdout.write(out.join('\n') + '\n')

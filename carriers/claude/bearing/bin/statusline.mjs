@@ -25,7 +25,7 @@ import { writeFile } from 'node:fs/promises'
 
 import { readAimSlugs, DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { runGit } from '../lib/git.mjs'
-import { resolveUnit } from '../lib/unit.mjs'
+import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
 import { gatherBacklog } from '../lib/process.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
@@ -363,25 +363,10 @@ export function foldRepos(perRepo) {
   }
 }
 
-/**
- * unit の root をどこに取るか。
- *
- * ⚠ **`project_dir` を先に見る。** unit とは「このセッションが何を対象にしているか」で
- * あって「今どの directory に立っているか」ではない —— agent が `cd` した先を root と
- * 読めば、`resolveUnit` は cwd から*下*しか探さないため **corpus は在るのに見失う**。
- * これは机上の懸念ではなく、実際に 2 行目が `corpus 未取得` に落ちて発覚した。
- *
- * ⚠ この解決順は `bin/aim-facts.mjs`（`process.cwd()`）とも
- * `boot-ritual` / `corpus-delta` / `precompact`（`input.cwd || process.cwd()`）とも違う。
- * **`docs/aims/bearing.md` の「hook 間の cwd 解決を一致させる」`[todo]` が指しているのは
- * この不一致であり、statusline はそこに 3 つ目の解決を持ち込んでいる。**
- */
-export function resolveCwd(input, fallback = process.cwd()) {
-  return input?.workspace?.project_dir
-    || input?.workspace?.current_dir
-    || input?.cwd
-    || fallback
-}
+// ⚠ **解決は `lib/unit.mjs` の 1 箇所である。** ここで組み直せば、面ごとに別の unit を
+// 読む形が戻る —— それは実際に起きていた欠陥である（`resolveCwd` の docstring）。
+export { resolveCwd }
+
 
 /**
  * ⚠ どの失敗も「事実が採れなかった」であって「0 だった」ではない ∴ null へ degrade する。
