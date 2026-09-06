@@ -116,6 +116,19 @@ function readStdin() {
  */
 function message(baton) {
   const when = baton.composedAt ? ` composed-at \`${baton.composedAt}\`` : ''
+  // 🔴 **持ち主が食い違う baton は、読む前に人間へ出させる。** 平坦化は単射でない ∴
+  // これは別の対話の baton でありうる —— **黙って読ませることは、baton が無いことより悪い。**
+  // ⚠ `absent` では黙る（記録より前に生まれた dir は正当に記録を持たない）。
+  const owner =
+    baton.unitRoot?.state === 'mismatch'
+      ? `\n\n🔴 **この baton dir は別の unit root のものとして記録されている** —— 記録: ` +
+        `\`${baton.unitRoot.recorded}\` / いま開いている unit: \`${baton.unitRoot.actual}\`。` +
+        '⚠ **平坦化は単射でなく、2 つの unit が同じ dir 名を得ることがある** ∴ ' +
+        '**これは別の対話の baton かもしれない。読む前に人間へ出すこと。**'
+      : baton.unitRoot?.state === 'unreadable'
+        ? '\n\n⚠ **この baton dir の持ち主の記録が読めない** —— ' +
+          '**食い違っていないことの確認は取れていない。**'
+        : ''
   const seen = baton.readAt
     ? `\n⚠ この baton は \`read-at: ${baton.readAt}\` を持っている —— 過去に読まれている。` +
       '報告の中で**事実として**述べること。手順を飛ばす理由にはならない' +
@@ -146,7 +159,7 @@ SessionStart hook はこの baton を surface したが、\`read-at\` は**意�
   4. 今どこに立っていて何を拾うかを人間に伝え（手順 6）、そのうえで人間が
      実際に頼んだことへ進むこと。
 
-正本: \`handoff\` skill が同梱する \`read.md\`（\`/bearing:handoff r\`）。⚠ **repo の中を探さないこと** —— handoff は aim と別であり、aim corpus に依存しない。これはセッションにつき一度だけ発火する。${seen}`
+正本: \`handoff\` skill が同梱する \`read.md\`（\`/bearing:handoff r\`）。⚠ **repo の中を探さないこと** —— handoff は aim と別であり、aim corpus に依存しない。これはセッションにつき一度だけ発火する。${seen}${owner}`
 }
 
 const raw = await readStdin()

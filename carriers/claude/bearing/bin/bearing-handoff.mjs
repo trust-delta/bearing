@@ -29,7 +29,8 @@ import { resolveUnit } from '../lib/unit.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import {
-  ACTIVE, ARCHIVE, activePath, archiveDir, batonDir, listArchive, moveFile, stampReadAt,
+  ACTIVE, ARCHIVE, activePath, archiveDir, batonDir, checkUnitRoot, listArchive, moveFile,
+  recordUnitRoot, stampReadAt,
   strandedBatons, writeBaton,
 } from '../lib/handoff.mjs'
 import { readBaton } from '../lib/baton.mjs'
@@ -51,6 +52,35 @@ const say = (...l) => out.push(...l)
  * aim を読み直して得られるのは*到達状態*であって*変化*ではない。**この差分だけが変化を
  * 運ぶ。**
  */
+/**
+ * dir の持ち主が食い違っている／読めないときに、それを声にする。
+ *
+ * 🔴 **平坦化は単射でない** —— `/w/a.b` と `/w/a-b` は同じ dir 名を得る ∴ **2 つの対話が
+ * 黙って同じ baton を共有しうる。** 名前の側では塞がない（読めることを取った帰結である）
+ * ∴ **塞ぐのではなく、起きたときに述べる。**
+ *
+ * ⚠ **`absent` では黙る。** 記録は 2026-09-06 に足したものであり、それ以前に生まれた dir が
+ * 記録を持たないのは正常である —— **不在を衝突として鳴らせば、既存の baton がすべて他所の
+ * ものに見え、本物の衝突がその中に埋もれる。**
+ */
+function sayUnitRootTrouble(check) {
+  if (!check || check.state === 'match' || check.state === 'absent') return
+  if (check.state === 'unreadable') {
+    say(
+      `- ⚠ **この dir の持ち主の記録が読めない**（\`${check.actual}\` として開いている）——`,
+      '  **食い違っていないことの確認は取れていない。**',
+    )
+    return
+  }
+  say(
+    '- 🔴 **この baton dir は別の unit root のものとして記録されている。**',
+    `  - 記録: \`${check.recorded}\``,
+    `  - いま開いている unit: \`${check.actual}\``,
+    '  ⚠ **平坦化は単射でない** ∴ 2 つの unit が同じ dir 名を得た可能性がある ——',
+    '  **これは別の対話の baton かもしれない。読む前に人間へ出すこと。**',
+  )
+}
+
 async function trace(unit) {
   const rows = []
   for (const repo of unit.repos) {
@@ -116,6 +146,8 @@ async function migrate(unitRoot) {
     return 0
   }
   await mkdir(archiveDir(unitRoot), { recursive: true })
+  // migrate も dir を作る側である ∴ ここでも持ち主を刻む（既に在れば触らない）。
+  await recordUnitRoot(unitRoot)
 
   const moved = []
   const kept = []
@@ -223,6 +255,9 @@ async function main() {
       '数を surface すること。',
       '',
     )
+    // ⚠ **不在の報告こそ、衝突が最も危険な形で効く場面である** —— 他所の unit が同じ dir を
+    // 使っていれば、こちらの baton はあちらの `write` に退避されて消えている。
+    sayUnitRootTrouble(await checkUnitRoot(unit.root))
     await trace(unit)
     return 0
   }
@@ -230,6 +265,7 @@ async function main() {
   // ⚠ 手順 3 より先に手順 2。先に刻めば、報告すべき値を破壊してしまう。
   const stamp = await stampReadAt(unit.root)
   say(`baton: \`${baton.path}\``)
+  sayUnitRootTrouble(baton.unitRoot)
   if (baton.composedAt) say(`- composed-at: \`${baton.composedAt}\``)
   if (stamp?.previousReadAt) {
     say(

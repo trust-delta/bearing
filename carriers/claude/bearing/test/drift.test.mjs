@@ -106,16 +106,35 @@ test('stripCodeSpans removes fenced blocks as well as inline spans', () => {
 
 test('both fences are emitted even with no candidates', () => {
   assert.equal(
-    renderIntraFence([]),
+    renderIntraFence([], 3),
     '```bearing-drift-intra v1\n' +
       '# fields: slug | anchor_commit | body_moved\n' +
       '# none — anchor が変更され、以後そのまま放置された record は無い\n' +
       '```\n\n',
   )
   assert.match(
-    renderInterFence([]),
+    renderInterFence([], [], 3),
     /# none — 変更された anchor の隣接は、すべてその後に動いているか照合済みである/,
   )
+})
+
+// ⚠ **候補 0 件は 2 つの出自を持つ。** 「見たが残らなかった」と「見るものが無かった」を
+// 同じ空欄で出せば、履歴の浅い corpus では沈黙が健全さの証言に化ける。
+test('an empty scan is worded apart from a clean one, in both fences', () => {
+  assert.match(renderIntraFence([], 0), /anchor が変更された record がまだ 1 つも無い/)
+  assert.match(renderInterFence([], [], 0), /anchor 履歴と隣接の両方を持つ record がまだ無い/)
+
+  // 陽性対照: 母数が在れば、従来どおり「照合済み」と述べる。
+  assert.match(renderIntraFence([], 1), /以後そのまま放置された record は無い/)
+  assert.match(renderInterFence([], [], 1), /すべてその後に動いているか照合済みである/)
+})
+
+// ⚠ 知らないことを「ズレ無し」へ畳むのは、`bodyMoved` の null を false へ畳むのと同じ嘘。
+test('a caller that does not know the scan size claims neither', () => {
+  for (const out of [renderIntraFence([]), renderInterFence([])]) {
+    assert.match(out, /記録されていない ∴ ズレ無しとは読めない/)
+    assert.doesNotMatch(out, /照合済み|生じえない/)
+  }
 })
 
 test('an unreadable body diff renders as unknown, never as false', () => {
@@ -155,6 +174,56 @@ test('an anchor modified with nothing since is an intra candidate', async (t) =>
   const facts = await gatherDrift(root)
   assert.deepEqual(facts.intra.map((r) => r.slug), ['alpha'])
   assert.equal(facts.intra[0].bodyMoved, false)
+})
+
+// ⚠ **「噛む履歴が無い」を実際の repo で固定する。** 描画の test だけでは、`scanned` が
+// 何を数えているかは押さえられない —— 数える側が壊れれば、文言は正しいまま嘘になる。
+test('a corpus where nothing was ever revised reports an empty intra scan', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'alpha', 'a purpose never revised')
+  await writeAim(root, 'beta', 'another purpose never revised')
+  commit(root, 'born')
+
+  const facts = await gatherDrift(root)
+  assert.deepEqual(facts.intra, [])
+  assert.equal(facts.scanned.intra, 0)
+  // 隣接を 1 つも持たない ∴ inter も原理的に生じえない。
+  assert.equal(facts.scanned.inter, 0)
+  assert.match(renderIntraFence(facts.intra, facts.scanned.intra), /まだ 1 つも無い/)
+  assert.match(renderInterFence(facts.inter, [], facts.scanned.inter), /まだ無い/)
+})
+
+// 陽性対照: 同じ材料で、revise が 1 度でも在れば母数は 0 でなくなる。
+test('one revision is enough to make the intra scan non-empty', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'alpha', 'first purpose')
+  commit(root, 'born')
+  await writeAim(root, 'alpha', 'second purpose')
+  commit(root, 'repurpose')
+  await writeAim(root, 'alpha', 'second purpose', { body: 'brought back to the purpose' })
+  commit(root, 'realign')
+
+  // ⚠ **候補ではないが、母数には入る** —— まさにここが「見たが残らなかった」である。
+  const facts = await gatherDrift(root)
+  assert.deepEqual(facts.intra, [])
+  assert.equal(facts.scanned.intra, 1)
+  assert.match(renderIntraFence(facts.intra, facts.scanned.intra), /以後そのまま放置された/)
+})
+
+// ⚠ 一緒に生まれた対は「照合済み」であって「見るものが無かった」ではない。
+test('neighbours born together count as scanned, not as an empty scan', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born together')
+
+  const facts = await gatherDrift(root)
+  assert.deepEqual(facts.inter, [])
+  assert.equal(facts.scanned.inter, 2)
+  assert.match(renderInterFence(facts.inter, [], facts.scanned.inter), /照合済みである/)
 })
 
 test('body_moved reports the fact, and a body edit in the same commit sets it', async (t) => {
@@ -290,7 +359,14 @@ test('a clean corpus with no anchor history yields empty fences, not null', asyn
   commit(root, 'born')
 
   const facts = await gatherDrift(root)
-  assert.deepEqual(facts, { intra: [], inter: [], brokenCollations: [] })
+  // ⚠ **空 fence であることと、健全であることは別である** —— ここは前者だけを述べる。
+  // `scanned` が 0 ゆえ、fence の文言は「まだ生じえない」側になる。
+  assert.deepEqual(facts, {
+    intra: [],
+    inter: [],
+    brokenCollations: [],
+    scanned: { intra: 0, inter: 0 },
+  })
 })
 
 // ── 照合記録 ────────────────────────────────────────────────────────────────

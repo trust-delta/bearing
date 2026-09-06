@@ -158,8 +158,11 @@ function renderRepo(r) {
     say('```bearing-drift-intra v1', '# unavailable — この repo の git を読めなかった。',
         '# ⚠ clean ではなく「不在」である: これを「drift 無し」と読まないこと。', '```', '')
   } else {
-    say(renderIntraFence(r.drift.intra).trimEnd(), '')
-    say(renderInterFence(r.drift.inter, r.drift.brokenCollations).trimEnd(), '')
+    say(renderIntraFence(r.drift.intra, r.drift.scanned?.intra ?? null).trimEnd(), '')
+    say(
+      renderInterFence(r.drift.inter, r.drift.brokenCollations, r.drift.scanned?.inter ?? null).trimEnd(),
+      '',
+    )
   }
   say(renderWorkingDeltaFence(r.working).trimEnd(), '')
   say(renderUnpushedFence(r.unpushed).trimEnd(), '')

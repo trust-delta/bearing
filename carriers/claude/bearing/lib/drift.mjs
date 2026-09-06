@@ -160,12 +160,19 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
   const intra = []
   const inter = []
   const brokenCollations = []
+  // ⚠ **絞り込みが何件に対して働いたかを数える。** 候補 0 件には出自の異なる 2 つが
+  // 畳まれている ——「見たが残らなかった」と「見るものが無かった」であり、後者では
+  // **絞り込みは一度も走っていない** ∴ 沈黙を「健全」と読ませてはならない。
+  let intraScanned = 0
+  let interScanned = 0
   for (const slug of [...live.keys()].sort()) {
     const anchor = lastAnchorTouch.get(slug)
     if (!anchor) continue
 
     // intra: anchor が*変更*され（誕生 commit ではなく）、以後何も無いもの。
-    if (anchor !== birth.get(slug) && lastTouch.get(slug) === anchor) {
+    const anchorChanged = anchor !== birth.get(slug)
+    if (anchorChanged) intraScanned++
+    if (anchorChanged && lastTouch.get(slug) === anchor) {
       intra.push({ slug, commit: anchor, bodyMoved: await bodyMovedIn(repoRoot, anchor, slug) })
     }
 
@@ -174,7 +181,11 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
     const co = touchedIn.get(anchor) ?? new Set()
     const { collated, broken } = readCollations(live.get(slug), order)
     for (const b of broken) brokenCollations.push({ slug, ...b })
-    const stale = graph.neighbours(slug).filter((n) => {
+    const neighbours = graph.neighbours(slug)
+    // ⚠ **隣接を持たない node は、この種のズレを原理的に生じえない** ∴ 絞り込みの母数に
+    // 入れない —— 入れれば「見た」と数えたことになる。
+    if (neighbours.length > 0) interScanned++
+    const stale = neighbours.filter((n) => {
       if (co.has(n)) return false
       // ⚠ **照合済みの対は候補ではない。** 「検査したが変更不要だった」は何も動かさない
       // ∴ file の移動だけを見る絞り込みでは永久に落ちず、**既に見た者へ「見よ」と言い
@@ -186,7 +197,7 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
     })
     if (stale.length > 0) inter.push({ slug, commit: anchor, stale: stale.sort() })
   }
-  return { intra, inter, brokenCollations }
+  return { intra, inter, brokenCollations, scanned: { intra: intraScanned, inter: interScanned } }
 }
 
 /**
@@ -231,10 +242,42 @@ function readCollations(record, order) {
 
 const short = (sha) => sha.slice(0, 8)
 
-export function renderIntraFence(items) {
+/**
+ * 候補 0 件の 1 行を組む。
+ *
+ * 🔴 **「ズレ無し」と「噛む履歴が無い」は、同じ空欄で出してはならない。** 履歴の浅い
+ * corpus では絞り込みが一度も走らないのに、fence は「すべて照合済みである」と述べて
+ * いた —— ⚠ **沈黙が健全さの証言に化ける形**であり、この機構が他の面で一貫して拒んで
+ * きたものと同じである。
+ *
+ * ⚠ **`scanned` を知らない呼び出しは、どちらとも述べない。** 知らないことを「ズレ無し」
+ * へ畳むのは、`bodyMoved` の `null` を `false` へ畳むのと同じ嘘である。
+ *
+ * @param {number|null} scanned 絞り込みが働いた母数。`null` は「記録されていない」
+ * @param {string} empty 母数が 0 のときの理由
+ * @param {string} clean 母数が 1 以上あり、そのうえで残らなかったときの理由
+ */
+function noneLine(scanned, empty, clean) {
+  if (scanned === null || scanned === undefined) {
+    return '# none — 絞り込みが何件に対して働いたかが記録されていない ∴ ズレ無しとは読めない'
+  }
+  return `# none — ${scanned === 0 ? empty : clean}`
+}
+
+/**
+ * @param {{slug: string, commit: string, bodyMoved: boolean|null}[]} items
+ * @param {number|null} scanned `gatherDrift` の `scanned.intra`
+ */
+export function renderIntraFence(items, scanned = null) {
   const lines = [FENCE + INTRA_FENCE_TAG, '# fields: slug | anchor_commit | body_moved']
   if (items.length === 0) {
-    lines.push('# none — anchor が変更され、以後そのまま放置された record は無い')
+    lines.push(
+      noneLine(
+        scanned,
+        'anchor が変更された record がまだ 1 つも無い ∴ この種のズレはまだ生じえない',
+        'anchor が変更され、以後そのまま放置された record は無い',
+      ),
+    )
   } else {
     for (const it of items) {
       const moved = it.bodyMoved === null ? 'unknown' : String(it.bodyMoved)
@@ -248,8 +291,9 @@ export function renderIntraFence(items) {
 /**
  * @param {{slug: string, commit: string, stale: string[]}[]} items
  * @param {{slug: string, slug2?: string, sha: string, why: string}[]} broken 読めない照合記録
+ * @param {number|null} scanned `gatherDrift` の `scanned.inter`
  */
-export function renderInterFence(items, broken = []) {
+export function renderInterFence(items, broken = [], scanned = null) {
   const lines = [
     FENCE + INTER_FENCE_TAG,
     '# fields: slug | anchor_commit | unreconciled_neighbours (comma-separated)',
@@ -261,7 +305,13 @@ export function renderInterFence(items, broken = []) {
     lines.push(`# ⚠ 読めない照合記録: ${b.slug} が [[${b.neighbour}]] @ ${b.sha} —— ${b.why}`)
   }
   if (items.length === 0) {
-    lines.push('# none — 変更された anchor の隣接は、すべてその後に動いているか照合済みである')
+    lines.push(
+      noneLine(
+        scanned,
+        'anchor 履歴と隣接の両方を持つ record がまだ無い ∴ この種のズレはまだ生じえない',
+        '変更された anchor の隣接は、すべてその後に動いているか照合済みである',
+      ),
+    )
   } else {
     for (const it of items) {
       lines.push(`${it.slug} | ${short(it.commit)} | ${it.stale.join(',')}`)

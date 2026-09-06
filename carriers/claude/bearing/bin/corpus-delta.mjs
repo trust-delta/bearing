@@ -119,8 +119,10 @@ async function historyFences(repo) {
         '# ⚠ clean ではなく「不在」である: これを「drift 無し」と読まないこと。\n```',
     )
   } else {
-    blocks.push(renderIntraFence(drift.intra).trimEnd())
-    blocks.push(renderInterFence(drift.inter, drift.brokenCollations).trimEnd())
+    blocks.push(renderIntraFence(drift.intra, drift.scanned?.intra ?? null).trimEnd())
+    blocks.push(
+      renderInterFence(drift.inter, drift.brokenCollations, drift.scanned?.inter ?? null).trimEnd(),
+    )
   }
   blocks.push(renderUnpushedFence(unpushed).trimEnd())
   blocks.push(renderCheckpointFence(checkpoint).trimEnd())
