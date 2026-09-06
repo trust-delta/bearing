@@ -60,6 +60,8 @@ HTML コメントゆえ、この宣言は消費者の context を 1 token も食
 
 ⚠ **この決定の費用は、いま消費者が少ないことに支えられている。** **現時点の消費者は人間本人とその管理下の repo だけである**（人間の証言 2026-09-06）∴ 置いたものが古くなっても、⚠ **気づける人間と直せる人間が同一である。** 🔴 **この前提は増えれば偽になる** —— 他者の repo が採った日から、**「条項が 1 つ減った」を消費者へ伝える面が無いことは、限定的な影響ではなくなる。** ⚠ **∴ これは恒久の事実ではなく、失効しうる前提として置いてある** —— **破壊的変更が安いかどうかを次に測る者は、まずこの 1 行がまだ真かを人間に確かめること。** ⚠ **再測は人間に訊く以外に無い** —— **採用は untracked な marker として消費者側にしか残らず、この repo からは原理的に数えられない。**
 
+⚠ **2026-09-06、実際に再測した —— まだ真である**（人間の証言）。⚠ **そのとき前提は 1 段鋭くなった**: 「消費者が少ない」ではなく **「最重要の消費者は人間本人であり、それがこの repo である」**。∴ **破壊的変更の費用が安いのは数が少ないからではなく、⚠ 気づく人間・直す人間・その変更で最も得をする人間が同一だからである。** 🔴 **∴ この前提が偽になるのは消費者が増えた日ではなく、*本人以外が最重要の消費者になった日*である** —— **数を数えても、その日は分からない。**
+
 **block は path ではなく skill 名を指す。** ⚠ **path を書けば version で腐る** —— plugin の cache path は version を含み、**cache は旧版を消さない**（実測 2026-09-04、1 台に 9 版）。⚠ **`${CLAUDE_PLUGIN_ROOT}` は hook の `command` と skill / command の本文では展開されるが、`CLAUDE.md` での展開は測っていない** —— そして `CLAUDE.md` は commit される。**skill 名は version を持たない ∴ commit しても嘘にならない。** ⚠ **skill が無いときの手当ては書かない** —— それは開示であり、repo のものである。
 
 ⚠ **規律が corpus の中に住まなくなる。** `.claude/skills/aim/` は「repo が自分のエージェントに与える指示」の置き場であり、`docs/aims/_guide/` のように corpus の中へ規律を混ぜない。⚠ **`docs/aims/_guide/` は廃される** —— あそこは bearing の build の源でありながら、bearing 自身の消費者側 canon でもあった。**同じ dir が 2 つの役を持っていたことが、複製の矢印が逆を向いた原因である**（`# HISTORY`）。正本は `original/<単位>/` へ集め（`aim` / `handoff` / `statusline`）、carrier の `skills/` と `commands/` はすべてそこからの生成物になる ∴ **bearing 自身の `.claude/skills/aim/` も置かれたものになり、bearing は自分の消費者の 1 つになる。** ⚠ **`original/` そのものは翌 2026-09-05 に畳まれた**（人間の決定。下段）—— **だがこの段の帰結は畳んでも動かない**: bearing が自分の消費者の 1 つになることは、正本がどこに住むかに依らない。
@@ -94,6 +96,12 @@ HTML コメントゆえ、この宣言は消費者の context を 1 token も食
 - [done] **statusline の shim が「載っていない」と描くとき、install の scope を勧めない。** `absentLine()` の `--scope project` を落とす —— scope は install する人間のものである
 - [done] **正本を `original/<単位>/` へ集め、`docs/aims/_guide/` を廃し、carrier の `skills/` と `commands/` を生成物にする。** ⚠ **aim の規律は `skills/` ではなく `templates/` へ写す** —— `skills/` に置けば `bearing:aim` として登録され、`setup-aim` が置いた `aim` と同じ規律が 2 つの skill として並ぶ。`gen/claude-plugin.sh` は純粋な複製になり、正本の無い生成物が残っていれば拒む。`test/original-sync.test.mjs` が byte 同一を見る。 ⚠ `scripts/classify-paths.mjs` の `GENERATED` に `commands/` を足すこと —— さもないと生成物の変更が code 扱いで PR を要求する。⚠ **2026-09-05、`original/` は畳まれた**（人間の決定）—— **中立は測ったら名目だった**（11 枚のうち Claude 固有語 0 件は 3 枚だけで、`setup-*.md` は `.claude/` と statusLine と plugin cache を語る Claude 専用の command そのものである）∴ **複製が複製であることを守るためだけに門を 3 つ持っていた。** `carriers/claude/bearing/` が正本になり、`gen/` は消え、`scripts/carrier-check.sh`（LICENSE の一致・参照の解決）が残った。⚠ **2 つ目の carrier が要る日は `carriers/claude/` を正本として派生させる** ——「中立を先に作る」のではなく「Claude を優先し、他 vendor にも対応可能にする」。⚠ **`docs/aims/_guide/` を廃した理由（同じ dir が 2 つの役を持っていた）は、この反転では戻らない** —— carrier は bearing 自身の消費者側 canon ではなく、それは `.claude/skills/aim/` である。⚠ **`GENERATED` は空にならず、中身が入れ替わった** —— carrier の md は docs へ、`.claude/skills/` が置かれた複製の側へ移った
 - [done] **bearing 自身の `.claude/` を tracked にした。** `.gitignore` は `.claude/**/*.local.json` だけを閉じる。⚠ **極性の反転ゆえ、危険も反転したことを見出しに書いた** —— 以後は**閉じ忘れが公開になる**。置かれた 3 枚は `templates/aim/` と byte 同一であることを `test/placed-skill-sync.test.mjs` が固定し、`scripts/classify-paths.mjs` は `.claude/skills/` を「置かれた複製」（docs 扱い・同期の検証が前提）として扱う。⚠ **`.claude/settings.json` は開けていない** —— あれは置かれた複製ではなく harness の設定であり、動けば docs の変更ではない
+
+# OBSERVATION
+
+- **採用を宣言していない自分の repo でセッションを立て、bearing 由来の出力が 1 行も画面に出ないことを見る。** ⚠ **hook の 0 byte は実測済みだが**（2026-09-05）、**それは出力の不在であって、人間の画面の不在ではない** —— 面は hook だけではない。
+- **置かれた block 10 行を、aim を知らない読み手として読む。** 他人が clone したときに、これが repo の開示として妥当か。⚠ **書いた側には読めない観測である。**
+- 🔴 **`# IS` の「現時点の消費者は人間本人とその管理下の repo だけ」がまだ真か**（人間の証言 2026-09-06）。⚠ **これは失効しうる前提であり、破壊的変更の費用がそこに乗っている** —— **再測は人間に訊く以外に無い**（採用は untracked な marker として消費者側にしか残らず、この repo からは原理的に数えられない）。
 
 # HISTORY
 

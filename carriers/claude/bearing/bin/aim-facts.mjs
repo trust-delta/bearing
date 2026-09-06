@@ -38,7 +38,7 @@ import { fileURLToPath } from 'node:url'
 import { readAimGraph, readAimSlugs } from '../lib/corpus.mjs'
 import { runGit } from '../lib/git.mjs'
 import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
-import { gatherBacklog, renderAwaitingFence } from '../lib/process.mjs'
+import { gatherBacklog, renderAwaitingDeclarationFence } from '../lib/process.mjs'
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { gatherWorkingDelta, renderWorkingDeltaFence } from '../lib/working-delta.mjs'
 import { gatherUnpushed, renderUnpushedFence } from '../lib/unpushed.mjs'
@@ -246,6 +246,10 @@ async function main(input) {
   const emptyEscalation = withCorpus.flatMap((r) =>
     (r.backlog.escalationEmptyNodes ?? []).map((slug) => `${r.label}/${slug}`),
   )
+  const observation = withCorpus.reduce((n, r) => n + (r.backlog.observationNodes?.length ?? 0), 0)
+  const emptyObservation = withCorpus.flatMap((r) =>
+    (r.backlog.observationEmptyNodes ?? []).map((slug) => `${r.label}/${slug}`),
+  )
   // ⚠ unit を横断して 1 枚に畳む。repo ごとに割ると、**番が渡っている node の総数**という
   // 唯一意味のある読み方が失われる —— 観測するのは人間であって、repo ではない。
   const awaiting = withCorpus.flatMap((r) =>
@@ -382,7 +386,7 @@ async function main(input) {
     )
     // ⚠ **open-todo の直後に置く。** 数が 0 でも「番が人間へ渡っている」ことが
     // 同じ視野に入らねばならない —— 離せば、0 が「何も残っていない」と読まれる。
-    say(renderAwaitingFence(awaiting).trimEnd(), '')
+    say(renderAwaitingDeclarationFence(awaiting).trimEnd(), '')
     if (awaiting.length > 0) {
       say(
         '⚠ **上の node はエージェントが尽くしている ∴ 残っているのは人間の観測と',
@@ -390,6 +394,20 @@ async function main(input) {
         'どうかを述べられるのは人間だけであり、この一覧はそれを一切先取りしない。**',
         '',
       )
+      // ⚠ **番だけを渡して材料を渡していない行を名指す。** これは triage ではない ——
+      // どれを先にやれとも、どれが重いとも述べていない。**述べているのは「この node は
+      // 人間に見るべきものを 1 つも渡していない」という corpus の欠陥の所在だけ**である。
+      const blind = awaiting.filter((a) => !(a.observations > 0))
+      if (blind.length > 0) {
+        say(
+          `⚠ **うち ${blind.length} 件は \`# OBSERVATION\` の票を 1 枚も持たない**: ` +
+            blind.map((a) => a.slug).join(', '),
+          '**番は渡っているが、何を見れば満たされたと言えるかが書かれていない** ∴ 人間は',
+          'node を頭から読み直すしかない。⚠ **これは人間の読み落としではなく corpus の欠陥で**',
+          '**あり、票を書くのはエージェントの仕事である。**',
+          '',
+        )
+      }
     }
     // ⚠ **同じ視野に置く 3 つ目。** 正本は「観測を可能にする作業は PROCESS、判断そのものは
     // ESCALATION、そして観測と宣言は人間」と分けている ∴ **上の 2 つだけを出す面は、その
@@ -414,6 +432,27 @@ async function main(input) {
           emptyEscalation.join(', '),
         '**上の数には入っていない。** 節を書き始めて止めたのか、既決を IS へ畳んだ後の残骸か',
         'は、ここからは分からない —— どちらであるかを決めるのは、その node を読む者である。',
+        '',
+      )
+    }
+    // ⚠ **`escalation` の直後に置く。** 2 つは「番」と「材料」で対になっており、離せば
+    // 「誰の番か」だけが読まれて「渡す材料が在るか」が落ちる。
+    say(
+      `**observation: ${observation}** —— \`# OBSERVATION\` に中身を持つ aim node の数`,
+      '（`state: dead` は除く）。1 node につき 1 回数える。**「人間が何を見れば、この aim が',
+      '満たされたと言えるか」だけがそこに書かれる** ∴ ⚠ **この数は「番」ではなく**',
+      '**「材料」を数えており、上の 2 つとは別の軸にある。** 票の枚数を運ぶのは上の fence の',
+      '`observations` 列だけである。',
+      '',
+      '**この数も surface せよ。triage も ranking も、どれから書くべきかの提案もするな。**',
+      '',
+    )
+    if (emptyObservation.length > 0) {
+      say(
+        `⚠ **\`# OBSERVATION\` 見出しを持つが中身が空の node が ${emptyObservation.length} 件**: ` +
+          emptyObservation.join(', '),
+        '**上の数には入っていない。** `# ESCALATION` の空見出しと同じ法である —— 読みに行っても',
+        '何も書かれていないものを「材料が在る」として数えない。だが黙って落としもしない。',
         '',
       )
     }

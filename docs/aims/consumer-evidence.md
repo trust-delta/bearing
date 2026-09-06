@@ -47,6 +47,12 @@ state: open
 - [done] **`setup-aim` を temp repo に打ち、置かれた block と `.claude/skills/aim/` が出荷 template と byte 同一であることを job が固定した。** 既に `CLAUDE.md` が在る／既に `.claude/skills/aim/` が在る、の 2 形も通る。⚠ **2 度目は中身も mtime も動かないことまで見る** —— 書き直して同じ byte を置く実装は「触らない」ではない。⚠ **足りない枚を補わないことも見る** —— 何を持つかはその repo が決めている
 - [done] **その job が「何を覆っていないか」を同じ出力で述べる。** 6 つを名指す: cache そのものではないこと（出荷 copy は checkout からの複製である）／走ったのは 1 platform・1 node 版だけであること／statusline の probe が通るのは platform 既定のシェルであって harness のそれではないこと／ハーネスの登録（置いた skill・`$ARGUMENTS`・plugin の skill 一覧が固まる時点）は覆えないこと／plugin 不在の場で block がどう読まれるかは検査の対象ではないこと（repo の開示である）／browser の面は 1 行も走らせていないこと
 
+# OBSERVATION
+
+- **管理下の別 repo で実際に受け取り、`/bearing:setup-aim` を打って block と `.claude/skills/aim/` が置かれるのを見る。** ⚠ **job が立てるのは合成した消費者であって実機ではない** —— job 自身が「cache そのものではない」と述べている。
+- **job が挙げる「覆っていない 6 つ」が、受け入れられる残りか**（1 platform・1 node 版／harness のシェルではない／ハーネスの登録／browser の面 ほか）。⚠ **どこまでの穴を負うかは目的の問いであり、job は決めない。**
+- **win32 の実機で通るか。** ⚠ **2026-09-04 に出た 4 件の不具合のうち 2 件は、人間が別マシン・別 browser で踏んで初めて出た**（win32 の path 形・UNC 越しの picker 拒否）—— **CI は 1 つも再現できない。**
+
 # DAG
 
 - 関連: [[adoption-declaration]] —— あちらは**どこへ配るか**（install の scope と採用の宣言）を持ち、本 node は**配ったものが向こうで動くか**を持つ。⚠ **2 つは黙って食い違いうる**: 正しい scope で配られた壊れたものは、あちらの法をすべて満たす

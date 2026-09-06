@@ -286,3 +286,45 @@ test('the state file is keyed per session, so two sessions do not read each othe
     await rm(u.root, { recursive: true, force: true })
   }
 })
+
+test('観測票は、番と同じセッションの中で面に出る', () => {
+  // ⚠ **票を書くのは、最後の `[todo]` を `[done]` にしたまさにそのセッションである** ∴
+  // boot 時にしか出さなければ、**書いた当のセッションが自分の書いたものを面で見ないまま終わる。**
+  const body = renderCorpusDelta({
+    repos: [
+      {
+        label: 'r',
+        working: [],
+        backlog: {
+          openTodoNodes: 0,
+          observationNodes: ['rich'],
+          observationEmptyNodes: ['hollow'],
+          awaitingNodes: [
+            { slug: 'rich', doneMarks: 2, observations: 3, state: 'open' },
+            { slug: 'blind', doneMarks: 1, observations: 0, state: 'open' },
+          ],
+          unknownNodes: [],
+          anomalies: [],
+        },
+      },
+    ],
+    moved: [],
+    hadBaseline: true,
+  })
+  assert.match(body, /observation: 1/)
+  assert.match(body, /中身が空の node が 1 件.*r\/hollow/s)
+  // ⚠ **番だけを渡して材料を渡していない行を名指す。** これは triage ではない ——
+  // どれが重いとも述べておらず、述べているのは corpus の欠陥の所在だけである。
+  assert.match(body, /1 件は `# OBSERVATION` の票を 1 枚も持たない.*blind/s)
+  assert.ok(!body.includes('undefined'))
+})
+
+test('観測票の無い backlog は 0 と描かれ、`undefined` にならない', () => {
+  const body = renderCorpusDelta({
+    repos: [{ label: 'r', working: [], backlog: { openTodoNodes: 1, unknownNodes: [], anomalies: [] } }],
+    moved: [],
+    hadBaseline: true,
+  })
+  assert.match(body, /observation: 0/)
+  assert.ok(!body.includes('undefined'))
+})
