@@ -50,8 +50,9 @@ claude plugin marketplace add https://github.com/trust-delta/bearing.git --scope
 claude plugin install bearing@trust-delta --scope user
 ```
 
-Then **restart the process** — the skill and hook inventories are fixed once the process first
-resolves them (measured 2026-09-04, one machine). ⚠ **`/clear` is not enough**: it starts a new
+Then **restart the process** — the inventories are fixed once the process first resolves them
+(⚠ **measured 2026-09-04, one machine; what was measured is the slash-command surface** — no
+equivalent A/B was ever run for skills or hooks). ⚠ **`/clear` is not enough**: it starts a new
 session, not a new process, so the version you just installed will not be loaded in it.
 
 ⚠ **Declaring `enabledPlugins` is not the same as loading it.** With no record in
@@ -100,7 +101,10 @@ claude plugin update bearing@trust-delta
 ```
 
 Then **restart the process** — ⚠ **`/clear` is not enough** (same reason as above). `claude plugin
-update` says so itself: `(restart required to apply)`.
+update` says so itself: `(restart required to apply)`. ⚠ **But the surfaces have different time
+constants** — **an already-loaded skill resolved to the new version within the same process**
+(measured 2026-09-06, target: the plugin cache, one machine) ∴ **restarting is the safe order, not
+a requirement of every surface.**
 
 ⚠ **Do not count on the startup pull.** Even with `"autoUpdate": true` declared on the
 `extraKnownMarketplaces` entry, **there were days it pulled and days it did not** (measured, one

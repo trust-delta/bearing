@@ -47,8 +47,9 @@ claude plugin marketplace add https://github.com/trust-delta/bearing.git --scope
 claude plugin install bearing@trust-delta --scope user
 ```
 
-そのうえで**プロセスごと開き直す** —— skill と hook の一覧は**プロセスが最初に解決した時点で
-固まる**（実測 2026-09-04、1 台）。⚠ **`/clear` では足りない** —— あれは新しいセッションを立てる
+そのうえで**プロセスごと開き直す** —— 一覧は**プロセスが最初に解決した時点で固まる**（⚠ **実測
+2026-09-04、1 台。対象は slash command の面である** —— skill と hook について同型の A/B は取れて
+いない）。⚠ **`/clear` では足りない** —— あれは新しいセッションを立てる
 が、**新しいプロセスを立てない** ∴ いま入れた版は、そのセッションには載らない。
 
 ⚠ **`enabledPlugins` の宣言は「載せる」ことではない。** `installed_plugins.json` に record が
@@ -94,7 +95,9 @@ claude plugin update bearing@trust-delta
 ```
 
 そして**プロセスごと開き直す** —— ⚠ **`/clear` では足りない**（同上）。`claude plugin update`
-自身が `(restart required to apply)` と述べている。
+自身が `(restart required to apply)` と述べている。⚠ **ただし面ごとに時定数が違う** —— **既に載って
+いる skill の実体は、同一プロセスの中で新しい版へ追随した**（実測 2026-09-06、対象: plugin cache、
+1 台）∴ **開き直すのは安全側の作法であって、全ての面がそれを要するという意味ではない。**
 
 ⚠ **起動時の自動 pull は当てにしないこと。** `extraKnownMarketplaces` に `"autoUpdate": true`
 を宣言していても、**引かれる日と引かれない日があった**（実測、1 台）∴ 更新が要るときは上の
