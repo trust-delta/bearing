@@ -64,10 +64,18 @@ details` は record が無くても版も skill も hook も列挙する ∴ 載
 /bearing:setup-aim --check           # 状態だけ述べる
 /bearing:setup-aim --remove          # block を外す（skill は残す —— 置いた後はこの repo のもの）
 /bearing:setup-aim --dir proj/aims   # corpus の在り処を宣言する（既定は docs/aims）
+/bearing:setup-aim --update          # block と skill を同時に今の版へ揃える（置かれた 3 枚は捨てる）
 ```
 
 ⚠ **書き先は実行した project である** —— aim の採用はその repo の corpus についての宣言ゆえ、repo にしか置けない。
-⚠ **置いた後は block も skill もこの repo のもの** —— track するか・直すか・古いままにするかは repo が決め、plugin は追随させない。
+⚠ **置いた後は block も skill もこの repo のもの** —— track するか・直すか・古いままにするかは repo が決める。
+
+🔴 **block と skill は 1 組である**（人間の決定 2026-09-07）—— **更新するなら両方、しないなら
+どちらも維持であり、どちらにするかは aim を使う側が決める。** ⚠ **理由は保有 corpus である**:
+版が上がることは doc の差し替えではなく、**手元の aim node の書き換えを伴いうる act** だからで
+ある。∴ 置かれた skill が同梱の正本と一致しなければ、`setup-aim` は **block も触らずに止まる**
+——「版が古い」のか「この repo が手を入れた」のかを区別する手段が無い以上、黙って捨てないため
+である。**両方を揃えるのは `--update`**。
 
 ⚠ **marker は HTML コメント ∴ context を 1 token も食わない。** 版と本文 sha を運ぶので、
 `--check` は**「版が古い」と「人間が block を編集した」を別のものとして述べる** —— 後者では

@@ -1,6 +1,6 @@
 ---
-description: この project で aim の規律を採る —— 書き先は実行した project。CLAUDE.md の末尾へ marker 付きの法を差し込み、.claude/skills/aim/ へ aim skill を置く。置いた後はどちらもこの repo のもの
-argument-hint: "[--dir <path>] [--check | --remove]"
+description: この project で aim の規律を採る —— 書き先は実行した project。CLAUDE.md の末尾へ marker 付きの法を差し込み、.claude/skills/aim/ へ aim skill を置く。置いた後はどちらもこの repo のものであり、block と skill は 1 組として動く
+argument-hint: "[--dir <path>] [--check | --remove | --update]"
 allowed-tools: Bash(bearing-setup-aim.mjs:*)
 disable-model-invocation: true
 ---
@@ -11,7 +11,9 @@ disable-model-invocation: true
 bearing-setup-aim.mjs $ARGUMENTS
 ```
 
-⚠ **書き先は、これを実行した project である** —— `CLAUDE.md` の末尾（marker 付きの法の block）と `.claude/skills/aim/`（aim skill）。これは scope の選択ではなく置くものの性質による: aim の採用はその repo の corpus についての宣言ゆえ、repo にしか置けない。⚠ **置いた後はどちらもこの repo のものである。** track するか・直すか・古いままにするかは repo が決め、plugin は追随させない。
+⚠ **書き先は、これを実行した project である** —— `CLAUDE.md` の末尾（marker 付きの法の block）と `.claude/skills/aim/`（aim skill）。これは scope の選択ではなく置くものの性質による: aim の採用はその repo の corpus についての宣言ゆえ、repo にしか置けない。⚠ **置いた後はどちらもこの repo のものである。** track するか・直すか・古いままにするかは repo が決める。
+
+🔴 **block と skill は 1 組である**（人間の決定 2026-09-07）—— **更新するなら両方、しないならどちらも維持であり、どちらにするかは aim を使う側が決める。** ⚠ **理由は保有 corpus である**: 版が上がることは doc の差し替えではなく、**手元の aim node の書き換えを伴いうる act** だからである。∴ 置かれた skill が同梱の正本と一致しないとき、この CLI は **block も触らずに止まる** —— 「版が古い」のか「この repo が手を入れた」のかを区別する手段が無い以上、黙って捨てないためである。**両方を今の版へ揃えるのは `--update`** であり、それは置かれた 3 枚を捨てる。
 
 ⚠ **採用していない project では、aim の機構は口を開かない** —— `docs/aims/` を持っていても黙る。**corpus が在ることは*使っている証拠*であって、この機構を通したいという宣言ではない**（人間の決定 2026-09-05）∴ **`--remove` はそのまま「通さない」を意味する** —— 専用の「降りる」宣言は要らない。⚠ **statusline の 2 行目だけは、corpus を見つけたことを 1 行述べる** —— 黙る機構は自分の存在を告げられないからである。⚠ **未読の baton も述べ続ける** —— handoff は aim に依存せず、どの project でも使える。
 
@@ -19,6 +21,6 @@ bearing-setup-aim.mjs $ARGUMENTS
 
 ⚠ **`CLAUDE_PLUGIN_ROOT` を波括弧つきで書いてはならない** —— この command 本文でも **inline 展開される**（2026-09-03 に実測。docs の表は command を挙げていないが、実際には置換される）∴ 散文の中に書けば、注意書きが**その場で実 path に化けて意味を失う。**
 
-出力はそのまま人間に見せること。書き先・既存 block の扱い・置き直しの可否・既に在る skill を触らなかったこと —— すべて CLI 側が述べる。⚠ **この command が代わりに要約しない** —— **触らずに止まった**という報告は、成功の報告よりも読まれる必要がある。
+出力はそのまま人間に見せること。書き先・既存 block の扱い・置き直しの可否・skill が正本と一致するか —— すべて CLI 側が述べる。⚠ **この command が代わりに要約しない** —— **触らずに止まった**という報告は、成功の報告よりも読まれる必要がある。
 
-⚠ **CLI が「置き直さない」と述べたときに、その理由を回避する手を勝手に採ってはならない。** block の本文が marker の sha と食い違うのは **人間がそこを編集した**という意味であり、置き直せばその編集が消える。**どうするかは人間が決める。**
+⚠ **CLI が「置き直さない」「一致しない」と述べたときに、その理由を回避する手を勝手に採ってはならない。** block の本文が marker の sha と食い違うのは **人間がそこを編集した**という意味であり、置き直せばその編集が消える。⚠ **`--update` を自分の判断で足してはならない** —— あれは**置かれた 3 枚を捨てる**うえ、**手元の aim node の書き換えを呼ぶ**。**どうするかは人間が決める。**

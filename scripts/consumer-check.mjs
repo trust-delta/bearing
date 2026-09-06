@@ -255,7 +255,7 @@ async function main() {
     }
     const r = setupAim(plain)
     must(r.status === 0, `exit=${r.status}`)
-    must(/既に在る ∴ 触らない/.test(r.stdout), `触らないと述べていない: ${r.stdout}`)
+    must(/一致する ∴ 触らない/.test(r.stdout), `触らないと述べていない: ${r.stdout}`)
     must(await readFile(md, 'utf8') === before.md, 'CLAUDE.md の中身が動いた')
     must((await stat(md)).mtimeMs === before.mt, 'CLAUDE.md が書き直された（mtime が動いた）')
     for (const [f, was] of Object.entries(before.skill)) {
@@ -269,7 +269,7 @@ async function main() {
     const r = setupAim(plain, '--check')
     must(r.status === 0, `exit=${r.status}`)
     must(/状態: current/.test(r.stdout), `current と述べていない: ${r.stdout}`)
-    must(/aim skill: 在る/.test(r.stdout), 'skill が在ると述べていない')
+    must(/aim skill: 同梱の正本と一致する/.test(r.stdout), 'skill が正本と一致すると述べていない')
     return '状態 current'
   })
 
@@ -299,18 +299,41 @@ async function main() {
     return '置いて外して byte 同一'
   })
 
-  await check('⑽ 既に .claude/skills/aim/ が在れば、潰さず補わず、述べて止まる', async () => {
+  await check('⑽ skill が正本と違えば、潰さず補わず、**block も置かず**に止まる', async () => {
+    // 🔴 **組の法**（人間の決定 2026-09-07）—— 更新するなら両方、しないならどちらも維持。
     const dir = path.join(hasSkill, '.claude', 'skills', 'aim')
     await mkdir(dir, { recursive: true })
     const mine = 'この repo が自分で直した版\n'
     await writeFile(path.join(dir, 'SKILL.md'), mine, 'utf8')
     const r = setupAim(hasSkill)
-    must(r.status === 0, `exit=${r.status}`)
-    must(/既に在る ∴ 触らない/.test(r.stdout), `述べて止まっていない: ${r.stdout}`)
+    must(r.status === 1, `exit=${r.status} —— 揃えられないなら赤い`)
+    must(/一致しない/.test(r.stdout), `一致しないと述べていない: ${r.stdout}`)
     must(await readFile(path.join(dir, 'SKILL.md'), 'utf8') === mine, 'この repo の版が潰された')
     // ⚠ **足りない枚を補うことも「触る」である** —— 何を持つかはこの repo が決めている。
     must((await listing(dir)).length === 1, '足りない枚が補われた')
-    return '1 枚のまま'
+    // 🔴 **そして block も置かれていない** —— 片方だけが動くことは無い。
+    const md = path.join(hasSkill, 'CLAUDE.md')
+    const has = await readFile(md, 'utf8').then((t) => /bearing:aim/.test(t), () => false)
+    must(!has, 'skill で止まったのに block が置かれた')
+    return '1 枚のまま・block も無し・exit 1'
+  })
+
+  await check('⑾ --update は、その同じ repo の block と skill を同時に今の版へ揃える', async () => {
+    const dir = path.join(hasSkill, '.claude', 'skills', 'aim')
+    const r = setupAim(hasSkill, '--update')
+    must(r.status === 0, `exit=${r.status}`)
+    must(/bearing:aim/.test(await readFile(path.join(hasSkill, 'CLAUDE.md'), 'utf8')), 'block が置かれていない')
+    const placed = await listing(dir)
+    must(placed.length === 3, `skill が 3 枚でない（${placed.length} 枚）`)
+    for (const f of ['SKILL.md', 'aim-authoring.md', 'aim-facts.md']) {
+      must(
+        await readFile(path.join(dir, f), 'utf8') === await readFile(path.join(shipped, 'templates', 'aim', f), 'utf8'),
+        `${f} が出荷 template と一致しない`,
+      )
+    }
+    // ⚠ **版が上がったことを黙って済ませない** —— 手元の corpus の書き換えを伴いうるからである。
+    must(/手元の aim node/.test(r.stdout), 'corpus を見よと述べていない')
+    return '両方が今の版'
   })
 
   await check('採っていない repo で --check は absent と述べ、exit 0 で終わる', async () => {
