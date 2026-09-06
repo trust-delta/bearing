@@ -13,6 +13,8 @@ import assert from 'node:assert/strict'
 import { readFile, access, readdir } from 'node:fs/promises'
 import path from 'node:path'
 
+import { stripStamp, parseStamp, skillSha } from '../lib/placed-skill.mjs'
+
 const PLUGIN = path.join(import.meta.dirname, '..')
 const REPO_ROOT = path.join(PLUGIN, '..', '..', '..')
 
@@ -24,15 +26,36 @@ const inCheckout =
 /** `setup-aim` が置く 3 枚。⚠ **`frame.md` は置かれない** —— 法は block と hook が運ぶ。 */
 const PLACED = ['SKILL.md', 'aim-authoring.md', 'aim-facts.md']
 
+// ⚠ **`SKILL.md` だけは刻印を除いてから比べる**（2026-09-07 から）—— `setup-aim` が置くときに
+// frontmatter へ版と 3 枚の指紋を 1 行で刻む ∴ **byte 同一を求めれば、我々が書いた 1 行のせいで
+// 必ず落ちる。** ⚠ **刻印そのものが正しいかは `test/placed-skill.test.mjs` と
+// `test/setup-aim.test.mjs` が見る** —— ここが見るのは**同期**である。
 for (const f of PLACED) {
-  test(`.claude/skills/aim/${f} は templates/aim/${f} と byte 同一である`, async (t) => {
+  test(`.claude/skills/aim/${f} は templates/aim/${f} と（刻印を除いて）byte 同一である`, async (t) => {
     if (!inCheckout) return t.skip('bearing の checkout ではない —— cache から走っている')
     assert.equal(
-      await readFile(path.join(REPO_ROOT, '.claude', 'skills', 'aim', f), 'utf8'),
+      stripStamp(await readFile(path.join(REPO_ROOT, '.claude', 'skills', 'aim', f), 'utf8')),
       await readFile(path.join(PLUGIN, 'templates', 'aim', f), 'utf8'),
     )
   })
 }
+
+test('置かれた SKILL.md は刻印を持ち、他の 2 枚は持たない', async (t) => {
+  if (!inCheckout) return t.skip('bearing の checkout ではない —— cache から走っている')
+  const at = (f) => path.join(REPO_ROOT, '.claude', 'skills', 'aim', f)
+  const stamp = parseStamp(await readFile(at('SKILL.md'), 'utf8'))
+  assert.ok(stamp, 'SKILL.md に刻印が無い —— 置き直せば付く（bearing-setup-aim.mjs）')
+  assert.deepEqual(Object.keys(stamp.shas).sort(), [...PLACED].sort())
+  // 🔴 **刻印は今の中身を指していること** —— 指していなければ、この repo 自身が
+  // 「区別できない」側へ落ちる。
+  for (const f of PLACED) {
+    const text = await readFile(at(f), 'utf8')
+    assert.equal(stamp.shas[f], skillSha(f === 'SKILL.md' ? stripStamp(text) : text), `${f} の指紋が刻印と違う`)
+  }
+  for (const f of ['aim-authoring.md', 'aim-facts.md']) {
+    assert.equal(parseStamp(await readFile(at(f), 'utf8')), null, `${f} に刻印が在る`)
+  }
+})
 
 test('frame.md は置かれない —— 置けば同じ 6 箇条が 3 箇所に住む', async (t) => {
   if (!inCheckout) return t.skip('bearing の checkout ではない —— cache から走っている')

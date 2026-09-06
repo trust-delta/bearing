@@ -32,10 +32,16 @@
 //
 // - **block** —— marker の sha が本文と一致すれば置き直す。一致しなければ **人間が手を入れた**と
 //   読んで拒む。
-// - **skill** —— 同梱の正本と一致すれば触る必要が無い。一致しなければ **止まる** —— ⚠ **「版が
-//   古い」のか「人間が手を入れた」のかを区別する手段が、こちらには無いからである**（台帳は棄却
-//   済み。`docs/aims/adoption-declaration.md` の `# HISTORY`）∴ 区別できないものを黙って捨てない。
-//   捨ててよいと述べるのが `--update` であり、⚠ **それは block と skill の両方に効く。**
+// - **skill** —— 同梱の正本と一致すれば触る必要が無い。**一致しないときは刻印に訊く**
+//   （`lib/placed-skill.mjs`）: 🔴 **刻印が今の中身を指していれば、それは我々が置いたそのもので
+//   ある** ∴ **置き直しても消えるものは無く、打った act で足りる**（block と同じ）。⚠ **刻印が
+//   無いか、刻印と中身が食い違えば止まる** —— **「古い」と「手を入れた」を分けられないからで
+//   ある。** 捨ててよいと述べるのが `--update` であり、⚠ **それは block と skill の両方に効く。**
+//
+// ⚠ **2026-09-07 の最初の実装は、刻印を持たず「一致しない」で一律に止めていた** —— **触って
+// いない repo にまで「捨ててよいか」を問うていた。** 刻印はその問いを、**本当に捨てるものが在る
+// ときだけ**に縮める。⚠ **だが刻印は、これから置くものにしか付かない** ∴ **既に置かれた複製は
+// 今までどおり止まる。**
 //
 // ⚠ **改行だけは正規化して比べる。** CRLF の checkout では git が変換しただけで「一致しない」に
 // なり、**同じ轍を block の sha で既に踏んでいる**（`docs/aims/bearing.md`）。⚠ **これは台帳では
@@ -66,7 +72,7 @@
 // ⚠ **stdin を読む前に委譲する**（他の bin と同じ理由。ここは stdin を読まないが、規律を
 // 破る例外を 1 つ作れば、次に読む者はどれが例外かを毎回確かめねばならない）。
 
-import { readFile, writeFile, rename, access, mkdir, copyFile } from 'node:fs/promises'
+import { readFile, writeFile, rename, access, mkdir } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import path from 'node:path'
 
@@ -78,6 +84,7 @@ import {
   findDeclined,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR, normalizeAimsDir, readAimSlugs } from '../lib/corpus.mjs'
+import { renderStamp, parseStamp, stripStamp, withStamp, skillSha } from '../lib/placed-skill.mjs'
 
 const log = (...a) => console.log(...a)
 
@@ -140,74 +147,107 @@ async function writeAtomic(file, text) {
   await rename(tmp, file)
 }
 
-/** 改行だけ揃えて比べる。⚠ **CRLF の checkout で、git が変換しただけの差を「違い」にしない。** */
-const lf = (t) => t.replace(/\r\n/g, '\n')
+/** 刻印を持つ 1 枚。⚠ **frontmatter を持つのはこれだけである**（他の 2 枚は plain markdown）。 */
+export const STAMP_FILE = 'SKILL.md'
 
-/**
- * 置かれた 3 枚が、同梱の正本と一致するか。
- *
- * ⚠ **状態も台帳も持たない** —— 見るのは中身だけである（台帳は棄却済み。見出しコメントを見よ）。
- * ⚠ **欠けている 1 枚も「一致しない」の 1 つ**として数える —— **半分だけ置かれた skill は、
- * 古い skill より静かに壊れている。**
- *
- * @param {string} root plugin root
- * @param {string} projectDir
- * @returns {Promise<{state: 'absent'|'same'|'differs'|'unreadable',
- *   differing: string[], unreadable: string[]}>}
- */
-export async function inspectSkill(root, projectDir) {
-  const dest = path.join(projectDir, SKILL_DIR)
-  if (!(await exists(dest))) return { state: 'absent', differing: [], unreadable: [] }
-  const differing = []
+/** 置く前の中身を読む。⚠ **読めない枚は「置く元が無い」であって「違う」ではない。** */
+async function readTemplates(root) {
+  const bodies = {}
   const unreadable = []
   for (const f of TEMPLATE_FILES) {
-    let want
     try {
-      want = await readFile(path.join(root, 'templates', 'aim', f), 'utf8')
+      bodies[f] = await readFile(path.join(root, 'templates', 'aim', f), 'utf8')
     } catch {
-      // ⚠ 「置かれたものが違う」と「置く元が無い」を同じ言葉にしない —— 後者はこの plugin の壊れである。
       unreadable.push(f)
-      continue
     }
-    let got
-    try {
-      got = await readFile(path.join(dest, f), 'utf8')
-    } catch {
-      differing.push(f)
-      continue
-    }
-    if (lf(got) !== lf(want)) differing.push(f)
   }
-  if (unreadable.length > 0) return { state: 'unreadable', differing, unreadable }
-  return { state: differing.length === 0 ? 'same' : 'differs', differing, unreadable }
+  return { bodies, unreadable }
 }
 
 /**
- * aim skill を `.claude/skills/aim/` へ置く。
+ * 置かれた 3 枚が、同梱の正本とどう違うか。
  *
- * ⚠ **既定では、既に在れば 1 byte も触らない。** `overwrite` は**呼ぶ側が組として判定したとき
- * だけ**渡される —— ⚠ **この関数は単独では「捨ててよいか」を知りえない。**
+ * 🔴 **刻印が在れば「古いだけ」と「手を入れた」を分けられる**（`lib/placed-skill.mjs`）——
+ * 刻印が述べる指紋と、置かれている中身の指紋が一致すれば、**それは我々が置いたそのものである。**
+ * ⚠ **刻印が無ければ分けられない** —— **刻印を持たない複製は、今までどおり「区別できない」側へ
+ * 落ちる。** 我々が刻み始める前に置かれたものは、すべてそこに居る。
+ *
+ * ⚠ **指紋は改行を正規化してから採る**（`skillSha`）—— CRLF の checkout で git が変換しただけの
+ * 差を「違い」にしない。**同じ轍を block の sha で既に踏んでいる。**
+ * ⚠ **欠けている 1 枚も「違う」に数える** —— **半分だけ置かれた skill は、古い skill より静かに
+ * 壊れている。**
  *
  * @param {string} root plugin root
  * @param {string} projectDir
- * @param {{overwrite?: boolean}} [opts]
+ * @returns {Promise<{state: 'absent'|'same'|'stale'|'diverged'|'unreadable',
+ *   differing: string[], untouched: string[], unknown: string[],
+ *   stampVersion: string|null, unreadable: string[]}>}
+ */
+export async function inspectSkill(root, projectDir) {
+  const dest = path.join(projectDir, SKILL_DIR)
+  const empty = { differing: [], untouched: [], unknown: [], stampVersion: null, stamped: false, unreadable: [] }
+  if (!(await exists(dest))) return { ...empty, state: 'absent' }
+
+  const { bodies, unreadable } = await readTemplates(root)
+  if (unreadable.length > 0) return { ...empty, state: 'unreadable', unreadable }
+
+  const placed = {}
+  for (const f of TEMPLATE_FILES) {
+    placed[f] = await readFile(path.join(dest, f), 'utf8').catch(() => null)
+  }
+  const stamp = placed[STAMP_FILE] === null ? null : parseStamp(placed[STAMP_FILE])
+
+  const differing = []
+  const untouched = []
+  const unknown = []
+  for (const f of TEMPLATE_FILES) {
+    if (placed[f] === null) {
+      differing.push(f)
+      unknown.push(f)
+      continue
+    }
+    const body = f === STAMP_FILE ? stripStamp(placed[f]) : placed[f]
+    const mine = skillSha(body)
+    if (mine === skillSha(bodies[f])) continue
+    differing.push(f)
+    // 🔴 **刻印が今の中身を指していれば、それは我々が置いたままである。**
+    ;(stamp?.shas?.[f] === mine ? untouched : unknown).push(f)
+  }
+
+  const state = differing.length === 0 ? 'same' : unknown.length === 0 ? 'stale' : 'diverged'
+  // 🔴 **中身が一致していても、刻印が無ければ「刻まれていない」** —— ⚠ **刻む前から採っていた
+  // repo は、正本と同じ中身のまま刻印を持たない** ∴ **次に template が動いた日に、触っていない
+  // のに `diverged` へ落ちる。** 中身は同じなので**書いても消えるものは無い** ∴ 次の `setup-aim`
+  // が黙って刻む（実装中に踏んだ: bearing 自身がまさにこの状態だった。2026-09-07）。
+  const stamped = state === 'same' && stamp !== null && TEMPLATE_FILES.every((f) => stamp.shas[f])
+  return { state, differing, untouched, unknown, stampVersion: stamp?.version ?? null, stamped, unreadable: [] }
+}
+
+/**
+ * aim skill を `.claude/skills/aim/` へ置き、**`SKILL.md` の frontmatter へ刻印する。**
+ *
+ * ⚠ **既定では、既に在れば 1 byte も触らない。** `overwrite` は**呼ぶ側が組として判定したとき
+ * だけ**渡される —— ⚠ **この関数は単独では「捨ててよいか」を知りえない。**
+ * ⚠ **刻印は置く 3 枚すべての指紋を運ぶ** —— `SKILL.md` 自身の分は**刻印を除いた本文**の指紋で
+ * ある（さもなくば自分自身を指せない。block の marker と同じ形）。
+ *
+ * @param {string} root plugin root
+ * @param {string} projectDir
+ * @param {{version?: string, overwrite?: boolean}} [opts]
  * @returns {Promise<{action: 'placed'|'replaced'|'kept', dir: string, missing: string[]}>}
  */
-export async function placeSkill(root, projectDir, { overwrite = false } = {}) {
+export async function placeSkill(root, projectDir, { version, overwrite = false } = {}) {
   const dest = path.join(projectDir, SKILL_DIR)
   const existed = await exists(dest)
   if (existed && !overwrite) return { action: 'kept', dir: dest, missing: [] }
   await mkdir(dest, { recursive: true })
-  const missing = []
-  for (const f of TEMPLATE_FILES) {
-    try {
-      await copyFile(path.join(root, 'templates', 'aim', f), path.join(dest, f))
-    } catch {
-      // ⚠ 「置かなかった」と「置く元が無かった」を同じ沈黙にしない。
-      missing.push(f)
-    }
+  const { bodies, unreadable } = await readTemplates(root)
+  const shas = Object.fromEntries(Object.entries(bodies).map(([f, t]) => [f, skillSha(t)]))
+  for (const [f, text] of Object.entries(bodies)) {
+    const out = f === STAMP_FILE && version ? withStamp(text, renderStamp(version, shas)) : text
+    await writeFile(path.join(dest, f), out, 'utf8')
   }
-  return { action: existed ? 'replaced' : 'placed', dir: dest, missing }
+  return { action: existed ? 'replaced' : 'placed', dir: dest, missing: unreadable }
 }
 
 function sayPlaced(r) {
@@ -216,7 +256,9 @@ function sayPlaced(r) {
     return
   }
   log(r.action === 'replaced'
-    ? `aim skill を置き直した: ${SKILL_DIR} —— **置かれていた 3 枚は捨てた。**`
+    ? (r.stampOnly
+      ? `aim skill に刻印を書いた: ${SKILL_DIR} —— **中身は 1 byte も変えていない。**`
+      : `aim skill を置き直した: ${SKILL_DIR}`)
     : `aim skill を置いた: ${SKILL_DIR}（${TEMPLATE_FILES.filter((f) => !r.missing.includes(f)).join('・')}）`)
   if (r.missing.length > 0) {
     log(`⚠ 同梱の template が読めない: ${r.missing.join('、')} —— この plugin の install が壊れている。`)
@@ -224,7 +266,7 @@ function sayPlaced(r) {
   log('⚠ 置いた瞬間からこの repo のものである。track するか・直すか・古いままにするかは、この repo が決める。')
 }
 
-/** 置かれた skill の状態を、そのまま述べる。⚠ **畳まない** —— 4 つは別々の事実である。 */
+/** 置かれた skill の状態を、そのまま述べる。⚠ **畳まない** —— 5 つは別々の事実である。 */
 function sayInspected(sk) {
   if (sk.state === 'absent') {
     log(`aim skill: 無い（${SKILL_DIR}）—— setup-aim が置く。`)
@@ -236,10 +278,21 @@ function sayInspected(sk) {
   }
   if (sk.state === 'same') {
     log(`aim skill: 同梱の正本と一致する（${SKILL_DIR}）。`)
+    // ⚠ **赤くはしない** —— 中身は今の版であり、欠けているのは我々の帳面のほうである。
+    if (!sk.stamped) log('  ⚠ 刻印がまだ無い —— 次の setup-aim が書く（中身は変わらない）。')
     return
   }
-  log(`aim skill: 正本と一致しない（${sk.differing.join('、')}）—— 版が古いか、この repo が手を入れたか。`)
-  log('  ⚠ どちらであるかを、この機構は区別できない。両方を今の版へ揃えるのは --update である。')
+  if (sk.state === 'stale') {
+    log(`aim skill: 古い —— 刻印は v${sk.stampVersion}、違うのは ${sk.differing.join('、')}。`)
+    log('  ⚠ 刻印が今の中身を指している ∴ **この repo は触っていない**。setup-aim が揃え直せる。')
+    return
+  }
+  log(`aim skill: 正本と一致せず、区別もできない（${sk.unknown.join('、')}）。`)
+  log(sk.stampVersion === null
+    ? '  ⚠ 刻印が無い —— 刻む前に置かれた複製である ∴ 「古い」と「手を入れた」を分けられない。'
+    : `  ⚠ 刻印（v${sk.stampVersion}）と中身が食い違う ∴ 「古い」と「手を入れた」を分けられない。`)
+  if (sk.untouched.length > 0) log(`  （${sk.untouched.join('、')} は触られていない）`)
+  log('  両方を今の版へ揃えるのは --update である —— **置かれた複製は捨てられる。**')
 }
 
 async function main(argv) {
@@ -362,14 +415,18 @@ async function main(argv) {
     log('⚠ CLAUDE.md も触っていない —— block と skill は 1 組である。')
     return 1
   }
-  if (sk.state === 'differs' && !update) {
-    log(`${SKILL_DIR} が同梱の正本と一致しない: ${sk.differing.join('、')}`)
-    log('⚠ 「版が古い」のか「この repo が手を入れた」のかを、この機構は区別できない ∴ 黙って捨てない。')
+  // 🔴 **区別できないものだけが止める。** 刻印が「この repo は触っていない」と述べるなら、
+  // 置き直しても**消えるのは我々が置いたそのもの**である ∴ **打った act で足りる**（block と同じ）。
+  if (sk.state === 'diverged' && !update) {
+    sayInspected(sk)
     log('⚠ CLAUDE.md も触っていない —— **更新するなら両方、しないならどちらも維持**である。')
-    log('  両方を今の版へ揃える（置かれた 3 枚は捨てられる）: bearing-setup-aim.mjs --update')
     log('  ⚠ 版が上がることは、手元の aim node の書き換えを伴いうる。')
     return 1
   }
+
+  // ⚠ **なぜ揃え直せるのかを述べる** —— 黙って上書きすれば、**刻印が効いていることは誰にも
+  // 見えない。** 「触っていない」と読んだのはこちらであり、その読みは人間に検められる必要がある。
+  if (sk.state === 'stale') sayInspected(sk)
 
   // ここから先は、block も skill も今の版へ動かせる ∴ **両方書く。**
   if (plan.action === 'unchanged' && base === before) {
@@ -381,11 +438,11 @@ async function main(argv) {
   }
   // ⚠ **法が最新であることは、skill が在ることを意味しない。** 版の更新のために打ち直した
   // 人間が、ここで初めて skill を得ることは在りうる ∴ `unchanged` でも置く。
-  const placed = await placeSkill(root, projectDir, { overwrite: sk.state === 'differs' })
-  sayPlaced(placed)
+  const placed = await placeSkill(root, projectDir, { version: desired.version, overwrite: sk.state !== 'same' || !sk.stamped })
+  sayPlaced({ ...placed, stampOnly: sk.state === 'same' })
   // 🔴 **版が動いたなら、手元の corpus を見よと述べる** —— **これが「使う側が決める」の理由
   // そのものである**（人間の決定 2026-09-07）: 版の更新は doc の差し替えではない。
-  if (plan.action === 'update' || placed.action === 'replaced') {
+  if (plan.action === 'update' || sk.state === 'stale' || sk.state === 'diverged') {
     log('⚠ 版が上がった ∴ 手元の aim node が今の法に合っているかを見ること —— 版の更新は corpus の書き換えを伴いうる。')
   }
   log('外すときは: bearing-setup-aim.mjs --remove')

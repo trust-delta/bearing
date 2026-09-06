@@ -19,6 +19,7 @@ import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 
 import { placeSkill, inspectSkill, TEMPLATE_FILES, SKILL_DIR, chooseDir } from '../bin/bearing-setup-aim.mjs'
+import { parseStamp, stripStamp, withStamp, renderStamp, skillSha } from '../lib/placed-skill.mjs'
 
 const ROOT = path.join(import.meta.dirname, '..')
 const fresh = async (t) => {
@@ -82,9 +83,14 @@ test('chooseDir は --dir → 既に置かれた宣言 → 既定 の順', () =>
 // 🔴 **固定するのは「片方だけが動かない」ことである。**
 //
 // ⚠ **これは仮定ではなく踏んだ形である**（実測 2026-09-07、対象: この checkout）—— 0.20.0 の
-// 3 枚を置いた repo に今の `setup-aim` を打つと、**block は v0.21.0 へ置き直され、skill は 0 byte
-// のまま、`--check` は exit 0 で `状態: current` と述べた。** 🔴 **そして 0.21.0 の実質は skill 側に
-// しか無かった** ∴ **あの「更新」は、その版が持っていたものを 1 文字も運んでいなかった。**
+// 3 枚を置いた repo に打つと、**block は v0.21.0 へ置き直され、skill は 0 byte のまま、`--check`
+// は exit 0 で `状態: current` と述べた。** 🔴 **そして 0.21.0 の実質は skill 側にしか無かった** ∴
+// **あの「更新」は、その版が持っていたものを 1 文字も運んでいなかった。**
+//
+// ── そして刻印が、止める範囲を狭める ────────────────────────────────────────
+//
+// 🔴 **刻印が「この repo は触っていない」と述べるなら、置き直しても消えるものは無い** ∴ 止まる
+// 必要が無い。⚠ **止まるのは区別できないときだけである。**
 
 /** ⚠ 委譲を塞ぐ —— 通れば走るのは working tree であって、この test が指した root ではない。 */
 const run = (dir, ...args) =>
@@ -94,40 +100,100 @@ const run = (dir, ...args) =>
     env: { ...process.env, CLAUDE_PROJECT_DIR: dir, BEARING_DELEGATED: '1' },
   })
 
-/** 正本と違う 3 枚を置く。⚠ **中身は問わない** —— 「一致しない」ことだけが要る。 */
-const withOldSkill = async (dir) => {
+/** 正本と違う 3 枚を、**刻印を持たずに**置く（＝ 刻む前に採用した消費者）。 */
+const withUnstampedSkill = async (dir) => {
   await mkdir(path.join(dir, SKILL_DIR), { recursive: true })
-  for (const f of TEMPLATE_FILES) await writeFile(path.join(dir, SKILL_DIR, f), '# 古い版\n')
+  for (const f of TEMPLATE_FILES) await writeFile(path.join(dir, SKILL_DIR, f), `# 古い版\n`)
+}
+
+/**
+ * **古い版を、その版の刻印つきで**置く（＝ 旧い plugin が置いたまま、誰も触っていない消費者）。
+ * ⚠ **刻印は、そのとき置かれた中身の指紋を運ぶ** —— ここでもそう組み立てる。
+ */
+const withStampedOldSkill = async (dir, version = '0.20.0') => {
+  await mkdir(path.join(dir, SKILL_DIR), { recursive: true })
+  const bodies = Object.fromEntries(TEMPLATE_FILES.map((f) => [f, `# ${version} の ${f}\n`]))
+  // SKILL.md は frontmatter を持たねば刻めない —— 旧版もそうであった。
+  bodies['SKILL.md'] = `---\nname: aim\ndescription: ${version} の版\n---\n\n# aim\n`
+  const shas = Object.fromEntries(Object.entries(bodies).map(([f, t]) => [f, skillSha(t)]))
+  for (const [f, t] of Object.entries(bodies)) {
+    const out = f === 'SKILL.md' ? withStamp(t, renderStamp(version, shas)) : t
+    await writeFile(path.join(dir, SKILL_DIR, f), out, 'utf8')
+  }
 }
 
 test('inspectSkill —— 無ければ absent、置いた直後は same', async (t) => {
   const dir = await fresh(t)
   assert.equal((await inspectSkill(ROOT, dir)).state, 'absent')
-  await placeSkill(ROOT, dir)
+  await placeSkill(ROOT, dir, { version: '9.9.9' })
   assert.equal((await inspectSkill(ROOT, dir)).state, 'same')
 })
 
-test('1 枚でも違えば differs で、その file を名指す', async (t) => {
+test('刻印は SKILL.md の frontmatter に置かれ、本文は正本のままである', async (t) => {
   const dir = await fresh(t)
-  await placeSkill(ROOT, dir)
-  await writeFile(path.join(dir, SKILL_DIR, 'aim-authoring.md'), '# 古い版\n')
-  const sk = await inspectSkill(ROOT, dir)
-  assert.equal(sk.state, 'differs')
-  assert.deepEqual(sk.differing, ['aim-authoring.md'])
+  await placeSkill(ROOT, dir, { version: '9.9.9' })
+  const placed = await readFile(path.join(dir, SKILL_DIR, 'SKILL.md'), 'utf8')
+  const stamp = parseStamp(placed)
+  assert.equal(stamp.version, '9.9.9')
+  // 🔴 **3 枚ぶんの指紋を運ぶ** —— 刻印は 1 箇所、対象は 3 枚である。
+  assert.deepEqual(Object.keys(stamp.shas).sort(), [...TEMPLATE_FILES].sort())
+  // ⚠ **刻印を除けば正本と byte 同一** —— 我々が書いた 1 行のせいで「一致しない」にならない。
+  assert.equal(
+    stripStamp(placed),
+    await readFile(path.join(ROOT, 'templates', 'aim', 'SKILL.md'), 'utf8'),
+  )
+  // ⚠ **他の 2 枚には刻まない** —— あれらは Read で開かれる ∴ 何を足しても context に載る。
+  for (const f of ['aim-authoring.md', 'aim-facts.md']) {
+    assert.equal(
+      await readFile(path.join(dir, SKILL_DIR, f), 'utf8'),
+      await readFile(path.join(ROOT, 'templates', 'aim', f), 'utf8'),
+    )
+    assert.equal(parseStamp(await readFile(path.join(dir, SKILL_DIR, f), 'utf8')), null)
+  }
 })
 
-test('欠けている 1 枚も differs —— 半分置かれた skill を「在る」に畳まない', async (t) => {
+test('刻印が中身を指していれば stale —— この repo は触っていない', async (t) => {
   const dir = await fresh(t)
-  await placeSkill(ROOT, dir)
+  await withStampedOldSkill(dir)
+  const sk = await inspectSkill(ROOT, dir)
+  assert.equal(sk.state, 'stale')
+  assert.equal(sk.stampVersion, '0.20.0')
+  assert.deepEqual(sk.unknown, [])
+  assert.deepEqual(sk.untouched.sort(), [...TEMPLATE_FILES].sort())
+})
+
+test('刻印が在っても、中身が食い違えば diverged —— その 1 枚を名指す', async (t) => {
+  const dir = await fresh(t)
+  await withStampedOldSkill(dir)
+  await writeFile(path.join(dir, SKILL_DIR, 'aim-authoring.md'), '# この repo が直した版\n')
+  const sk = await inspectSkill(ROOT, dir)
+  assert.equal(sk.state, 'diverged')
+  assert.deepEqual(sk.unknown, ['aim-authoring.md'])
+  // ⚠ **触られていない枚は、触られていないと述べる** —— 畳まない。
+  assert.ok(sk.untouched.includes('SKILL.md'))
+})
+
+test('刻印が無ければ diverged —— 刻む前に置かれた複製は区別できない', async (t) => {
+  const dir = await fresh(t)
+  await withUnstampedSkill(dir)
+  const sk = await inspectSkill(ROOT, dir)
+  assert.equal(sk.state, 'diverged')
+  assert.equal(sk.stampVersion, null)
+  assert.deepEqual(sk.unknown.sort(), [...TEMPLATE_FILES].sort())
+})
+
+test('欠けている 1 枚も違い —— 半分置かれた skill を「在る」に畳まない', async (t) => {
+  const dir = await fresh(t)
+  await placeSkill(ROOT, dir, { version: '9.9.9' })
   await rm(path.join(dir, SKILL_DIR, 'aim-facts.md'))
   const sk = await inspectSkill(ROOT, dir)
-  assert.equal(sk.state, 'differs')
-  assert.deepEqual(sk.differing, ['aim-facts.md'])
+  assert.equal(sk.state, 'diverged')
+  assert.deepEqual(sk.unknown, ['aim-facts.md'])
 })
 
 test('CRLF の checkout を「違い」にしない —— git が変換しただけである', async (t) => {
   const dir = await fresh(t)
-  await placeSkill(ROOT, dir)
+  await placeSkill(ROOT, dir, { version: '9.9.9' })
   for (const f of TEMPLATE_FILES) {
     const at = path.join(dir, SKILL_DIR, f)
     await writeFile(at, (await readFile(at, 'utf8')).replace(/\n/g, '\r\n'))
@@ -135,38 +201,63 @@ test('CRLF の checkout を「違い」にしない —— git が変換した�
   assert.equal((await inspectSkill(ROOT, dir)).state, 'same')
 })
 
-test('skill が正本と違うなら、block も動かない —— 踏んだ形', async (t) => {
+// 🔴 **踏んだ形**（実装中、2026-09-07）—— **中身が正本と一致する repo は、刻印を持たないまま
+// 永久に据え置かれた。** ⚠ **bearing 自身がその状態だった** ∴ **次に template が動いた日、触って
+// いないのに `diverged` へ落ちるところだった。** **中身が同じなら書いても消えるものは無い。**
+test('中身が一致していて刻印だけ無いなら、黙って刻む —— 中身は 1 byte も変えない', async (t) => {
   const dir = await fresh(t)
-  // まず両方を今の版で置く（＝ 揃った消費者）
+  assert.equal(run(dir).status, 0)
+  // 刻印を剥がす（＝ 刻む前に採用した repo が、たまたま今の版と同じ中身を持っている状態）
+  const at = path.join(dir, SKILL_DIR, 'SKILL.md')
+  const bare = stripStamp(await readFile(at, 'utf8'))
+  await writeFile(at, bare)
+  const before = await inspectSkill(ROOT, dir)
+  assert.equal(before.state, 'same')
+  assert.equal(before.stamped, false)
+
+  const r = run(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /刻印を書いた/)
+  // ⚠ **「版が上がった」とは言わない** —— 上がっていない。
+  assert.doesNotMatch(r.stdout, /版が上がった/)
+  const after = await inspectSkill(ROOT, dir)
+  assert.equal(after.stamped, true)
+  assert.equal(stripStamp(await readFile(at, 'utf8')), bare)
+})
+
+test('区別できない skill が在るなら、block も動かない —— 踏んだ形', async (t) => {
+  const dir = await fresh(t)
   assert.equal(run(dir).status, 0)
   const placedBlock = await readFile(path.join(dir, 'CLAUDE.md'), 'utf8')
-  // そこへ「古い版の skill」を持ち込む（＝ 実測で見た形。block は current、skill だけが古い）
-  await withOldSkill(dir)
+  await withUnstampedSkill(dir)
 
   const r = run(dir)
   assert.equal(r.status, 1)
-  assert.match(r.stdout, /一致しない/)
+  assert.match(r.stdout, /区別もできない/)
   assert.match(r.stdout, /CLAUDE\.md も触っていない/)
   // 🔴 **block は 1 byte も動いていない。**
   assert.equal(await readFile(path.join(dir, 'CLAUDE.md'), 'utf8'), placedBlock)
-  // そして skill も捨てられていない。
   assert.equal(await readFile(path.join(dir, SKILL_DIR, 'SKILL.md'), 'utf8'), '# 古い版\n')
 })
 
-test('--update は両方を今の版へ揃え、corpus の書き換えを述べる', async (t) => {
+test('刻印が「触っていない」と述べるなら、--update なしで両方が揃う', async (t) => {
   const dir = await fresh(t)
-  await withOldSkill(dir)
+  await withStampedOldSkill(dir)
+  const r = run(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /この repo は触っていない/)
+  assert.match(await readFile(path.join(dir, 'CLAUDE.md'), 'utf8'), /bearing:aim/)
+  assert.equal((await inspectSkill(ROOT, dir)).state, 'same')
+  assert.match(r.stdout, /手元の aim node/)
+})
+
+test('--update は、区別できない複製を捨てて両方を今の版へ揃える', async (t) => {
+  const dir = await fresh(t)
+  await withUnstampedSkill(dir)
   const r = run(dir, '--update')
   assert.equal(r.status, 0)
-  for (const f of TEMPLATE_FILES) {
-    assert.equal(
-      await readFile(path.join(dir, SKILL_DIR, f), 'utf8'),
-      await readFile(path.join(ROOT, 'templates', 'aim', f), 'utf8'),
-      `${f} が正本と一致しない`,
-    )
-  }
+  assert.equal((await inspectSkill(ROOT, dir)).state, 'same')
   assert.match(await readFile(path.join(dir, 'CLAUDE.md'), 'utf8'), /bearing:aim/)
-  // ⚠ **版が上がったことを黙って済ませない** —— それが「使う側が決める」の理由である。
   assert.match(r.stdout, /手元の aim node/)
 })
 
@@ -194,11 +285,21 @@ test('--check は、block が current でも skill が違えば赤い —— 踏
   assert.equal(green.status, 0)
   assert.match(green.stdout, /aim skill: 同梱の正本と一致する/)
 
-  await withOldSkill(dir)
+  await withUnstampedSkill(dir)
   const red = run(dir, '--check')
   assert.equal(red.status, 1)
   assert.match(red.stdout, /状態: current/)
-  assert.match(red.stdout, /aim skill: 正本と一致しない/)
+  assert.match(red.stdout, /区別もできない/)
+})
+
+test('--check は「古いだけ」を「区別できない」と別の言葉で述べる', async (t) => {
+  const dir = await fresh(t)
+  assert.equal(run(dir).status, 0)   // 採ってから —— 未採用は赤くならない（下の 1 本が固定する）
+  await withStampedOldSkill(dir)
+  const r = run(dir, '--check')
+  assert.equal(r.status, 1)
+  assert.match(r.stdout, /aim skill: 古い/)
+  assert.match(r.stdout, /この repo は触っていない/)
 })
 
 test('採っていない repo の --check は赤くない —— 未採用は異常ではない', async (t) => {
