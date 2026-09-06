@@ -78,3 +78,83 @@ test('面は gh を起こさない —— statusline は lib/ci.mjs の read 側
   assert.doesNotMatch(src, /\bprobeCi\b/)
   assert.doesNotMatch(src, /\bwriteCi\b/)
 })
+
+// ── 間近に走った run を「全て」見る ────────────────────────────────────────────
+//
+// 🔴 **固定するのは「1 本の緑を全体の緑として描かない」ことである。**
+// ⚠ **これは仮定ではなく踏んだ形である**（実測 2026-09-07、対象: この機体の `gh`）——
+// `44ff61ef` の `push-policy` が completed/success の時点で `ci` はまだ `in_progress`
+// であり、旧い `--limit 1` は前者を返した。
+
+const gh = (rows) => ({ run: () => Promise.resolve({ stdout: JSON.stringify(rows) }) })
+const RUN = (name, status, conclusion = null, headSha = 'aaaa1111', updatedAt = '2026-09-07T00:00:00Z') =>
+  ({ workflowName: name, status, conclusion, headSha, updatedAt })
+
+test('1 本でも実行中なら、実行中へ倒す —— 片方の緑を全体の緑にしない', async () => {
+  const r = await probeCi('/tmp', 'main', gh([
+    RUN('push-policy', 'completed', 'success'),
+    RUN('ci', 'in_progress'),
+  ]))
+  assert.equal(r.state, 'in_progress')
+  assert.equal(r.conclusion, null)
+  assert.equal(r.workflow, 'ci')
+  assert.equal(ciSegment({ ...r, branch: 'main', probedAt: NOW.toISOString() }, 'main', NOW).text, 'CI 実行中')
+  // 陽性対照: 同じ 2 本が両方 completed/success なら、通過を描く。
+  const ok = await probeCi('/tmp', 'main', gh([
+    RUN('push-policy', 'completed', 'success'),
+    RUN('ci', 'completed', 'success'),
+  ]))
+  assert.equal(ciSegment({ ...ok, branch: 'main', probedAt: NOW.toISOString() }, 'main', NOW).text, 'CI 通過')
+})
+
+test('1 本でも通っていなければ失敗であり、その 1 本を名指す', async () => {
+  const r = await probeCi('/tmp', 'main', gh([
+    RUN('push-policy', 'completed', 'success'),
+    RUN('ci', 'completed', 'failure'),
+  ]))
+  assert.equal(r.conclusion, 'failure')
+  assert.equal(r.workflow, 'ci')
+  assert.equal(ciSegment({ ...r, branch: 'main', probedAt: NOW.toISOString() }, 'main', NOW).tone, 'bad')
+})
+
+test('前の commit の run を混ぜない —— 混ぜれば畳んだ結論が嘘になる', async () => {
+  const r = await probeCi('/tmp', 'main', gh([
+    RUN('ci', 'completed', 'failure', '新しい'),
+    RUN('push-policy', 'completed', 'success', '新しい'),
+    RUN('ci', 'completed', 'success', '古い'),
+    RUN('push-policy', 'completed', 'success', '古い'),
+  ]))
+  assert.equal(r.headSha, '新しい')
+  assert.equal(r.workflows.length, 2)
+  assert.equal(r.conclusion, 'failure')
+})
+
+test('`skipped` は失敗ではない —— 条件で走らなかった job を赤くしない', async () => {
+  const r = await probeCi('/tmp', 'main', gh([
+    RUN('ci', 'completed', 'success'),
+    RUN('nightly', 'completed', 'skipped'),
+  ]))
+  assert.equal(r.conclusion, 'success')
+  // ⚠ **全部通ったときは 1 本を名指さない** —— 代表を名乗らせれば、また 1 本の話に見える。
+  assert.equal(r.workflow, null)
+  // 内訳は残す —— 面は 1 語しか置けないが、会話で読む側は何本見たかを要る。
+  assert.deepEqual(r.workflows.map((w) => w.name), ['ci', 'nightly'])
+})
+
+test('上限に当たったまま全部が同じ commit なら、取りこぼしを排除できないと述べる', async () => {
+  const r = await probeCi('/tmp', 'main', gh(Array.from({ length: 20 }, (_, i) => RUN(`w${i}`, 'completed', 'success'))))
+  assert.equal(r.state, 'unknown')
+  assert.match(r.reason, /取りこぼしを排除できない/)
+  // ⚠ **「見えた範囲では全部緑」を緑に畳まない。**
+  assert.equal(ciSegment({ ...r, branch: 'main', probedAt: NOW.toISOString() }, 'main', NOW).text, 'CI 不明')
+  // 陽性対照: 1 本でも別 commit が混じれば、上限に当たっていても畳める。
+  const rows = Array.from({ length: 20 }, (_, i) => RUN(`w${i}`, 'completed', 'success'))
+  rows[19] = RUN('古い', 'completed', 'success', '古い')
+  assert.equal((await probeCi('/tmp', 'main', gh(rows))).conclusion, 'success')
+})
+
+test('run が 0 本なのは「まだ走っていない」であって「緑」ではない', async () => {
+  const r = await probeCi('/tmp', 'main', gh([]))
+  assert.equal(r.state, 'none')
+  assert.deepEqual(r.workflows, [])
+})

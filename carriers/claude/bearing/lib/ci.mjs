@@ -23,48 +23,87 @@ const run = promisify(execFile)
 export const ciCachePath = (unitRoot, env = process.env) =>
   path.join(unitHome(unitRoot, env), 'ci.json')
 
+// ⚠ **1 度の push で走る workflow は 1 本とは限らない。** この repo は `ci` と `push-policy`
+// の 2 本が同じ push で走る ∴ **`--limit 1` は「間近に走った CI が全て通ったか」を答えない。**
+// 🔴 **実際に食い違った**（実測 2026-09-07、対象: この機体の `gh`）—— `44ff61ef` の
+// `push-policy` が completed/success の時点で `ci` はまだ `in_progress` であり、
+// **`--limit 1` は前者を返した** ∴ 面は「CI 通過」と描きえた。
+const RUN_LIMIT = 20
+
+// ⚠ **`skipped` は失敗ではない**（条件で走らなかった job）∴ 通過側へ数える。
+// それ以外の conclusion は、たとえ `neutral` でも**名指す** —— 知らない結論を緑に畳まない。
+const PASSING = new Set(['success', 'skipped'])
+
+const unknown = (reason) =>
+  ({ state: 'unknown', conclusion: null, workflow: null, workflows: [], headSha: null, updatedAt: null, reason })
+
 /**
- * `gh` に今の branch の最新 run を訊く。
+ * `gh` に今の branch の**間近に走った run を全て**訊き、最悪値へ畳む。
+ *
+ * ⚠ **畳むのは結論だけで、内訳は残す**（`workflows`）—— 面は 1 語しか置けないが、
+ * **会話でこれを読むエージェントと人間は内訳を要る。**
  *
  * ⚠ **失敗の理由を畳まない。** `gh` が無い / 認証が無い / repo が GitHub でない / run が
  * 1 本も無い —— どれも「CI が緑」でも「CI が赤」でもない、**別々の事実**である。
  *
  * @returns {Promise<{state: string, conclusion: string|null, workflow: string|null,
+ *   workflows: {name: string, status: string, conclusion: string|null}[], headSha: string|null,
  *   updatedAt: string|null, reason: string|null}>}
  */
 export async function probeCi(repoRoot, branch, deps = {}) {
   const exec = deps.run ?? run
-  if (!branch) return { state: 'unknown', conclusion: null, workflow: null, updatedAt: null, reason: 'branch を読めない' }
+  if (!branch) return unknown('branch を読めない')
   let out
   try {
     ;({ stdout: out } = await exec(
       'gh',
-      ['run', 'list', '--branch', branch, '--limit', '1',
-       '--json', 'status,conclusion,workflowName,updatedAt'],
+      ['run', 'list', '--branch', branch, '--limit', String(RUN_LIMIT),
+       '--json', 'headSha,status,conclusion,workflowName,updatedAt'],
       { cwd: repoRoot, timeout: deps.timeout ?? 8000 },
     ))
   } catch (e) {
     const why = e?.code === 'ENOENT' ? '`gh` が無い' : (e?.killed ? '`gh` が時間内に答えない' : '`gh` が失敗した')
-    return { state: 'unknown', conclusion: null, workflow: null, updatedAt: null, reason: why }
+    return unknown(why)
   }
   let rows
   try {
     rows = JSON.parse(out)
   } catch {
-    return { state: 'unknown', conclusion: null, workflow: null, updatedAt: null, reason: '`gh` の出力を読めない' }
+    return unknown('`gh` の出力を読めない')
   }
+  if (!Array.isArray(rows)) return unknown('`gh` の出力を読めない')
   // ⚠ **run が 0 本なのは「まだ走っていない」であって「緑」ではない。**
-  if (!Array.isArray(rows) || rows.length === 0) {
-    return { state: 'none', conclusion: null, workflow: null, updatedAt: null, reason: null }
+  if (rows.length === 0) {
+    return { state: 'none', conclusion: null, workflow: null, workflows: [], headSha: null, updatedAt: null, reason: null }
   }
-  const r = rows[0]
-  return {
-    state: r.status === 'completed' ? 'completed' : (r.status ?? 'unknown'),
+  // ⚠ **`gh run list` は新しい順である** ∴ 先頭の commit が「間近に走った」もの。
+  // **その commit の run だけを見る** —— 前の commit の緑を混ぜれば、畳んだ結論が嘘になる。
+  const headSha = rows[0].headSha ?? null
+  const group = rows.filter((r) => (r.headSha ?? null) === headSha)
+  // ⚠ **上限に当たったまま全部が同じ commit なら、取りこぼしを排除できない** ∴ そう述べる。
+  // **「見えた範囲では全部緑」を「全部緑」に畳まない。**
+  if (rows.length === RUN_LIMIT && group.length === rows.length) {
+    return { ...unknown(`直近 ${RUN_LIMIT} 本すべてが同じ commit ∴ 取りこぼしを排除できない`), headSha }
+  }
+
+  const workflows = group.map((r) => ({
+    name: r.workflowName ?? '(名前を読めない)',
+    status: r.status ?? 'unknown',
     conclusion: r.conclusion || null,
-    workflow: r.workflowName ?? null,
-    updatedAt: r.updatedAt ?? null,
-    reason: null,
+  }))
+  const updatedAt = group.map((r) => r.updatedAt).filter(Boolean).sort().at(-1) ?? null
+
+  // 🔴 **最悪値へ畳む** —— 1 本でも走っていれば実行中、1 本でも通っていなければ失敗。
+  const pending = workflows.find((w) => w.status !== 'completed')
+  if (pending) {
+    return { state: pending.status, conclusion: null, workflow: pending.name, workflows, headSha, updatedAt, reason: null }
   }
+  const failed = workflows.find((w) => !PASSING.has(w.conclusion))
+  if (failed) {
+    return { state: 'completed', conclusion: failed.conclusion ?? 'unknown', workflow: failed.name, workflows, headSha, updatedAt, reason: null }
+  }
+  // ⚠ **全部通ったときに 1 本を名指さない** —— 代表を名乗らせれば、また 1 本の話に見える。
+  return { state: 'completed', conclusion: 'success', workflow: null, workflows, headSha, updatedAt, reason: null }
 }
 
 /** 採った結果を、採った時刻つきで置く。 */
