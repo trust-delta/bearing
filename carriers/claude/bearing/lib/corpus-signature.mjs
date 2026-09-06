@@ -142,17 +142,24 @@ export function factsDigest(repos) {
       // ⚠ **escalation は数ではなく slug で digest に入れる。** 数だけを入れると、**1 つが
       // 片付き別の 1 つが生まれた**セッション —— 判断待ちの中身が入れ替わったのに総数は
       // 動かない経路 —— で第 2 の門が「事実は変わっていない」と判定して黙る。⚠ **これは
-      // 観測待ちを digest へ入れたときと同じ理由であり、同じ罠である。**
+      // 宣言待ちを digest へ入れたときと同じ理由であり、同じ罠である。**
       escalation: [...(r.backlog?.escalationNodes ?? [])].sort(),
       escalationEmpty: [...(r.backlog?.escalationEmptyNodes ?? [])].sort(),
+      // ⚠ **観測票も slug で入れる。** 同じ理由が 3 度目に効く —— 1 node に票が書かれ、
+      // 別の node から消えたセッションで、総数は動かないのに**材料の所在は入れ替わっている。**
+      observation: [...(r.backlog?.observationNodes ?? [])].sort(),
+      observationEmpty: [...(r.backlog?.observationEmptyNodes ?? [])].sort(),
       unknown: [...(r.backlog?.unknownNodes ?? [])].sort(),
-      // ⚠ **観測待ちも digest に入れる。** 入れなければ、最後の `[todo]` が `[done]` に
+      // ⚠ **宣言待ちも digest に入れる。** 入れなければ、最後の `[todo]` が `[done]` に
       // なった瞬間 —— **体制が人間へ番を渡すまさにその瞬間** —— を第 2 の門が「事実は
       // 変わっていない」と判定して黙る。open-todo の数は 1 減るので実際には気づけるが、
       // それに依存すると、**数が変わらない経路**（1 つが done になり別の 1 つに todo が
       // 増える）で黙ることになる。
       awaiting: [...(r.backlog?.awaitingNodes ?? [])]
-        .map((a) => [a.slug, a.doneMarks, a.state])
+        // ⚠ **票の枚数も digest に入れる。** 番が渡ったまま票だけが書かれたセッション ——
+        // **人間にとっては何も変わっていないところから、見るべきものが渡された瞬間** ——
+        // は awaiting の顔ぶれを 1 つも動かさない ∴ 枚数を落とせば、そこで門が黙る。
+        .map((a) => [a.slug, a.doneMarks, a.observations ?? 0, a.state])
         .sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0)),
       anomalies: (r.backlog?.anomalies ?? [])
         .map((a) => [a.slug, a.kind, a.no, a.line])

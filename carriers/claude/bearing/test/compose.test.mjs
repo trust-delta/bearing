@@ -331,3 +331,28 @@ test('取り残しが無ければ、これまで通り fresh start と述べる'
   await withAim(root)
   assert.match(compose(root), /fresh start である/)
 })
+
+test('番を渡された node が、何を見ればよいかを持っているかが frame に出る', async () => {
+  // ⚠ **正本は「観測を可能にする作業は PROCESS、判断そのものは ESCALATION、観測すべきものは
+  // OBSERVATION、そして観測と宣言そのものは人間」と分けている** ∴ 番だけを出す frame は、
+  // 人間に「あなたの番だ」と告げながら **node を頭から読み直させる。**
+  const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  const root = path.join(dir, 'proj')
+  await mkdir(root, { recursive: true })
+  await corpusRepo(root, ['alpha'])
+  await writeFile(
+    path.join(root, 'docs', 'aims', 'rich.md'),
+    '---\naim: x\nstate: open\n---\n\n# PROCESS\n\n- [done] a\n\n# OBSERVATION\n\n- 面を開いて木が描かれるか\n- 衝突が拒否されるか\n',
+  )
+  await writeFile(
+    path.join(root, 'docs', 'aims', 'blind.md'),
+    '---\naim: x\nstate: open\n---\n\n# PROCESS\n\n- [done] a\n',
+  )
+  const out = compose(root)
+  assert.match(out, /\*\*observation: 1\*\*/)
+  // ⚠ **0 枚は `0` ではなく `-`** —— `0` は「数えたら 0」とも「まだ数えていない」とも読める。
+  assert.match(out, /\nrich \| 1 \| 2 \| open\n/)
+  assert.match(out, /\nblind \| 1 \| - \| open\n/)
+  assert.match(out, /1 件は `# OBSERVATION` の票を 1 枚も持たない.*blind/s)
+  await rm(dir, { recursive: true, force: true })
+})

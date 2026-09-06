@@ -377,7 +377,7 @@ async function main() {
 
   await check('その例外は baton に閉じる —— aim の fence も open-todo も出さない', async () => {
     const r = runBin(env0, shipped, 'aim-facts.mjs', { cwd: withBaton })
-    for (const leak of ['open-todo', 'escalation:', 'bearing-drift-intra', 'bearing-awaiting-observation', '# aim frame']) {
+    for (const leak of ['open-todo', 'escalation:', 'bearing-drift-intra', 'bearing-awaiting-declaration', '# aim frame']) {
       must(!r.stdout.includes(leak), `採っていない repo へ「${leak}」が漏れた`)
     }
     must(/baton:/.test(r.stdout), 'baton を名指していない')

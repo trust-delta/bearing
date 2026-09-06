@@ -23,8 +23,9 @@ import {
   splitProcess,
   parseProcessMarks,
   parseEscalation,
+  parseObservation,
   gatherBacklog,
-  renderAwaitingFence,
+  renderAwaitingDeclarationFence,
 } from '../lib/process.mjs'
 
 const body = (...lines) => lines.join('\n')
@@ -200,7 +201,7 @@ test('unknown nodes are named so the human can see what was unreadable', async (
 // ── 番が人間へ渡る瞬間 ───────────────────────────────────────────────────────
 //
 // ⚠ `[todo]` はエージェントが自力で完了を確認できる形でのみ書かれる ∴ mark が尽きた node は
-// 「エージェントが尽くした ∴ 人間の観測待ち」を意味する。**この瞬間が可視化されなければ、
+// 「エージェントが尽くした ∴ 人間の宣言待ち」を意味する。**この瞬間が可視化されなければ、
 // 誰も観測に来ない** —— open-todo が 0 になるだけでは、番が渡ったことは誰にも見えない。
 
 test('a node whose marks are all done is awaiting the human, not finished', async () => {
@@ -210,7 +211,9 @@ test('a node whose marks are all done is awaiting the human, not finished', asyn
   ])
   const r = await gatherBacklog(root)
   assert.equal(r.openTodoNodes, 1)
-  assert.deepEqual(r.awaitingNodes, [{ slug: 'exhausted', doneMarks: 2, state: 'open' }])
+  assert.deepEqual(r.awaitingNodes, [
+    { slug: 'exhausted', doneMarks: 2, observations: 0, state: 'open' },
+  ])
   await rm(root, { recursive: true, force: true })
 })
 
@@ -253,19 +256,21 @@ test('an unreadable PROCESS is not awaiting — `unknown` must not become `all-d
 })
 
 test('the fence is emitted even with no records, and says which silence it is', () => {
-  const out = renderAwaitingFence([])
-  assert.match(out, /^```bearing-awaiting-observation v1\n/)
-  assert.match(out, /# fields: slug \| done_marks \| state/)
-  assert.match(out, /# none — エージェントが尽くして観測待ちになっている aim は無い/)
+  const out = renderAwaitingDeclarationFence([])
+  assert.match(out, /^```bearing-awaiting-declaration v1\n/)
+  assert.match(out, /# fields: slug \| done_marks \| observations \| state/)
+  assert.match(out, /# none — エージェントが尽くして宣言待ちになっている aim は無い/)
 })
 
 test('records render one per line, in the fixed field order', () => {
-  const out = renderAwaitingFence([
-    { slug: 'a', doneMarks: 3, state: 'open' },
-    { slug: 'b', doneMarks: 1, state: 'open' },
+  const out = renderAwaitingDeclarationFence([
+    { slug: 'a', doneMarks: 3, observations: 2, state: 'open' },
+    { slug: 'b', doneMarks: 1, observations: 0, state: 'open' },
   ])
-  assert.match(out, /\na \| 3 \| open\n/)
-  assert.match(out, /\nb \| 1 \| open\n/)
+  assert.match(out, /\na \| 3 \| 2 \| open\n/)
+  // ⚠ **0 枚は `0` ではなく `-`** —— `0` は「数えたら 0」とも「まだ数えていない」とも
+  // 読めるが、`-` は**在るべきものが無い**という 1 つの読みしか持たない。
+  assert.match(out, /\nb \| 1 \| - \| open\n/)
 })
 
 // ── 番が人間へ渡る、もう 1 つの形: `# ESCALATION` ────────────────────────────
@@ -347,8 +352,10 @@ test('an empty ESCALATION heading is named, not counted', async () => {
   const r = await gatherBacklog(root)
   assert.deepEqual(r.escalationNodes, [])
   assert.deepEqual(r.escalationEmptyNodes, ['hollow'])
-  // ⚠ 空の節は、その node が観測待ちであることを打ち消さない —— 別の事実である。
-  assert.deepEqual(r.awaitingNodes, [{ slug: 'hollow', doneMarks: 1, state: 'open' }])
+  // ⚠ 空の節は、その node が宣言待ちであることを打ち消さない —— 別の事実である。
+  assert.deepEqual(r.awaitingNodes, [
+    { slug: 'hollow', doneMarks: 1, observations: 0, state: 'open' },
+  ])
   await rm(root, { recursive: true, force: true })
 })
 
@@ -359,5 +366,83 @@ test('a corpus with no escalation anywhere yields empty lists, not undefined', a
   // 何も描かず、読み手はそこに事実が無いことを知りようがない。
   assert.deepEqual(r.escalationNodes, [])
   assert.deepEqual(r.escalationEmptyNodes, [])
+  await rm(root, { recursive: true, force: true })
+})
+
+// ── 番の隣にある、渡す材料: `# OBSERVATION` ──────────────────────────────────
+//
+// ⚠ **これは `[todo]` の鏡像である** —— あちらが「エージェントが自力で確認できることだけ」を
+// 書く節なら、こちらは **「エージェントには確認できないことだけ」** を書く節である。
+// ⚠ **番を渡すことと、何を見ればよいかを渡すことは別である**: 前者だけを出す面は、人間に
+// node を頭から読み直させる。
+
+test('an OBSERVATION section with slips is material for the human', () => {
+  const r = parseObservation(body('# IS', 'x', '# OBSERVATION', '', '- 面を開いて木が描かれるか', '- 衝突が拒否されるか', '', '# PROCESS'))
+  assert.deepEqual(r, { present: true, empty: false, items: 2 })
+})
+
+test('a node with no OBSERVATION section carries no material — and that is not silence', () => {
+  const r = parseObservation(body('# IS', 'x', '# PROCESS', '- [todo] a'))
+  assert.deepEqual(r, { present: false, empty: false, items: 0 })
+})
+
+test('an empty OBSERVATION heading is `empty`, not `present` — the same law as ESCALATION', () => {
+  const r = parseObservation(body('# OBSERVATION', '', '', '# PROCESS', '- [todo] a'))
+  assert.deepEqual(r, { present: false, empty: true, items: 0 })
+})
+
+test('prose in OBSERVATION counts as content but not as a slip', () => {
+  // ⚠ **書かれたものを「無い」と述べるほうが、票として数えないことより重い嘘である** ∴
+  // `present` は真、`items` は 0。⚠ 数えられたいなら list item にすること（`# PROCESS` と同法）。
+  const r = parseObservation(body('# OBSERVATION', '', '見るべきものはあるが、票の形で書いていない', ''))
+  assert.deepEqual(r, { present: true, empty: false, items: 0 })
+})
+
+test('regression: an OBSERVATION heading quoted inside a fence is not a claim', () => {
+  // ⚠ **scanner が 1 つであることが、この法を 2 つ目の節にも自動で効かせている。**
+  const r = parseObservation(
+    body('# IS', '', '```markdown', '# OBSERVATION', '- 例示であって主張ではない', '```', ''),
+  )
+  assert.deepEqual(r, { present: false, empty: false, items: 0 })
+})
+
+test('observation counts NODES, while the fence carries the number of slips', async () => {
+  const root = await corpusBodies([
+    ['rich', 'open', '# OBSERVATION\n\n- a\n- b\n- c\n\n# PROCESS\n\n- [done] 手段'],
+    ['blind', 'open', '# PROCESS\n\n- [done] 手段'],
+  ])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.observationNodes, ['rich'])
+  // ⚠ **0 枚と 3 枚の差は node 単位の数に現れない** ∴ 枚数は awaiting の record が運ぶ。
+  assert.deepEqual(r.awaitingNodes, [
+    { slug: 'blind', doneMarks: 1, observations: 0, state: 'open' },
+    { slug: 'rich', doneMarks: 1, observations: 3, state: 'open' },
+  ])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('a done node keeps its slips — the record of what was looked at does not vanish', async () => {
+  // ⚠ **除外は `dead` だけである。** 倒した瞬間に材料が面から消えれば、宣言を後から
+  // 検め直す道が閉じる。
+  const root = await corpusBodies([['settled', 'done', '# OBSERVATION\n\n- 見たもの\n\n# PROCESS\n\n- [done] a']])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.observationNodes, ['settled'])
+  assert.deepEqual(r.awaitingNodes, [])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('an empty OBSERVATION heading is named, not counted', async () => {
+  const root = await corpusBodies([['hollow', 'open', '# OBSERVATION\n\n# PROCESS\n\n- [done] a']])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.observationNodes, [])
+  assert.deepEqual(r.observationEmptyNodes, ['hollow'])
+  await rm(root, { recursive: true, force: true })
+})
+
+test('a corpus with no OBSERVATION anywhere yields empty lists, not undefined', async () => {
+  const root = await corpus([['a', 'open', ['- [todo] one']]])
+  const r = await gatherBacklog(root)
+  assert.deepEqual(r.observationNodes, [])
+  assert.deepEqual(r.observationEmptyNodes, [])
   await rm(root, { recursive: true, force: true })
 })

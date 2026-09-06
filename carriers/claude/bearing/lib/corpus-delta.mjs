@@ -11,7 +11,7 @@
 // triage を招くからである。**
 
 import { renderWorkingDeltaFence } from './working-delta.mjs'
-import { renderAwaitingFence } from './process.mjs'
+import { renderAwaitingDeclarationFence } from './process.mjs'
 
 /**
  * @param {{
@@ -28,8 +28,10 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   const lines = []
   let openTodo = 0
   let escalation = 0
+  let observation = 0
   const unknown = []
   const emptyEscalation = []
+  const emptyObservation = []
   const awaiting = []
   const anomalies = []
 
@@ -47,6 +49,8 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
     escalation += r.backlog?.escalationNodes?.length ?? 0
     for (const s of r.backlog?.unknownNodes ?? []) unknown.push(`${r.label}/${s}`)
     for (const s of r.backlog?.escalationEmptyNodes ?? []) emptyEscalation.push(`${r.label}/${s}`)
+    observation += r.backlog?.observationNodes?.length ?? 0
+    for (const s of r.backlog?.observationEmptyNodes ?? []) emptyObservation.push(`${r.label}/${s}`)
     for (const a of r.backlog?.awaitingNodes ?? [])
       awaiting.push({ ...a, slug: repos.length > 1 ? `${r.label}/${a.slug}` : a.slug })
     for (const a of r.backlog?.anomalies ?? []) anomalies.push({ repo: r.label, ...a })
@@ -75,7 +79,7 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   // ⚠ **セッション途中こそ、この事実が生まれる場所である** —— 最後の `[todo]` を `[done]` に
   // するのはまさに走っているセッションであり、そのとき番は人間へ渡る。boot 時にしか
   // 出さなければ、**渡した当のセッションがそれを知らないまま進む。**
-  lines.push(renderAwaitingFence(awaiting).trimEnd(), '')
+  lines.push(renderAwaitingDeclarationFence(awaiting).trimEnd(), '')
   if (awaiting.length > 0) {
     lines.push(
       '⚠ **上の node はエージェントが尽くしている ∴ 残っているのは人間の観測と `state:` の',
@@ -83,6 +87,15 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
       '人間だけであり、この一覧はそれを先取りしない。**',
       '',
     )
+    const blind = awaiting.filter((a) => !(a.observations > 0))
+    if (blind.length > 0) {
+      lines.push(
+        `⚠ **うち ${blind.length} 件は \`# OBSERVATION\` の票を 1 枚も持たない**: ` +
+          blind.map((a) => a.slug).join(', '),
+        '**番は渡っているが、何を見れば満たされたと言えるかが書かれていない。**',
+        '',
+      )
+    }
   }
 
   // ⚠ **セッション途中に生まれる、もう 1 つの「人間の番」。** 自力で閉じられないと分かった
@@ -100,6 +113,24 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
     lines.push(
       `⚠ **\`# ESCALATION\` 見出しを持つが中身が空の node が ${emptyEscalation.length} 件**: ` +
         emptyEscalation.join(', '),
+      '**上の数には入っていない。**',
+      '',
+    )
+  }
+
+  // ⚠ **番の隣に材料を置く。** セッション途中に票が書かれることこそ普通であり
+  // （`[todo]` が尽きた瞬間に書く）、boot 時にしか出さなければ **書いた当のセッションが
+  // 自分の書いたものを面で見ないまま終わる。**
+  lines.push(
+    `**observation: ${observation}** —— \`# OBSERVATION\` に中身を持つ aim node の数`,
+    '（`state: dead` は除く）。⚠ **これは「番」ではなく「材料」を数えている** ——',
+    '**番を渡された人間に、何を見ればよいかが書かれているか。**',
+    '',
+  )
+  if (emptyObservation.length > 0) {
+    lines.push(
+      `⚠ **\`# OBSERVATION\` 見出しを持つが中身が空の node が ${emptyObservation.length} 件**: ` +
+        emptyObservation.join(', '),
       '**上の数には入っていない。**',
       '',
     )

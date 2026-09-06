@@ -34,7 +34,18 @@
 // ∴ **mark が在り、その全てが `[done]` の node には固有の意味がある**: エージェントが尽くし、
 // 残っているのは**人間の観測と `state:` の宣言だけ**である。これを `open-todo: 0` として
 // 沈黙させると、⚠ **体制が人間へ番を渡した瞬間が、どこにも現れなくなる。**
-// `renderAwaitingFence` はその瞬間を可視化する —— **可視化するだけで、判定はしない。**
+// `renderAwaitingDeclarationFence` はその瞬間を可視化する —— **可視化するだけで、判定はしない。**
+//
+// ⚠ **だが「番を渡す」ことと「何を見ればよいかを渡す」ことは別である。** 番だけを渡す面は、
+// 人間に「あなたの番だ」と告げながら **node を頭から読み直させる**。∴ 正本は `# OBSERVATION`
+// を置き、**エージェントが「人間が何を見れば満たされたと言えるか」を票として書く**と定めた。
+// ⚠ **`[todo]` の鏡像である**: あちらが「自力で確認できることだけ」なら、こちらは
+// **「自力では確認できないことだけ」**。⚠ **エージェントはこの節を倒さない** —— 観測したと
+// いう証言は frontmatter（`state:` / `last-verified:`）に置かれ、それは人間の act である。
+//
+// ⚠ **これは仮定ではなく実測から来ている**（2026-09-06、全 node が宣言待ちに並んだ 1 つの
+// corpus）: 倒せば「目的は全て達成された」と読める状態になったが、**各 node が自ら書いていた
+// 未観測の条件は散文の中にしか無く、どの面もそれを運んでいなかった。**
 //
 // ⚠ **mark が 1 つも無い純 IS の node はここに入らない。** あちらはまだ何も約束していない
 // のであって、尽くしたのではない。両者を同じ「todo 0 件」として畳んではならない。
@@ -43,7 +54,7 @@
 //
 // 正本は 3 つを分けている ——「**観測を可能にする作業は PROCESS、判断そのものは ESCALATION、
 // そして観測と宣言は人間**」。⚠ **このうち面を持たない 1 つが `# ESCALATION` だった** ——
-// `[todo]` は `open-todo` に、尽きた mark は `awaiting-observation` に出るのに、**「人間が
+// `[todo]` は `open-todo` に、尽きた mark は `awaiting-declaration` に出るのに、**「人間が
 // 判断しなければ誰も進めない」だけが、どの数にも fence にも現れなかった。**
 //
 // ⚠ **∴ 既に書かれていた読み方が偽になっていた**（`aim-facts.md`）: 「open-todo と awaiting が
@@ -59,7 +70,13 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { aimRelPath, parseAimRecord, readAimSlugs, DEFAULT_AIMS_DIR } from './corpus.mjs'
 
-export const AWAITING_FENCE_TAG = 'bearing-awaiting-observation v1'
+// ⚠ **旧 tag は `bearing-awaiting-observation` だった。** `# OBSERVATION` が入った以上、
+// 「観測待ち」は *票が在るか* とも *番が渡ったか* とも読める ∴ 名前が 2 つの事実を指す。
+// **この fence が述べているのは後者だけである** —— 人間の**宣言**を待っている、が正確な形。
+export const AWAITING_DECLARATION_FENCE_TAG = 'bearing-awaiting-declaration v1'
+
+/** 観測票 —— 1 行 1 票の list item。`# PROCESS` の mark と同じく、散文は数えない。 */
+const SLIP = /^- \S/
 
 /**
  * corpus が書いているとおりの mark: 行頭・`-` bullet・小文字の語。
@@ -97,7 +114,7 @@ const stripInlineCode = (line) => line.replace(/`[^`]*`/g, '')
  * body を 1 度だけ走査し、各行がどの top-level 節に属するかを付けて返す。
  *
  * 節は `# ` 見出しから次の `# ` 見出しまで走る。`aim-authoring.md` は body の section を
- * top-level で与えている（`# IS`・`# ESCALATION`・`# PROCESS`・`# HISTORY`・`# DAG`）∴
+ * top-level で与えている（`# IS`・`# ESCALATION`・`# PROCESS`・`# OBSERVATION`・`# HISTORY`・`# DAG`）∴
  * 節の中の `## ` は corpus が使っていない深い level である —— **推測せず anomaly として
  * 報告する。**
  *
@@ -177,6 +194,32 @@ export function parseEscalation(body) {
 }
 
 /**
+ * `# OBSERVATION` —— 正本が **「人間が何を見れば、この aim が満たされたと言えるか」のみ**と
+ * 定める節。
+ *
+ * ⚠ **`# ESCALATION` と同じ 3 状態を持つ**（無い / 中身が在る / 見出しだけ）—— 空の見出しを
+ * 「票が在る」と数えれば、**読みに行っても何も書かれていない**ものを人間に渡すことになる。
+ *
+ * ⚠ **だが 1 つだけ多く返す: 票の枚数である。** `escalation` は「向き合う node が幾つか」で
+ * 足りるが、こちらは **番を渡された人間に材料が在るか**を述べる節であり、⚠ **0 枚と 3 枚の
+ * 差は node 単位の数には現れない。** ∴ 枚数は fence の列が運ぶ。
+ *
+ * ⚠ **散文は票として数えない。** `# PROCESS` の mark と同じ法である —— 数えられたいなら
+ * list item にすること。⚠ **ただし散文だけの節も「中身が在る」には入る**: 書かれたものを
+ * 「無い」と述べるほうが、票として数えないことより重い嘘である。
+ *
+ * @param {string} body
+ * @returns {{present: boolean, empty: boolean, items: number}}
+ */
+export function parseObservation(body) {
+  const { rows, headings } = scanSections(body)
+  if (!headings.has('OBSERVATION')) return { present: false, empty: false, items: 0 }
+  const own = rows.filter((r) => r.section === 'OBSERVATION')
+  const hasContent = own.some((r) => r.line.trim() !== '')
+  return { present: hasContent, empty: !hasContent, items: own.filter((r) => SLIP.test(r.line)).length }
+}
+
+/**
  * 1 つの record body の mark を parse する。
  *
  * @param {string} body
@@ -231,12 +274,18 @@ export function parseProcessMarks(body) {
  * こちらが求めているのは「人間の判断を待って止まっている aim に注意を払う」ことであり、
  * 1 つの node が判断待ちを 3 つ抱えていても、**人間が向き合う node としては 1 つ**である。
  *
+ * ⚠ **`observationNodes` だけは node 単位で足りない。** あちら 2 つは「注意を払うべき node」を
+ * 数えているが、観測票が述べるのは *その node に材料が在るか* であり、**0 枚と 3 枚の差は
+ * node の数に現れない** ∴ 枚数は `awaitingNodes` の record が運ぶ。
+ *
  * @param {string} repoRoot
- * @returns {Promise<{openTodoNodes: number, escalationNodes: string[], escalationEmptyNodes: string[], unknownNodes: string[], anomalies: {slug: string, kind: string, line: string, no: number}[]}>}
+ * @returns {Promise<{openTodoNodes: number, escalationNodes: string[], escalationEmptyNodes: string[], observationNodes: string[], observationEmptyNodes: string[], unknownNodes: string[], anomalies: {slug: string, kind: string, line: string, no: number}[]}>}
  */
 export async function gatherBacklog(repoRoot, dir = DEFAULT_AIMS_DIR) {
   const slugs = await readAimSlugs(repoRoot, dir)
   let openTodoNodes = 0
+  const observationNodes = []
+  const observationEmptyNodes = []
   const unknownNodes = []
   const awaitingNodes = []
   const escalationNodes = []
@@ -260,19 +309,35 @@ export async function gatherBacklog(repoRoot, dir = DEFAULT_AIMS_DIR) {
     const esc = parseEscalation(record.body)
     if (esc.blocked) escalationNodes.push(slug)
     else if (esc.empty) escalationEmptyNodes.push(slug)
+    // ⚠ **観測票も `dead` だけを除く。** `state: done` の node に票が残っていることは
+    // 食い違いではない —— 票は「何を見たか」の記録として残り続けてよい。除外を増やせば、
+    // **倒した瞬間に材料が面から消え**、後から宣言を検め直す道が閉じる。
+    const obs = parseObservation(record.body)
+    if (obs.present) observationNodes.push(slug)
+    else if (obs.empty) observationEmptyNodes.push(slug)
     if (marks.unknown) unknownNodes.push(slug)
     if (marks.todo > 0) openTodoNodes++
     // ⚠ all-done かつ未解決 ＝ **人間の番**。mark が在り、その全てが `[done]` で、人間が
     // まだ `state: done` を宣言していない node。`no-process`（mark が 1 つも無い純 IS）は
     // 入らない —— あちらはまだ何も約束していない。
     else if (marks.done > 0 && record.state !== 'done') {
-      awaitingNodes.push({ slug, doneMarks: marks.done, state: record.state ?? 'unset' })
+      // ⚠ **票の枚数をここで運ぶ。** node 単位の `observation` は「票が在る node の数」しか
+      // 述べず、**番を渡された当の node が 0 枚であることを述べられない** —— そしてそれこそが
+      // 人間にとって唯一まずい形である。
+      awaitingNodes.push({
+        slug,
+        doneMarks: marks.done,
+        observations: obs.items,
+        state: record.state ?? 'unset',
+      })
     }
   }
   return {
     openTodoNodes,
     escalationNodes,
     escalationEmptyNodes,
+    observationNodes,
+    observationEmptyNodes,
     unknownNodes,
     awaitingNodes,
     anomalies,
@@ -280,7 +345,7 @@ export async function gatherBacklog(repoRoot, dir = DEFAULT_AIMS_DIR) {
 }
 
 /**
- * `bearing-awaiting-observation v1` —— エージェントが尽くし、人間の観測を待っている aim。
+ * `bearing-awaiting-declaration v1` —— エージェントが尽くし、人間の**宣言**を待っている aim。
  *
  * ⚠ **これは「終わった aim」の一覧ではない。** エージェントの側の終点は「目的が満たされたこと」
  * ではなく「人間が観測できるようになったこと」であり、ここに挙がるのは後者に達した node で
@@ -291,15 +356,18 @@ export async function gatherBacklog(repoRoot, dir = DEFAULT_AIMS_DIR) {
  * 正本は「fence を parse せよ、prose を scrape するな」と定めており、行動の対象になる slug を
  * 言い回しの変わりうる散文に置けば、読み手は scrape を強いられる。
  */
-export function renderAwaitingFence(items) {
+export function renderAwaitingDeclarationFence(items) {
   const lines = [
-    '```' + AWAITING_FENCE_TAG,
-    '# fields: slug | done_marks | state',
+    '```' + AWAITING_DECLARATION_FENCE_TAG,
+    '# fields: slug | done_marks | observations | state',
   ]
   if (items.length === 0) {
-    lines.push('# none — エージェントが尽くして観測待ちになっている aim は無い')
+    lines.push('# none — エージェントが尽くして宣言待ちになっている aim は無い')
   } else {
-    for (const it of items) lines.push(`${it.slug} | ${it.doneMarks} | ${it.state}`)
+    // ⚠ **0 枚は `0` ではなく `-` で出す。** `0` は「数えたら 0 だった」とも「まだ数えて
+    // いない」とも読めるが、`-` は**在るべきものが無い**という 1 つの読みしか持たない。
+    for (const it of items)
+      lines.push(`${it.slug} | ${it.doneMarks} | ${it.observations > 0 ? it.observations : '-'} | ${it.state}`)
   }
   lines.push('```', '')
   return lines.join('\n') + '\n'
