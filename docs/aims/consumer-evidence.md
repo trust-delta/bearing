@@ -41,6 +41,10 @@ state: open
 
 ⚠ **覆えない範囲が残り、それは字面に出さねばならない。** 合成した消費者が再現できるのは**我々の code の振る舞い**だけであり、**browser・OS・ハーネスの変異は覆えない** —— 上の 4 つのうち 2 つ（UNC の picker 拒否、別マシンの win32）は**人間が実機で踏んで初めて出た**。⚠ **覆った範囲と覆えない範囲を同じ場所で述べないかぎり、この機構自身が「覆ったように読ませる」側になる** —— それは canon が 7 箇所で禁じている形そのものである。
 
+# ESCALATION
+
+- 🔴 **job が挙げる「覆っていない 6 つ」が、受け入れられる残りか**（1 platform・1 node 版／harness のシェルではない／ハーネスの登録／browser の面 ほか）。⚠ **どこまでの穴を負うかは目的の問いであり、job は決めない。** ⚠ **これは 2026-09-06 まで `# OBSERVATION` の票として置かれていた** —— 🔴 **欄違いであって、文言は 1 字も動いていない。** 正本は `# OBSERVATION` を「人間が何を見れば、この aim が満たされたと言えるか」だけの欄と定め、**判断そのものは `# ESCALATION`** へ振り分けている（`aim-authoring.md`）。経緯は [[bearing]] の `# ESCALATION`
+
 # PROCESS
 
 - [done] **合成した消費者を CI の job にした。** `scripts/consumer-check.mjs` と CI の `consumer` job。carrier の tracked file だけを mode ごと checkout の外へ写して出荷 copy とし、`BEARING_DELEGATED` を立て、**消費者が carrier の manifest を持たないこと**も併せて見る。⚠ **各 bin の cwd は消費者へ倒す** —— 倒さなければ bearing 自身を測る（`# IS`）。⚠ **session id は毎回新しくする** —— `precompact` は `os.tmpdir()` の marker で「セッションにつき一度」を守る ∴ 使い回せば 2 度目以降は黙り、**その沈黙は検査の成功に見える**
@@ -50,7 +54,6 @@ state: open
 # OBSERVATION
 
 - **管理下の別 repo で実際に受け取り、`/bearing:setup-aim` を打って block と `.claude/skills/aim/` が置かれるのを見る。** ⚠ **job が立てるのは合成した消費者であって実機ではない** —— job 自身が「cache そのものではない」と述べている。
-- **job が挙げる「覆っていない 6 つ」が、受け入れられる残りか**（1 platform・1 node 版／harness のシェルではない／ハーネスの登録／browser の面 ほか）。⚠ **どこまでの穴を負うかは目的の問いであり、job は決めない。**
 - **win32 の実機で通るか。** ⚠ **2026-09-04 に出た 4 件の不具合のうち 2 件は、人間が別マシン・別 browser で踏んで初めて出た**（win32 の path 形・UNC 越しの picker 拒否）—— **CI は 1 つも再現できない。**
 
 # DAG
