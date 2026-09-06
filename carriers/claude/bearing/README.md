@@ -46,7 +46,7 @@ baton だけは述べる —— handoff は aim ではない）。使う project
 ```
 
 実行した project の `CLAUDE.md` の末尾へ marker で挟んだ法を差し込み、`.claude/skills/aim/` へ aim
-skill を置く（`--check` / `--remove` も在る）。⚠ **置いた後はどちらもその repo のもの** —— plugin は追随させない。⚠ **marker は HTML コメント ∴ context には 1 token も乗らない** —— docs が
+skill を置く（`--check` / `--remove` / `--update` も在る）。⚠ **置いた後はどちらもその repo のもの** —— 🔴 **block と skill は 1 組であり、更新するなら両方、しないならどちらも維持である**（人間の決定 2026-09-07。理由は、版の更新が**手元の aim node の書き換えを伴いうる**からである）∴ 置かれた skill が正本と違えば **block も触らずに止まる**。揃えるのは `--update`。⚠ **marker は HTML コメント ∴ context には 1 token も乗らない** —— docs が
 「block-level の HTML コメントは注入前に除かれる」と明記している。⚠ **hook はこの marker を
 読み、置かれた法が古ければそう述べる。人間が block の中を編集していれば、置き直さず止まる。**
 

@@ -55,7 +55,13 @@ baton, which is handoff, not aim). Once, in a project that wants it:
 ```
 
 That inserts a marker-delimited block of the law at the end of the
-project-root `CLAUDE.md` (`--check` and `--remove` are there too). The
+project-root `CLAUDE.md`, and the aim skill under `.claude/skills/aim/`
+(`--check`, `--remove` and `--update` are there too). **The block and the
+skill are one pair** (human decision, 2026-09-07): update both or keep both,
+and which one it is belongs to the side using aim — a version bump may
+require rewriting the aim nodes already in hand. So if the placed skill does
+not match the shipped canon, the command stops without touching the block
+either; `--update` brings both to the current version. The
 markers are HTML comments, which the docs state are stripped before the
 content is injected — so they cost no context. The hook reads them: if the
 block is stale it says so, and if a human edited the block it stops instead

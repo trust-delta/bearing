@@ -68,10 +68,19 @@ with no record at all, so it is no evidence.
 /bearing:setup-aim --check           # report the state only
 /bearing:setup-aim --remove          # take the block out (the skill stays — once placed it belongs to this repo)
 /bearing:setup-aim --dir proj/aims   # declare where the corpus lives (default docs/aims)
+/bearing:setup-aim --update          # bring block and skill to the current version together (the placed 3 files are discarded)
 ```
 
 ⚠ **It writes into the project you run it in** — adopting aim is a declaration about this repo's corpus, so there is nowhere else it could go.
-⚠ **Once placed, both the block and the skill belong to this repo** — whether to track, edit, or leave them stale is the repo's call; the plugin does not keep them in sync.
+⚠ **Once placed, both the block and the skill belong to this repo** — whether to track, edit, or leave them stale is the repo's call.
+
+🔴 **The block and the skill are one pair** (human decision, 2026-09-07) — **update both or keep
+both; which one it is, is for the side using aim to decide.** ⚠ **The reason is the corpus they
+already hold**: a version bump is not a document swap but an act that **may require rewriting the
+aim nodes in hand**. So when the placed skill does not match the shipped canon, `setup-aim`
+**stops without touching the block either** — it has no way to tell "the version is old" from
+"this repo edited it", and it will not discard what it cannot tell apart. **`--update` brings
+both to the current version.**
 
 ⚠ **The marker is an HTML comment, so it costs the consumer's context nothing.** It carries the
 version and a hash of the body, so `--check` tells **"the version is old" apart from "a human

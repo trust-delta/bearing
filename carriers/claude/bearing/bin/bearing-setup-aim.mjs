@@ -4,18 +4,42 @@
 // 置くのは 2 つ: project-root の `CLAUDE.md` の末尾へ marker 付きの法の block、そして
 // `.claude/skills/aim/` へ aim skill（plugin の `templates/aim/` の複製）。
 //
-// ═══ 置いたところで責任が終わる ═════════════════════════════════════════════
+// ═══ block と skill は 1 組である ═══════════════════════════════════════════
+//
+// 🔴 **この CLI が書き込むのは、実行後に block と skill の両方が今の版になるときだけである。**
+// **片方だけが動くことは無い。**
 //
 // ⚠ **置いたものは、置いた瞬間からその repo のものである**（人間の決定 2026-09-05）。track するか・
-// 直すか・古いままにするか・clone した誰もが読めるようにするかは repo の policy であり、plugin は
-// 関与しない ∴ **この CLI は置いたものを追随させない** —— 2 度目に打っても、既に在る
-// `.claude/skills/aim/` には触らず、在ることを述べて止まる。block だけは marker に版と本文 sha を
-// 持つので、人間が中を編集していなければ置き直せる。
+// 直すか・古いままにするかは repo の policy であり、plugin は関与しない。⚠ **だが「古さは repo の
+// もの」は「block だけ更新する」という意味ではない**（人間の決定 2026-09-07）—— **更新するなら
+// 両方、しないならどちらも維持であり、どちらにするかは aim を使う側が決める。**
 //
-// ⚠ **先行の手段はこの逆を採り、1 日で行き詰まった。** canon を `docs/aims/_guide/` へ置き、台帳で
-// 「我々が置いたまま」なら最新へ追随させていた —— 5 状態・台帳・CRLF 正規化比較のすべてが、
-// **置いたものを我々のものと見た**ことから生じた費用である（`docs/aims/adoption-declaration.md`
-// の `# HISTORY`）。
+// 🔴 **理由は保有 corpus である** —— 版が上がることは doc の差し替えではなく、**手元の aim node の
+// 書き換えを伴いうる act** である。⚠ **実例が在る**: 0.21.0 は `# OBSERVATION` の欄を導入し、
+// 既存 node の判断待ちを `# ESCALATION` へ移す作業を生んだ。
+//
+// ⚠ **2026-09-07 まで、実装は block だけを追随させていた。** 実測（同日、対象: この checkout）——
+// 0.20.0 の 3 枚を置いた repo に打つと、block は v0.21.0 へ置き直され、skill は 0 byte のまま、
+// `--check` は **exit 0 で `状態: current`** と述べた。🔴 **そして 0.21.0 の実質は
+// `aim-authoring.md` と `aim-facts.md` にしか無く、`frame.md`（＝ block の法）は 1 行も動いて
+// いない** ∴ **あの「更新」は、その版が持っていたものを 1 文字も運んでいなかった。**
+//
+// ═══ 止める規準 ═══════════════════════════════════════════════════════════
+//
+// 🔴 **消えるのが「我々が置いたそのもの」なら、打った act で足りる。消えるものが手元の何かかも
+// しれないなら、止めて人間に出す。** ⚠ **これは block が既に持っていた規則を skill へ広げたもの
+// であって、新しい法ではない。**
+//
+// - **block** —— marker の sha が本文と一致すれば置き直す。一致しなければ **人間が手を入れた**と
+//   読んで拒む。
+// - **skill** —— 同梱の正本と一致すれば触る必要が無い。一致しなければ **止まる** —— ⚠ **「版が
+//   古い」のか「人間が手を入れた」のかを区別する手段が、こちらには無いからである**（台帳は棄却
+//   済み。`docs/aims/adoption-declaration.md` の `# HISTORY`）∴ 区別できないものを黙って捨てない。
+//   捨ててよいと述べるのが `--update` であり、⚠ **それは block と skill の両方に効く。**
+//
+// ⚠ **改行だけは正規化して比べる。** CRLF の checkout では git が変換しただけで「一致しない」に
+// なり、**同じ轍を block の sha で既に踏んでいる**（`docs/aims/bearing.md`）。⚠ **これは台帳では
+// ない** —— 状態も記録も持たず、見るのは byte だけである。
 //
 // ═══ 書き先は実行した project である ═══════════════════════════════════════
 //
@@ -116,18 +140,63 @@ async function writeAtomic(file, text) {
   await rename(tmp, file)
 }
 
+/** 改行だけ揃えて比べる。⚠ **CRLF の checkout で、git が変換しただけの差を「違い」にしない。** */
+const lf = (t) => t.replace(/\r\n/g, '\n')
+
 /**
- * aim skill を `.claude/skills/aim/` へ置く。⚠ **既に在れば 1 byte も触らない** —— 置いた後は
- * その repo のものであり、2 度目の `setup-aim` はそれを「我々のもの」として扱えない。中身が古い
- * かどうかも見ない: 古さは repo のものである。
+ * 置かれた 3 枚が、同梱の正本と一致するか。
+ *
+ * ⚠ **状態も台帳も持たない** —— 見るのは中身だけである（台帳は棄却済み。見出しコメントを見よ）。
+ * ⚠ **欠けている 1 枚も「一致しない」の 1 つ**として数える —— **半分だけ置かれた skill は、
+ * 古い skill より静かに壊れている。**
  *
  * @param {string} root plugin root
  * @param {string} projectDir
- * @returns {Promise<{action: 'placed'|'kept', dir: string, missing: string[]}>}
+ * @returns {Promise<{state: 'absent'|'same'|'differs'|'unreadable',
+ *   differing: string[], unreadable: string[]}>}
  */
-export async function placeSkill(root, projectDir) {
+export async function inspectSkill(root, projectDir) {
   const dest = path.join(projectDir, SKILL_DIR)
-  if (await exists(dest)) return { action: 'kept', dir: dest, missing: [] }
+  if (!(await exists(dest))) return { state: 'absent', differing: [], unreadable: [] }
+  const differing = []
+  const unreadable = []
+  for (const f of TEMPLATE_FILES) {
+    let want
+    try {
+      want = await readFile(path.join(root, 'templates', 'aim', f), 'utf8')
+    } catch {
+      // ⚠ 「置かれたものが違う」と「置く元が無い」を同じ言葉にしない —— 後者はこの plugin の壊れである。
+      unreadable.push(f)
+      continue
+    }
+    let got
+    try {
+      got = await readFile(path.join(dest, f), 'utf8')
+    } catch {
+      differing.push(f)
+      continue
+    }
+    if (lf(got) !== lf(want)) differing.push(f)
+  }
+  if (unreadable.length > 0) return { state: 'unreadable', differing, unreadable }
+  return { state: differing.length === 0 ? 'same' : 'differs', differing, unreadable }
+}
+
+/**
+ * aim skill を `.claude/skills/aim/` へ置く。
+ *
+ * ⚠ **既定では、既に在れば 1 byte も触らない。** `overwrite` は**呼ぶ側が組として判定したとき
+ * だけ**渡される —— ⚠ **この関数は単独では「捨ててよいか」を知りえない。**
+ *
+ * @param {string} root plugin root
+ * @param {string} projectDir
+ * @param {{overwrite?: boolean}} [opts]
+ * @returns {Promise<{action: 'placed'|'replaced'|'kept', dir: string, missing: string[]}>}
+ */
+export async function placeSkill(root, projectDir, { overwrite = false } = {}) {
+  const dest = path.join(projectDir, SKILL_DIR)
+  const existed = await exists(dest)
+  if (existed && !overwrite) return { action: 'kept', dir: dest, missing: [] }
   await mkdir(dest, { recursive: true })
   const missing = []
   for (const f of TEMPLATE_FILES) {
@@ -138,19 +207,39 @@ export async function placeSkill(root, projectDir) {
       missing.push(f)
     }
   }
-  return { action: 'placed', dir: dest, missing }
+  return { action: existed ? 'replaced' : 'placed', dir: dest, missing }
 }
 
 function sayPlaced(r) {
   if (r.action === 'kept') {
-    log(`${SKILL_DIR} は既に在る ∴ 触らない —— 置いた後はこの repo のものである。`)
+    log(`${SKILL_DIR} は既に同梱の正本と一致する ∴ 触らない。`)
     return
   }
-  log(`aim skill を置いた: ${SKILL_DIR}（${TEMPLATE_FILES.filter((f) => !r.missing.includes(f)).join('・')}）`)
+  log(r.action === 'replaced'
+    ? `aim skill を置き直した: ${SKILL_DIR} —— **置かれていた 3 枚は捨てた。**`
+    : `aim skill を置いた: ${SKILL_DIR}（${TEMPLATE_FILES.filter((f) => !r.missing.includes(f)).join('・')}）`)
   if (r.missing.length > 0) {
     log(`⚠ 同梱の template が読めない: ${r.missing.join('、')} —— この plugin の install が壊れている。`)
   }
   log('⚠ 置いた瞬間からこの repo のものである。track するか・直すか・古いままにするかは、この repo が決める。')
+}
+
+/** 置かれた skill の状態を、そのまま述べる。⚠ **畳まない** —— 4 つは別々の事実である。 */
+function sayInspected(sk) {
+  if (sk.state === 'absent') {
+    log(`aim skill: 無い（${SKILL_DIR}）—— setup-aim が置く。`)
+    return
+  }
+  if (sk.state === 'unreadable') {
+    log(`aim skill: 同梱の正本が読めない（${sk.unreadable.join('、')}）—— この plugin の install が壊れている。`)
+    return
+  }
+  if (sk.state === 'same') {
+    log(`aim skill: 同梱の正本と一致する（${SKILL_DIR}）。`)
+    return
+  }
+  log(`aim skill: 正本と一致しない（${sk.differing.join('、')}）—— 版が古いか、この repo が手を入れたか。`)
+  log('  ⚠ どちらであるかを、この機構は区別できない。両方を今の版へ揃えるのは --update である。')
 }
 
 async function main(argv) {
@@ -190,14 +279,22 @@ async function main(argv) {
       log('  採用していない project は、その行が無くても黙る。--remove で掃除できる。')
     }
     const s = inspect(before, desired)
+    const sk = await inspectSkill(root, projectDir)
     log(`状態: ${s.state} —— ${s.detail}`)
     log(`今の法: v${desired.version} sha=${bodySha(desired.law)}`)
-    // ⚠ **skill は在るか無いかを述べるだけで、exit code は動かさない** —— この終了値は
-    // *法の block* についての判定であり、そこへ別の軸を混ぜれば、呼ぶ側は何が赤いのか分からない。
-    log((await exists(path.join(projectDir, SKILL_DIR)))
-      ? `aim skill: 在る（${SKILL_DIR}）—— 中身はこの repo のものであり、この実行は見ない。`
-      : `aim skill: 無い（${SKILL_DIR}）—— setup-aim が置く。`)
-    return s.state === 'broken' || s.state === 'edited' ? 1 : 0
+    sayInspected(sk)
+    // 🔴 **この終了値は「組」についての判定である。**
+    //
+    // ⚠ **2026-09-07 まで、ここは *block だけ* を見ていた** —— 「skill は在るか無いかを述べる
+    // だけで exit code は動かさない。別の軸を混ぜれば、呼ぶ側は何が赤いのか分からない」と
+    // 述べていた。🔴 **その理由は軸が 2 つ在ることに乗っていた。** block と skill が 1 組に
+    // なった今、**軸は 1 つである** ∴ **どちらかが今の版でなければ赤い。** 何が赤いのかは、
+    // 上の 3 行が名指す。
+    //
+    // ⚠ **採っていない repo は赤くしない**（`absent`）—— **採用していないことは異常ではなく、
+    // この機構が最も守ってきた既定である。**
+    if (s.state === 'absent') return 0
+    return s.state === 'current' && sk.state === 'same' ? 0 : 1
   }
 
   // ⚠ **消えた flag を黙って無視してはならない。** `--decline` は 2026-09-05 に撤去された ——
@@ -246,11 +343,35 @@ async function main(argv) {
     log('⚠ 旧い「降りる宣言」が在ったので外した —— 採用の宣言と並べば読み手が矛盾を読む。')
   }
 
+  // ── 組として判定する ───────────────────────────────────────────────────────
+  //
+  // 🔴 **どちらか一方でも動かせないなら、両方動かさない**（見出しコメントを見よ）。⚠ **判定を
+  // すべて済ませてから書く** —— 先に block を書いてから skill で止まれば、**止まったのに片方が
+  // 動いた状態が残る。**
   const plan = planApply(base, desired)
+  const sk = await inspectSkill(root, projectDir)
+  const update = argv.includes('--update')
+
   if (plan.action === 'refuse') {
     log(`置き直さない: ${plan.reason}`)
+    log(`⚠ ${SKILL_DIR} も触っていない —— block と skill は 1 組である。`)
     return 1
   }
+  if (sk.state === 'unreadable') {
+    log(`⚠ 同梱の template が読めない: ${sk.unreadable.join('、')} —— この plugin の install が壊れている。`)
+    log('⚠ CLAUDE.md も触っていない —— block と skill は 1 組である。')
+    return 1
+  }
+  if (sk.state === 'differs' && !update) {
+    log(`${SKILL_DIR} が同梱の正本と一致しない: ${sk.differing.join('、')}`)
+    log('⚠ 「版が古い」のか「この repo が手を入れた」のかを、この機構は区別できない ∴ 黙って捨てない。')
+    log('⚠ CLAUDE.md も触っていない —— **更新するなら両方、しないならどちらも維持**である。')
+    log('  両方を今の版へ揃える（置かれた 3 枚は捨てられる）: bearing-setup-aim.mjs --update')
+    log('  ⚠ 版が上がることは、手元の aim node の書き換えを伴いうる。')
+    return 1
+  }
+
+  // ここから先は、block も skill も今の版へ動かせる ∴ **両方書く。**
   if (plan.action === 'unchanged' && base === before) {
     log(plan.reason)
   } else {
@@ -260,7 +381,13 @@ async function main(argv) {
   }
   // ⚠ **法が最新であることは、skill が在ることを意味しない。** 版の更新のために打ち直した
   // 人間が、ここで初めて skill を得ることは在りうる ∴ `unchanged` でも置く。
-  sayPlaced(await placeSkill(root, projectDir))
+  const placed = await placeSkill(root, projectDir, { overwrite: sk.state === 'differs' })
+  sayPlaced(placed)
+  // 🔴 **版が動いたなら、手元の corpus を見よと述べる** —— **これが「使う側が決める」の理由
+  // そのものである**（人間の決定 2026-09-07）: 版の更新は doc の差し替えではない。
+  if (plan.action === 'update' || placed.action === 'replaced') {
+    log('⚠ 版が上がった ∴ 手元の aim node が今の法に合っているかを見ること —— 版の更新は corpus の書き換えを伴いうる。')
+  }
   log('外すときは: bearing-setup-aim.mjs --remove')
   return 0
 }
