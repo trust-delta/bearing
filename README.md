@@ -64,7 +64,7 @@ details` は record が無くても版も skill も hook も列挙する ∴ 載
 /bearing:setup-aim --check           # 状態だけ述べる
 /bearing:setup-aim --remove          # block を外す（skill は残す —— 置いた後はこの repo のもの）
 /bearing:setup-aim --dir proj/aims   # corpus の在り処を宣言する（既定は docs/aims）
-/bearing:setup-aim --update          # block と skill を同時に今の版へ揃える（置かれた 3 枚は捨てる）
+/bearing:setup-aim --update          # 区別できない複製を捨てて、block と skill を今の版へ揃える
 ```
 
 ⚠ **書き先は実行した project である** —— aim の採用はその repo の corpus についての宣言ゆえ、repo にしか置けない。
@@ -73,9 +73,15 @@ details` は record が無くても版も skill も hook も列挙する ∴ 載
 🔴 **block と skill は 1 組である**（人間の決定 2026-09-07）—— **更新するなら両方、しないなら
 どちらも維持であり、どちらにするかは aim を使う側が決める。** ⚠ **理由は保有 corpus である**:
 版が上がることは doc の差し替えではなく、**手元の aim node の書き換えを伴いうる act** だからで
-ある。∴ 置かれた skill が同梱の正本と一致しなければ、`setup-aim` は **block も触らずに止まる**
-——「版が古い」のか「この repo が手を入れた」のかを区別する手段が無い以上、黙って捨てないため
-である。**両方を揃えるのは `--update`**。
+ある。∴ 置かれた skill が同梱の正本と一致しなければ、**`SKILL.md` の frontmatter に刻んだ版と 3 枚の
+指紋に訊く** —— 🔴 **刻印が今の中身を指していれば「この repo は触っていない」** ∴ **打った act で
+揃え直す**（消えるものが無いからである）。⚠ **刻印が無いか、刻印と中身が食い違えば block も触らず
+に止まる** —— そこは「古い」と「手を入れた」を分けられない。**捨ててよいと述べるのが `--update`**。
+
+⚠ **刻印は frontmatter に在る ∴ 消費者の context には 1 token も乗らない**（実測 2026-09-07、対象:
+Claude Code 2.1.263、1 台 —— skill として読み込まれるとき、注入されるのは `---` の後の本文だけで
+ある）。⚠ **対して HTML コメントは skill の本文では除かれない** —— `CLAUDE.md` の marker と違う。
+⚠ **刻印は、これから置くものにしか付かない** —— **既に置かれた複製は今までどおり止まる。**
 
 ⚠ **marker は HTML コメント ∴ context を 1 token も食わない。** 版と本文 sha を運ぶので、
 `--check` は**「版が古い」と「人間が block を編集した」を別のものとして述べる** —— 後者では

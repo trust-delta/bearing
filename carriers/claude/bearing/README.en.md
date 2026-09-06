@@ -60,8 +60,13 @@ project-root `CLAUDE.md`, and the aim skill under `.claude/skills/aim/`
 skill are one pair** (human decision, 2026-09-07): update both or keep both,
 and which one it is belongs to the side using aim — a version bump may
 require rewriting the aim nodes already in hand. So if the placed skill does
-not match the shipped canon, the command stops without touching the block
-either; `--update` brings both to the current version. The
+not match the shipped canon, the command asks the stamp — one frontmatter
+line in `SKILL.md` carrying the version and a fingerprint of all three files.
+If the stamp points at what is there now, this repo has not touched it and
+running the command is enough; if there is no stamp or it disagrees, the
+command stops without touching the block either, and `--update` says the copy
+may be discarded. The stamp lives in frontmatter, so it costs the consumer's
+context nothing (measured 2026-09-07, Claude Code 2.1.263, one machine). The
 markers are HTML comments, which the docs state are stripped before the
 content is injected — so they cost no context. The hook reads them: if the
 block is stale it says so, and if a human edited the block it stops instead

@@ -38,6 +38,7 @@ import { mkdtemp, mkdir, copyFile, chmod, stat, readFile, writeFile, rm, readdir
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
+import { createHash } from 'node:crypto'
 
 const ROOT = path.join(import.meta.dirname, '..')
 const CARRIER = path.join('carriers', 'claude', 'bearing')
@@ -185,9 +186,15 @@ async function main() {
   const hasMd = await consumer(base, 'has-claude-md')
   const hasSkill = await consumer(base, 'has-skill')
   const withBaton = await consumer(base, 'with-baton')
+  const stale = await consumer(base, 'stale-skill')
   const unadopted = await consumer(base, 'unadopted', { corpus: true })
 
   const setupAim = (cwd, ...args) => runBin(env0, shipped, 'bearing-setup-aim.mjs', { cwd, args })
+  // ⚠ **刻印の扱いを、出荷 lib から import せずに書く** —— **同じ実装で期待値も作れば、実装の
+  // バグは両側で同じように間違い、検査は緑のまま通る。** ここは独立に述べる。
+  const STAMP = /^bearing-placed: (.*)$/m
+  const bare = (t) => t.replace(/^bearing-placed: .*\n/m, '')
+  const stampOf = (t) => t.match(STAMP)?.[1] ?? null
 
   // ── A. 前提 ───────────────────────────────────────────────────────────────
 
@@ -234,16 +241,25 @@ async function main() {
     return `${body.split('\n').length} 行、禁じた字 0 件`
   })
 
-  await check('⑶ 置かれた 3 枚は出荷 template と byte 同一で、frame.md は置かれない', async () => {
+  await check('⑶ 置かれた 3 枚は、刻印を除けば出荷 template と byte 同一である', async () => {
     const dir = path.join(plain, '.claude', 'skills', 'aim')
     const placed = await listing(dir)
     must(!placed.includes('frame.md'), 'frame.md が置かれている —— 同じ 6 箇条が 3 箇所に住む')
     for (const f of placed) {
-      const a = await readFile(path.join(dir, f))
-      const b = await readFile(path.join(shipped, 'templates', 'aim', f))
-      must(a.equals(b), `${f} が出荷 template と byte 同一でない`)
+      const a = bare(await readFile(path.join(dir, f), 'utf8'))
+      const b = await readFile(path.join(shipped, 'templates', 'aim', f), 'utf8')
+      must(a === b, `${f} が出荷 template と（刻印を除いて）byte 同一でない`)
     }
-    return placed.join('・')
+    // 🔴 **刻印は SKILL.md にだけ在り、3 枚ぶんの指紋を運ぶ。**
+    const stamp = stampOf(await readFile(path.join(dir, 'SKILL.md'), 'utf8'))
+    must(stamp !== null, 'SKILL.md に刻印が無い')
+    must(/^v\d+\.\d+\.\d+ /.test(stamp), `刻印が版を名乗っていない: ${stamp}`)
+    for (const f of placed) must(stamp.includes(`${f}=`), `刻印が ${f} を運んでいない`)
+    // ⚠ **他の 2 枚には刻まない** —— あれらは Read で開かれる ∴ 何を足しても context に載る。
+    for (const f of ['aim-authoring.md', 'aim-facts.md']) {
+      must(stampOf(await readFile(path.join(dir, f), 'utf8')) === null, `${f} に刻印が在る`)
+    }
+    return `${placed.join('・')} ＋ 刻印 1 行`
   })
 
   await check('⑷ 2 度目は 1 byte も触らない —— 置いた後はこの repo のもの', async () => {
@@ -307,7 +323,7 @@ async function main() {
     await writeFile(path.join(dir, 'SKILL.md'), mine, 'utf8')
     const r = setupAim(hasSkill)
     must(r.status === 1, `exit=${r.status} —— 揃えられないなら赤い`)
-    must(/一致しない/.test(r.stdout), `一致しないと述べていない: ${r.stdout}`)
+    must(/区別もできない/.test(r.stdout), `区別できないと述べていない: ${r.stdout}`)
     must(await readFile(path.join(dir, 'SKILL.md'), 'utf8') === mine, 'この repo の版が潰された')
     // ⚠ **足りない枚を補うことも「触る」である** —— 何を持つかはこの repo が決めている。
     must((await listing(dir)).length === 1, '足りない枚が補われた')
@@ -327,13 +343,43 @@ async function main() {
     must(placed.length === 3, `skill が 3 枚でない（${placed.length} 枚）`)
     for (const f of ['SKILL.md', 'aim-authoring.md', 'aim-facts.md']) {
       must(
-        await readFile(path.join(dir, f), 'utf8') === await readFile(path.join(shipped, 'templates', 'aim', f), 'utf8'),
-        `${f} が出荷 template と一致しない`,
+        bare(await readFile(path.join(dir, f), 'utf8')) === await readFile(path.join(shipped, 'templates', 'aim', f), 'utf8'),
+        `${f} が出荷 template と（刻印を除いて）一致しない`,
       )
     }
     // ⚠ **版が上がったことを黙って済ませない** —— 手元の corpus の書き換えを伴いうるからである。
     must(/手元の aim node/.test(r.stdout), 'corpus を見よと述べていない')
     return '両方が今の版'
+  })
+
+  await check('⑿ 刻印が「触っていない」と述べるなら、--update なしで両方が揃う', async () => {
+    // 🔴 **これがこの刻印の見返りである** —— 触っていない repo に「捨ててよいか」を問わない。
+    // ⚠ **古い版を、その版の刻印つきで置く**（＝ 旧い plugin が置いたまま、誰も触っていない状態）。
+    const dir = path.join(stale, '.claude', 'skills', 'aim')
+    await mkdir(dir, { recursive: true })
+    const bodies = {
+      'SKILL.md': '---\nname: aim\ndescription: 0.20.0 の版\n---\n\n# aim\n',
+      'aim-authoring.md': '# 0.20.0 の authoring\n',
+      'aim-facts.md': '# 0.20.0 の facts\n',
+    }
+    const sha = (t) => createHash('sha256').update(t.replace(/\r\n/g, '\n').trimEnd(), 'utf8').digest('hex').slice(0, 16)
+    const stamp = `v0.20.0 ${Object.entries(bodies).map(([f, t]) => `${f}=${sha(t)}`).join(' ')}`
+    for (const [f, t] of Object.entries(bodies)) {
+      const out = f === 'SKILL.md' ? t.replace('---\nname: aim\n', `---\nname: aim\nbearing-placed: ${stamp}\n`) : t
+      await writeFile(path.join(dir, f), out, 'utf8')
+    }
+
+    const r = setupAim(stale)
+    must(r.status === 0, `exit=${r.status}: ${r.stdout}`)
+    must(/この repo は触っていない/.test(r.stdout), `理由を述べていない: ${r.stdout}`)
+    must(/bearing:aim/.test(await readFile(path.join(stale, 'CLAUDE.md'), 'utf8')), 'block が置かれていない')
+    for (const f of Object.keys(bodies)) {
+      must(
+        bare(await readFile(path.join(dir, f), 'utf8')) === await readFile(path.join(shipped, 'templates', 'aim', f), 'utf8'),
+        `${f} が今の版になっていない`,
+      )
+    }
+    return '両方が今の版（--update なし）'
   })
 
   await check('採っていない repo で --check は absent と述べ、exit 0 で終わる', async () => {
