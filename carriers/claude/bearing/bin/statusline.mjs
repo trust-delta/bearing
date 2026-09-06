@@ -26,6 +26,7 @@ import { writeFile } from 'node:fs/promises'
 import { readAimSlugs, DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { runGit } from '../lib/git.mjs'
 import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
+import { ciSegment, readCi } from '../lib/ci.mjs'
 import { gatherBacklog } from '../lib/process.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
@@ -174,7 +175,11 @@ export function fit(segments, columns) {
 }
 
 /** 1 行目 —— デスクトップの usage ring が持っていて、CLI が持っていないもの。 */
-export function renderSession(input, branch, now = Date.now()) {
+/**
+ * @param {object|null} ci `lib/ci.mjs` の `ciSegment` が返す 1 語。⚠ **既定は `null`（描かない）**
+ *   —— CI は**採られていなければ何も言えない**のであって、緑でも赤でもない。
+ */
+export function renderSession(input, branch, now = Date.now(), ci = null) {
   const seg = []
 
   const model = input?.model?.display_name
@@ -196,6 +201,14 @@ export function renderSession(input, branch, now = Date.now()) {
   if (branch === null) seg.push(field('git', paint(C.faint, '未検知')))
   else if (branch === '') seg.push(field('git', paint(C.faint, 'detached')))
   else seg.push(field('git', paint(C.cyan, branch)))
+
+  // ⚠ **CI は 1 行目に置く。** aim とは無関係な事実であり、[[adoption-declaration]] の
+  // gate で黙らせれば、採っていない repo が CI を見失う —— baton と同じ例外である。
+  // ⚠ **面はここで `gh` を起こさない**（`lib/ci.mjs` 冒頭）—— 描くのは置かれた結果だけ。
+  if (ci) {
+    const tone = { ok: C.green, bad: C.red, wait: C.yellow, unknown: C.faint }[ci.tone] ?? C.faint
+    seg.push(paint(tone, ci.text))
+  }
 
   const cw = input?.context_window
   if (cw && typeof cw.used_percentage === 'number') {
@@ -387,7 +400,10 @@ async function gatherFacts(input) {
   // でも「baton 未読」だけは述べねばならない —— handoff はどこでも使えるからである。
   const baton = await readBaton(unit.root).catch(() => null)
   const batonUnread = Boolean(baton && !baton.readAt)
-  const notEngaged = { state: 'not-engaged', facts: { batonUnread }, branch }
+  // ⚠ **置かれた結果を読むだけである** —— 採るのは `bin/bearing-ci.mjs` の仕事。
+  // ⚠ **どの state でも読む** —— CI は aim の採用と無関係だからである（baton と同じ例外）。
+  const ci = ciSegment(await readCi(unit.root).catch(() => null), branch)
+  const notEngaged = { state: 'not-engaged', facts: { batonUnread }, branch, ci }
 
   // ⚠ **述語は hook と同じ 1 つを通る**（`lib/claude-md.mjs` の `isEngaged`）—— 結論を
   // ここで組み直せば、同じ project が面ごとに別の姿を持つ。
@@ -398,7 +414,7 @@ async function gatherFacts(input) {
   // 関係のない場所で毎ターン警告色が出る。
   const engaged = isEngaged(declaration)
   if (unit.repos.length === 0) {
-    return engaged ? { state: 'unavailable', facts: null, branch } : notEngaged
+    return engaged ? { state: 'unavailable', facts: null, branch, ci } : notEngaged
   }
 
   const perRepo = (await Promise.all(unit.repos.map(async (repo) => {
@@ -423,7 +439,7 @@ async function gatherFacts(input) {
   if (perRepo.length === 0) {
     if (!engaged) return notEngaged
     const aimsDirs = [...new Set(unit.repos.map((r) => r.aimsDir ?? DEFAULT_AIMS_DIR))]
-    return { state: 'no-corpus', facts: { batonUnread }, branch, aimsDirs }
+    return { state: 'no-corpus', facts: { batonUnread }, branch, aimsDirs, ci }
   }
 
   // ⚠ **corpus が在る経路にも同じ gate を通す。** ここを素通りさせれば、採用していない
@@ -431,11 +447,11 @@ async function gatherFacts(input) {
   // ⚠ **ただし完全な沈黙にはしない** —— corpus を見つけたことだけは述べる（`renderAim`）。
   if (!engaged) {
     const aimCount = perRepo.reduce((n, r) => n + r.slugs.length, 0)
-    return { state: 'unadopted', facts: { batonUnread, aimCount }, branch }
+    return { state: 'unadopted', facts: { batonUnread, aimCount }, branch, ci }
   }
 
   // ⚠ baton は unit に 1 つである（repo ではなく unit root に置かれる）∴ 畳まない。
-  return { state: 'ok', branch, facts: { ...foldRepos(perRepo), batonUnread } }
+  return { state: 'ok', branch, ci, facts: { ...foldRepos(perRepo), batonUnread } }
 }
 
 async function readStdin() {
@@ -481,7 +497,7 @@ export async function main() {
     if (process.env.BEARING_STATUSLINE_DEBUG) console.error(err)
   }
 
-  const first = fit(renderSession(input, gathered.branch), columns)
+  const first = fit(renderSession(input, gathered.branch, Date.now(), gathered.ci ?? null), columns)
   const second = fit(
     renderBearing(
       gathered.state,
