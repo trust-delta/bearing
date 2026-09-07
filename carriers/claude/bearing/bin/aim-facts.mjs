@@ -189,7 +189,7 @@ function sayBatonPresent(unit, baton) {
       (baton.composedAt ? ` · composed-at \`${baton.composedAt}\`` : '') +
       (baton.readAt ? ` · **read-at \`${baton.readAt}\`（既に一度読まれている）**` : ''),
     '',
-    '**`handoff` skill が同梱する `read.md`（`/bearing:handoff r`）の手順 2〜6 に従うこと**（⚠ handoff は',
+    '**`handoff` skill が同梱する `read.md`（`/bearing:handoff-r`）の手順 2〜6 に従うこと**（⚠ handoff は',
     'aim と別であり、aim corpus には依存しない）—— この hook は baton を surface',
     'したが `read-at` は**刻んでいない**。手順 4〜6（未 push aim の surface・pointers の',
     '読み込み・現在地の報告）はあなたの仕事である。',

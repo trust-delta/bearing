@@ -39,7 +39,7 @@ Requires Node. There is no build step, no daemon and no server — the hooks are
 ⚠ `PreCompact` never blocks a compaction a human asked for. Overriding a person's
 own act with a ritual meant to serve them is the inversion this refuses.
 
-One skill ships with it: `/bearing:handoff` (`r` to read, `w` to write). ⚠ **The aim discipline is
+One skill ships with it: `/bearing:handoff` (`r` to read, `w` to write) — ⚠ **two aliases carry the argument in the name** so they can be picked straight from the suggestion list: `/bearing:handoff-r` and `/bearing:handoff-w` (**they hold no procedure — they just call the skill with the argument**). ⚠ **The aim discipline is
 not a plugin skill** — `/bearing:setup-aim` places it under the adopting project's `.claude/skills/aim/`
 as a project skill, and from then on it belongs to that repo.
 
