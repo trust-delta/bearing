@@ -37,7 +37,7 @@ const RUN_LIMIT = 20
 const PASSING = new Set(['success', 'skipped'])
 
 const base = () =>
-  ({ conclusion: null, workflow: null, workflows: [], commit: null, ahead: null, updatedAt: null, reason: null, note: null })
+  ({ conclusion: null, workflow: null, workflows: [], commit: null, ahead: null, pr: null, updatedAt: null, reason: null, note: null })
 
 const unknown = (reason) => ({ ...base(), state: 'unknown', reason })
 
@@ -71,6 +71,108 @@ const none = (note) => ({ ...base(), state: 'none', note })
  *   workflows: {name: string, status: string, conclusion: string|null}[], commit: string|null,
  *   ahead: number|null, updatedAt: string|null, reason: string|null, note: string|null}>}
  */
+/**
+ * PR が在るなら、その番号と repo を返す。⚠ **無いことは失敗ではない** —— main への直 push には
+ * PR が無く、それは正常な状態である。
+ */
+async function findPr(exec, repoRoot, timeout) {
+  try {
+    const { stdout } = await exec('gh', ['pr', 'view', '--json', 'number,url'], { cwd: repoRoot, timeout })
+    const { number, url } = JSON.parse(stdout)
+    const m = /^https?:\/\/[^/]+\/([^/]+)\/([^/]+)\/pull\/\d+/.exec(url ?? '')
+    return number && m ? { number, owner: m[1], repo: m[2] } : null
+  } catch {
+    return null
+  }
+}
+
+// 🔴 **デスクトップの CI 表示が打っているのと同じ問い**（推定 2026-09-07、対象: この機体の
+// Claude Code 2.1.263 の同梱バイナリ —— `commits(last:1){nodes{commit{statusCheckRollup{` と
+// `contexts(first:0){checkRunCountsByState{state count} statusContextCountsByState{state count}}`
+// という文字列が在った）。⚠ **これは文字列からの推定であって、あちらの実装の記述ではない。**
+//
+// 🔴 **判定は `statusCheckRollup.state` を使う —— GitHub に畳ませる。** ⚠ **自分で畳めば、
+// NEUTRAL や SKIPPED の扱いが 1 つ違うだけで、同じ画面を見ている 2 つの経路が別のことを言う。**
+// **「揃える」とは同じ集合を見ることではなく、同じ判定に至ることである。**
+//
+// ⚠ **内訳だけは `first:100` で取る**（あちらは `first:0` で件数しか取らない）—— **面に置けるのは
+// 1 語だが、この command の肝は「人間が GitHub の web も打たずに CI を共有できること」である。**
+const ROLLUP_QUERY =
+  'query($owner:String!,$repo:String!,$n:Int!){repository(owner:$owner,name:$repo)' +
+  '{pullRequest(number:$n){commits(last:1){nodes{commit{oid statusCheckRollup{state' +
+  ' contexts(first:100){nodes{__typename ... on CheckRun{name status conclusion}' +
+  ' ... on StatusContext{context state}}}}}}}}}}'
+
+/** rollup の 1 語を、我々の 2 つ組へ写す。⚠ **知らない値を緑へ畳まない。** */
+const ROLLUP = {
+  SUCCESS: { state: 'completed', conclusion: 'success' },
+  FAILURE: { state: 'completed', conclusion: 'failure' },
+  ERROR: { state: 'completed', conclusion: 'error' },
+  PENDING: { state: 'pending', conclusion: null },
+  // ⚠ **`EXPECTED` は「報告されるはずだが未着」である** —— GitHub 側にだけ在る、
+  // **我々が `gh run list` の層では決して知りえなかった状態。**
+  EXPECTED: { state: 'expected', conclusion: null },
+}
+
+/** rollup の 1 件を、内訳の 1 行へ写す。⚠ **CheckRun と StatusContext を同じ形で並べる。** */
+const asRow = (n) => {
+  if (n.__typename === 'StatusContext') {
+    const st = String(n.state ?? '').toUpperCase()
+    return {
+      name: n.context ?? '(名前を読めない)',
+      status: st === 'PENDING' || st === 'EXPECTED' ? 'in_progress' : 'completed',
+      conclusion: st ? st.toLowerCase() : null,
+    }
+  }
+  return {
+    name: n.name ?? '(名前を読めない)',
+    status: String(n.status ?? 'unknown').toLowerCase(),
+    conclusion: n.conclusion ? String(n.conclusion).toLowerCase() : null,
+  }
+}
+
+/** PR が在るときの経路 —— **デスクトップと同じ判定へ揃える。** */
+async function probeByRollup(exec, repoRoot, pr, ahead, timeout) {
+  let data
+  try {
+    const { stdout } = await exec(
+      'gh',
+      ['api', 'graphql', '-f', `query=${ROLLUP_QUERY}`,
+       '-F', `owner=${pr.owner}`, '-F', `repo=${pr.repo}`, '-F', `n=${pr.number}`],
+      { cwd: repoRoot, timeout },
+    )
+    data = JSON.parse(stdout)
+  } catch (e) {
+    const why = e?.code === 'ENOENT' ? '`gh` が無い' : (e?.killed ? '`gh` が時間内に答えない' : '`gh` の GraphQL が失敗した')
+    return { ...unknown(why), ahead, pr: pr.number }
+  }
+  const commitNode = data?.data?.repository?.pullRequest?.commits?.nodes?.[0]?.commit
+  if (!commitNode) return { ...unknown('PR の commit を読めない'), ahead, pr: pr.number }
+  const commit = commitNode.oid ?? null
+  const rollup = commitNode.statusCheckRollup
+  // ⚠ **rollup が無いのは「check が 1 つも無い」である** —— 緑ではない。
+  if (!rollup) {
+    return { ...none('この PR の commit に check が 1 つも無い'), commit, ahead, pr: pr.number }
+  }
+  const workflows = (rollup.contexts?.nodes ?? []).map(asRow)
+  const mapped = ROLLUP[String(rollup.state ?? '').toUpperCase()]
+  if (!mapped) {
+    return { ...unknown(`rollup の state を知らない: ${rollup.state}`), commit, ahead, pr: pr.number, workflows }
+  }
+  // ⚠ **名指すのは、通っていない 1 件だけ** —— 全部通ったときに代表を名乗らせない。
+  const bad = workflows.find((w) => w.status !== 'completed' || !PASSING.has(w.conclusion))
+  return {
+    ...base(),
+    ...mapped,
+    workflow: mapped.conclusion === 'success' ? null : (bad?.name ?? null),
+    workflows,
+    commit,
+    ahead,
+    pr: pr.number,
+    note: 'PR の statusCheckRollup —— check run と status context の両方を GitHub が畳んだもの',
+  }
+}
+
 export async function probeCi(repoRoot, branch, deps = {}) {
   const exec = deps.run ?? run
   const git = deps.git ?? ((args) => runGit(repoRoot, args))
@@ -82,6 +184,13 @@ export async function probeCi(repoRoot, branch, deps = {}) {
   if (!commit) return none('この branch に upstream が無い ∴ まだ push されていない')
   const aheadRaw = Number.parseInt((await git(['rev-list', '--count', '@{u}..HEAD']))?.trim() ?? '', 10)
   const ahead = Number.isFinite(aheadRaw) ? aheadRaw : null
+
+  // 🔴 **PR が在るなら、デスクトップと同じ判定へ揃える**（人間の決定 2026-09-07、「主眼は揃える
+  // ことである」）。⚠ **PR が無ければ揃えようが無い** —— **あちらの面は PR 文脈にしか存在せず、
+  // main への直 push には PR が無い** ∴ そこは我々の層（`gh run list --commit`）が答える。
+  // ⚠ **これは 2 つの実装ではなく、2 つの*問い*である** —— 同じ問いには同じ答えを返す。
+  const pr = await findPr(exec, repoRoot, deps.timeout ?? 8000)
+  if (pr) return probeByRollup(exec, repoRoot, pr, ahead, deps.timeout ?? 8000)
 
   let out
   try {

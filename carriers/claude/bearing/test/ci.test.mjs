@@ -247,3 +247,94 @@ test('この commit の run が上限に達したら、取りこぼしを排除�
   assert.equal(r.state, 'unknown')
   assert.match(r.reason, /取りこぼしを排除できない/)
 })
+
+// ── PR が在るときは、デスクトップと同じ判定へ揃える ──────────────────────────
+//
+// 🔴 **判定は `statusCheckRollup.state` に委ねる** —— **自分で畳めば、NEUTRAL や SKIPPED の
+// 扱いが 1 つ違うだけで、同じ画面を見ている 2 つの経路が別のことを言う。**
+//
+// ⚠ **あちらが同じ問いを打っていることは、同梱バイナリの文字列からの推定である**（2026-09-07、
+// 対象: この機体の Claude Code 2.1.263）—— **あちらの実装の記述ではない。**
+
+const CHECK = (name, status, conclusion = null) =>
+  ({ __typename: 'CheckRun', name, status, conclusion })
+const STATUS = (context, state) => ({ __typename: 'StatusContext', context, state })
+
+/** PR が在る機体。`gh pr view` と `gh api graphql` の 2 本に答える。 */
+const ghPr = (state, nodes = [], { number = 42, oid = 'ffff9999' } = {}) => ({
+  run: (_bin, args) =>
+    Promise.resolve({
+      stdout: args[0] === 'pr'
+        ? JSON.stringify({ number, url: `https://github.com/o/r/pull/${number}` })
+        : JSON.stringify({
+          data: { repository: { pullRequest: { commits: { nodes: [{ commit: {
+            oid, statusCheckRollup: state === null ? null : { state, contexts: { nodes } },
+          } }] } } } },
+        }),
+    }),
+  git: (a) => Promise.resolve(a.includes('rev-list') ? '0' : 'aaaa1111'),
+})
+
+test('PR が在れば rollup の判定を使い、check run と status context を両方並べる', async () => {
+  const r = await probeCi('/tmp', 'feature', ghPr('SUCCESS', [
+    CHECK('test', 'COMPLETED', 'SUCCESS'),
+    STATUS('CodeRabbit', 'SUCCESS'),
+  ]))
+  assert.equal(r.state, 'completed')
+  assert.equal(r.conclusion, 'success')
+  assert.equal(r.pr, 42)
+  assert.equal(r.commit, 'ffff9999')
+  assert.deepEqual(r.workflows.map((w) => w.name), ['test', 'CodeRabbit'])
+  assert.equal(r.workflow, null, '全部通ったのに 1 本を名指している')
+  assert.equal(ciSegment({ ...r, branch: 'feature', probedAt: NOW.toISOString() }, 'feature', NOW).text, 'CI 通過')
+})
+
+test('status context が赤なら赤へ倒れる —— `gh run list` の層では見えなかった', async () => {
+  // 🔴 **踏んだ形の逆**（実測 2026-09-07、PR #47）—— `gh pr checks` は 6 件返すのに
+  // `gh run list --commit` は 1 件しか返さず、**差は `CodeRabbit`（StatusContext）だった。**
+  const r = await probeCi('/tmp', 'feature', ghPr('FAILURE', [
+    CHECK('test', 'COMPLETED', 'SUCCESS'),
+    STATUS('CodeRabbit', 'FAILURE'),
+  ]))
+  assert.equal(r.conclusion, 'failure')
+  assert.equal(r.workflow, 'CodeRabbit', '赤い 1 件を名指していない')
+  assert.equal(ciSegment({ ...r, branch: 'feature', probedAt: NOW.toISOString() }, 'feature', NOW).tone, 'bad')
+})
+
+test('rollup の PENDING と EXPECTED は、どちらも実行中へ倒す', async () => {
+  for (const state of ['PENDING', 'EXPECTED']) {
+    const r = await probeCi('/tmp', 'feature', ghPr(state, [CHECK('test', 'IN_PROGRESS')]))
+    assert.equal(r.conclusion, null, state)
+    assert.equal(
+      ciSegment({ ...r, branch: 'feature', probedAt: NOW.toISOString() }, 'feature', NOW).text,
+      'CI 実行中',
+      state,
+    )
+  }
+})
+
+test('rollup が無いのは「check が 1 つも無い」であって緑ではない', async () => {
+  const r = await probeCi('/tmp', 'feature', ghPr(null))
+  assert.equal(r.state, 'none')
+  assert.match(r.note, /1 つも無い/)
+  assert.equal(ciSegment({ ...r, branch: 'feature', probedAt: NOW.toISOString() }, 'feature', NOW).text, 'CI 無し')
+})
+
+test('知らない rollup state を緑へ畳まない', async () => {
+  const r = await probeCi('/tmp', 'feature', ghPr('NEW_STATE_WE_DO_NOT_KNOW'))
+  assert.equal(r.state, 'unknown')
+  assert.match(r.reason, /state を知らない/)
+})
+
+test('PR が無ければ、run list の層が答える —— 揃える相手が居ない', async () => {
+  // ⚠ **あちらの面は PR 文脈にしか存在しない** ∴ main への直 push では揃えようが無い。
+  const r = await probeCi('/tmp', 'main', {
+    run: (_bin, args) => args[0] === 'pr'
+      ? Promise.reject(new Error('no pull requests found'))
+      : Promise.resolve({ stdout: JSON.stringify([RUN('ci', 'completed', 'success')]) }),
+    git: (a) => Promise.resolve(a.includes('rev-list') ? '0' : 'aaaa1111'),
+  })
+  assert.equal(r.pr, null)
+  assert.equal(r.conclusion, 'success')
+  assert.deepEqual(r.workflows.map((w) => w.name), ['ci'])
+})

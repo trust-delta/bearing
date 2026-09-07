@@ -12,6 +12,10 @@
 // push で走る workflow は 1 本とは限らず、**1 本だけ読めば「全部通ったか」に答えられない。**
 // ⚠ **そして照合先は HEAD ではない** —— CI が走るのは push された commit であり、HEAD と照合
 // すれば**未 push の間ずっと「run が無い」**になる。
+//
+// 🔴 **PR が在るときは、そちらへ揃える**（人間の決定 2026-09-07、「主眼は揃えることである」）——
+// **`statusCheckRollup` の判定をそのまま使う** ∴ **デスクトップの CI 表示と同じ結論になる。**
+// ⚠ **PR が無ければ揃えようが無い** —— あちらの面は PR 文脈にしか存在しない。
 
 import { probeCi, writeCi } from '../lib/ci.mjs'
 import { resolveUnit } from '../lib/unit.mjs'
@@ -38,7 +42,10 @@ const lines = (probe.workflows ?? []).map(
 process.stdout.write(
   `CI を採った: ${placed.path}\n` +
     `- branch: ${branch ?? '(読めない)'}\n` +
-    (probe.commit ? `- 照合した commit (@{u}): ${probe.commit.slice(0, 8)}\n` : '') +
+    (probe.pr
+      ? `- PR #${probe.pr} の rollup を見た —— **デスクトップの CI 表示と同じ判定である**\n`
+      : '') +
+    (probe.commit ? `- 照合した commit: ${probe.commit.slice(0, 8)}${probe.pr ? '（PR の head）' : '（@{u}）'}\n` : '') +
     (probe.ahead ? `- ⚠ 手元はその先に ${probe.ahead} commit 居る（未 push）—— この結論は手元を検証していない\n` : '') +
     `- 状態: ${probe.state}${probe.conclusion ? ` / ${probe.conclusion}` : ''}` +
     `${probe.workflow ? ` (${probe.workflow})` : ''}\n` +
