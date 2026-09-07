@@ -95,8 +95,13 @@ version and a hash of the body, so `--check` tells **"the version is old" apart 
 edited the block"** — in the second case it stops and says so instead of replacing it.
 
 ⚠ **In a project that has not opted in the hooks emit zero bytes** (one exception: an unread
-baton — handoff does not depend on aim). ⚠ **A project that already has a corpus keeps speaking
-even without the marker.**
+baton — handoff does not depend on aim). 🔴 **A corpus is not enough: without the marker it stays silent.** ⚠ **That was not true until
+2026-09-05**, when the predicate was `marker || corpus` — a migration convenience, so that a
+project already writing nodes would not be silenced for lacking a mark. **That day the corpus was
+dropped from the predicate** (`isEngaged` in `lib/claude-md.mjs` reads `adopted` alone): **having a
+corpus is *evidence of use*, not a *declaration* that this machinery is wanted.** ⚠ **The one
+exception is the statusline's second line**, which reports `aim 未採用` and `corpus N` when it finds a
+corpus — **a mechanism that goes silent cannot announce its own existence.**
 
 ### Attaching the surface
 

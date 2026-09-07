@@ -50,7 +50,10 @@ skill を置く（`--check` / `--remove` / `--update` も在る）。⚠ **置�
 「block-level の HTML コメントは注入前に除かれる」と明記している。⚠ **hook はこの marker を
 読み、置かれた法が古ければそう述べる。人間が block の中を編集していれば、置き直さず止まる。**
 
-⚠ **corpus が既に在る repo では、marker が無くても従来どおり動く。**
+🔴 **corpus が在っても、marker が無ければ黙る**（2026-09-05 に述語から corpus が落ちた ——
+`lib/claude-md.mjs` の `isEngaged` は `adopted` だけを見る）。⚠ **corpus が在ることは*使っている
+証拠*であって、この機構を通したいという*宣言*ではない。** ⚠ **例外は statusline の 2 行目だけ**
+—— corpus を見つけたことを `aim 未採用` と `corpus N` の 1 行で述べる。
 
 ⚠ **在り処は `--dir` で変えられる**（既定 `docs/aims/`）—— `/bearing:setup-aim --dir proj/aims`。
 宣言は marker が運ぶ ∴ **採用の宣言と同じ 1 つの宣言**で、`dir=` が無ければ既定である。

@@ -72,7 +72,12 @@ content is injected — so they cost no context. The hook reads them: if the
 block is stale it says so, and if a human edited the block it stops instead
 of rewriting it.
 
-A repo that already has a corpus keeps working without a marker.
+A corpus is not enough: without the marker the machinery stays silent
+(on 2026-09-05 the corpus was dropped from the predicate — `isEngaged` in
+`lib/claude-md.mjs` reads `adopted` alone). Having a corpus is evidence of
+use, not a declaration that this machinery is wanted. The one exception is
+the statusline's second line, which reports `aim 未採用` and `corpus N`
+when it finds a corpus.
 
 Where the corpus lives is configurable with `--dir` (default `docs/aims/`):
 `/bearing:setup-aim --dir proj/aims`. The declaration rides in the marker, so
