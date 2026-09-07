@@ -8,8 +8,10 @@
 // ⚠ **採れなかったことを「CI が無い」に畳まない** —— `gh` の不在も、認証の不在も、
 // run が 1 本も無いことも、それぞれ別の事実として置かれる。
 //
-// 🔴 **見るのは「間近に走った commit の run を全て」である**（`lib/ci.mjs`）—— 1 度の push で
-// 走る workflow は 1 本とは限らず、**1 本だけ読めば「全部通ったか」に答えられない。**
+// 🔴 **見るのは「push 済みの commit（`@{u}`）の run を全て」である**（`lib/ci.mjs`）—— 1 度の
+// push で走る workflow は 1 本とは限らず、**1 本だけ読めば「全部通ったか」に答えられない。**
+// ⚠ **そして照合先は HEAD ではない** —— CI が走るのは push された commit であり、HEAD と照合
+// すれば**未 push の間ずっと「run が無い」**になる。
 
 import { probeCi, writeCi } from '../lib/ci.mjs'
 import { resolveUnit } from '../lib/unit.mjs'
@@ -36,10 +38,12 @@ const lines = (probe.workflows ?? []).map(
 process.stdout.write(
   `CI を採った: ${placed.path}\n` +
     `- branch: ${branch ?? '(読めない)'}\n` +
-    (probe.headSha ? `- 間近に走った commit: ${probe.headSha.slice(0, 8)}\n` : '') +
+    (probe.commit ? `- 照合した commit (@{u}): ${probe.commit.slice(0, 8)}\n` : '') +
+    (probe.ahead ? `- ⚠ 手元はその先に ${probe.ahead} commit 居る（未 push）—— この結論は手元を検証していない\n` : '') +
     `- 状態: ${probe.state}${probe.conclusion ? ` / ${probe.conclusion}` : ''}` +
     `${probe.workflow ? ` (${probe.workflow})` : ''}\n` +
     (lines.length ? `- 見た run ${lines.length} 本:\n${lines.join('\n')}\n` : '') +
+    (probe.note ? `- ${probe.note}\n` : '') +
     (probe.reason ? `- ⚠ 採れなかった理由: ${probe.reason}\n` : ''),
 )
 process.exit(0)
