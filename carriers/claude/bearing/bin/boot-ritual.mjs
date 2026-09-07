@@ -159,7 +159,7 @@ SessionStart hook はこの baton を surface したが、\`read-at\` は**意�
   4. 今どこに立っていて何を拾うかを人間に伝え（手順 6）、そのうえで人間が
      実際に頼んだことへ進むこと。
 
-正本: \`handoff\` skill が同梱する \`read.md\`（\`/bearing:handoff r\`）。⚠ **repo の中を探さないこと** —— handoff は aim と別であり、aim corpus に依存しない。これはセッションにつき一度だけ発火する。${seen}${owner}`
+正本: \`handoff\` skill が同梱する \`read.md\`（\`/bearing:handoff-r\`）。⚠ **repo の中を探さないこと** —— handoff は aim と別であり、aim corpus に依存しない。これはセッションにつき一度だけ発火する。${seen}${owner}`
 }
 
 const raw = await readStdin()

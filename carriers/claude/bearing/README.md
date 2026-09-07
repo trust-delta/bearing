@@ -33,7 +33,7 @@ Node が要る。build 手順も daemon も server も無い —— hook は fil
 ⚠ **`PreCompact` は、人間が求めた圧縮を決して遮断しない。** 人に仕えるための儀式で、その人
 自身の act を上書きすることは、この plugin が拒む反転である。
 
-skill は `/bearing:handoff`（`r` で読み、`w` で書く）。⚠ **aim の規律は plugin の skill ではない** —— `/bearing:setup-aim` が採用した project の `.claude/skills/aim/` へ置く project skill であり、置いた後はその repo のものである。
+skill は `/bearing:handoff`（`r` で読み、`w` で書く）—— ⚠ **引数なしでそのまま選べる別名が 2 つ在る**: `/bearing:handoff-r` と `/bearing:handoff-w`（**手順は 1 文字も持たず、skill を引数つきで呼ぶだけである**）。⚠ **aim の規律は plugin の skill ではない** —— `/bearing:setup-aim` が採用した project の `.claude/skills/aim/` へ置く project skill であり、置いた後はその repo のものである。
 
 ### aim は project ごとの opt-in
 
