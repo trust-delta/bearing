@@ -402,6 +402,9 @@ async function main(argv) {
   // すべて済ませてから書く** —— 先に block を書いてから skill で止まれば、**止まったのに片方が
   // 動いた状態が残る。**
   const plan = planApply(base, desired)
+  // ⚠ **版と*法の本文の指紋*を別々に受け取る。** 下で「置かれるものが動いたか」を版から
+  // 読まないために要る —— 2 つは独立に動く（`inspect` の見出しを見よ）。
+  const blk = inspect(base, desired)
   const sk = await inspectSkill(root, projectDir)
   const update = argv.includes('--update')
 
@@ -440,10 +443,28 @@ async function main(argv) {
   // 人間が、ここで初めて skill を得ることは在りうる ∴ `unchanged` でも置く。
   const placed = await placeSkill(root, projectDir, { version: desired.version, overwrite: sk.state !== 'same' || !sk.stamped })
   sayPlaced({ ...placed, stampOnly: sk.state === 'same' })
-  // 🔴 **版が動いたなら、手元の corpus を見よと述べる** —— **これが「使う側が決める」の理由
-  // そのものである**（人間の決定 2026-09-07）: 版の更新は doc の差し替えではない。
-  if (plan.action === 'update' || sk.state === 'stale' || sk.state === 'diverged') {
-    log('⚠ 版が上がった ∴ 手元の aim node が今の法に合っているかを見ること —— 版の更新は corpus の書き換えを伴いうる。')
+  // 🔴 **置かれるものが動いたなら、手元の corpus を見よと述べる** —— **これが「使う側が決める」
+  // の理由そのものである**（人間の決定 2026-09-07）: 版の更新は doc の差し替えではない。
+  //
+  // ⚠ **2026-09-07 まで、ここは `plan.action === 'update'` を見ていた** ∴ **marker の版の数字が
+  // 動いただけで「corpus を見よ」と述べた。** 🔴 **踏んだ形である**（実測 2026-09-07、対象: この
+  // checkout）—— 0.21.0 で置いた repo へ 0.26.0 で打つと、**「中身は 1 byte も変えていない。」の
+  // 2 行下に「版が上がった ∴ 手元の aim node を見よ」が出た。隣り合う 2 行が矛盾していた。**
+  // ⚠ **そして 0.22.0〜0.26.0 の 5 版で `templates/aim/` は 1 行も動いていない** ∴ **これは例外
+  // ではなく通常の版上げの姿であり、放てば警告そのものが読み飛ばされる側になる。**
+  // ⚠ **再測は、旧い版で置いた repo へ今の CLI を打ち、この 2 行を並べて読むことである。**
+  const lawMoved = blk.sha !== null && blk.sha !== bodySha(desired.law)
+  const skillMoved = sk.state === 'stale' || sk.state === 'diverged'
+  // ⚠ **「の」まで含めて組み立てる。** 和文の中の半角語には前後に空白が要る ∴ 語だけを繋いで
+  // 外で `の` を足すと、`法` のときだけ `法 の中身` になる —— **他人の画面で、我々の 1 行だけが
+  // 組版を外す**（この repo は 2026-09-05 に同じ形を 1 つ踏んでいる）。
+  const what = lawMoved && skillMoved ? '法と skill の' : lawMoved ? '法の' : 'skill の'
+  if (lawMoved || skillMoved) {
+    log(`⚠ ${what}中身が動いた ∴ 手元の aim node が今の法に合っているかを見ること —— 版の更新は corpus の書き換えを伴いうる。`)
+  } else if (plan.action === 'update') {
+    // ⚠ **黙らない。** 版が動いたことは事実であり、**述べなければ「見なくてよい」も伝わらない**
+    // —— 沈黙は「動いていない」ではなく「何も分からない」である。
+    log('⚠ 動いたのは版の数字だけ —— 置かれるものは 1 byte も変わっていない ∴ corpus の見直しは要らない。')
   }
   log('外すときは: bearing-setup-aim.mjs --remove')
   return 0
