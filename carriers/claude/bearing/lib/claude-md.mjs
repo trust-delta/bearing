@@ -508,17 +508,24 @@ export function planRemove(text) {
 /**
  * 置かれた block の状態を述べる（書き込まない）。hook もこれを使う。
  *
+ * ⚠ **返す `sha` は置かれた*法の本文*の指紋であって、版の数字ではない。** 🔴 **2 つは独立に
+ * 動く** —— **版が上がっても法が 1 字も動かないことは例外ではなく通常である**（実測 2026-09-07、
+ * 対象: この checkout —— 0.21.0 と 0.26.0 の `templates/aim/` 4 枚は 0 行差で、marker の sha は
+ * どちらも `6d8693bb3c91e20f` だった。再測は 2 つの版の template を `diff` するだけ）∴ ⚠ **呼ぶ側が
+ * 「置かれるものが動いたか」を版から読めば、1 byte も動いていない版で人を働かせる。**
+ *
  * @param {string} text
  * @param {{version: string, law: string}} desired
- * @returns {{state: 'absent'|'current'|'stale'|'edited'|'broken', version: string|null, detail: string}}
+ * @returns {{state: 'absent'|'current'|'stale'|'edited'|'broken', version: string|null,
+ *   sha: string|null, detail: string}}
  */
 export function inspect(text, { version, law, dir = DEFAULT_AIMS_DIR }) {
   const { blocks, anomalies } = findBlocks(text)
   if (anomalies.length > 0) {
-    return { state: 'broken', version: null, dir: null, detail: anomalies.join('。') }
+    return { state: 'broken', version: null, dir: null, sha: null, detail: anomalies.join('。') }
   }
   if (blocks.length === 0) {
-    return { state: 'absent', version: null, dir: null, detail: 'block が無い' }
+    return { state: 'absent', version: null, dir: null, sha: null, detail: 'block が無い' }
   }
 
   const [found] = blocks
@@ -527,16 +534,22 @@ export function inspect(text, { version, law, dir = DEFAULT_AIMS_DIR }) {
       state: 'edited',
       version: found.version,
       dir: found.dir,
+      sha: found.sha,
       detail: '本文が marker の sha と一致しない',
     }
   }
-  if (found.version === version && found.dir === dir && found.sha === bodySha(law)) {
-    return { state: 'current', version: found.version, dir: found.dir, detail: '今の版と一致する' }
+  const lawSha = bodySha(law)
+  if (found.version === version && found.dir === dir && found.sha === lawSha) {
+    return { state: 'current', version: found.version, dir: found.dir, sha: found.sha, detail: '今の版と一致する' }
   }
   // ⚠ **在り処が動いたことは、版が古いことと別の理由で起きる** ∴ 別の言葉で述べる ——
   // 「古い」とだけ言えば、人間は plugin を更新して直らない理由を探すことになる。
+  // ⚠ **同じ理由で「法の本文は同一」も述べる** —— **置き直しても読むものが 1 字も変わらないなら、**
+  // **読み手はそれを知る資格がある。** さもなくば「古い」だけを見た人間は、読み直す要りもしない
+  // 10 行を読み直しに行く。
   const detail = found.dir !== dir
     ? `宣言された在り処は ${found.dir}、今の解決は ${dir}`
-    : `置かれているのは v${found.version}、今の版は v${version}`
-  return { state: 'stale', version: found.version, dir: found.dir, detail }
+    : `置かれているのは v${found.version}、今の版は v${version}` +
+      (found.sha === lawSha ? '（**法の本文は同一**）' : '')
+  return { state: 'stale', version: found.version, dir: found.dir, sha: found.sha, detail }
 }

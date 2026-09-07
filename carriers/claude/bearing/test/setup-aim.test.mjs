@@ -20,6 +20,7 @@ import { spawnSync } from 'node:child_process'
 
 import { placeSkill, inspectSkill, TEMPLATE_FILES, SKILL_DIR, chooseDir } from '../bin/bearing-setup-aim.mjs'
 import { parseStamp, stripStamp, withStamp, renderStamp, skillSha } from '../lib/placed-skill.mjs'
+import { renderBlock } from '../lib/claude-md.mjs'
 
 const ROOT = path.join(import.meta.dirname, '..')
 const fresh = async (t) => {
@@ -218,8 +219,10 @@ test('中身が一致していて刻印だけ無いなら、黙って刻む —�
   const r = run(dir)
   assert.equal(r.status, 0)
   assert.match(r.stdout, /刻印を書いた/)
-  // ⚠ **「版が上がった」とは言わない** —— 上がっていない。
-  assert.doesNotMatch(r.stdout, /版が上がった/)
+  // ⚠ **corpus の見直しを求めない** —— 何も動いていない。⚠ **2026-09-07 まで、ここは
+  // `/版が上がった/` を見ていた** —— その文言は同日 code から消え、**この assertion は
+  // 在らない文字列の不在を測る空振りになっていた。** 見るのは出続ける側の 1 文である。
+  assert.doesNotMatch(r.stdout, /手元の aim node/)
   const after = await inspectSkill(ROOT, dir)
   assert.equal(after.stamped, true)
   assert.equal(stripStamp(await readFile(at, 'utf8')), bare)
@@ -307,4 +310,54 @@ test('採っていない repo の --check は赤くない —— 未採用は異
   const r = run(dir, '--check')
   assert.equal(r.status, 0)
   assert.match(r.stdout, /状態: absent/)
+})
+
+// ── 版の数字と、置かれるものの中身 ───────────────────────────────────────────
+//
+// 🔴 **踏んだ形**（実測 2026-09-07、対象: この checkout）—— **0.21.0 で置いた repo へ 0.26.0 で
+// 打つと、「中身は 1 byte も変えていない。」の 2 行下に「版が上がった ∴ 手元の aim node を
+// 見よ」が出た。隣り合う 2 行が矛盾していた。** ⚠ **そして 0.22.0〜0.26.0 の 5 版で
+// `templates/aim/` は 1 行も動いていない** ∴ **これは例外ではなく通常の版上げの姿であり、**
+// **放てば警告そのものが読み飛ばされる側になる。**
+
+test('版の数字だけが動いたなら、corpus の見直しを求めない', async (t) => {
+  const dir = await fresh(t)
+  assert.equal(run(dir).status, 0)
+  // 版の数字だけを古くする —— **本文も sha もそのまま** ＝ 「法は同一・版だけ古い」
+  const at = path.join(dir, 'CLAUDE.md')
+  await writeFile(at, (await readFile(at, 'utf8')).replace(/(<!-- bearing:aim )v[\d.]+/, '$1v0.0.1'))
+
+  const r = run(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /v0\.0\.1 から/)                 // 置き直しはする（版は事実として古い）
+  assert.match(r.stdout, /動いたのは版の数字だけ/)
+  // 🔴 **これが本体** —— 1 byte も動いていない版で人を働かせない。
+  assert.doesNotMatch(r.stdout, /手元の aim node/)
+})
+
+// ✅ **陽性対照** —— **求めない側だけを固定すれば、警告を丸ごと消しても緑になる。**
+test('法の本文が動いたなら、corpus の見直しを求める', async (t) => {
+  const dir = await fresh(t)
+  await writeFile(
+    path.join(dir, 'CLAUDE.md'),
+    `# doc\n\n${renderBlock('0.0.1', '# aim frame\n\n古い法\n')}\n`,
+  )
+  const r = run(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /法の中身が動いた/)
+  assert.match(r.stdout, /手元の aim node/)
+  assert.doesNotMatch(r.stdout, /版の数字だけ/)
+})
+
+// ⚠ **skill の側も同じ軸で見る** —— 法が 1 字も動いていなくても、**skill が動けば読み直す
+// ものは在る。**（既存の 2 本が `--update` 経路でこれを固定している ∴ ここは「法は同一のまま
+// skill だけが動く」という、あちらが通らない組み合わせを見る。）
+test('法が同一でも skill が動いていれば、corpus の見直しを求める', async (t) => {
+  const dir = await fresh(t)
+  assert.equal(run(dir).status, 0)
+  await withStampedOldSkill(dir)      // 刻印つきの古い skill ＝「触っていない」と読める
+  const r = run(dir)
+  assert.equal(r.status, 0)
+  assert.match(r.stdout, /skill の中身が動いた/)
+  assert.doesNotMatch(r.stdout, /版の数字だけ/)
 })

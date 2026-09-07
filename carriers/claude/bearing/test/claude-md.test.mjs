@@ -259,6 +259,27 @@ test('古い block は版を名指せる —— 「違う」だけでは置き�
   assert.match(s.detail, /v0\.0\.1/)
 })
 
+// 🔴 **版と法の本文は独立に動く。** 実測 2026-09-07（対象: この checkout）—— **0.21.0 と 0.26.0 の
+// `templates/aim/` 4 枚は 0 行差で、marker の sha はどちらも `6d8693bb3c91e20f` だった**（再測は
+// 2 つの版の template を `diff` するだけ）。∴ ⚠ **版だけを見る呼び出し側は、1 byte も動いていない
+// 版で人を働かせる** —— この 1 本はその区別を `sha` と `detail` の両方で固定する。
+test('版だけが動いたことを、法が動いたことと分けて述べる', () => {
+  const old = planApply('# doc\n', { version: '0.0.1', law: LAW }).text
+  const s = inspect(old, desired)
+  assert.equal(s.state, 'stale')
+  // 🔴 **指紋は今の法と同一** —— 呼ぶ側はこれで「置かれるものは動いていない」と読める。
+  assert.equal(s.sha, bodySha(LAW))
+  assert.match(s.detail, /法の本文は同一/)
+
+  // ✅ **陽性対照** —— 法そのものが違えば指紋も違い、その 1 文も出ない。**出ないことを確かめ
+  // なければ、測っているのは区別ではなく文字列の有無である。**
+  const older = planApply('# doc\n', { version: '0.0.1', law: '# aim frame\n\n古い法\n' }).text
+  const t2 = inspect(older, desired)
+  assert.equal(t2.state, 'stale')
+  assert.notEqual(t2.sha, bodySha(LAW))
+  assert.doesNotMatch(t2.detail, /法の本文は同一/)
+})
+
 // ── detectEol ───────────────────────────────────────────────────────────────
 
 test('1 つでも CRLF が在れば CRLF とみなす', () => {
