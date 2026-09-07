@@ -85,9 +85,18 @@ export async function probeCi(repoRoot, branch, deps = {}) {
 
   let out
   try {
+    // 🔴 **その commit の run を、commit で直接引く。** ⚠ **branch で引いて手元で絞る形は、
+    // 「まだ走っていない」と「直近 N 本の窓の外」を区別できない** —— main のように run が
+    // 溜まった branch では窓が常に埋まっており、**push 直後は必ず「取りこぼしを排除できない」
+    // へ倒れて `CI 不明` になった**（実測 2026-09-07、merge 直後の `dbff7598`）。
+    //
+    // ⚠ **渡す sha を切り詰めてはならない。** 🔴 **`--commit` に短縮 sha を渡すと、在る run を
+    // 黙って 0 件と返す**（実測 2026-09-07、対象: この機体の `gh` 2.85.0 —— `66d378f3…` の
+    // full sha では 2 本返り、先頭 8 桁では 0 件）∴ **「無い」と読めば嘘になる。**
+    // **再測は `gh run list --commit <full> --json headSha` と、同じ sha の先頭 8 桁である。**
     ;({ stdout: out } = await exec(
       'gh',
-      ['run', 'list', '--branch', branch, '--limit', String(RUN_LIMIT),
+      ['run', 'list', '--commit', commit, '--limit', String(RUN_LIMIT),
        '--json', 'headSha,status,conclusion,workflowName,updatedAt'],
       { cwd: repoRoot, timeout: deps.timeout ?? 8000 },
     ))
@@ -103,20 +112,16 @@ export async function probeCi(repoRoot, branch, deps = {}) {
   }
   if (!Array.isArray(rows)) return { ...unknown('`gh` の出力を読めない'), commit, ahead }
 
-  // 🔴 **push 済みの commit の run だけを見る。** ⚠ **他の commit の run は混ぜない** ——
-  // 混ぜれば畳んだ結論が嘘になる。
+  // ⚠ **問うた commit 以外が返ってきたら落とす。** `--commit` で引いている以上これは冗長だが、
+  // **他人の系の振る舞いを 1 つ仮定するたび、そこが黙って破れる面が 1 つ増える。**
   const group = rows.filter((r) => (r.headSha ?? null) === commit)
-  if (group.length === 0) {
-    // ⚠ **上限に当たっていれば、「無い」と「窓の外」を区別できない** ∴ そう述べる。
-    if (rows.length === RUN_LIMIT) {
-      return { ...unknown(`直近 ${RUN_LIMIT} 本に push 済み commit の run が無い ∴ 取りこぼしを排除できない`), commit, ahead }
-    }
-    return { ...none('push された commit の run がまだ 1 本も無い'), commit, ahead }
-  }
-  // ⚠ **上限に当たったまま全部が同じ commit なら、取りこぼしを排除できない** ∴ そう述べる。
+  // 🔴 **0 本は「まだ走っていない」である** —— commit で直接引いている ∴ **窓の外という疑いが
+  // 要らない。** ⚠ **これが「前の commit の緑を持ち越さない」の実体である。**
+  if (group.length === 0) return { ...none('push された commit の run がまだ 1 本も無い'), commit, ahead }
+  // ⚠ **上限に当たったなら、取りこぼしを排除できない** ∴ そう述べる。
   // **「見えた範囲では全部緑」を「全部緑」に畳まない。**
-  if (rows.length === RUN_LIMIT && group.length === rows.length) {
-    return { ...unknown(`直近 ${RUN_LIMIT} 本すべてが同じ commit ∴ 取りこぼしを排除できない`), commit, ahead }
+  if (rows.length === RUN_LIMIT) {
+    return { ...unknown(`この commit の run が ${RUN_LIMIT} 本以上ある ∴ 取りこぼしを排除できない`), commit, ahead }
   }
 
   const workflows = group.map((r) => ({

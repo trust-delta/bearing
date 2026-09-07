@@ -165,18 +165,6 @@ test('`skipped` は失敗ではない —— 条件で走らなかった job を
   assert.deepEqual(r.workflows.map((w) => w.name), ['ci', 'nightly'])
 })
 
-test('上限に当たったまま全部が同じ commit なら、取りこぼしを排除できないと述べる', async () => {
-  const r = await probeCi('/tmp', 'main', gh(Array.from({ length: 20 }, (_, i) => RUN(`w${i}`, 'completed', 'success'))))
-  assert.equal(r.state, 'unknown')
-  assert.match(r.reason, /取りこぼしを排除できない/)
-  // ⚠ **「見えた範囲では全部緑」を緑に畳まない。**
-  assert.equal(ciSegment({ ...r, branch: 'main', probedAt: NOW.toISOString() }, 'main', NOW).text, 'CI 不明')
-  // 陽性対照: 1 本でも別 commit が混じれば、上限に当たっていても畳める。
-  const rows = Array.from({ length: 20 }, (_, i) => RUN(`w${i}`, 'completed', 'success'))
-  rows[19] = RUN('古い', 'completed', 'success', '古い')
-  assert.equal((await probeCi('/tmp', 'main', gh(rows))).conclusion, 'success')
-})
-
 test('run が 0 本なのは「まだ走っていない」であって「緑」ではない', async () => {
   const r = await probeCi('/tmp', 'main', gh([]))
   assert.equal(r.state, 'none')
@@ -239,10 +227,23 @@ test('手元が push 済みの先に居るなら、面がそう言う —— 緑
   assert.equal(ciSegment({ ...none, branch: 'main', probedAt: NOW.toISOString() }, 'main', NOW).text, 'CI 通過')
 })
 
-test('上限に当たって push 済み commit が見えないなら、無いとは言わない', async () => {
-  const rows = Array.from({ length: 20 }, (_, i) => RUN(`w${i}`, 'completed', 'success', '前'))
-  const r = await probeCi('/tmp', 'main', gh(rows, '今'))
+test('その commit を、commit で直接引く —— sha を切り詰めない', async () => {
+  // 🔴 **`--commit` に短縮 sha を渡すと、在る run を黙って 0 件と返す**（実測 2026-09-07、
+  // 対象: この機体の `gh` 2.85.0）∴ **渡す sha を短くする最適化を、二度と入れさせない。**
+  let seen = null
+  await probeCi('/tmp', 'main', {
+    run: (_bin, args) => ((seen = args), Promise.resolve({ stdout: '[]' })),
+    git: (a) => Promise.resolve(a.includes('rev-list') ? '0' : '0123456789abcdef0123456789abcdef01234567'),
+  })
+  assert.ok(seen.includes('--commit'), 'commit で引いていない')
+  assert.ok(seen.includes('0123456789abcdef0123456789abcdef01234567'), 'sha が切り詰められている')
+  // ⚠ **branch では引かない** —— それが「窓の外」と「まだ無い」を混ぜた原因である。
+  assert.ok(!seen.includes('--branch'), 'branch で引いている')
+})
+
+test('この commit の run が上限に達したら、取りこぼしを排除できないと述べる', async () => {
+  const rows = Array.from({ length: 20 }, (_, i) => RUN(`w${i}`, 'completed', 'success'))
+  const r = await probeCi('/tmp', 'main', gh(rows))
   assert.equal(r.state, 'unknown')
   assert.match(r.reason, /取りこぼしを排除できない/)
-  assert.equal(r.commit, '今')
 })
