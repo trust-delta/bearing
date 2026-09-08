@@ -41,6 +41,8 @@ that ask git questions.
 the tree and may propose changes to any purpose — but pinning a purpose, and
 declaring one achieved, are the human's acts. That asymmetry is the whole point.
 
+> **Before you decide whether to adopt** — [`docs/adoption.en.md`](docs/adoption.en.md) states the contract on one page: **what gets placed in your repository, and which acts stay yours afterwards.**
+
 ## Usage
 
 ### Install — once, at user scope
