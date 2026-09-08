@@ -1,7 +1,7 @@
 ---
 aim: bearingが何を目指し、どのような機構で達成しようとしているか。何を要求されてどのようなactが残されるのか。採用を検討する人に伝える面をもつ
 parent: bearing
-state: open
+state: done
 ---
 
 # IS
