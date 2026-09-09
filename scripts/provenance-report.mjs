@@ -1,6 +1,10 @@
 #!/usr/bin/env node
-// 出所の測定 —— `docs/aims/observation-provenance.md` が要求する「日付を持たない実測を、
-// 候補として挙げる」手段。
+// 出所の測定 —— `docs/aims/observation-provenance.md` が要求する 2 つの欠落を候補として挙げる:
+// ⑴ **日付を持たない実測／観測**、⑵ **対象を持たない実測**（日付のほかに何も名指さない刻印）。
+//
+// ⚠ **2 類を 1 つに畳んでいない。** ⑴ は*いつ*の欠落、⑵ は*何を*の欠落であり、**同じ記録が
+// 片方だけを欠くことが実際に起きる** —— ⑵ を足す動機は、まさに「日付は在るが対象が無い」形が
+// ⑴ の視界の外に在ったことである。
 //
 // ⚠ **これは報告であって門ではない。** heuristic は**引用と断定を区別できない** ——
 // 「観測は不在の証拠ではない」のような一般論にも「観測」の語は現れる ∴ ここに出るのは
@@ -29,6 +33,45 @@ export const CLAIM = /実測|観測/
  * 揃っているかは別の問いであり、それをここで測れば、書式違いが出所の欠落として出る。
  */
 export const DATED = /\d{4}-\d{2}(-\d{2})?|\d{4}\s*年|\d{1,2}\s*月\s*\d{1,2}\s*日/
+
+/**
+ * 閉じの刻印 —— 括弧 1 つ分。**法は確信の階級を「閉じに置く」と述べており**、刻印はその形である。
+ *
+ * ⚠ **入れ子は追わない。** この repo の刻印は入れ子を持たず、追えば「どこまでが 1 つの刻印か」
+ * という別の問いに化ける。
+ *
+ * ⚠ **`g` を持つ ∴ `.test()` に使ってはならない**（`lastIndex` が残る）—— `.match()` だけで使う。
+ */
+export const STAMP = /[（(][^（）()]*[）)]/g
+
+/**
+ * 数量表現。🔴 **「1 台」は*どれだけ*を述べており、*何を*を述べていない。**
+ */
+const COUNTER = /\d+\s*(台|個|本|枚|件|回|名|人|版|標本|セッション|段落|repo|node)/g
+
+/**
+ * その刻印は「何を」を名指しているか。
+ *
+ * 🔴 **見るのはラベル `対象:` ではない。** corpus の刻印はラベルなしで系を名指す形が主流で
+ * あり（`（実測 2026-09-05、Claude Code、\`claude plugin list\`）`）、⚠ **ラベルの有無で測れば
+ * 76 件中 55 件が候補になる —— 測っているのは作法の普及率であって欠落ではない**
+ * （実測 2026-09-10、対象: この repo の corpus）。**悪いセンサーはセンサーが無いことに劣る。**
+ *
+ * ∴ **日付と数量を落として、何も残らないものだけを候補にする** —— 法が要求するのは
+ * 「いつ・**何を**・どう観測したか」の「何を」であって、その書き方ではない。
+ */
+export function namesTarget(stamp) {
+  // ⚠ **`g` 付きで落とす。** `CLAIM` / `DATED` は `g` を持たない ∴ そのまま使えば
+  // **1 つ目だけが消え、2 つ目が残余として「名指している」に化ける**（刻印が日付を 2 つ
+  // 持つ形は実在しうる）。
+  const rest = stamp
+    .replace(/[（()）]/g, '')
+    .replace(new RegExp(CLAIM.source, 'g'), '')
+    .replace(new RegExp(DATED.source, 'g'), '')
+    .replace(COUNTER, '')
+    .replace(/[\s、,。：:；;—\-…・]/g, '')
+  return rest !== ''
+}
 
 /** 測る対象: aim corpus の record と、repo root の `CLAUDE.md`。 */
 export const inScope = (f) =>
@@ -108,7 +151,9 @@ export function report(log = console.log) {
   const root = repoRoot()
   const files = tracked(root).filter(inScope)
   const candidates = []
+  const untargeted = []
   let claims = 0
+  let stamps = 0
 
   for (const f of files) {
     let text
@@ -120,6 +165,14 @@ export function report(log = console.log) {
       continue
     }
     for (const p of paragraphs(text)) {
+      // ⚠ **刻印は claim の有無に関わらず走査する** —— 上の類（日付の欠落）で `continue` した
+      // 単位にも刻印は在りうる ∴ この 2 つを 1 本の早期脱出に相乗りさせない。
+      for (const s of p.text.match(STAMP) ?? []) {
+        if (!/実測/.test(s) || !DATED.test(s)) continue
+        stamps++
+        if (namesTarget(s)) continue
+        untargeted.push({ f, no: p.no, stamp: s })
+      }
       if (!CLAIM.test(p.text)) continue
       claims++
       if (DATED.test(p.text)) continue
@@ -143,6 +196,23 @@ export function report(log = console.log) {
       console_.log(`  ${c.f}:${c.no}  ${c.line.slice(0, 110)}`)
     }
     if (candidates.length > 40) console_.log(`  … 他 ${candidates.length - 40} 件`)
+  }
+
+  console_.log('\n# 出所の測定 —— 対象を持たない実測の候補\n')
+  console_.log(`実測を含む閉じの刻印: ${stamps}\n`)
+
+  if (stamps === 0) {
+    // ⚠ **上と同じ理由で、0 を健全さとして報告しない。**
+    console_.log('⚠ **刻印を 1 つも拾えなかった。** 対象が無いのか、この道具が壊れているのかを')
+    console_.log('  区別できない —— **健全であるとは読まないこと。**')
+  } else if (untargeted.length === 0) {
+    console_.log(`実測を含む ${stamps} 件の刻印は、すべて日付のほかに何かを名指している。`)
+  } else {
+    console_.log(`⚠ 日付のほかに何も名指さない候補 ${untargeted.length} 件 / ${stamps} 件中:\n`)
+    for (const c of untargeted.slice(0, 40)) {
+      console_.log(`  ${c.f}:${c.no}  ${c.stamp.slice(0, 110)}`)
+    }
+    if (untargeted.length > 40) console_.log(`  … 他 ${untargeted.length - 40} 件`)
   }
 
   console_.log(
