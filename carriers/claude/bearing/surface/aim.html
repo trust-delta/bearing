@@ -7,7 +7,7 @@
 <script type="module" data-contract="aim-frontmatter">
 // aim の frontmatter を、人間の 3 欄（aim / parent / state）だけ動かして往復させる契約。
 //
-// ⚠ **この block が契約の正本であり、複製は 1 つも無い。** test（`test/aim-format.test.mjs`）は
+// ⚠ **この block が契約の正本であり、複製は 1 つも無い。** test（`test/claude/bearing/aim-format.test.mjs`）は
 // この file から**この block を取り出して**走らせる ∴ **契約が 2 箇所に住むことは構造的に
 // 起こりえない。** 前身は Rust engine の write surface の "faithful TS mirror" を持ち、同じ契約が
 // 2 言語に住んでいた —— ここはそれを引き継がない。
@@ -200,7 +200,7 @@ globalThis.AimFrontmatter = { read, edit, readScalar, emitScalar, AimFormatError
 
 <script type="module" data-contract="aim-tree">
 // `parent:` から木を組む契約。⚠ **前の block と同じ理由で、正本はここ 1 つである** ——
-// test（`test/aim-tree-shape.test.mjs`）がこの block を取り出して走らせる。
+// test（`test/claude/bearing/aim-tree-shape.test.mjs`）がこの block を取り出して走らせる。
 //
 // 🔴 **壊れた形を「木が描けない」の一言に畳んではならない。** 畳めば、読み手は corpus が
 // 健全だと読む —— この機構が他のすべての面で拒んできた誤読と同じ形である。∴ **壊れ方は

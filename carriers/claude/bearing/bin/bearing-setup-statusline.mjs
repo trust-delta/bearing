@@ -44,7 +44,7 @@ export const statusLineFor = (command) => ({ type: 'command', command })
  *
  * ⚠ **同じ罠は既に 1 度塞がれており、その正本が `lib/shell.mjs` である** —— 塞いだのに
  * **新しい emission 地点がそこを通らなかった。** 法を 1 箇所に置くだけでは足りず、
- * **通っていることを門が見ていなければならない**（`test/setup-statusline.test.mjs`）。
+ * **通っていることを門が見ていなければならない**（`test/claude/bearing/setup-statusline.test.mjs`）。
  *
  * ⚠ **`node` を前置する。** hook 4 枚も同じ形であり、**shebang と exec bit の扱いが
  * シェルごとに違う**ことに依らない —— emission の時点で、どのシェルが受けるかは分からない。

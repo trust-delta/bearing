@@ -19,9 +19,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: plugin の test を走らせる
-        working-directory: carriers/claude/bearing
-        run: node --test test/*.test.mjs
+      # ⚠ **test は carrier の外に在る**（人間の決定 2026-09-10）—— plugin root の subtree は
+      # 丸ごと cache へ複製される ∴ 開発用の test を同梱する意味が無い。境界そのものは
+      # `scripts/carrier-check.sh` の carrier_allowed が見張る（下の carrier-closed job）。
+      - name: test を走らせる
+        run: node --test test/claude/bearing/*.test.mjs
 
   carrier-closed:
     name: carrier が自分の中で閉じている

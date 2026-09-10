@@ -1,0 +1,185 @@
+// boot 儀式 trigger（`UserPromptSubmit`）の test。
+//
+// ⚠ **この hook が直す対象は、想像ではなく実測されたものである**: `SessionStart` は baton を
+// context に置くが turn を開始しない ∴ `_guide/handoff.md` § 読む の手順 2〜6 ——
+// すべてエージェントの act —— は、人間がたまたま入力するまで走らず、入力が無関係なもので
+// あれば一度も走らなかった。以下は**半強制の 2 つの半分**を assert する:
+// 義務をちょうど一度だけ述べること、そして人間が入力したものに決して触れないこと。
+
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
+import { spawnSync } from 'node:child_process'
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { mkdtempSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { quotePathForShell } from '../../../carriers/claude/bearing/lib/shell.mjs'
+import { activePath, batonDir } from '../../../carriers/claude/bearing/lib/handoff.mjs'
+
+// ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
+// baton** —— を読み書きする。`activePath` 等は呼ばれた時点の env を見る ∴ import より後、
+// 最初の fixture より前にここで倒しておけば足りる。
+process.env.BEARING_HOME = mkdtempSync(path.join(tmpdir(), 'bearing-home-'))
+
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const HOOK = path.join(HERE, '..', '..', '..', 'carriers', 'claude', 'bearing', 'bin', 'boot-ritual.mjs')
+
+/** この suite の他のどの実行とも衝突しない session id。 */
+let seq = 0
+const freshSession = () => `test-${process.pid}-${Date.now()}-${seq++}`
+
+function run(input) {
+  const res = spawnSync(process.execPath, [HOOK], {
+    input: typeof input === 'string' ? input : JSON.stringify(input),
+    encoding: 'utf8',
+  })
+  return { status: res.status, stdout: res.stdout ?? '', stderr: res.stderr ?? '' }
+}
+
+async function unitWithBaton(front = 'composed-at: 2026-08-31T13:07:56Z') {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
+  await mkdir(batonDir(root), { recursive: true })
+  await writeFile(
+    activePath(root),
+    `---\n${front}\ntask: pick up the measurement\n---\n\n## ▶ Task\n\nkeep going\n`,
+    'utf8',
+  )
+  return root
+}
+
+test('with no baton there is nothing outstanding, so it stays silent', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
+  try {
+    const r = run({ session_id: freshSession(), cwd: root })
+    assert.equal(r.status, 0)
+    assert.equal(r.stdout, '')
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('an outstanding baton is surfaced with the procedure that owns it', async () => {
+  const root = await unitWithBaton()
+  try {
+    const r = run({ session_id: freshSession(), cwd: root })
+    assert.equal(r.status, 0)
+    assert.match(r.stdout, /未処理の baton があり/)
+    assert.ok(r.stdout.includes(activePath(root)))
+    // ⚠ 手順を再掲せず、正本と帳簿 CLI を指す —— 木の中に儀式についての第 3 の記述が
+    // 置かれることは、「正本は 1 つ」の規則が禁じている複製である。
+    assert.match(r.stdout, /handoff.*read\.md/s)
+    // ⚠ **repo の中の path を名指してはならない**（人間が 2026-09-04 に正した）——
+    // **handoff は aim と別であり、`with-aim` 無しで動かねばならない** ∴ この hook は
+    // aim を採っていない repo でも発火する。⚠ **先行版は `docs/aims/_guide/handoff.md` を
+    // 正本として名指しており、実測すると corpus も `CLAUDE.md` も無い repo で
+    // そう述べた** —— そこには何も無い。⚠ **そしてこの試験は、その欠陥のほうを
+    // 固定していた。**
+    assert.doesNotMatch(r.stdout, /docs\/aims/,
+      'handoff の hook が aim の repo path を名指している')
+    // ⚠ **CLI は解決済みの絶対 path で名指されねばならない。** hook の吐く text は
+    // `${CLAUDE_PLUGIN_ROOT}` の inline 展開の対象では**ない**（対象は hook の `command`
+    // field である）∴ placeholder を書けば文字列のまま届き、しかも Bash tool の env に
+    // その変数は無い —— エージェントは `/bin/bearing-handoff.mjs` を見て落ちる。4 セッション連続で
+    // 実際に起きた。この 2 行がその回帰を止める。
+    //
+    // ⚠ **path の*形*ではなく、解決された path *そのもの*を突き合わせる。** 先行版は
+    // `/node "\/.*\/bin\/handoff\.mjs" read/` と書いており、先頭 `/` を要求する ∴ POSIX
+    // でしか真になりえなかった —— **win32 では常に落ち、CI は ubuntu ゆえ誰も気づかない**。
+    // 常時赤い門は、門を持たないより悪い（それを読む側が失敗を読み飛ばすようになる）。
+    // 期待値を組み立てる形なら platform を問わず、しかも「絶対 path らしさ」ではなく
+    // **どの複製を名指したか**まで固定できる。
+    //
+    // ⚠ **シェルへ載せる形そのものは `lib/shell.mjs` の持ち物で、あちらが単体で検査される**
+    // （`shell.test.mjs`。UNC・POSIX の backslash・platform 分岐）。ここが見るのは
+    // **hook がその正本を通したか**であって、quoting の規則ではない。
+    const cli = path.join(HERE, '..', '..', '..', 'carriers', 'claude', 'bearing', 'bin', 'bearing-handoff.mjs')
+    assert.ok(path.isAbsolute(cli))
+    assert.ok(
+      r.stdout.includes(`node ${quotePathForShell(cli)} read`),
+      `解決済みの絶対 path で CLI を名指していない。期待した断片: node ${quotePathForShell(cli)} read`,
+    )
+    assert.ok(!r.stdout.includes('CLAUDE_PLUGIN_ROOT'))
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('it fires once per session, and the marker is what makes that true', async () => {
+  const root = await unitWithBaton()
+  const session = freshSession()
+  try {
+    const first = run({ session_id: session, cwd: root })
+    const second = run({ session_id: session, cwd: root })
+    assert.match(first.stdout, /未処理の baton があり/)
+    assert.equal(second.stdout, '')
+    assert.equal(second.status, 0)
+    // ⚠ 同じ workspace の別セッションは**別の対話**であり、それ自身の促しを負われている。
+    const other = run({ session_id: freshSession(), cwd: root })
+    assert.match(other.stdout, /未処理の baton があり/)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('it never exits 2 — the human’s prompt is never erased', async () => {
+  const root = await unitWithBaton()
+  try {
+    // UserPromptSubmit での exit 2 は「処理を遮断し、元の prompt を消去する」。⚠ 人間に
+    // 仕えるための儀式を強制するために人間が入力したものを破壊することは、
+    // `precompact.mjs` も拒んでいる反転である。
+    assert.equal(run({ session_id: freshSession(), cwd: root }).status, 0)
+    assert.equal(run({ session_id: freshSession(), cwd: '/nonexistent-path-xyz' }).status, 0)
+    assert.equal(run('not json at all').status, 0)
+    assert.equal(run('').status, 0)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('a baton that was already read says so, and is still handed over', async () => {
+  const root = await unitWithBaton(
+    'composed-at: 2026-08-31T13:07:56Z\nread-at: 2026-08-31T13:25:09Z',
+  )
+  try {
+    const r = run({ session_id: freshSession(), cwd: root })
+    // 正本: 再読は正当であり、`read-at` はそれを**検出する**ために在るのであって
+    // **防ぐ**ために在るのではない。∴ 事実は述べられ、手順はなお立つ。
+    assert.match(r.stdout, /2026-08-31T13:25:09Z/)
+    assert.match(r.stdout, /過去に読まれている/)
+    assert.match(r.stdout, /未処理の baton があり/)
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('an empty baton file is an absent baton, not an outstanding one', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
+  try {
+    await mkdir(batonDir(root), { recursive: true })
+    await writeFile(activePath(root), '   \n', 'utf8')
+    assert.equal(run({ session_id: freshSession(), cwd: root }).stdout, '')
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test('旧い置き場に取り残された baton も、儀式を一度だけ発火させる', async (t) => {
+  // ⚠ **儀式が在るのは未処理の baton が無視されないためであって、それがどこに置かれて
+  // いるかは理由ではない。** 黙れば、その baton は誰にも読まれないまま残り続ける。
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await mkdir(path.join(root, '.handoff'), { recursive: true })
+  await writeFile(path.join(root, '.handoff', 'active.md'), '---\ntask: old\n---\n\nold\n')
+
+  const session = freshSession()
+  const first = run({ session_id: session, cwd: root })
+  assert.equal(first.status, 0)
+  assert.match(first.stdout, /旧い置き場に baton が取り残されている/)
+  assert.match(first.stdout, /bearing-handoff\.mjs migrate/)
+  // ⚠ **「読め」ではなく「移せ」である** —— 機構はもうそこを読まない ∴ 読む手順を述べても
+  // 実行できない。
+  assert.doesNotMatch(first.stdout, /read-at/)
+  // 二度は言わない。促しは promise ではなく、繰り返せば単なる騒音になる。
+  assert.equal(run({ session_id: session, cwd: root }).stdout, '')
+})
