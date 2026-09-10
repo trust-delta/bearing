@@ -39,11 +39,17 @@
 //      なる ∴ 再計算して本物を出す。commit 1 回につき 169ms 払うのは無であり、batch ごとに
 //      払うのが問題なのである。
 //
-// ⚠ **1 つの不正確さを、隠さずに述べる**: `checkpoint-stale` の `commits_since` は**あらゆる**
-// commit で動く（aim に一切触れないものを含む）が、ここはそれを再報告しない。あの fence は
-// verdict ではなく**弱い経過の候補**であることを明言しており、boot 時の fence が既に slug を
-// 名指している —— **カウンタが 1 進んだことを batch ごとに督促するのは、第 2 の門がまさに
-// 防ぐために在る雑音である。**
+// ⚠ **1 つの不正確さを、隠さずに述べる**: `aim-code-stale` の `commits_since` は **その aim の
+// code に触れたあらゆる commit**で動き（別の aim のために触れたものを含む）、⚠ **精度は PR
+// 単位である。** 🔴 **それは欠点ではない**（[[purpose-drift]]: **PR にはコメント ＝ 意図が載り、
+// 別の aim のために動いたことも「動いて平気か確かめる価値がある」ことを示す**）—— **だが
+// ここはそれを再報告しない。** あの fence は verdict ではなく**候補**であり、boot 時の fence が
+// 既に slug を名指している —— **カウンタが 1 進んだことを batch ごとに督促するのは、第 2 の門が
+// まさに防ぐために在る雑音である。**
+//
+// ⚠ **かつてここは `checkpoint-stale` について同じことを述べていた** —— **あの fence は
+// 2026-09-10 に退役した**（人間の決定。`last-verified:` ＝ 人間が sha を書く欄であり、host の
+// merge 慣習がそれを書き換えるため）。
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -51,7 +57,6 @@ import { readAimGraph, readAimSlugs, DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
 import { renderCorpusDelta } from '../lib/corpus-delta.mjs'
-import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.mjs'
 import { gatherAimCodeStale, renderAimCodeFence } from '../lib/aim-code.mjs'
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { runGit } from '../lib/git.mjs'
@@ -108,10 +113,9 @@ async function aimsMovedBetween(repoRoot, from, to) {
 async function historyFences(repo) {
   const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
   const graph = await readAimGraph(repo.root, dir)
-  const [drift, unpushed, checkpoint, aimCode] = await Promise.all([
+  const [drift, unpushed, aimCode] = await Promise.all([
     gatherDrift(repo.root, dir),
     gatherUnpushed(repo.root, repo.slugs, dir),
-    gatherCheckpointStale(repo.root, graph?.nodes ?? new Map()),
     gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
   ])
   const blocks = []
@@ -132,7 +136,6 @@ async function historyFences(repo) {
     )
   }
   blocks.push(renderUnpushedFence(unpushed).trimEnd())
-  blocks.push(renderCheckpointFence(checkpoint).trimEnd())
   blocks.push(renderAimCodeFence(aimCode).trimEnd())
   return blocks
 }

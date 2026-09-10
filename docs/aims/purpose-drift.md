@@ -37,7 +37,7 @@ state: open
 # PROCESS
 
 - [done] plugin の drift 機構（intra / inter の 2 fence）を移設した
-- [done] **`drift-inter` に「検査したが変更不要だった」を書く場所を与えた。** `# DAG` の `照合: [[slug]] @ <anchor_commit>` を機械が読み、その対を候補から落とす。⚠ **証言は commit に pin される** ∴ anchor が再び動けば対は候補へ戻る。⚠ **読めない sha（日付・在りもしない commit・曖昧な短縮）は候補を消さず、fence が読めない記録として名指す** —— 壊れた証言は無い証言より声が大きい、という `checkpoint.mjs` と同じ形である
+- [done] **`drift-inter` に「検査したが変更不要だった」を書く場所を与えた。** `# DAG` の `照合: [[slug]] @ <anchor_commit>` を機械が読み、その対を候補から落とす。⚠ **証言は commit に pin される** ∴ anchor が再び動けば対は候補へ戻る。⚠ **読めない sha（日付・在りもしない commit・曖昧な短縮）は候補を消さず、fence が読めない記録として名指す** —— 壊れた証言は無い証言より声が大きい、という `claude-md.mjs` の anomaly と同じ形である（⚠ **かつては `checkpoint.mjs` を指していた —— あの module は 2026-09-10 に退役した**）
 - [done] **win32 で常時赤かった門 3 本を、どちらの platform からも両方の分岐を検査できる形にした。** ⚠ **2026-09-04、別マシン（repo が `D:`・home が `C:` の win32）で実測**: `node --test` は 291 pass / **3 fail** であり、内訳は ⑴ `bin/` の exec bit を working tree の mode で見る検査（⚠ **win32 は exec bit を持たない** —— node は `bin/` の全 file に `0o100666` を返す ∴ **原理的に通りえない門だった**）、⑵⑶ `unitSlug` の検査が POSIX 形の path を前提していたもの（win32 では `path.resolve` が drive letter を付ける）。⚠ **CI は ubuntu ゆえ 3 本とも緑であり続けていた** —— 上段の「CI が緑」は「*その platform で*通った」でしかない、の 2 度目の実地である。∴ **直し方は上段の法に従った**: `unitSlug` は `resolve` を引数に取り（`path.posix.resolve` / `path.win32.resolve` の両形を、どちらの platform からも検査する）、exec bit は **git の index が持つ mode** を第一の源にした —— ⚠ **配布されるのは index の側である**（消費者の cache は clone であり、POSIX の exec bit は `100755` から生える）∴ **両 platform で同じ答えを持つ唯一の場所**であり、判定は純関数 `isExecMode` へ出して 2 つの源を両方から踏めるようにした。⚠ **どちらの源からも読めないとき（win32 かつ index が無い ＝ cache から走ったとき）は skip し、理由を述べる** —— **「検査した」と「検査できなかった」を同じ緑に畳まない**
 - [done] 🔴 **aim⊥code の面を新設した —— `bearing-aim-code-stale v1`**（人間の決定 2026-09-10）。⚠ **corpus の中しか見ない 2 枚（intra / inter）には、「aim は不変のまま、それを実装した code が動く」形が原理的に映らない。** 🔴 **join は履歴の中に在った**（人間の指摘 2026-09-10）—— **`[done]` mark を書き入れた commit は、その mark が指す code を一緒に持っている** ∴ **人間が 1 文字も書かなくても引け、既存の mark に遡って効き、corpus の移行を要さない。** ⚠ **squash はこれを壊すどころか締める**（PR の全体が 1 commit になる）。
 
@@ -49,7 +49,7 @@ state: open
 
   ⚠ **費用は corpus の大きさに比例させた** —— **全履歴 1 パスは履歴の長さに比例して黙って重くなる** ∴ **node ごとの範囲問い合わせ**（`<marksAt>..HEAD -- <code>`）。**この repo で 0.32 秒**（実測 2026-09-10、13 node / 135 commit。hook の 20 秒に対して十分）。⚠ **引数の上限を超えたら分割して全部問う** —— **切れば「動いていない」と読める。**
 
-  ⚠ **`bearing-checkpoint-stale` はまだ撤去していない** —— **保有数 0 ∴ 併走しても `# none` のままで衝突しない。** **撤去は [[aim-tree]] の escalation に懸かっており、`process.mjs` / `corpus.mjs` / 試験 3 枚 / canon へ波及する別の変更である。**
+  ✅ **`bearing-checkpoint-stale` は撤去した**（2026-09-10、同日）。**`lib/checkpoint.mjs` を削除し、`isShaLike` は `git.mjs` へ移した** —— ⚠ **判定は git の概念であって checkpoint の概念ではなく、照合記録の旧い形（commit sha）が今もそれを通る。** **消える module への参照 2 件も直した**（`claude-md.mjs` / 本 module の注釈）—— 🔴 **参照先が消えるなら参照も直す。** ⚠ **退役は削除ではない** —— **消費者の corpus に書かれた `last-verified:` は 1 文字も動かない**（[[aim-tree]]）。**判断の在り処は [[aim-tree]]**（frontmatter は人間のもの）。
 
   🔴 **変異試験で見張りを確かめた**（2026-09-10）—— **承認判定を無効化すると 2 本赤／`codeDigest` を定数へ倒すと別の 2 本が赤／PR 番号の補強を無効化すると 1 本が赤**、いずれも復元で緑。**再測**: `node --test test/claude/bearing/aim-code.test.mjs`（13 本）
 

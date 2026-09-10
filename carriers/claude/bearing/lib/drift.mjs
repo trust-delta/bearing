@@ -26,9 +26,9 @@
 
 import { runGit } from './git.mjs'
 import { aimRelPath, readAimGraph, DEFAULT_AIMS_DIR } from './corpus.mjs'
-// ⚠ 判定を再実装しない: 「sha として妥当か」の正本は checkpoint 側に既に在り、二重に
+// ⚠ 判定を再実装しない: 「sha として妥当か」の正本は道具の側に 1 つだけ在り、二重に
 // 書けば片方だけが直る日が来る。
-import { isShaLike } from './checkpoint.mjs'
+import { isShaLike } from './git.mjs'
 
 export const INTRA_FENCE_TAG = 'bearing-drift-intra v1'
 // ⚠ **v2 である。** 出す列が `anchor_commit` から `anchor_digest` へ変わった —— 🔴 **照合の
@@ -223,8 +223,8 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
  *
  * ⚠ **読めない記録は suppression に使わず、そのまま声にする。** 誰かが証言を鋳造したのに
  * センサーが読めない —— これは記録が無い状態より悪く、黙って飛ばせば「照合したのに flag が
- * 消えない」という、原因の見えない不信だけが残る（`checkpoint.mjs` が同じ理由で同じ形を
- * 採っている）。
+ * 消えない」という、原因の見えない不信だけが残る（`claude-md.mjs` の anomaly が同じ理由で
+ * 同じ形を採っている）。
  *
  * ⚠ **短縮 sha が複数に一致したら読めない扱いである。** 曖昧な証言は証言ではない。
  */

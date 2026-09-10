@@ -25,16 +25,15 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
 | `bearing-aim-code-stale v1` | `slug \| code_digest \| moved_paths \| commits_since` | `[done]` mark と一緒に commit された code が、その後動いた node。⚠ **aim の主張と code の剥離**を見る唯一の面であり、**判定ではなく「読み直す理由が在る」までを述べる**。`検証:` 記録で片付く |
-| `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
 | `bearing-awaiting-declaration v1` | `slug \| done_marks \| observations \| state` | エージェントが尽くし（mark が在り、その全てが `[done]`）、人間がまだ `state: done` を宣言していない node。`observations` は その node の `# OBSERVATION` の票数（0 なら `-`） |
 
 ⚠ **前の 5 枚は git の事実だが、6 枚目だけは corpus の事実である。** git が読めなくても出る。
 
 **drift が 2 枚に割れるのは、2 種の drift が trigger を共有しないため**である。「同一 aim 内」は anchor の*改訂*のみが隙間を開ける（誕生時、body は anchor と共に書かれる）が、「aim 同士」は*作成*も trigger になる（親を動かさずに子を足す形）。∴ 1 枚に畳むと、どちらかの trigger が黙って落ちる。
 
-⚠ **checkpoint-stale に閾は無い。** 「N commit 未満は候補から落とす」という数を名指す `aim:` 文が存在しない ∴ 導出を持たない filter は検査面を運任せで削ることになる。少なく出したいなら、まず閾を目的として書くこと。
+⚠ **aim-code-stale に閾は無い。** 「N commit 未満は候補から落とす」という数を名指す `aim:` 文が存在しない ∴ 導出を持たない filter は検査面を運任せで削ることになる。少なく出したいなら、まず閾を目的として書くこと。
 
-⚠ **履歴の浅い corpus では、履歴を読む 3 枚が構造的に沈黙する。** `drift-intra` は anchor の*変更* commit を、`drift-inter` は「一緒に commit されていない隣接」を、`checkpoint-stale` は `last-verified` からの経過を見る ∴ 誕生 commit しか無い間、3 枚とも空になる。**空を「該当なし」と読む前に、噛むものが在るかを確かめること** —— これは working / broken のどちらでもない第 3 の状態である。
+⚠ **履歴の浅い corpus では、履歴を読む 3 枚が構造的に沈黙する。** `drift-intra` は anchor の*変更* commit を、`drift-inter` は「一緒に commit されていない隣接」を、`aim-code-stale` は `[done]` mark と一緒に commit された code の動きを見る ∴ 誕生 commit しか無い間、3 枚とも空になる。**空を「該当なし」と読む前に、噛むものが在るかを確かめること** —— これは working / broken のどちらでもない第 3 の状態である。
 
 ### 各 fence が課すもの
 
@@ -50,7 +49,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 ⚠ **そして `observations` 列は、この fence が渡す*内容*である。** 番を渡すだけの fence は「あなたが見るべきものが在る」としか言えない ∴ **列が `-` の行は、人間に番だけを渡して材料を渡していない** —— それは corpus の欠陥であって、人間が読み落としているのではない。
 
-**checkpoint-stale は verdict ではない。** footprint はまだ node 自身の code へ絞られておらず、repo 全体が動いただけかもしれない。挙がった slug は「**再検証する価値がありうる候補**」として扱う。判断不要な絞り込みは fan-out してよいが、**aim が code から剥離したという宣言は人間の act** である（`state: done` と同じ層）。
+**aim-code-stale は verdict ではない。** footprint はまだ node 自身の code へ絞られておらず、repo 全体が動いただけかもしれない。挙がった slug は「**再検証する価値がありうる候補**」として扱う。判断不要な絞り込みは fan-out してよいが、**aim が code から剥離したという宣言は人間の act** である（`state: done` と同じ層）。
 
 ---
 

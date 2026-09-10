@@ -59,3 +59,17 @@ export async function runGitNonEmpty(repoRoot, args) {
   if (out === null) return null
   return out.trim() === '' ? null : out
 }
+
+/**
+ * commit-ish として妥当か。
+ *
+ * ⚠ **日付を書く取り違えには前例がある**（`last-verified:` が `2026-05-15` を持っていた）——
+ * **その field は 2026-09-10 に退役したが、取り違えの形は残る** ∴ 判定はここに残す。
+ *
+ * ⚠ **かつて `checkpoint.mjs` に在った。** 🔴 **あの module は `bearing-aim-code-stale` に
+ * 置き換えられて消えた**（人間の決定 2026-09-10）—— **判定は git の概念であって checkpoint の
+ * 概念ではない** ∴ **道具の側へ移した。**
+ */
+export function isShaLike(value) {
+  return typeof value === 'string' && /^[0-9a-f]{7,40}$/.test(value)
+}

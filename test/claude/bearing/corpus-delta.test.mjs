@@ -244,7 +244,6 @@ test('an aim commit moves HEAD and the history fences are recomputed, not just f
     // それは**体制がセッションに負っている事実を、お使いに変えてしまう。**
     assert.match(body, /bearing-drift-intra v1/)
     assert.match(body, /bearing-unpushed v1/)
-    assert.match(body, /bearing-checkpoint-stale v1/)
   } finally {
     await rm(u.root, { recursive: true, force: true })
   }

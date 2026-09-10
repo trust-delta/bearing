@@ -1,7 +1,7 @@
 ---
 name: aim
-description: aim corpus（既定 docs/aims/）—— この project を駆動する purpose＝means の木 —— を読み・書き・保守する方法。aim node を読む／作る／編集する前、boot 時の drift / unpushed / checkpoint-stale の record が slug を名指したとき、open todo やこの project が何のためかを問われたときに使う。
-bearing-placed: v0.28.0 SKILL.md=6d5f4c0febe82e32 aim-authoring.md=eff93e639b27103c aim-facts.md=a19bfea2a601b87c
+description: aim corpus（既定 docs/aims/）—— この project を駆動する purpose＝means の木 —— を読み・書き・保守する方法。aim node を読む／作る／編集する前、boot 時の drift / unpushed / aim-code-stale の record が slug を名指したとき、open todo やこの project が何のためかを問われたときに使う。
+bearing-placed: v0.28.0 SKILL.md=6ed67247c1811785 aim-authoring.md=0a26e796c0b608d3 aim-facts.md=532f4f8e50a03122
 ---
 
 # aim
