@@ -67,6 +67,16 @@ state: open
 
   ⚠ **再測は `node --test test/claude/bearing/process.test.mjs`（42 本）と、この repo の corpus に対する `observation: 10` ／ 宣言待ち fence の `observations` 列である**（実測 2026-09-06）
 
+# ESCALATION
+
+🔴 **`last-verified:` をどこへ置くか —— あるいは置かないか。**
+
+⚠ **2026-09-10、人間が frontmatter の射程を述べた**（人間の決定 2026-09-10）—— 🔴 **「私が frontmatter に求めるのは『目的の一文・親を示す・満足と諦めの状態』のみ」** ∴ **`aim:` / `parent:` / `state:` の 3 つであり、`last-verified:` は frontmatter に属さない。**
+
+⚠ **だが行き先が決まらない。** 🔴 **body へ移せば「人間が body に書く」ことになり、「frontmatter は人間のもの・body はあなたのもの」という分割そのものに触れる** —— **これはこの node の中心である。** ⚠ **併せて、`last-verified:` は同じ欠陥を持つ** —— **人間が sha を書く欄であり、host の merge がそれを書き換える**（[[purpose-drift]] が照合について直したのと同型。**しかもこちらは人間のものであり、黙って無効になる**）。⚠ **保有数は 0 である**（実測 2026-09-06、対象: この repo の corpus）∴ **まだ誰も踏んでいない。**
+
+**候補**: ⑴ **`# OBSERVATION` へ人間が 1 行書く形にする**（分割を緩める）⑵ **`checkpoint-stale` ごと廃する**（保有数 0 ＋ `state:` が満足を既に運ぶ）⑶ **frontmatter に残す**（3 つに絞るという決定を、この 1 field だけ例外にする）。⚠ **⑴⑵ はどちらも配る法の改訂を含む。選ぶのは人間である。**
+
 # OBSERVATION
 
 - **`open-todo` / `escalation` / `observation` / 宣言待ちの 4 つが、実際に注意を向けるべき node へ導いたか。** 1 サイクル使ったうえで —— ⚠ **数が読まれずに素通りされたなら、それは面が在ることの反証である。**

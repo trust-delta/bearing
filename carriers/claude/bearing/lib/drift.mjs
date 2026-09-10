@@ -31,7 +31,10 @@ import { aimRelPath, readAimGraph, DEFAULT_AIMS_DIR } from './corpus.mjs'
 import { isShaLike } from './checkpoint.mjs'
 
 export const INTRA_FENCE_TAG = 'bearing-drift-intra v1'
-export const INTER_FENCE_TAG = 'bearing-drift-inter v1'
+// ⚠ **v2 である。** 出す列が `anchor_commit` から `anchor_digest` へ変わった —— 🔴 **照合の
+// 宛先が commit から anchor の内容へ移ったため**（人間の決定 2026-09-10。**sha は host の
+// merge 慣習が書き換える ∴ repo を問わず機能しない**）。**列が変われば版を上げる。**
+export const INTER_FENCE_TAG = 'bearing-drift-inter v2'
 
 // ⚠ **在り処は project が宣言する** ∴ ここに焼かない（既定は `corpus.mjs` が持つ）。
 const dirPrefix = (dir) => `${dir}/`
@@ -160,6 +163,7 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
   const intra = []
   const inter = []
   const brokenCollations = []
+  const legacyCollations = []
   // ⚠ **絞り込みが何件に対して働いたかを数える。** 候補 0 件には出自の異なる 2 つが
   // 畳まれている ——「見たが残らなかった」と「見るものが無かった」であり、後者では
   // **絞り込みは一度も走っていない** ∴ 沈黙を「健全」と読ませてはならない。
@@ -179,8 +183,11 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
     // inter: anchor が触られた時点より厳密に古い隣接 —— まだ機会を得ていないもの。
     const anchorOrder = order.get(anchor)
     const co = touchedIn.get(anchor) ?? new Set()
-    const { collated, broken } = readCollations(live.get(slug), order)
+    const record = live.get(slug)
+    const digest = record?.anchorDigest ?? null
+    const { current, collated, legacy, broken } = readCollations(record, order, digest)
     for (const b of broken) brokenCollations.push({ slug, ...b })
+    for (const l of legacy) legacyCollations.push({ slug, ...l })
     const neighbours = graph.neighbours(slug)
     // ⚠ **隣接を持たない node は、この種のズレを原理的に生じえない** ∴ 絞り込みの母数に
     // 入れない —— 入れれば「見た」と数えたことになる。
@@ -190,14 +197,25 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
       // ⚠ **照合済みの対は候補ではない。** 「検査したが変更不要だった」は何も動かさない
       // ∴ file の移動だけを見る絞り込みでは永久に落ちず、**既に見た者へ「見よ」と言い
       // 続ける**。それは可視化ではなく、注意予算への課税である。
+      // 🔴 **digest が今の anchor と一致する照合は、履歴に依らず効く。** ⚠ **host が sha を
+      // 書き換えても内容は動かない** —— **これが「repo を問わず機能する」の実体である。**
+      if (current.has(n)) return false
+      // ⚠ **旧い形（commit sha）も通す** —— 消費者の記録を黙って壊さないため。書き換えは
+      // fence が促す。
       const at = collated.get(n)
       if (at !== undefined && at <= anchorOrder) return false
       const seen = lastTouch.get(n)
       return seen !== undefined && order.get(seen) > anchorOrder
     })
-    if (stale.length > 0) inter.push({ slug, commit: anchor, stale: stale.sort() })
+    if (stale.length > 0) inter.push({ slug, commit: anchor, digest, stale: stale.sort() })
   }
-  return { intra, inter, brokenCollations, scanned: { intra: intraScanned, inter: interScanned } }
+  return {
+    intra,
+    inter,
+    brokenCollations,
+    legacyCollations,
+    scanned: { intra: intraScanned, inter: interScanned },
+  }
 }
 
 /**
@@ -210,15 +228,23 @@ export async function gatherDrift(repoRoot, dir = DEFAULT_AIMS_DIR) {
  *
  * ⚠ **短縮 sha が複数に一致したら読めない扱いである。** 曖昧な証言は証言ではない。
  */
-function readCollations(record, order) {
+function readCollations(record, order, digest) {
+  const current = new Set()
   const collated = new Map()
+  const legacy = []
   const broken = []
   for (const c of record?.collations ?? []) {
+    // ⑴ **今の anchor の digest** —— 新しい形。⚠ **先に見る** ∴ digest が偶然 commit の接頭と
+    // 一致しても害が無い（どちらも「有効」を意味する）。
+    if (digest !== null && c.sha === digest) {
+      current.add(c.slug)
+      continue
+    }
     // ⚠ **`neighbour` へ改名して持つ。** 記録の `slug` は*隣接*の名であり、呼び出し側は
     // そこへ*この node* の名を足す —— 同じ key 名のまま spread すると、node の名が隣接の
     // 名に黙って潰れ、fence が「誰の記録が読めないのか」を取り違えて述べる。
     if (!isShaLike(c.sha)) {
-      broken.push({ neighbour: c.slug, sha: c.sha, why: 'sha ではない' })
+      broken.push({ neighbour: c.slug, sha: c.sha, why: 'digest でも sha でもない' })
       continue
     }
     const hits = order.has(c.sha) ? [c.sha] : [...order.keys()].filter((f) => f.startsWith(c.sha))
@@ -228,16 +254,23 @@ function readCollations(record, order) {
       broken.push({
         neighbour: c.slug,
         sha: c.sha,
-        why: hits.length === 0 ? 'aim 履歴に無い' : '短縮 sha が曖昧',
+        // ⚠ **2 つの原因を両方名指す。** 片方だけを述べれば、読み手はもう片方を疑わない
+        // —— 🔴 **2026-09-10 に踏んだのは後者である**（squash が sha を消した）。
+        why:
+          hits.length === 0
+            ? '今の anchor の digest でも、aim 履歴の commit でもない —— anchor が変わったか、host の merge が sha を書き換えた'
+            : '短縮 sha が曖昧',
       })
       continue
     }
+    // ⑵ **旧い形（commit sha）。** 通すが、書き換えを促す。
+    legacy.push({ neighbour: c.slug, sha: c.sha })
     const at = order.get(hits[0])
     // 同じ隣接に複数の照合が在れば、最も新しいもの（order が小さい）が効く。
     const prev = collated.get(c.slug)
     collated.set(c.slug, prev === undefined ? at : Math.min(prev, at))
   }
-  return { collated, broken }
+  return { current, collated, legacy, broken }
 }
 
 const short = (sha) => sha.slice(0, 8)
@@ -289,20 +322,35 @@ export function renderIntraFence(items, scanned = null) {
 }
 
 /**
- * @param {{slug: string, commit: string, stale: string[]}[]} items
- * @param {{slug: string, slug2?: string, sha: string, why: string}[]} broken 読めない照合記録
+ * @param {{slug: string, commit: string, digest: string|null, stale: string[]}[]} items
+ * @param {{slug: string, neighbour: string, sha: string, why: string}[]} broken 読めない照合記録
+ * @param {{slug: string, neighbour: string, sha: string}[]} legacy 旧い形（commit sha）の照合記録
  * @param {number|null} scanned `gatherDrift` の `scanned.inter`
  */
-export function renderInterFence(items, broken = [], scanned = null) {
+export function renderInterFence(items, broken = [], scanned = null, legacy = []) {
   const lines = [
     FENCE + INTER_FENCE_TAG,
-    '# fields: slug | anchor_commit | unreconciled_neighbours (comma-separated)',
+    '# fields: slug | anchor_digest | unreconciled_neighbours (comma-separated)',
   ]
   // ⚠ **読めない照合記録は、候補の一覧より先に出す。** 候補が減っていること自体がこの
   // 記録に依存しており、記録が読めないなら「減っていない」ではなく「減ったかどうかが
   // 分からない」が正しい —— それを一覧の後ろに置くと、読み手は先に一覧を信じる。
   for (const b of broken) {
     lines.push(`# ⚠ 読めない照合記録: ${b.slug} が [[${b.neighbour}]] @ ${b.sha} —— ${b.why}`)
+  }
+  // ⚠ **旧い形は「読めない」ではない** —— 効いている ∴ 候補を減らしている。だが **host の
+  // merge が次に書き換えれば読めなくなる** ∴ 別の声で述べ、書き換えを促す。
+  //
+  // 🔴 **1 行へ畳む。** ⚠ **記録ごとに 1 行出せば、移行期の corpus では面が warning で埋まる**
+  // （この repo では 29 件だった。実測 2026-09-10）—— **それは可視化ではなく注意予算への
+  // 課税である。** ⚠ **読めない記録の方は畳まない** —— あちらは 1 件ずつが行動を要する。
+  if (legacy.length > 0) {
+    const byNode = new Map()
+    for (const l of legacy) byNode.set(l.slug, (byNode.get(l.slug) ?? 0) + 1)
+    const where = [...byNode].map(([slug, n]) => `${slug}×${n}`).join(' ')
+    lines.push(
+      `# ⚠ 旧い形の照合記録（commit sha）${legacy.length} 件: ${where} —— 今は効いているが、host の merge が sha を書き換えれば読めなくなる ∴ anchor の digest へ書き換えよ`,
+    )
   }
   if (items.length === 0) {
     lines.push(
@@ -314,7 +362,9 @@ export function renderInterFence(items, broken = [], scanned = null) {
     )
   } else {
     for (const it of items) {
-      lines.push(`${it.slug} | ${short(it.commit)} | ${it.stale.join(',')}`)
+      // ⚠ **digest を持たない record は `-` を出す**（`aim:` が無い node）—— 空欄にすれば
+      // 「digest が空文字である」と読める。
+      lines.push(`${it.slug} | ${it.digest ?? '-'} | ${it.stale.join(',')}`)
     }
   }
   lines.push(FENCE, '')

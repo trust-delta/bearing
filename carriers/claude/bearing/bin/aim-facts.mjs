@@ -160,7 +160,12 @@ function renderRepo(r) {
   } else {
     say(renderIntraFence(r.drift.intra, r.drift.scanned?.intra ?? null).trimEnd(), '')
     say(
-      renderInterFence(r.drift.inter, r.drift.brokenCollations, r.drift.scanned?.inter ?? null).trimEnd(),
+      renderInterFence(
+        r.drift.inter,
+        r.drift.brokenCollations,
+        r.drift.scanned?.inter ?? null,
+        r.drift.legacyCollations,
+      ).trimEnd(),
       '',
     )
   }
