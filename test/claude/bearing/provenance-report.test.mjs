@@ -68,3 +68,61 @@ test('報告は走り、必ず 0 で終わる —— これは門ではない', 
   assert.match(lines.join('\n'), /「実測」「観測」を含む段落: [1-9]/)
   assert.match(lines.join('\n'), /測った file: [1-9]/)
 })
+
+// ═══ 第 2 の類 —— 対象を持たない実測 ════════════════════════════════════════
+//
+// 🔴 **⑴（日付の欠落）とは別の軸である。** ⑵ を足した動機は、**「日付は在るが対象が無い」
+// 形が ⑴ の視界の外に在った**ことであり、⚠ **陽性対照は目的の node が名指している**:
+// 直す前の `README.md:51`（`（実測 2026-09-04、1 台）`）を拾えなければ、測っているのは
+// 対象ではなく道具である。
+
+test('陽性対照 —— 直す前の README:51 の刻印を拾う', async (t) => {
+  if (!present) return t.skip('scripts/ が無い')
+  const { namesTarget } = await load()
+  // `c068d18:README.md:51` の原文。⚠ **「1 台」は*どれだけ*であって*何を*ではない。**
+  assert.equal(namesTarget('（実測 2026-09-04、1 台）'), false, '陽性対照を拾えていない')
+})
+
+test('陰性対照 —— ラベル無しで系を名指す刻印は挙げない', async (t) => {
+  if (!present) return t.skip('scripts/ が無い')
+  const { namesTarget } = await load()
+  // 🔴 **`対象:` ラベルの有無で測ってはならない** —— corpus の主流はこの形であり、
+  // ラベルで測れば **76 件中 55 件**が候補になる（実測 2026-09-10、対象: この repo の corpus）。
+  for (const s of [
+    '（実測 2026-09-05、Claude Code、`claude plugin list`）',
+    '（実測 2026-09-06、`grep -l \'last-verified\' docs/aims/*.md`）',
+    '（実測 2026-09-10、対象: `hooks.json`）',
+    '（実測 2026-09-06、上段）',
+  ]) {
+    assert.equal(namesTarget(s), true, `名指しているのに候補にした: ${s}`)
+  }
+})
+
+test('刻印が日付や主張語を 2 つ持っても、残余に化けない', async (t) => {
+  if (!present) return t.skip('scripts/ が無い')
+  const { namesTarget } = await load()
+  // ⚠ `CLAIM` / `DATED` は `g` を持たない ∴ そのまま `replace` すれば 1 つ目だけが消え、
+  // **2 つ目が残余として「名指している」に化ける。**
+  assert.equal(namesTarget('（実測 2026-09-04、2026-09-06）'), false, '2 つ目の日付が残余に化けた')
+  assert.equal(namesTarget('（実測 2026-09-04、観測）'), false, '2 つ目の主張語が残余に化けた')
+})
+
+test('刻印の走査は、日付を持たない単位でも止まらない', async (t) => {
+  if (!present) return t.skip('scripts/ が無い')
+  const { paragraphs, STAMP } = await load()
+  // 🔴 **2 類を 1 本の早期脱出に相乗りさせない** —— ⑴ で `continue` した単位にも刻印は在りうる。
+  const units = paragraphs('- 日付なしの実測。そして刻印（実測 2026-09-07）も在る')
+  const found = units.flatMap((u) => u.text.match(STAMP) ?? [])
+  assert.deepEqual(found, ['（実測 2026-09-07）'])
+})
+
+test('報告は 2 類とも出し、それでも 0 で終わる', async (t) => {
+  if (!present) return t.skip('scripts/ が無い')
+  const { report } = await load()
+  const lines = []
+  const code = report((s) => lines.push(s))
+  const text = lines.join('\n')
+  assert.equal(code, 0, '門にしてはならない')
+  assert.match(text, /日付を持たない実測／観測の候補/)
+  assert.match(text, /対象を持たない実測の候補/)
+})
