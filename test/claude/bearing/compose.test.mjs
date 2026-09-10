@@ -278,7 +278,7 @@ test('宣言された在り処の corpus が、どの面からも見える —�
   assert.match(out, /\*\*open-todo: 2\*\*/, '2 node とも読めていない')
   for (const tag of [
     'bearing-drift-intra', 'bearing-drift-inter', 'bearing-working-delta',
-    'bearing-unpushed', 'bearing-checkpoint-stale',
+    'bearing-unpushed', 'bearing-checkpoint-stale', 'bearing-aim-code-stale',
   ]) {
     assert.match(out, new RegExp(tag), `${tag} が出ていない`)
   }
