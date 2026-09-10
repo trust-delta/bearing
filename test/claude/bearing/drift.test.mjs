@@ -144,8 +144,17 @@ test('an unreadable body diff renders as unknown, never as false', () => {
 })
 
 test('inter records list their neighbours comma-separated, in one row per node', () => {
-  const out = renderInterFence([{ slug: 'alpha', commit: 'b'.repeat(40), stale: ['beta', 'gamma'] }])
-  assert.match(out, /^alpha \| bbbbbbbb \| beta,gamma$/m)
+  // ⚠ **出る列は `anchor_digest` である**（v2）—— commit ではない。
+  const out = renderInterFence([
+    { slug: 'alpha', commit: 'b'.repeat(40), digest: 'abc123abc123', stale: ['beta', 'gamma'] },
+  ])
+  assert.match(out, /^alpha \| abc123abc123 \| beta,gamma$/m)
+})
+
+test('digest を持たない node は空欄ではなく - を出す', () => {
+  // ⚠ 空欄は「digest が空文字である」と読める。
+  const out = renderInterFence([{ slug: 'alpha', commit: 'b'.repeat(40), digest: null, stale: ['beta'] }])
+  assert.match(out, /^alpha \| - \| beta$/m)
 })
 
 // ── 本物の repository に対して ───────────────────────────────────────────────
@@ -365,6 +374,7 @@ test('a clean corpus with no anchor history yields empty fences, not null', asyn
     intra: [],
     inter: [],
     brokenCollations: [],
+    legacyCollations: [],
     scanned: { intra: 0, inter: 0 },
   })
 })
@@ -443,7 +453,12 @@ test('読めない照合記録は候補を消さず、そのまま声になる',
   const facts = await gatherDrift(root)
   assert.deepEqual(facts.inter.find((r) => r.slug === 'child-node').stale, ['parent-node'])
   assert.deepEqual(facts.brokenCollations, [
-    { slug: 'child-node', neighbour: 'parent-node', sha: '2026-09-02', why: 'sha ではない' },
+    {
+      slug: 'child-node',
+      neighbour: 'parent-node',
+      sha: '2026-09-02',
+      why: 'digest でも sha でもない',
+    },
   ])
 })
 
@@ -461,13 +476,15 @@ test('aim 履歴に無い commit を名指した照合も読めない扱いに�
 
   const facts = await gatherDrift(root)
   assert.deepEqual(facts.inter.find((r) => r.slug === 'child-node').stale, ['parent-node'])
-  assert.equal(facts.brokenCollations[0].why, 'aim 履歴に無い')
+  // ⚠ **2 つの原因を両方名指す** —— 片方だけを述べれば、読み手はもう片方を疑わない。
+  assert.match(facts.brokenCollations[0].why, /anchor が変わったか/)
+  assert.match(facts.brokenCollations[0].why, /host の merge が sha を書き換えた/)
 })
 
 test('読めない記録は候補の一覧より先に出る —— 一覧を先に信じさせないため', () => {
   const out = renderInterFence(
-    [{ slug: 'alpha', commit: 'b'.repeat(40), stale: ['beta'] }],
-    [{ slug: 'alpha', neighbour: 'gamma', sha: 'nope', why: 'sha ではない' }],
+    [{ slug: 'alpha', commit: 'b'.repeat(40), digest: 'abc123abc123', stale: ['beta'] }],
+    [{ slug: 'alpha', neighbour: 'gamma', sha: 'nope', why: 'digest でも sha でもない' }],
   )
   const lines = out.split('\n')
   const warn = lines.findIndex((l) => l.startsWith('# ⚠ 読めない照合記録'))
@@ -482,4 +499,149 @@ test('fenced block の中の照合は記録ではなく引用である', () => {
      '- 照合: [[real]] @ abcdef1', ''].join('\n'),
   )
   assert.deepEqual(record.collations, [{ slug: 'real', sha: 'abcdef1' }])
+})
+
+// ── 宛先が内容であること —— repo を問わず機能するための芯 ────────────────────
+//
+// 🔴 **人間の決定 2026-09-10**: 照合の宛先は commit sha ではなく anchor の digest である。
+// ⚠ **理由は host の merge 慣習を知りえないことである** —— **squash も rebase も branch 上の
+// sha を `main` に残さない** ∴ **PR で書いた照合が land した瞬間に読めなくなる**（2026-09-10
+// に 7 件が一度に落ちた）。**aim はどの repo でも機能しなければならない。**
+
+/** anchor の digest を、実装と同じ道で引く。⚠ test で hash を再実装しない。 */
+const digestOf = async (aimLine) => {
+  const { anchorDigest } = await import(
+    '../../../carriers/claude/bearing/lib/corpus.mjs'
+  )
+  return anchorDigest(aimLine)
+}
+
+test('digest を宛先にした照合は候補を消す', async (t) => {
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born')
+
+  const revised = 'the child purpose, revised'
+  await writeAim(root, 'child-node', revised, {
+    parent: 'parent-node',
+    body: `- 照合: [[parent-node]] @ ${await digestOf(revised)} —— 見たが変更不要だった`,
+  })
+  commit(root, 'repurpose the child alone')
+
+  const facts = await gatherDrift(root)
+  assert.equal(facts.inter.find((r) => r.slug === 'child-node'), undefined, '候補が消えていない')
+  assert.deepEqual(facts.brokenCollations, [])
+  assert.deepEqual(facts.legacyCollations, [], 'digest の記録を旧い形と数えている')
+})
+
+test('anchor が変われば digest が変わり、照合は答えでなくなる', async (t) => {
+  // 🔴 **commit sha が担っていた性質はここで保たれる** —— ⚠ **一度書いた行が以後すべての
+  // 変更を黙って吸収してはならない。**
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born')
+
+  const first = 'the child purpose, revised'
+  const collation = `- 照合: [[parent-node]] @ ${await digestOf(first)} —— 見たが変更不要だった`
+  await writeAim(root, 'child-node', first, { parent: 'parent-node', body: collation })
+  commit(root, 'repurpose the child alone')
+
+  // 古い照合行をそのまま残して anchor をもう一度動かす。
+  await writeAim(root, 'child-node', 'the child purpose, revised again', {
+    parent: 'parent-node',
+    body: collation,
+  })
+  commit(root, 'repurpose the child once more')
+
+  const facts = await gatherDrift(root)
+  assert.deepEqual(facts.inter.find((r) => r.slug === 'child-node').stale, ['parent-node'])
+  assert.match(facts.brokenCollations[0].why, /anchor が変わったか/)
+})
+
+test('履歴が書き換えられても digest の照合は生き残る —— commit sha は落ちる', async (t) => {
+  // 🔴 **これが「repo を問わず機能する」の実体である。** ⚠ **squash を再現する**: 同じ内容の
+  // まま commit を 1 本へ畳み、sha を総取り替えする。
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  commit(root, 'born')
+
+  const aim = 'the child purpose'
+  await writeAim(root, 'child-node', aim, { parent: 'parent-node' })
+  commit(root, 'add the child')
+  const doomed = git(root, ['rev-parse', 'HEAD']).trim()
+
+  const both = [
+    `- 照合: [[parent-node]] @ ${await digestOf(aim)} —— digest を宛先にした`,
+    `- 照合: [[parent-node]] @ ${doomed} —— commit を宛先にした（この sha は畳まれて消える）`,
+  ]
+
+  // ⑴ digest 版だけを持たせて squash → 生き残るか
+  await writeAim(root, 'child-node', aim, { parent: 'parent-node', body: both[0] })
+  commit(root, 'collate by digest')
+  git(root, ['reset', '--soft', 'HEAD~2'])
+  commit(root, 'squashed')
+  let facts = await gatherDrift(root)
+  assert.deepEqual(facts.brokenCollations, [], 'digest の照合が squash で落ちた')
+  assert.equal(facts.inter.find((r) => r.slug === 'child-node'), undefined)
+
+  // ⑵ 消えた commit を宛先にした照合は、読めない記録になる
+  await writeAim(root, 'child-node', 'the child purpose, moved', {
+    parent: 'parent-node',
+    body: `- 照合: [[parent-node]] @ ${doomed} —— 畳まれて消えた commit`,
+  })
+  commit(root, 'collate by a dead commit')
+  facts = await gatherDrift(root)
+  assert.equal(facts.brokenCollations.length, 1, '消えた commit が読めない記録になっていない')
+  assert.match(facts.brokenCollations[0].why, /host の merge が sha を書き換えた/)
+})
+
+test('旧い形（commit sha）は通るが、書き換えを促す声が出る', async (t) => {
+  // ⚠ **消費者の記録を黙って壊さない。** だが **次の merge で読めなくなる** ∴ 別の声で述べる。
+  const root = await makeRepo()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  await writeAim(root, 'parent-node', 'the parent purpose')
+  await writeAim(root, 'child-node', 'the child purpose', { parent: 'parent-node' })
+  commit(root, 'born')
+
+  await writeAim(root, 'child-node', 'the child purpose, revised', { parent: 'parent-node' })
+  commit(root, 'repurpose the child alone')
+  const anchor = git(root, ['rev-parse', 'HEAD']).trim()
+
+  await writeAim(root, 'child-node', 'the child purpose, revised', {
+    parent: 'parent-node',
+    body: `- 照合: [[parent-node]] @ ${anchor} —— 旧い形`,
+  })
+  commit(root, 'collate the old way')
+
+  const facts = await gatherDrift(root)
+  assert.equal(facts.inter.find((r) => r.slug === 'child-node'), undefined, '旧い形が効いていない')
+  assert.deepEqual(facts.brokenCollations, [])
+  assert.deepEqual(facts.legacyCollations, [
+    { slug: 'child-node', neighbour: 'parent-node', sha: anchor },
+  ])
+})
+
+test('旧い形の声は 1 行へ畳まれる —— 移行期に面を埋めないため', () => {
+  // ⚠ **記録ごとに 1 行出せば、29 件持つ corpus では warning が面を占める**（実測 2026-09-10）。
+  // 🔴 **読めない記録の方は畳まない** —— あちらは 1 件ずつが行動を要する。
+  const out = renderInterFence(
+    [],
+    [],
+    1,
+    [
+      { slug: 'alpha', neighbour: 'beta', sha: 'a'.repeat(40) },
+      { slug: 'alpha', neighbour: 'gamma', sha: 'a'.repeat(40) },
+      { slug: 'delta', neighbour: 'beta', sha: 'b'.repeat(40) },
+    ],
+  )
+  const warn = out.split('\n').filter((l) => l.startsWith('# ⚠ 旧い形'))
+  assert.equal(warn.length, 1, '1 行へ畳まれていない')
+  assert.match(warn[0], /3 件/)
+  assert.match(warn[0], /alpha×2/)
+  assert.match(warn[0], /delta×1/)
 })

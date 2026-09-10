@@ -21,7 +21,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | fence tag | fields | 何の事実か |
 | :-- | :-- | :-- |
 | `bearing-drift-intra v1` | `slug \| anchor_commit \| body_moved` | 自 node の `aim:` が**改訂**され、以後 body がそれに寄せられたかどうか |
-| `bearing-drift-inter v1` | `slug \| anchor_commit \| unreconciled_neighbours` | 隣接 node（親・子・`[[link]]` 先）のうち、その変更と一緒に commit されておらず、かつ `照合:` 記録でも片付いていないもの |
+| `bearing-drift-inter v2` | `slug \| anchor_digest \| unreconciled_neighbours` | 隣接 node（親・子・`[[link]]` 先）のうち、その変更と一緒に commit されておらず、かつ `照合:` 記録でも片付いていないもの |
 | `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
 | `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |

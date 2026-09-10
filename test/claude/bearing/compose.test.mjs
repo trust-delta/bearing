@@ -175,7 +175,7 @@ test('a corpus yields the fences and the open-todo count', async () => {
   await corpusRepo(root, ['alpha', 'beta'])
   const out = compose(root)
   assert.match(out, /```bearing-drift-intra v1/)
-  assert.match(out, /```bearing-drift-inter v1/)
+  assert.match(out, /```bearing-drift-inter v2/)
   assert.match(out, /```bearing-working-delta v1/)
   assert.match(out, /```bearing-unpushed v1/)
   assert.match(out, /```bearing-checkpoint-stale v1/)

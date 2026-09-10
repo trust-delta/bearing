@@ -5,6 +5,7 @@
 // 子は親を名指し、slug は file 名である。⚠ **以下はそこから読むだけで、自分では何も
 // 足さない。**
 
+import { createHash } from 'node:crypto'
 import { readdir } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -127,14 +128,39 @@ export function stripCodeSpans(text) {
  * 変更が要れば隣接が動く ∴ flag は自然に落ちる。だが**変更不要という結論は何も動かさない**
  * ∴ 記録する場所が無ければ flag は立ち続け、**既に見た者に「見よ」と言い続ける**。
  *
- * ⚠ **sha を必須にしているのは、照合が commit に対する証言だからである。** anchor が次に
- * 変われば、その照合はもう答えになっていない —— node に対する証言にすると、一度書いた
- * 行が以後すべての変更を黙って吸収してしまう。
+ * ⚠ **宛先を必須にしているのは、照合が「その anchor の下での」証言だからである。** `aim:`
+ * が次に変われば、その照合はもう答えになっていない —— **node に対する証言にすると、一度
+ * 書いた行が以後すべての変更を黙って吸収してしまう。**
+ *
+ * 🔴 **宛先は `anchorDigest` である。commit sha ではない**（人間の決定 2026-09-10）——
+ * ⚠ **sha は host の merge 慣習が書き換える** ∴ **PR で書いた照合が land で読めなくなる。**
+ * **旧い形（commit sha）は `drift.mjs` が当面そのまま通し、fence が書き換えを促す。**
  *
  * ⚠ **fenced block だけを剥ぐ**（inline span は剥がない）。剥ぐと backtick 付きで書かれた
- * sha が消え、記録が**黙って落ちる** —— 落ちた記録は「記録が無い」と同じ見た目になる。
+ * 宛先が消え、記録が**黙って落ちる** —— 落ちた記録は「記録が無い」と同じ見た目になる。
  */
 const COLLATION_RE = /^[ \t]*[-*][ \t]*照合:[ \t]*\[\[([^\]\n]+)\]\][ \t]*@[ \t]*([^\s`]+)/gm
+
+/**
+ * anchor（`aim:` 本文）の digest。**照合記録が指す宛先である。**
+ *
+ * 🔴 **なぜ commit sha ではないのか。** 照合は「この anchor の下で隣接を点検した」という
+ * 証言であり、⚠ **commit sha は host の merge 慣習（squash / rebase）が書き換える** ——
+ * **書いた瞬間は正しく、land した瞬間に偽になる。** 2026-09-10 に実際に起きた:
+ * PR の squash が 7 件の照合を「読めない証言」へ落とした。**bearing は任意の repo へ配る
+ * ∴ 配り先の merge 慣習を知りえない** —— **sha を写す設計では、repo を問わず機能しない。**
+ *
+ * ⚠ **内容は書き換えられない。** `aim:` が変われば digest が変わり、照合は答えでなくなる
+ * （commit sha が担っていた性質はここで保たれる）。**それ以外の変更は吸収してよい** ——
+ * `drift-inter` の trigger は anchor の変更だからである。
+ *
+ * ⚠ **12 桁である。** 区別すべきは「同じ node の anchor の版」だけであり、corpus 全体で
+ * 一意である必要は無い。**短いほど commit sha の接頭と衝突しやすい** ∴ 短くしない。
+ */
+export function anchorDigest(aim) {
+  if (aim === null || aim === undefined) return null
+  return createHash('sha256').update(String(aim).trim(), 'utf8').digest('hex').slice(0, 12)
+}
 
 /**
  * 1 つの aim record を、fence が必要とする事実へ parse する。
@@ -171,8 +197,10 @@ export function parseAimRecord(text) {
     slug: m[1].trim(),
     sha: m[2].trim(),
   }))
+  const aim = field('aim')
   return {
-    aim: field('aim'),
+    aim,
+    anchorDigest: anchorDigest(aim),
     parent: field('parent'),
     state: field('state'),
     lastVerified: field('last-verified'),
