@@ -30,7 +30,7 @@ CI が落とす門は 2 つだけ —— **test** と、**carrier が自分の�
 されていない以上、硬い門にするのは早い）。
 
 ```
-node --test carriers/claude/bearing/test/*.test.mjs   # test
+node --test test/claude/bearing/*.test.mjs            # test
 bash scripts/carrier-check.sh                         # carrier の検査
 node scripts/lang-report.mjs                          # 言語の測定（落ちない）
 ```

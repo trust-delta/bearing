@@ -31,7 +31,7 @@
 //
 // ここでは `.claude/skills/**` を「docs 由来」として扱うが、⚠ **それが許されるのは、置かれた
 // 複製が正本と同期しており、かつ他に code が動いていないときだけである。** 同期の検証は
-// 呼び出し側が行う（`test/placed-skill-sync.test.mjs` が byte 同一を見る）—— この file は path
+// 呼び出し側が行う（`test/claude/bearing/placed-skill-sync.test.mjs` が byte 同一を見る）—— この file は path
 // しか見ないと述べておく。
 //
 // ⚠ **`CLAUDE.md` は「一部だけ生成物」だが `docs` に置く。** marker の内側は
