@@ -1,8 +1,28 @@
-# ⚠ shell script と git hook は LF でなければ動かない。
+# ⚠ **git の中は完全に LF である**（実測 2026-09-10、tracked 112 file の全数を `git show :<path>`
+# で検めた。CRLF を含むもの 0 件）∴ 直すべきは checkout の側だけだった。
 #
-# 本機は `core.autocrlf=true` である ∴ 指定が無ければ checkout で CRLF に変換され、
-# `#!/usr/bin/env bash` は `bad interpreter: /usr/bin/env bash^M` で死ぬ。
-# ここが効くのは clone した各マシンであって、CI（ubuntu, autocrlf=false）ではない
-# —— **CI が緑でも手元が壊れる**、という形の壊れ方をする。
+# ⚠ **`core.autocrlf=true` の機体では、指定の無い file は checkout で CRLF になる。** ここが効くのは
+# clone した各マシンであって、CI（ubuntu, autocrlf=false）ではない —— **CI が緑でも手元が壊れる**、
+# という形の壊れ方をする。
+#
+# 🔴 **2026-09-10 まで、閉じていたのは `*.sh` と `.githooks/**` の 2 行だけだった。** あの 2 行が塞いで
+# いたのは「起動しない」という *目に見える* 壊れ方（`bad interpreter: /usr/bin/env bash^M`）であり、
+# **黙って赤くなるほうは開いたままだった。** 実測（2026-09-10、win32・`core.autocrlf=true`・
+# node v24.18.1）: `node --test` が ✖10、`scripts/consumer-check.mjs` が NG 4 —— **同じ commit で
+# CI は緑である**（`gh run list`、main 最新 ci は success）。1 本は原因まで特定した ——
+# `carriers/claude/bearing/surface/aim.html` の CRLF に対し `surface-shape.test.mjs` の正規表現が
+# `>\n` を要求し、一致 0 件になる（`>\r\n` なら 3 件）。⚠ **残りが同根かは未特定である。**
+#
+# ⚠ **`* text=auto eol=lf` は `core.autocrlf` より強い** ∴ 各マシンの設定に依らず checkout は LF に
+# なる。**そして tracked である** —— clone した者にも同じものが効き、効いている事実が git に残る。
+# ⚠ **machine-local な `core.autocrlf=false` では、そのどちらも成り立たない** —— 設定した記録が
+# どこにも残らず、次の機体で黙って再発する。
+#
+# 再測: `git ls-files -z | xargs -0 -I{} sh -c 'git show :{} | grep -q "$(printf \"\\r\")" && echo {}'`
+# —— 何も出なければ index は LF である。手元の側は `file` か od で見る。
+* text=auto eol=lf
+
+# ⚠ **下の 2 行は上に含まれる。それでも残す** —— 塞いでいる穴が別だからである（上は「黙って
+# 赤くなる」、下は「そもそも起動しない」）∴ **上を緩めた日に、下が道連れにならない。**
 *.sh text eol=lf
 .githooks/** text eol=lf
