@@ -43,6 +43,60 @@ elif ! cmp -s "$repo_root/LICENSE" "$plugin/LICENSE"; then
   fail=1
 fi
 
+# ── 配るものの境界 ─────────────────────────────────────────────────────────
+# ⚠ **plugin root の subtree は丸ごと cache へ複製される** ∴ 境界は dir そのものであり、
+# **既定 allow・例外 0 個**である。⚠ **file を除外する manifest field は無い**（docs の読み
+# 2026-09-10、対象: code.claude.com/docs/ja/plugins-reference の「コンポーネントパスフィールド」
+# —— あれらは *どこから読むか* を述べるだけで、*何を複製するか* には触れていない）∴ 締め出す
+# 手は、この repo の側にしか置けない。
+#
+# 🔴 **上の 2026-09-03 の観測は、その後 2 度追い越されている**（実測 2026-09-10、`git log
+# --diff-filter=A --reverse -- <path>`）—— `surface/` が 09-04、`templates/` が 09-05 に carrier へ
+# 増え、**どちらも配られるようになったが、あの行は更新されなかった。** ⚠ **害は出ていない** ——
+# 2 つとも `setup-surface` / `setup-aim` が写すものであり、配られなければ動かない。🔴 **問題は、
+# 正しかったことを確かめた機構が 1 つも無かったことである。** この門はそこに置く。
+#
+# ⚠ **見るのは tracked file だけである** —— cache は released commit の clone ゆえ、untracked な
+# 手元の残骸は配られない。`scripts/consumer-check.mjs` が出荷 copy を組む源（`git ls-files`）と
+# 揃えてある ∴ **2 つが別の「配るもの」を見ることはない。**
+#
+# ⚠ **`test/` はこの一覧に無い**（人間の決定 2026-09-10）—— 開発用の test を同梱する意味が無い ∴
+# `test/claude/bearing/` へ出した。**載せ直すことは、配ると宣言することである。**
+plugin_rel="carriers/claude/bearing"
+carrier_allowed=".claude-plugin LICENSE README.en.md README.md bin commands hooks lib skills surface templates"
+
+carrier_seen="$(git -C "$repo_root" ls-files -- "$plugin_rel" | sed "s|^$plugin_rel/||" | cut -d/ -f1 | sort -u)"
+[ -n "$carrier_seen" ] || { echo "error: carrier に tracked file が 1 つも無い" >&2; exit 1; }
+
+# 許していないものが配られようとしていないか。
+for entry in $carrier_seen; do
+  case " $carrier_allowed " in
+    *" $entry "*) ;;
+    *)
+      echo "error: carrier に許していないものが在る: $entry" >&2
+      echo "  これは cache へ複製され、全消費者へ届く。" >&2
+      echo "  配るなら scripts/carrier-check.sh の carrier_allowed へ足す（＝ 配ると宣言する）。" >&2
+      echo "  配らないなら carrier の外へ出す。" >&2
+      fail=1
+      ;;
+  esac
+done
+
+# ⚠ **逆向きの腐りも見る** —— 消えたものが一覧に残れば、境界は *決定* ではなく
+# *昔の決定の化石* になる。**腐る字は機械に見張らせる。**
+carrier_seen_sp="$(echo $carrier_seen)"
+for entry in $carrier_allowed; do
+  case " $carrier_seen_sp " in
+    *" $entry "*) ;;
+    *)
+      echo "error: carrier_allowed が '$entry' を名指しているが、carrier に無い。" >&2
+      echo "  消したのなら carrier_allowed からも外すこと —— 一覧は今の境界でなければならない。" >&2
+      fail=1
+      ;;
+  esac
+done
+
+echo "配るもの: $carrier_seen_sp"
 # ── carrier が名指す参照はすべて解決せねばならない ───────────────────────────
 # ⚠ **読み手が開けない file を指す carrier は、ここで最も重大な「黙った失敗」である**:
 # エージェントは framed されたと信じ、実際にはされていない。これは既に本物の破損を 2 件

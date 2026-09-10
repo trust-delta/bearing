@@ -65,7 +65,7 @@ state: open
 
   ⚠ **版は 0.21.0**（minor。人間の決定 2026-09-06。前提「最重要の消費者は人間本人である」を再測したうえで）。🔴 **この bump では法の本文が 1 byte も動いていない** —— `frame.md` を触らないと決めたからである（節の定義は skill が持つ層であり、frame は既に「触れる前に skill を読め」と命じている）∴ **marker の sha は `6d8693bb3c91e20f` のまま、version だけが動いた** —— **この corpus で初めての形である。**
 
-  ⚠ **再測は `node --test test/process.test.mjs`（42 本）と、この repo の corpus に対する `observation: 10` ／ 宣言待ち fence の `observations` 列である**（実測 2026-09-06）
+  ⚠ **再測は `node --test test/claude/bearing/process.test.mjs`（42 本）と、この repo の corpus に対する `observation: 10` ／ 宣言待ち fence の `observations` 列である**（実測 2026-09-06）
 
 # OBSERVATION
 

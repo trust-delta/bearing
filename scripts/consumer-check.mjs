@@ -64,20 +64,44 @@ function must(cond, message) {
  *
  * ⚠ **working tree ではなく index が知っている file だけを写す。** commit されていない file が
  * 出荷物に見えれば、この job は届かないものを検めることになる。
+ *
+ * ⚠ **mode も index から読む —— 写した file の `stat()` ではない。** `core.filemode=false` の
+ * 機体（Windows）では working tree が exec bit を持てず、`stat()` は carrier の bin をすべて
+ * `666` と答える ∴ そこから写せば「裸で呼べるか」の検査は**測れないものを測る**（実測
+ * 2026-09-10、win32 —— `bearing-ci.mjs` は index で `100755` なのに NG になっていた）。
+ * ⚠ **`fs.chmod` 自体も win32 では exec bit に効かない**（実測 2026-09-10: `chmod(0o755)` の
+ * 後も mode は `666`）∴ **写した側を測り直す道は塞がっている。**
+ * 🔴 **cache は released commit の clone である ∴ 出荷物の mode の正本は index の側であり、**
+ * **そちらを `modes` として持ち回る。**
+ *
+ * @returns {Promise<{count: number, modes: Map<string, string>}>} `modes` は carrier 相対の
+ *   path（区切りは `/`）→ index の mode（`100644` / `100755`）
  */
 async function buildShipped(dest) {
-  const ls = spawnSync('git', ['-C', ROOT, 'ls-files', '-z', '--', CARRIER], { encoding: 'buffer' })
+  const ls = spawnSync('git', ['-C', ROOT, 'ls-files', '-s', '-z', '--', CARRIER], { encoding: 'buffer' })
   must(ls.status === 0, `git ls-files が失敗した: ${ls.stderr?.toString() ?? ''}`)
-  const files = ls.stdout.toString('utf8').split('\0').filter(Boolean)
-  must(files.length > 0, 'carrier に tracked file が 1 つも無い')
-  for (const f of files) {
-    const rel = path.relative(CARRIER, f)
+  const entries = ls.stdout
+    .toString('utf8')
+    .split('\0')
+    .filter(Boolean)
+    .map((line) => {
+      // `<mode> <sha> <stage>\t<path>`
+      const tab = line.indexOf('\t')
+      must(tab > 0, `git ls-files -s の行を解せない: ${line}`)
+      return { mode: line.slice(0, tab).split(' ')[0], file: line.slice(tab + 1) }
+    })
+  must(entries.length > 0, 'carrier に tracked file が 1 つも無い')
+  const modes = new Map()
+  for (const { mode, file } of entries) {
+    const rel = path.relative(CARRIER, file)
     const to = path.join(dest, rel)
     await mkdir(path.dirname(to), { recursive: true })
-    await copyFile(path.join(ROOT, f), to)
-    await chmod(to, (await stat(path.join(ROOT, f))).mode & 0o777)
+    await copyFile(path.join(ROOT, file), to)
+    // ⚠ POSIX ではこの 1 行が効き、win32 では効かない（上の実測）—— どちらでも `modes` が正本。
+    await chmod(to, mode === '100755' ? 0o755 : 0o644)
+    modes.set(rel.split(path.sep).join('/'), mode)
   }
-  return files.length
+  return { count: entries.length, modes }
 }
 
 // ── 合成消費者 ──────────────────────────────────────────────────────────────
@@ -164,7 +188,7 @@ async function main() {
   console.log(`置き場: ${base}`)
   console.log('')
 
-  const count = await buildShipped(shipped)
+  const { count, modes } = await buildShipped(shipped)
   const manifest = JSON.parse(await readFile(path.join(shipped, '.claude-plugin', 'plugin.json'), 'utf8'))
   console.log(`出荷 copy: ${count} file · plugin ${manifest.name} v${manifest.version}`)
   console.log('')
@@ -589,7 +613,12 @@ async function main() {
         must(st !== null, `${f} が名指す ${m[1]} が同梱されていない`)
         // ⚠ **名前と exec bit は対である** —— `bearing-` を冠した名は「裸で呼んでよい」という
         // 約束であり、exec bit が無ければその約束は `Permission denied` で破れる。
-        must((st.mode & 0o111) !== 0, `${m[1]} に exec bit が無い —— 裸で呼べば Permission denied`)
+        // ⚠ **訊くのは index の mode であって、写した file の `stat()` ではない**（`buildShipped`
+        // の注記）—— win32 では後者が exec bit を持てず、**測れないものを測ることになる。**
+        must(
+          modes.get(`bin/${m[1]}`) === '100755',
+          `${m[1]} の index の mode が 100755 でない —— 裸で呼べば Permission denied`,
+        )
         named.push(m[1])
       }
     }
