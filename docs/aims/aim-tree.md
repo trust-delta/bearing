@@ -28,6 +28,12 @@ state: open
 
 ⚠ **この規則は、この repo の corpus にだけ置く**（人間の決定 2026-09-08）—— **配る canon（aim skill の `aim-authoring.md`）へは昇格させない。** 🔴 **∴ 配る側で同じことを探しても無い** —— **無いのは漏れではなく決定である。**
 
+⚠ **2026-09-10、frontmatter は 3 field になった**（人間の決定）—— 🔴 **「私が frontmatter に求めるのは『目的の一文・親を示す・満足と諦めの状態』のみ」** ∴ **`aim:` / `parent:` / `state:`。**
+
+🔴 **4 番目の `last-verified:` は退役した**（同日）。⚠ **人間が sha を書く欄であり、host の merge 慣習がそれを書き換える** ∴ **人間の要求「aim は repo を問わず機能する」を満たせない。** **aim⊥code の剥離は [[purpose-drift]] の `bearing-aim-code-stale` が `[done]` mark の commit から引く** —— 🔴 **人間は 1 文字も書かない。** ⚠ **能力の後退は無い**: **`checkpoint-stale` は人間の刻印を持つ node にしか発火せず、数えていたのは repo 全体の commit であった** ∴ **置き換えが見えない場所は、あちらも見えなかった**（保有数は最後まで 0 だった。実測 2026-09-06 および 2026-09-10）。
+
+⚠ **退役は削除ではない。** **既に `last-verified:` を書いた消費者の corpus は 1 文字も動かない** —— **「知らない frontmatter の行」を保つ振る舞いが、そのまま後方互換になっている**（`test/claude/bearing/aim-format.test.mjs` が固定）。
+
 # PROCESS
 
 - [done] plugin の aim 機構（corpus の読み取り・fence 生成・記法検査）を移設した。5 枚の fence が実際に出ており、うち `drift-inter` は 2026-09-01 に実地で発火した
@@ -59,27 +65,13 @@ state: open
 
   ⚠ **完了はエージェントが書かない。** 節は票だけを持ち、観測したという証言は frontmatter（`state:` ／ `last-verified:`）に置かれる ∴ **人間の宣言がエージェントを経由する経路を 1 本も増やしていない**（[[human-domain]] が畳もうとしている 3 手の形）。
 
-  ⚠ **`last-verified:` は読む側にしか定義が無かった。** `checkpoint-stale` fence が読み、parser も test も在るのに、**書く側の canon が 1 度も述べておらず、この corpus の保有数は 0 だった**（実測 2026-09-06、`grep -l 'last-verified' docs/aims/*.md`）—— ⚠ **証言する場所だけが在っても、書けと述べる場所が無ければ使われない** ∴ canon の frontmatter の節へ足した。
+  ⚠ **`last-verified:` は読む側にしか定義が無かった。** `checkpoint-stale` fence が読み、parser も test も在るのに、**書く側の canon が 1 度も述べておらず、この corpus の保有数は 0 だった**（実測 2026-09-06、`grep -l 'last-verified' docs/aims/*.md`）—— ⚠ **証言する場所だけが在っても、書けと述べる場所が無ければ使われない** ∴ canon の frontmatter の節へ足した（🔴 **2026-09-10、その足した行ごと退役した** —— **field 自体が frontmatter から落ちた。上の観測は 2026-09-06 の事実として真のまま在る** ∴ **書き換えず、追記で訂正する**）。
 
   ⚠ **fence は改名した**（`bearing-awaiting-observation` → `bearing-awaiting-declaration`。field に `observations` を追加）—— **破壊的変更である。** 支えているのは [[adoption-declaration]] の「現時点の消費者は人間本人とその管理下の repo だけ」という**失効しうる前提**であり、**次に同種の変更を測る者は、まずその 1 行がまだ真かを確かめること。**
 
   ⚠ **版は 0.21.0**（minor。人間の決定 2026-09-06。前提「最重要の消費者は人間本人である」を再測したうえで）。🔴 **この bump では法の本文が 1 byte も動いていない** —— `frame.md` を触らないと決めたからである（節の定義は skill が持つ層であり、frame は既に「触れる前に skill を読め」と命じている）∴ **marker の sha は `6d8693bb3c91e20f` のまま、version だけが動いた** —— **この corpus で初めての形である。**
 
   ⚠ **再測は `node --test test/claude/bearing/process.test.mjs`（42 本）と、この repo の corpus に対する `observation: 10` ／ 宣言待ち fence の `observations` 列である**（実測 2026-09-06）
-
-# ESCALATION
-
-🔴 **`last-verified:` をどこへ置くか —— あるいは置かないか。**
-
-⚠ **2026-09-10、人間が frontmatter の射程を述べた**（人間の決定 2026-09-10）—— 🔴 **「私が frontmatter に求めるのは『目的の一文・親を示す・満足と諦めの状態』のみ」** ∴ **`aim:` / `parent:` / `state:` の 3 つであり、`last-verified:` は frontmatter に属さない。**
-
-⚠ **だが行き先が決まらない。** 🔴 **body へ移せば「人間が body に書く」ことになり、「frontmatter は人間のもの・body はあなたのもの」という分割そのものに触れる** —— **これはこの node の中心である。** ⚠ **併せて、`last-verified:` は同じ欠陥を持つ** —— **人間が sha を書く欄であり、host の merge がそれを書き換える**（[[purpose-drift]] が照合について直したのと同型。**しかもこちらは人間のものであり、黙って無効になる**）。⚠ **保有数は 0 である**（実測 2026-09-06、対象: この repo の corpus）∴ **まだ誰も踏んでいない。**
-
-⚠ **2026-09-10、候補 ⑵ に実体が付いた。** 🔴 **[[purpose-drift]] に `bearing-aim-code-stale v1` を新設した** —— **`[done]` mark を書き入れた commit から aim⊥code の join を引く形であり、人間が sha を書く必要が無く、既存の mark に遡って効く**（人間の指摘 2026-09-10）。∴ **`checkpoint-stale` を廃するのは「使われていないから」ではなく「置き換えが在るから」になった** —— **消極的な廃止ではなく置換である。**
-
-⚠ **まだ撤去していない。** **保有数 0 ∴ 併走しても `# none` のままで衝突しない**が、🔴 **撤去は `process.mjs` / `corpus.mjs` / 試験 3 枚 / 配る canon 2 枚へ波及する別の変更であり、そして「frontmatter から field を 1 つ落とす」ことそのものが人間の act である。**
-
-**候補**: ⑴ **`# OBSERVATION` へ人間が 1 行書く形にする**（分割を緩める）⑵ **`checkpoint-stale` ごと廃する**（保有数 0 ＋ `state:` が満足を既に運ぶ）⑶ **frontmatter に残す**（3 つに絞るという決定を、この 1 field だけ例外にする）。⚠ **⑴⑵ はどちらも配る法の改訂を含む。選ぶのは人間である。**
 
 # OBSERVATION
 

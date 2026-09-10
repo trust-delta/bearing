@@ -104,6 +104,10 @@ test('body に `---` が在っても、そこを frontmatter の閉じと取り�
 })
 
 test('知らない frontmatter の行は 1 文字も動かない', () => {
+  // 🔴 **2026-09-10 以降、これは退役した field の避難路である。** ⚠ **`last-verified:` は
+  // frontmatter から落ちた**（人間の決定: frontmatter は `aim:` / `parent:` / `state:` の 3 つ）
+  // **が、消費者の corpus には既に書かれているかもしれない** —— **退役は削除ではない** ∴
+  // **知らない field として 1 文字も動かさないことが、そのまま後方互換になる。**
   const extra = '---\naim: x\nparent: p\nstate: open\nlast-verified: abc123\n---\n本文\n'
   assert.equal(writeBackUnchanged(extra), extra)
   assert.ok(edit(extra, { state: 'done' }).includes('last-verified: abc123'))

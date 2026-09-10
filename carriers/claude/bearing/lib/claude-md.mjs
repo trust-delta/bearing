@@ -217,7 +217,7 @@ export const renderBlock = (version, body, dir = DEFAULT_AIMS_DIR) => {
  *
  * ⚠ **anomaly は「無い」に畳まない。** 片方だけの marker・読めない marker・2 組以上 ——
  * どれも「block が無い」に見せれば、**次の apply が末尾へもう 1 つ足す**。壊れた記録は
- * 無い記録より声が大きい、という `checkpoint.mjs` と同じ形である。
+ * 無い記録より声が大きい、という `drift.mjs` の照合記録と同じ形である。
  *
  * @param {string} text
  * @returns {{blocks: {from: number, to: number, version: string, sha: string, body: string}[], anomalies: string[]}}

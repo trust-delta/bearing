@@ -42,7 +42,6 @@ import { gatherBacklog, renderAwaitingDeclarationFence } from '../lib/process.mj
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { gatherWorkingDelta, renderWorkingDeltaFence } from '../lib/working-delta.mjs'
 import { gatherUnpushed, renderUnpushedFence } from '../lib/unpushed.mjs'
-import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.mjs'
 import { gatherAimCodeStale, renderAimCodeFence } from '../lib/aim-code.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
 import {
@@ -135,15 +134,14 @@ async function repoFacts(repo) {
     return { ...repo, head, slugs, corpus: false }
   }
   const graph = await readAimGraph(repo.root, dir)
-  const [drift, working, unpushed, checkpoint, aimCode] = await Promise.all([
+  const [drift, working, unpushed, aimCode] = await Promise.all([
     gatherDrift(repo.root, dir),
     gatherWorkingDelta(repo.root, slugs, dir),
     gatherUnpushed(repo.root, slugs, dir),
-    gatherCheckpointStale(repo.root, graph?.nodes ?? new Map()),
     gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
   ])
   const backlog = await gatherBacklog(repo.root, dir)
-  return { ...repo, head, slugs, corpus: true, drift, working, unpushed, checkpoint, aimCode, backlog }
+  return { ...repo, head, slugs, corpus: true, drift, working, unpushed, aimCode, backlog }
 }
 
 function renderRepo(r) {
@@ -173,7 +171,6 @@ function renderRepo(r) {
   }
   say(renderWorkingDeltaFence(r.working).trimEnd(), '')
   say(renderUnpushedFence(r.unpushed).trimEnd(), '')
-  say(renderCheckpointFence(r.checkpoint).trimEnd(), '')
   say(renderAimCodeFence(r.aimCode).trimEnd(), '')
 }
 

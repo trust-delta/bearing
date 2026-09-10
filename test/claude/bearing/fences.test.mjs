@@ -1,4 +1,4 @@
-// unpushed・checkpoint-stale・baton の各層の test。
+// unpushed・sha 判定・baton の各層の test。
 //
 // git に面したものは、本物の upstream を持つ本物の repository に対して走る: ⚠
 // `@{upstream}..HEAD` が何を意味するかは **git の ref graph についての事実**であり、
@@ -13,7 +13,7 @@ import { mkdtempSync } from 'node:fs'
 import path from 'node:path'
 
 import { gatherUnpushed, renderUnpushedFence, parseUnpushedLog } from '../../../carriers/claude/bearing/lib/unpushed.mjs'
-import { gatherCheckpointStale, renderCheckpointFence, isShaLike } from '../../../carriers/claude/bearing/lib/checkpoint.mjs'
+import { isShaLike } from '../../../carriers/claude/bearing/lib/git.mjs'
 import { readBaton } from '../../../carriers/claude/bearing/lib/baton.mjs'
 import { activePath, batonDir } from '../../../carriers/claude/bearing/lib/handoff.mjs'
 
@@ -121,69 +121,19 @@ test('no upstream yields null — "could not look", not "nothing there"', async 
   await rm(root, { recursive: true, force: true })
 })
 
-// ── checkpoint-stale ─────────────────────────────────────────────────────────
+// ── sha の判定 ───────────────────────────────────────────────────────────────
+//
+// ⚠ **かつてここは `checkpoint-stale` の節だった。** 🔴 **あの fence は 2026-09-10 に退役した**
+// （人間の決定。`last-verified:` ＝ **人間が sha を書く frontmatter の field** であり、**host の
+// merge 慣習がそれを書き換える** ∴ **repo を問わず機能しない**）—— **置き換えは
+// `bearing-aim-code-stale`**（`test/claude/bearing/aim-code.test.mjs`）。
+// ⚠ **判定だけは残る** —— **日付を書く取り違えの形は field が消えても残り、照合記録の旧い形
+// （commit sha）が今もこれを通る。**
 
-test('isShaLike rejects a date — the archived records use this field for dates', () => {
+test('isShaLike rejects a date — the retired field used to carry dates', () => {
   assert.equal(isShaLike('9d9cb31'), true)
   assert.equal(isShaLike('2026-05-15'), false)
   assert.equal(isShaLike(null), false)
-})
-
-test('a node with no checkpoint contributes nothing — absence is a third state', async () => {
-  const root = await mkdtemp(path.join(tmpdir(), 'aim-cp-'))
-  execFileSync('git', ['init', '-q', root])
-  const nodes = new Map([['a', { lastVerified: null }]])
-  assert.deepEqual(await gatherCheckpointStale(root, nodes), [])
-  await rm(root, { recursive: true, force: true })
-})
-
-test('commits_since is measured from the checkpoint, and zero is not reported', async () => {
-  const { dir, work } = await makeRepoWithUpstream()
-  await writeAim(work, 'a')
-  commit(work, 'one')
-  const base = git(work, ['rev-parse', 'HEAD']).trim()
-  const atBase = await gatherCheckpointStale(work, new Map([['a', { lastVerified: base }]]))
-  assert.deepEqual(atBase, []) // clean: the repo has not moved
-
-  await writeFile(path.join(work, 'other.txt'), 'x')
-  commit(work, 'two')
-  await writeFile(path.join(work, 'other.txt'), 'y')
-  commit(work, 'three')
-  const moved = await gatherCheckpointStale(work, new Map([['a', { lastVerified: base }]]))
-  assert.equal(moved.length, 1)
-  assert.equal(moved[0].commitsSince, 2)
-  await rm(dir, { recursive: true, force: true })
-})
-
-test('a malformed or unknown checkpoint is louder than a missing one', async () => {
-  const { dir, work } = await makeRepoWithUpstream()
-  await writeAim(work, 'a')
-  commit(work, 'one')
-  const bad = await gatherCheckpointStale(
-    work,
-    new Map([
-      ['dated', { lastVerified: '2026-05-15' }],
-      ['unknown', { lastVerified: 'deadbee' }],
-    ]),
-  )
-  assert.equal(bad.length, 2)
-  assert.ok(bad.every((b) => b.commitsSince === null))
-  assert.match(renderCheckpointFence(bad), /unreadable/)
-  await rm(dir, { recursive: true, force: true })
-})
-
-test('no tuned floor: a single commit of movement is still a candidate', async () => {
-  // 対照群は 10 未満をすべて落とす。⚠ **数を名指す目的の文は存在せず、導出を持たない
-  // filter は検査面を運任せで縮める。**
-  const { dir, work } = await makeRepoWithUpstream()
-  await writeAim(work, 'a')
-  commit(work, 'one')
-  const base = git(work, ['rev-parse', 'HEAD']).trim()
-  await writeFile(path.join(work, 'other.txt'), 'x')
-  commit(work, 'two')
-  const items = await gatherCheckpointStale(work, new Map([['a', { lastVerified: base }]]))
-  assert.equal(items[0].commitsSince, 1)
-  await rm(dir, { recursive: true, force: true })
 })
 
 // ── the baton ────────────────────────────────────────────────────────────────

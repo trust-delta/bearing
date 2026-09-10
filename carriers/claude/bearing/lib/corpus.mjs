@@ -189,10 +189,13 @@ export function parseAimRecord(text) {
       [...stripCodeSpans(body).matchAll(/\[\[([^\]\n]+)\]\]/g)].map((x) => x[1].trim()),
     ),
   ]
-  // `last-verified` は人間が持つ 4 番目の疎な field である: ⚠ **不在は一級の第 3 状態**
-  // （まだ aim⊥code の監視下に無い）であって、埋めるべき既定値ではない。`body` を返して
-  // いるのは `# PROCESS` がそこに在るからで、mark の parser が frontmatter を再分割しては
-  // ならないためである。
+  // ⚠ **frontmatter は 3 field である**（人間の決定 2026-09-10）—— `aim:` / `parent:` /
+  // `state:`。🔴 **かつて 4 番目に `last-verified:` が在ったが退役した** —— **人間が sha を
+  // 書く欄であり、host の merge 慣習がそれを書き換える** ∴ **aim⊥code は `aim-code.mjs` が
+  // `[done]` mark の commit から引く**（[[purpose-drift]]）。⚠ **知らない field は 1 文字も
+  // 動かさない** ∴ **消費者の corpus に残った `last-verified:` は保たれる**（`aim-format` の
+  // 「知らない frontmatter の行」の test がそれを固定している）。`body` を返しているのは
+  // `# PROCESS` がそこに在るからで、mark の parser が frontmatter を再分割してはならない。
   const collations = [...stripFencedBlocks(body).matchAll(COLLATION_RE)].map((m) => ({
     slug: m[1].trim(),
     sha: m[2].trim(),
@@ -203,7 +206,6 @@ export function parseAimRecord(text) {
     anchorDigest: anchorDigest(aim),
     parent: field('parent'),
     state: field('state'),
-    lastVerified: field('last-verified'),
     body,
     links,
     collations,

@@ -19,7 +19,7 @@
 - `aim:`（目的 1 文）= 人間の bearing。**絶対に書き換えない**。目的が動くべきなら候補を提案し **escalate**（確定は人間）。
 - `parent:`（木の位置）も人間。再 parent も escalate。
 - `state:`（open/done/dead）も人間（解決の act）。あなたは判定しない。
-- `last-verified:`（疎・任意）も人間。**観測した時点の commit** を人間が証言する field であり、所有は `state:` と同じ ∴ ⚠ **あなたは書かない。** 不在は「まだ観測の証言が無い」という一級の状態であって、埋めるべき既定値ではない。
+⚠ **frontmatter はこの 3 つだけである**（人間の決定 2026-09-10）—— **目的の一文・親を示す・満足と諦めの状態。** 🔴 **かつて 4 番目に `last-verified:`（人間が観測した commit）が在ったが退役した** —— **人間が sha を書く欄であり、host の merge 慣習がそれを書き換える**（squash / rebase）∴ **repo を問わず機能しない。** **aim⊥code の剥離は `bearing-aim-code-stale` が `[done]` mark の commit から引く** —— **人間は 1 文字も書かない。** ⚠ **既に書かれた `last-verified:` は 1 文字も動かさない**（知らない field は保たれる）。
 - body（下記 6 section）= あなたのもの。起草・保守する。
 
 ## slug はあなたのもの

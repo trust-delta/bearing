@@ -1,6 +1,6 @@
 ---
 name: aim
-description: aim corpus（既定 docs/aims/）—— この project を駆動する purpose＝means の木 —— を読み・書き・保守する方法。aim node を読む／作る／編集する前、boot 時の drift / unpushed / checkpoint-stale の record が slug を名指したとき、open todo やこの project が何のためかを問われたときに使う。
+description: aim corpus（既定 docs/aims/）—— この project を駆動する purpose＝means の木 —— を読み・書き・保守する方法。aim node を読む／作る／編集する前、boot 時の drift / unpushed / aim-code-stale の record が slug を名指したとき、open todo やこの project が何のためかを問われたときに使う。
 ---
 
 # aim

@@ -178,7 +178,6 @@ test('a corpus yields the fences and the open-todo count', async () => {
   assert.match(out, /```bearing-drift-inter v2/)
   assert.match(out, /```bearing-working-delta v1/)
   assert.match(out, /```bearing-unpushed v1/)
-  assert.match(out, /```bearing-checkpoint-stale v1/)
   assert.match(out, /\*\*open-todo: 2\*\*/)
   // 数は事実であり、composer はそれに順位を付けるのではなく、事実としてそう述べねばならない。
   assert.match(out, /拾うものを選ぶのは人間の act である/)
@@ -278,7 +277,7 @@ test('宣言された在り処の corpus が、どの面からも見える —�
   assert.match(out, /\*\*open-todo: 2\*\*/, '2 node とも読めていない')
   for (const tag of [
     'bearing-drift-intra', 'bearing-drift-inter', 'bearing-working-delta',
-    'bearing-unpushed', 'bearing-checkpoint-stale', 'bearing-aim-code-stale',
+    'bearing-unpushed', 'bearing-aim-code-stale',
   ]) {
     assert.match(out, new RegExp(tag), `${tag} が出ていない`)
   }
