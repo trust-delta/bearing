@@ -52,6 +52,7 @@ import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
 import { renderCorpusDelta } from '../lib/corpus-delta.mjs'
 import { gatherCheckpointStale, renderCheckpointFence } from '../lib/checkpoint.mjs'
+import { gatherAimCodeStale, renderAimCodeFence } from '../lib/aim-code.mjs'
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { runGit } from '../lib/git.mjs'
 import { gatherBacklog } from '../lib/process.mjs'
@@ -107,10 +108,11 @@ async function aimsMovedBetween(repoRoot, from, to) {
 async function historyFences(repo) {
   const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
   const graph = await readAimGraph(repo.root, dir)
-  const [drift, unpushed, checkpoint] = await Promise.all([
+  const [drift, unpushed, checkpoint, aimCode] = await Promise.all([
     gatherDrift(repo.root, dir),
     gatherUnpushed(repo.root, repo.slugs, dir),
     gatherCheckpointStale(repo.root, graph?.nodes ?? new Map()),
+    gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
   ])
   const blocks = []
   if (drift === null) {
@@ -131,6 +133,7 @@ async function historyFences(repo) {
   }
   blocks.push(renderUnpushedFence(unpushed).trimEnd())
   blocks.push(renderCheckpointFence(checkpoint).trimEnd())
+  blocks.push(renderAimCodeFence(aimCode).trimEnd())
   return blocks
 }
 

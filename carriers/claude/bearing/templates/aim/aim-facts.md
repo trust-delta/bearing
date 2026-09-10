@@ -24,6 +24,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | `bearing-drift-inter v2` | `slug \| anchor_digest \| unreconciled_neighbours` | 隣接 node（親・子・`[[link]]` 先）のうち、その変更と一緒に commit されておらず、かつ `照合:` 記録でも片付いていないもの |
 | `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
+| `bearing-aim-code-stale v1` | `slug \| code_digest \| moved_paths \| commits_since` | `[done]` mark と一緒に commit された code が、その後動いた node。⚠ **aim の主張と code の剥離**を見る唯一の面であり、**判定ではなく「読み直す理由が在る」までを述べる**。`検証:` 記録で片付く |
 | `bearing-checkpoint-stale v1` | `slug \| checkpoint_sha \| commits_since` | `last-verified` を持つ node の checkpoint から repo がどれだけ動いたか |
 | `bearing-awaiting-declaration v1` | `slug \| done_marks \| observations \| state` | エージェントが尽くし（mark が在り、その全てが `[done]`）、人間がまだ `state: done` を宣言していない node。`observations` は その node の `# OBSERVATION` の票数（0 なら `-`） |
 

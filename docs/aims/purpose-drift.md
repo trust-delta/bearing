@@ -39,6 +39,20 @@ state: open
 - [done] plugin の drift 機構（intra / inter の 2 fence）を移設した
 - [done] **`drift-inter` に「検査したが変更不要だった」を書く場所を与えた。** `# DAG` の `照合: [[slug]] @ <anchor_commit>` を機械が読み、その対を候補から落とす。⚠ **証言は commit に pin される** ∴ anchor が再び動けば対は候補へ戻る。⚠ **読めない sha（日付・在りもしない commit・曖昧な短縮）は候補を消さず、fence が読めない記録として名指す** —— 壊れた証言は無い証言より声が大きい、という `checkpoint.mjs` と同じ形である
 - [done] **win32 で常時赤かった門 3 本を、どちらの platform からも両方の分岐を検査できる形にした。** ⚠ **2026-09-04、別マシン（repo が `D:`・home が `C:` の win32）で実測**: `node --test` は 291 pass / **3 fail** であり、内訳は ⑴ `bin/` の exec bit を working tree の mode で見る検査（⚠ **win32 は exec bit を持たない** —— node は `bin/` の全 file に `0o100666` を返す ∴ **原理的に通りえない門だった**）、⑵⑶ `unitSlug` の検査が POSIX 形の path を前提していたもの（win32 では `path.resolve` が drive letter を付ける）。⚠ **CI は ubuntu ゆえ 3 本とも緑であり続けていた** —— 上段の「CI が緑」は「*その platform で*通った」でしかない、の 2 度目の実地である。∴ **直し方は上段の法に従った**: `unitSlug` は `resolve` を引数に取り（`path.posix.resolve` / `path.win32.resolve` の両形を、どちらの platform からも検査する）、exec bit は **git の index が持つ mode** を第一の源にした —— ⚠ **配布されるのは index の側である**（消費者の cache は clone であり、POSIX の exec bit は `100755` から生える）∴ **両 platform で同じ答えを持つ唯一の場所**であり、判定は純関数 `isExecMode` へ出して 2 つの源を両方から踏めるようにした。⚠ **どちらの源からも読めないとき（win32 かつ index が無い ＝ cache から走ったとき）は skip し、理由を述べる** —— **「検査した」と「検査できなかった」を同じ緑に畳まない**
+- [done] 🔴 **aim⊥code の面を新設した —— `bearing-aim-code-stale v1`**（人間の決定 2026-09-10）。⚠ **corpus の中しか見ない 2 枚（intra / inter）には、「aim は不変のまま、それを実装した code が動く」形が原理的に映らない。** 🔴 **join は履歴の中に在った**（人間の指摘 2026-09-10）—— **`[done]` mark を書き入れた commit は、その mark が指す code を一緒に持っている** ∴ **人間が 1 文字も書かなくても引け、既存の mark に遡って効き、corpus の移行を要さない。** ⚠ **squash はこれを壊すどころか締める**（PR の全体が 1 commit になる）。
+
+  **精度は PR 単位である**（人間の決定 2026-09-10）—— ⚠ **squash は無関係な file も束ねる。** 🔴 **だがそれは欠点ではない**: **PR にはコメント ＝ 意図が載り、別の aim のために動いたことも「動いて平気か確かめる価値がある」ことを示す。** ∴ **述べるのは「読み直す理由が在る」までであって、剥離したという判定ではない。**
+
+  🔴 **承認が無ければ警報は壁になる**（実測 2026-09-10、対象: この repo の corpus）—— **承認機構を入れる前は 13 node 中 12 件が候補**であり、⚠ **`drift-inter` から借りた導出可能な絞り込み**（node の body が code の動きより後に触られていれば機会を得ている）**は 1 件しか落とさなかった。** ∴ **`drift-inter` と同じ法を当てた** ——「**変更不要と結論したときは、それを書く**」。`# DAG` に `- 検証: @ <code_digest> —— 理由` を残す。
+
+  ⚠ **宛先は code の内容である**（path と blob の対を畳んだ digest）—— 🔴 **sha は host の merge 慣習が書き換える**（同日、照合について直したのと同型）。**blob は動かない**（実測 2026-09-10）∴ **squash を跨いで承認が生き残り、code が次に動けば digest が変わって自動で失効する。**
+
+  ⚠ **費用は corpus の大きさに比例させた** —— **全履歴 1 パスは履歴の長さに比例して黙って重くなる** ∴ **node ごとの範囲問い合わせ**（`<marksAt>..HEAD -- <code>`）。**この repo で 0.32 秒**（実測 2026-09-10、13 node / 135 commit。hook の 20 秒に対して十分）。⚠ **引数の上限を超えたら分割して全部問う** —— **切れば「動いていない」と読める。**
+
+  ⚠ **`bearing-checkpoint-stale` はまだ撤去していない** —— **保有数 0 ∴ 併走しても `# none` のままで衝突しない。** **撤去は [[aim-tree]] の escalation に懸かっており、`process.mjs` / `corpus.mjs` / 試験 3 枚 / canon へ波及する別の変更である。**
+
+  🔴 **変異試験で見張りを確かめた**（2026-09-10）—— **承認判定を無効化すると 2 本赤／`codeDigest` を定数へ倒すと別の 2 本が赤／PR 番号の補強を無効化すると 1 本が赤**、いずれも復元で緑。**再測**: `node --test test/claude/bearing/aim-code.test.mjs`（13 本）
+
 - [done] 🔴 **照合の宛先を commit sha から anchor の内容へ移した**（人間の決定 2026-09-10、fence は `bearing-drift-inter v2`）。⚠ **commit sha は host の merge 慣習が書き換える** —— **squash も rebase も branch 上の sha を `main` に残さない** ∴ **PR で書いた照合が land した瞬間に読めなくなる**（実測 2026-09-10、対象: この repo の `#53` —— **7 件が一度に落ちた**）。🔴 **bearing は任意の repo へ配る ∴ 配り先の merge 慣習を知りえない** —— **人間の要求は「aim は repo を問わず機能する」であり、sha を写す設計はそれを満たせない。**
 
   **宛先は `aim:` 本文の sha-256 先頭 12 桁**（`corpus.mjs` の `anchorDigest`）。⚠ **commit sha が担っていた性質は保たれる** —— **`aim:` が変われば digest が変わり、照合は答えでなくなる**（`drift-inter` の trigger は anchor の変更だから、それ以外の変更は吸収してよい）。**判定の順は ⑴ digest 一致 → 済 ⑵ aim 履歴の commit → 旧い形として通す ⑶ どちらでもない → 読めない。** ⚠ **⑵ を残したのは、消費者の記録を黙って壊さないためである** —— **fence は別の声で書き換えを促し、その声は node 単位に 1 行へ畳む**（**記録ごとに出せば移行期に面が埋まる** —— この repo は 29 件だった。実測 2026-09-10）。
