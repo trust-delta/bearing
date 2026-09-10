@@ -38,3 +38,31 @@ test('write.md は land の前に人間へ見せることを要求し続ける',
   assert.match(text, /人間に見せて確認を得てから land/, '確認の要求が消えている')
   assert.match(text, /何を残し何を省いたか/, '手順 3 の報告が消えている')
 })
+
+test('write.md は「他人の系の主張は階級と射程ごと運ぶ」を要求する', async () => {
+  // 🔴 **2026-09-11 に測った**（対象: 本 repo の baton と native な圧縮要約）—— **主張が
+  // 運ばれながら日付・対象・射程の限定だけが落ちる形が、両方に実在した。**
+  // ⚠ **圧縮側**: corpus の「commit sha は host の merge 慣習が書き換える（実測 2026-09-10、
+  // 対象: `#53`）。配り先の慣習は知りえない」が、要約では「every PR lands as one commit ∴
+  // force-push is avoidable」になった —— **他人の系についての、日付を持たない普遍的な現在形。**
+  // ⚠ **baton 側**: 「`.jsonl` の `isCompactSummary` 行に全文が在り、読める」も同じ形である。
+  // 🔴 **止めたいのは片方だけである** —— **丸ごと落ちれば不在として現れる（安い）。剥がれて
+  // 運ばれれば確信として現れる（高い）。**
+  const text = await read(path.join('skills', 'handoff', 'write.md'))
+  const principles = text.split('### 原則')[1]?.split('### 形')[0] ?? ''
+  assert.match(principles, /他人の系/, '他人の系についての要求が消えている')
+  assert.match(principles, /階級と射程/, '「階級と射程」が消えている —— 片方だけでは足りない')
+  assert.match(principles, /corpus を指す/, '運べないときの行き先が消えている')
+})
+
+test('write.md の様式は人間の逐語の欄を持つ', async () => {
+  // ⚠ **これは欠落として先に測られていた**（`docs/aims/session-handoff.md` の `# IS`:
+  // 「baton は逐語の欄を持たない」）—— 🔴 **2026-09-11、native 側がその欄を持つことを
+  // 実測した**（対象: 本 repo の圧縮要約 —— **人間の逐語 22 件が `6. All user messages` に
+  // 独立節で保たれていた**）∴ **取り入れた。** ⚠ **欄が黙って消えれば、著者は逐語を
+  // 言い換えて Settled へ埋め、人間の原語が失われる**（前の baton が実際にそうしている）。
+  const text = await read(path.join('skills', 'handoff', 'write.md'))
+  const shape = text.split('### 形')[1] ?? ''
+  assert.match(shape, /^## 逐語$/m, '様式から逐語の節が消えている')
+  assert.match(shape, /言い換えてはならない/, '言い換えの禁止が消えている —— 節だけでは効かない')
+})
