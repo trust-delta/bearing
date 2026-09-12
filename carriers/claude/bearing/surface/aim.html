@@ -278,6 +278,168 @@ function buildTree(nodes) {
 globalThis.AimTree = { buildTree }
 </script>
 
+<script type="module" data-contract="aim-body">
+// body を top-level の節へ割り、`# PROCESS` の mark と `# ESCALATION` / `# OBSERVATION` の
+// 中身を取り出す契約。⚠ **前の 2 block と同じ理由で、正本はここ 1 つである** ——
+// test（`test/claude/bearing/aim-body-shape.test.mjs`）がこの block を取り出して走らせる。
+//
+// 🔴 **だが前の 2 つと違い、この法は既に node 側に住んでいる。** `lib/process.mjs` が同じ節と
+// 同じ mark を parse し、**人間が既に見ている数**（`open-todo` / `escalation` / `observation`）を
+// 出している ∴ **ここに書くのは 2 つ目の実装である。**
+//
+// ⚠ **`file://` は相対 import を塞いでいる**（実測 2026-09-04、Chrome 140）∴ 面があちらを
+// 読む道は無く、生成すれば「正本と生成物が一致しているか」を見る門が要る —— **この node が
+// 既に棄却した形である。** 🔴 **∴ 採ったのは「2 つ在ることを認め、食い違いを門にする」で
+// ある**: test が **実 corpus 全枚に対して両者の出力の一致を assert する。**
+// ⚠ **これは「同じ code である」ことの保証ではなく「今の corpus の上で同じ答えを返す」ことの
+// 保証である** —— **両方が同じように取り落とす body の形は、corpus に現れるまで検出されない。**
+//
+// 🔴 **数を写さない。** 面は自分で数える —— statusline の数を写せば、**数が 2 箇所に住み**、
+// 片方だけ古くなったことを誰も述べない。
+//
+// ⚠ **fence の中の行も rows に残す（`fenced: true`）が、数えない。** あちらは fence の行を
+// 落とすが、**落とせば `[todo]` の中に書かれた fence が画面から消える** —— 数えないことと
+// 見せないことは別である ∴ **数える側は `fenced` を除き、見せる側は含める。**
+
+/** fence の開閉: 行頭、字下げは最大 3 空白（CommonMark）。 */
+const FENCE_LINE = /^ {0,3}(```+|~~~+)/
+/** corpus が書いているとおりの mark。⚠ **括弧の後に空白を要求しない** —— 日本語の散文は ASCII 空白を負う義理がない。 */
+const MARK = /^- \[(done|todo)\]/
+/** 読み手が mark と呼ぶであろう全て。意図して `MARK` より広い —— 床に落ちるものを掬う網。 */
+const MARK_ISH = /^(\s*)([-*+])\s+\[([A-Za-z]+)\]/
+/** 観測票 —— 1 行 1 票の list item。散文は数えない。 */
+const SLIP = /^- \S/
+/** 行の**中**の inline code span を剥ぐ。⚠ 行を消さない粒度で当てる。 */
+const stripInlineCode = (line) => line.replace(/`[^`]*`/g, '')
+
+/**
+ * body を 1 度だけ走査し、各行にどの top-level 節かを付けて返す。
+ *
+ * ⚠ **走査が 1 つしかないことに意味がある** —— 「fence の中の見出しは引用であって主張では
+ * ない」は `# PROCESS` だけに効く法ではない。2 枚目の scanner を書けば、その法は片方にだけ
+ * 効き、もう片方は fence の中に例示された `# ESCALATION` を実在として数える。
+ */
+function scan(body) {
+  const rows = []
+  const nested = new Map()
+  const headings = new Set()
+  let section = null
+  let inFence = false
+  String(body ?? '').split(/\r?\n/).forEach((raw, i) => {
+    if (FENCE_LINE.test(raw)) {
+      inFence = !inFence
+      rows.push({ raw, line: '', no: i + 1, section, fenced: true })
+      return
+    }
+    if (inFence) {
+      rows.push({ raw, line: '', no: i + 1, section, fenced: true })
+      return
+    }
+    const line = stripInlineCode(raw)
+    const heading = line.match(/^#\s+(.*?)\s*$/)
+    if (heading) {
+      section = heading[1]
+      headings.add(section)
+      return
+    }
+    if (section && /^#{2,}\s/.test(line) && !nested.has(section)) nested.set(section, line.trim())
+    rows.push({ raw, line, no: i + 1, section, fenced: false })
+  })
+  return { rows, nested, headings }
+}
+
+/**
+ * 節 1 つの 3 状態。⚠ **見出しだけ在って中身が無いものを「在る」と数えてはならない** ——
+ * 読みに行っても何も書かれていないものを人間に渡すことになる。⚠ **かといって黙って
+ * 落とさない** —— どちらの沈黙も採らず、別の名で述べる。
+ */
+function section3(rows, headings, name) {
+  const all = rows.filter((r) => r.section === name)
+  if (!headings.has(name)) return { heading: false, present: false, empty: false, rows: [], items: 0 }
+  const counted = all.filter((r) => !r.fenced)
+  const present = counted.some((r) => r.line.trim() !== '')
+  return {
+    heading: true,
+    present,
+    empty: !present,
+    rows: all,
+    items: counted.filter((r) => SLIP.test(r.line)).length,
+  }
+}
+
+/**
+ * body 1 つを読む。
+ *
+ * @returns {{headings: string[], escalation: object, observation: object,
+ *   marks: {done: number, todo: number, unknown: boolean,
+ *     items: {kind: 'done'|'todo', no: number, lines: string[]}[],
+ *     anomalies: {kind: string, line: string, no: number}[]}}}
+ */
+function parseBody(body) {
+  const { rows, nested, headings } = scan(body)
+  const escalation = section3(rows, headings, 'ESCALATION')
+  const observation = section3(rows, headings, 'OBSERVATION')
+
+  const marks = { done: 0, todo: 0, unknown: false, items: [], anomalies: [] }
+  const procAll = rows.filter((r) => r.section === 'PROCESS')
+  const nestedHeading = nested.get('PROCESS') ?? null
+  // ⚠ **順序を合わせる。** あちらは nested-heading を先に、次に節の中を順に、最後に節の外を
+  // 積む —— 食い違いの門が `deepEqual` で効くのは、順序まで同じときだけである。
+  if (nestedHeading) marks.anomalies.push({ kind: 'nested-heading', line: nestedHeading, no: 0 })
+  for (const r of procAll) {
+    if (r.fenced) continue
+    const strict = r.line.match(MARK)
+    if (strict) {
+      if (strict[1] === 'done') marks.done++
+      else marks.todo++
+      marks.items.push({ kind: strict[1], no: r.no, lines: [] })
+      continue
+    }
+    const loose = r.line.match(MARK_ISH)
+    if (!loose) continue
+    const kind =
+      loose[1].length > 0 ? 'indented'
+      : loose[2] !== '-' ? 'bullet'
+      : /^(done|todo)$/i.test(loose[3]) ? 'case'
+      : 'unknown-mark'
+    marks.anomalies.push({ kind, line: r.line.trim(), no: r.no })
+  }
+  // 🔴 **`# PROCESS` の外にある mark は第 3 の沈黙である**: 進捗として書かれ、何にも読まれない。
+  for (const r of rows) {
+    if (r.fenced || r.section === 'PROCESS') continue
+    if (MARK_ISH.test(r.line)) marks.anomalies.push({ kind: 'outside-process', line: r.line.trim(), no: r.no })
+  }
+  // ⚠ **読める mark を 1 つも持たない `# PROCESS` 見出しは `unknown`** であり、これを
+  // 「やることが無い」へ畳んではならない —— 捏造された done より正直な unknown が勝つ。
+  marks.unknown = headings.has('PROCESS') && marks.done === 0 && marks.todo === 0
+
+  // ⚠ **項目の本文は、次の mark までの行すべてである**（fence の中も含む）—— **1 行目だけを
+  // 見せれば、なぜそれが todo なのかが画面から落ちる。**
+  const starts = marks.items.map((it) => it.no)
+  for (const r of procAll) {
+    let idx = -1
+    for (let i = 0; i < starts.length; i++) if (starts[i] <= r.no) idx = i
+    if (idx >= 0) marks.items[idx].lines.push(r.raw)
+  }
+  return { headings: [...headings], escalation, observation, marks }
+}
+
+/**
+ * record の body —— frontmatter の後ろ。
+ *
+ * 🔴 **これも 2 つ目の実装である** —— `lib/corpus.mjs` の `parseAimRecord` が同じ切り方をして
+ * いる。⚠ **面が別の body を parse すれば、節も mark も同じ code で数えているのに数がずれる**
+ * ∴ **test が実 corpus 全枚で一致を assert する。**
+ */
+function bodyOf(text) {
+  const t = String(text ?? '')
+  const m = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(t)
+  return m ? t.slice(m[0].length) : t
+}
+
+globalThis.AimBody = { parseBody, scan, bodyOf }
+</script>
+
 <style>
   :root {
     color-scheme: light dark;
@@ -336,13 +498,32 @@ globalThis.AimTree = { buildTree }
   .row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
   details.check { margin-top: 2rem; }
   details.check summary { cursor: pointer; color: var(--muted); }
+
+  /* ── 面の切り替え。⚠ **切り方は*所有*である** —— 木 / 人間の番 / エージェントの残務。 */
+  .tabs { display: flex; gap: .4rem; margin: 1.5rem 0 1.25rem; border-bottom: 1px solid var(--line); }
+  .tabs button { border: 1px solid transparent; border-bottom: 0; border-radius: .4rem .4rem 0 0;
+                 background: none; color: var(--muted); margin-bottom: -1px; }
+  .tabs button[aria-selected="true"] { border-color: var(--line); background: var(--card);
+                                       color: var(--fg); font-weight: 600; }
+  .count { color: var(--muted); font-size: .85rem; margin: 0 0 1.25rem; white-space: pre-wrap; }
+  .card { border: 1px solid var(--line); border-radius: .5rem; background: var(--card);
+          padding: .9rem 1.1rem .4rem; margin: 0 0 1rem; }
+  .card h3 { margin: 0 0 .6rem; font-size: .95rem; font-weight: 400; }
+  .card h3 button { font-family: ui-monospace, monospace; font-weight: 600; padding: .1rem .3rem;
+                    background: none; border: 0; color: inherit; cursor: pointer; border-radius: 3px; }
+  .card h3 button:hover { background: var(--line); }
+  .kind { color: var(--muted); font-size: .8rem; }
+  pre.sec { white-space: pre-wrap; word-break: break-word; margin: .2rem 0 .9rem;
+            font: inherit; font-size: .84rem; }
 </style>
 
 <main>
   <h1>aim —— 目的の木</h1>
   <p class="lede">
-    corpus の <code>docs/aims/</code> を選ぶと、<strong><code>parent:</code> から木を組んで描き</strong>、
-    node を選べば body を読み、<strong>人間の 3 欄（aim / parent / state）だけを書き戻せます</strong>。
+    corpus の <code>docs/aims/</code> を選ぶと、3 つの面に分けて描きます。
+    ⚠ <strong>切り方は<em>所有</em>です</strong> —— 木（構造と、人間が持つ 3 欄）／
+    人間の番（<code># ESCALATION</code> と <code># OBSERVATION</code>）／
+    エージェントの残務（<code>[todo]</code>）。
     ⚠ <strong>body はここでは編集しません</strong> —— body はエージェントの領分です。
   </p>
 
@@ -350,6 +531,15 @@ globalThis.AimTree = { buildTree }
     <button id="pick" type="button">docs/aims を選ぶ</button>
     <span id="note"></span>
   </div>
+
+  <!-- ⚠ **タブの名はこの 3 行にしか無い** ∴ 改名はここを書き換えるだけである。 -->
+  <div class="tabs" role="tablist" aria-label="面の切り替え">
+    <button id="t-tree" type="button" role="tab" aria-controls="pane-tree" aria-selected="true">木</button>
+    <button id="t-human" type="button" role="tab" aria-controls="pane-human" aria-selected="false">人間の番</button>
+    <button id="t-agent" type="button" role="tab" aria-controls="pane-agent" aria-selected="false">エージェントの残務</button>
+  </div>
+
+  <section id="pane-tree" role="tabpanel" aria-labelledby="t-tree">
 
   <div id="problems" hidden>
     <h2>木が組めなかった形</h2>
@@ -392,6 +582,34 @@ globalThis.AimTree = { buildTree }
       <tbody></tbody>
     </table></div>
   </details>
+
+  </section>
+
+  <section id="pane-human" role="tabpanel" aria-labelledby="t-human" hidden>
+    <p class="lede">
+      ⚠ <strong>ここに在るのは、エージェントが自力では閉じられないものだけです。</strong>
+      <code># ESCALATION</code> は<strong>人間の判断</strong>が要る点、<code># OBSERVATION</code> は
+      <strong>人間が何を見れば満たされたと言えるか</strong>の票です。
+      ⚠ <strong>並べ替えていません</strong>（slug 順）—— どれが重いかを述べることは
+      <strong>注意予算の割り当て</strong>であって、この面の仕事ではありません。
+      ⚠ <strong>この面は <code>state:</code> の宣言待ちを数えていません</strong> ——
+      0 件は「番が無い」ではありません。
+    </p>
+    <p class="count" id="human-count"></p>
+    <div id="human-list"></div>
+  </section>
+
+  <section id="pane-agent" role="tabpanel" aria-labelledby="t-agent" hidden>
+    <p class="lede">
+      <code>[todo]</code> は <strong>エージェントが自力で完了を確認できるものだけ</strong>が
+      書かれる節です ∴ <strong>ここに人間待ちは入りません</strong>。
+      ⚠ <strong>並べ替えていません</strong>（slug 順）。
+      ⚠ <strong>mark に見えて数えられなかった行も出します</strong> ——
+      黙って落とせば、この面と statusline の数が食い違います。
+    </p>
+    <p class="count" id="agent-count"></p>
+    <div id="agent-list"></div>
+  </section>
 
   <footer>
     ⚠ このページは File System Access API を使います —— 対応は Chromium 系に限られます
@@ -461,6 +679,8 @@ globalThis.AimTree = { buildTree }
   function renderAll() {
     const rows = [...nodes.values()].sort((a, b) => a.slug.localeCompare(b.slug))
     renderTree(rows)
+    renderHuman(rows)
+    renderAgent(rows)
     renderCheck(rows)
     if (current && nodes.has(current)) select(current)
     else { detail.hidden = true; current = null }
@@ -542,6 +762,179 @@ globalThis.AimTree = { buildTree }
 
   // ── 1 枚の詳細 ──────────────────────────────────────────────────────────────
 
+  // ── 面の切り替え ───────────────────────────────────────────────────────────
+  //
+  // 🔴 **切り方は*所有*である。** `# ESCALATION` は人間の判断、`# OBSERVATION` は人間の観測、
+  // `[todo]` は**エージェントが自力で完了を確認できるものだけ** —— **3 つは 1 つの分割の
+  // 3 面であって、別々の関心ではない**（`lib/process.mjs` がその分割を述べている）。
+  //
+  // ⚠ **並べ替えない**（slug 順）—— **どれが重いかを述べることは注意予算の割り当てであり、
+  // それ自体が人間の act である。** 面が述べるのは幾つ在るかと、何が書かれているかまで。
+  //
+  // ⚠ **数を statusline から写さない。** 面は自分で数える —— 写せば**数が 2 箇所に住み**、
+  // 片方だけ古くなったことを誰も述べない。
+  const PANES = {
+    tree: [$('t-tree'), $('pane-tree')],
+    human: [$('t-human'), $('pane-human')],
+    agent: [$('t-agent'), $('pane-agent')],
+  }
+  function showTab(name) {
+    for (const [key, [tab, pane]] of Object.entries(PANES)) {
+      tab.setAttribute('aria-selected', String(key === name))
+      pane.hidden = key !== name
+    }
+  }
+  for (const [key, [tab]] of Object.entries(PANES)) tab.addEventListener('click', () => showTab(key))
+
+  /** 節の生の行を、前後の空行だけ落として 1 つの text にする。⚠ **原文である** —— 剥がさない。 */
+  function secText(rs) {
+    const lines = rs.map((r) => r.raw)
+    while (lines.length && lines[0].trim() === '') lines.shift()
+    while (lines.length && lines[lines.length - 1].trim() === '') lines.pop()
+    return lines.join('\n')
+  }
+
+  /**
+   * card 1 枚。見出しの slug は押せる —— ⚠ **押せば木の面でその node が開く。**
+   *
+   * 🔴 **番を渡すことと、動かせることは別である** —— この node の `aim:` は「**エージェントを
+   * 介さずに動かせる**」と述べており、**読んだ場所から 3 欄まで 1 手で渡らなければ、
+   * 人間は木の面へ戻って slug を探し直すことになる。**
+   */
+  function card(slug, aside) {
+    const el = document.createElement('div')
+    el.className = 'card'
+    const h = document.createElement('h3')
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.textContent = slug
+    b.addEventListener('click', () => {
+      showTab('tree')
+      select(slug)
+    })
+    h.append(b)
+    if (aside) {
+      const k = document.createElement('span')
+      k.className = 'kind'
+      k.textContent = ` ${aside}`
+      h.append(k)
+    }
+    el.append(h)
+    return el
+  }
+
+  /** card へ「見出し ＋ 原文」を足す。 */
+  function addSec(el, label, text) {
+    const k = document.createElement('div')
+    k.className = 'kind'
+    k.textContent = label
+    const pre = document.createElement('pre')
+    pre.className = 'sec'
+    pre.textContent = text
+    el.append(k, pre)
+  }
+
+  // ── 人間の番 ───────────────────────────────────────────────────────────────
+
+  function renderHuman(rows) {
+    const { parseBody } = globalThis.AimBody
+    const list = $('human-list')
+    list.replaceChildren()
+    let esc = 0
+    let obs = 0
+    let slips = 0
+    const emptyHeads = []
+    const unreadable = []
+    for (const r of rows) {
+      // ⚠ **読めない file をここに空欄で並べない** —— 木の面の verdict と `problems` が
+      // 別に述べている。**だが黙って落とさない**: 何件落としたかを下で述べる。
+      if (!r.readable) {
+        unreadable.push(r.slug)
+        continue
+      }
+      const b = parseBody(bodyOf(r.text))
+      if (b.escalation.empty) emptyHeads.push(`${r.slug}（ESCALATION）`)
+      if (b.observation.empty) emptyHeads.push(`${r.slug}（OBSERVATION）`)
+      if (!b.escalation.present && !b.observation.present) continue
+      const el = card(r.slug, r.state ? `state: ${r.state}` : null)
+      if (b.escalation.present) {
+        esc++
+        addSec(el, '# ESCALATION —— 人間の判断が要る点', secText(b.escalation.rows))
+      }
+      if (b.observation.present) {
+        obs++
+        slips += b.observation.items
+        addSec(
+          el,
+          `# OBSERVATION —— 人間が何を見れば満たされたと言えるか（票 ${b.observation.items} 枚）`,
+          secText(b.observation.rows),
+        )
+      }
+      list.append(el)
+    }
+    const parts = [
+      `# ESCALATION に中身を持つ node: ${esc} 件`,
+      `# OBSERVATION に中身を持つ node: ${obs} 件（票 合計 ${slips} 枚）`,
+    ]
+    // ⚠ **見出しだけの節を「在る」と数えない。だが黙って落とさない** —— 読みに行っても
+    // 何も書かれていないものを人間に渡すことと、書かれたものを無いと述べることは別である。
+    if (emptyHeads.length) parts.push(`⚠ 見出しだけで中身が無い節: ${emptyHeads.join(' / ')}`)
+    if (unreadable.length) parts.push(`⚠ 読めない file ${unreadable.length} 件はこの面に出していない: ${unreadable.join(' / ')}`)
+    if (esc === 0 && obs === 0) {
+      // 🔴 **0 件を「番が無い」と読ませない。** この面は `state:` の宣言待ちを数えていない。
+      parts.push('⚠ この 2 節に中身を持つ node は 0 件 —— **番が無いという意味ではない**（宣言待ちはこの面が数えていない）。')
+    }
+    $('human-count').textContent = parts.join('\n')
+  }
+
+  // ── エージェントの残務 ─────────────────────────────────────────────────────
+
+  function renderAgent(rows) {
+    const { parseBody } = globalThis.AimBody
+    const list = $('agent-list')
+    list.replaceChildren()
+    let nodesWithTodo = 0
+    let items = 0
+    let anomalies = 0
+    const unknown = []
+    const unreadable = []
+    for (const r of rows) {
+      if (!r.readable) {
+        unreadable.push(r.slug)
+        continue
+      }
+      const b = parseBody(bodyOf(r.text))
+      const todos = b.marks.items.filter((it) => it.kind === 'todo')
+      if (b.marks.unknown) unknown.push(r.slug)
+      if (todos.length === 0 && b.marks.anomalies.length === 0) continue
+      const el = card(r.slug, `[done] ${b.marks.done} / [todo] ${b.marks.todo}`)
+      if (todos.length) {
+        nodesWithTodo++
+        items += todos.length
+        for (const it of todos) addSec(el, `${r.slug}.md:${it.no}`, it.lines.join('\n'))
+      }
+      // 🔴 **mark に見えて数えられなかった行を、面からも落とさない。** 落とせば、この面と
+      // statusline が同じ corpus について別の数を述べる —— `surface-parity` が名指した形。
+      if (b.marks.anomalies.length) {
+        anomalies += b.marks.anomalies.length
+        addSec(
+          el,
+          '⚠ mark に見えて数えられなかった行 —— どこにも数えていない',
+          b.marks.anomalies.map((a) => `${a.kind}  ${r.slug}.md:${a.no}  ${a.line}`).join('\n'),
+        )
+      }
+      list.append(el)
+    }
+    const parts = [`[todo] を持つ node: ${nodesWithTodo} 件（項目 合計 ${items}）`]
+    if (anomalies) parts.push(`⚠ mark に見えて数えられなかった行: ${anomalies} 行`)
+    // ⚠ **`# PROCESS` が在って読める mark が 1 つも無い node は `unknown`** であり、これを
+    // 「やることが無い」へ畳んではならない —— 捏造された done より正直な unknown が勝つ。
+    if (unknown.length) parts.push(`⚠ # PROCESS が在るのに読める mark が無い node: ${unknown.join(' / ')}`)
+    if (unreadable.length) parts.push(`⚠ 読めない file ${unreadable.length} 件はこの面に出していない: ${unreadable.join(' / ')}`)
+    if (nodesWithTodo === 0) parts.push('⚠ [todo] を持つ node は 0 件 —— **尽くしたという意味ではない**（mark を 1 つも持たない node も 0 件に含まれない）。')
+    $('agent-count').textContent = parts.join('\n')
+  }
+
   function select(slug) {
     const r = nodes.get(slug)
     if (!r) return
@@ -569,9 +962,9 @@ globalThis.AimTree = { buildTree }
   }
 
   /** frontmatter の後ろ全部。⚠ **切り出しに失敗したら、全文を見せる** —— 隠さない。 */
+  // ⚠ **正本は契約 block である** —— ここに 2 つ目の regex を置かない。
   function bodyOf(text) {
-    const m = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(text)
-    return m ? text.slice(m[0].length) : text
+    return globalThis.AimBody.bodyOf(text)
   }
 
   function fillParents(slug, currentParent) {
@@ -727,4 +1120,11 @@ globalThis.AimTree = { buildTree }
     }
     table.hidden = rows.length === 0
   }
+
+  // 🔴 **走らせるための口。** ⚠ **この面の UI は、長いあいだ誰にも*走らされて*いなかった**
+  // —— `surface-shape.test.mjs` が答えるのは「parse できるか」「id が在るか」の 2 つだけで
+  // あり、**描画の中で数を取り違えても、緑のまま通る。** ∴ test が document を stub して
+  // ここから呼ぶ（`surface-render.test.mjs`）。⚠ **browser の代わりにはならない** ——
+  // 固定できるのは*論理*であって、*見え方*ではない。
+  globalThis.AimSurface = { renderHuman, renderAgent, showTab, secText }
 </script>

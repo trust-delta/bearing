@@ -46,8 +46,23 @@ test('script が名指す id は、すべて HTML に在る', () => {
   assert.deepEqual(missing, [], `script が在らない id を引いている: ${missing.join(', ')}`)
 })
 
-test('契約 block は、ちょうど 2 つ —— frontmatter と木', () => {
+test('契約 block は、ちょうど 3 つ —— frontmatter と木と body', () => {
   const tags = [...html.matchAll(/data-contract="([^"]+)"/g)].map((m) => m[1]).sort()
   // ⚠ **増えたことに気づける形にしておく。** 契約が増えれば、それを取り出す test も要る。
-  assert.deepEqual(tags, ['aim-frontmatter', 'aim-tree'])
+  // 🔴 **`aim-body` は他の 2 つと質が違う** —— あの法は既に `lib/process.mjs` に住んでおり、
+  // 面のそれは**2 つ目の実装**である ∴ 取り出す test（`aim-body-shape.test.mjs`）が担うのは
+  // 契約の固定だけでなく、**実 corpus 全枚での両者の一致**である。
+  assert.deepEqual(tags, ['aim-body', 'aim-frontmatter', 'aim-tree'])
+})
+
+test('面が組む 3 つの pane と 3 つの tab は、HTML に在る', () => {
+  // ⚠ **id の実在は上の test が見ているが、あれは script が*引いた*ものだけを見る。**
+  // 🔴 **pane が 1 つ消えても script が引かなくなれば、あの test は黙って通る** ∴
+  // **切り方そのものを、ここで名指しで固定する。**
+  for (const id of ['t-tree', 't-human', 't-agent', 'pane-tree', 'pane-human', 'pane-agent']) {
+    assert.match(html, new RegExp(`id="${id}"`), `${id} が面から消えている`)
+  }
+  // ⚠ **役割も固定する** —— tablist が無ければ、押せる見た目の div が 3 つ並ぶだけになる。
+  assert.match(html, /role="tablist"/)
+  assert.equal([...html.matchAll(/role="tabpanel"/g)].length, 3)
 })
