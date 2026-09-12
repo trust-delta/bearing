@@ -36,6 +36,9 @@ import {
   transcriptDir,
   transcriptPath,
   stampTranscript,
+  claimedTranscript,
+  resolveTranscript,
+  transcriptState,
 } from '../../../carriers/claude/bearing/lib/handoff.mjs'
 import { readBaton } from '../../../carriers/claude/bearing/lib/baton.mjs'
 
@@ -505,11 +508,12 @@ test('transcript の path は実在を確かめてから返す —— 解決し�
   assert.equal(await transcriptPath(cwd, '', home), null)
 })
 
-test('transcript は composed-at の直後に刻まれ、著者が書いた値は除去される', async () => {
-  // ⚠ **`read-at` と同じ扱いである** —— 機械が知っている事実であって著述ではない。
-  const out = stampTranscript('---\ncomposed-at: X\ntranscript: 著者が書いた嘘\ntask: T\n---\n\nbody', '/real.jsonl')
+test('transcript は composed-at の直後に、欄 1 つへ正規化されて刻まれる', async () => {
+  // ⚠ **著者の値を捨てるためではない** —— 欄が 2 つ在る frontmatter を作らないためである。
+  // 🔴 **値の出所を決めるのは `writeBaton` であり、2026-09-12 にそれは著者側へ移った。**
+  const out = stampTranscript('---\ncomposed-at: X\ntranscript: 解く前の名乗り\ntask: T\n---\n\nbody', '/real.jsonl')
   assert.match(out, /^---\ncomposed-at: X\ntranscript: \/real\.jsonl\ntask: T\n---/)
-  assert.doesNotMatch(out, /著者が書いた嘘/)
+  assert.equal(out.match(/^transcript:/gm).length, 1, '欄が 2 つ在ってはならない')
 })
 
 test('刻めないときは欄そのものを置かない —— 開けない path は欄が無いことより悪い', async () => {
@@ -520,19 +524,153 @@ test('刻めないときは欄そのものを置かない —— 開けない pa
   assert.equal(stampTranscript('no frontmatter', '/x.jsonl'), 'no frontmatter')
 })
 
-test('writeBaton は記録された session から transcript を刻む', async () => {
+// ── 値は著者、実在は機械、食い違いは述べる ───────────────────────────────────
+//
+// 🔴 **2026-09-12 に値の出所が移った**（人間の決定）。⚠ **機械が導ける値は「最後に prompt を
+// 送った対話」であって「この baton を著している対話」ではない** ∴ 同じ unit で 2 つの対話が
+// 並走すれば、**実在する他人の transcript を指した baton が黙って生まれる**（`stat` は実在
+// しか見ず、同一性を見ない）。🔴 **著者が導けば、外したとき path が実在せず欄が消える**
+// —— **落ち方が沈黙から不在へ変わる。** ⚠ **test されるのはこの極性である。**
+
+/** fake home に transcript を 1 本置き、その絶対 path を返す。 */
+async function fakeTranscript(root, home, id) {
+  await mkdir(transcriptDir(root, home), { recursive: true })
+  const p = path.join(transcriptDir(root, home), `${id}.jsonl`)
+  await writeFile(p, '{}\n', 'utf8')
+  return p
+}
+
+test('著者が名乗った transcript を読み出す —— 名乗りが無ければ null', () => {
+  assert.equal(claimedTranscript('---\ncomposed-at: X\ntranscript: abc\n---\n\nbody'), 'abc')
+  assert.equal(claimedTranscript('---\ntask: T\n---\n\nbody'), null)
+  assert.equal(claimedTranscript('---\ntranscript:   \n---\n\nbody'), null, '空の欄は名乗りではない')
+  assert.equal(claimedTranscript('frontmatter が無い'), null)
+})
+
+test('名乗りは id 1 つでよい —— dir は機械が導き、相対 path は拒む', async () => {
+  // 🔴 **著者が地の真理を持つのは id の側だけである** —— dir の規則は我々が
+  // `~/.claude/projects/` を真似ているだけであり、向こうが変えれば黙って外れる。
   const root = await unit()
   const home = await mkdtemp(path.join(tmpdir(), 'fake-home-'))
-  // ⚠ **`transcriptPath` は `os.homedir()` を既定に取る** ∴ writeBaton 経由では実機の home を
-  // 見る —— **実機に在るはずがない id を使い、「刻めないときは欄を置かない」側を固定する。**
-  await recordSession(root, 'nonexistent-session-id')
-  const { transcript, sessionId } = await writeBaton(root, '---\ntask: T\n---\n\nbody')
-  assert.equal(sessionId, 'nonexistent-session-id')
-  assert.equal(transcript, null)
+  const real = await fakeTranscript(root, home, 'mine')
+  assert.equal(await resolveTranscript(root, 'mine', home), real)
+  assert.equal(await resolveTranscript(root, real, home), real, '絶対 path も受ける')
+  assert.equal(await resolveTranscript(root, `~/${path.relative(home, real)}`, home), real, '~ は home へ解く')
+  assert.equal(await resolveTranscript(root, 'hallucinated-id', home), null, '実在しない id は落ちる')
+  // 🔴 **絶対 path 側の `stat` を独立に測る。** ⚠ **id 側は `transcriptPath` が確かめる** ∴
+  // id だけで測れば、**こちらの確認を消しても通る**（2026-09-12、変異試験で露見 —— **見逃した**）。
+  assert.equal(await resolveTranscript(root, path.join(home, 'nope.jsonl'), home), null, '実在しない絶対 path も落とす')
+  assert.equal(await resolveTranscript(root, '~/nope.jsonl', home), null, '~ 経由でも実在を確かめる')
+  // 🔴 **実在する相対 path で測る。** ⚠ **実在しない相対 path では `stat` が先に落ちる** ∴
+  // 拒否そのものを消しても通ってしまう（2026-09-12、変異試験で露見）。
+  assert.equal(
+    await resolveTranscript(root, path.relative(process.cwd(), real), home),
+    null,
+    '相対 path は読む側で意味が変わる ∴ 実在しても拒む',
+  )
+  assert.equal(await resolveTranscript(root, '', home), null)
+  await rm(home, { recursive: true, force: true })
+  await rm(root, { recursive: true, force: true })
+})
+
+test('transcriptState は 5 つを区別する —— 次にすべきことが違うからである', () => {
+  assert.equal(transcriptState(null, null, 'rec'), 'unclaimed', '名乗っていない')
+  assert.equal(transcriptState('claim', null, 'rec'), 'unresolved', '名乗ったが外した')
+  assert.equal(transcriptState('mine', '/p/mine.jsonl', null), 'unrecorded', '照合の相手が無い')
+  assert.equal(transcriptState('mine', '/p/mine.jsonl', 'mine'), 'agreed')
+  assert.equal(transcriptState('mine', '/p/mine.jsonl', 'other'), 'mismatch')
+})
+
+test('writeBaton は著者の値を刻み、記録とは照合するだけである', async () => {
+  const root = await unit()
+  const home = await mkdtemp(path.join(tmpdir(), 'fake-home-'))
+  const real = await fakeTranscript(root, home, 'mine')
+  await recordSession(root, 'mine')
+  const { transcript, session } = await writeBaton(
+    root,
+    '---\ntranscript: mine\ntask: T\n---\n\nbody',
+    new Date(),
+    home,
+  )
+  assert.equal(transcript, real)
+  assert.equal(session.state, 'agreed')
+  assert.equal((await readBaton(root)).transcript, real)
+  await rm(home, { recursive: true, force: true })
+  await rm(root, { recursive: true, force: true })
+})
+
+test('🔴 記録と食い違っても刻むのは著者の値 —— 機械はどちらが正しいかを決められない', async () => {
+  // ⚠ **門にしない。** canon は「衝突は『起きない』ではなく『起きたら述べる』で塞ぐ」と
+  // 定めており、**身元の主張を持つのは著者の側**である ∴ 刻んで、食い違いを述べる。
+  const root = await unit()
+  const home = await mkdtemp(path.join(tmpdir(), 'fake-home-'))
+  const real = await fakeTranscript(root, home, 'mine')
+  await fakeTranscript(root, home, 'other')
+  await recordSession(root, 'other')
+  const { transcript, session } = await writeBaton(
+    root,
+    '---\ntranscript: mine\ntask: T\n---\n\nbody',
+    new Date(),
+    home,
+  )
+  assert.equal(transcript, real, '著者の値を刻む')
+  assert.equal(session.state, 'mismatch')
+  assert.equal(session.recorded, 'other', '記録は対照として返る —— 述べる側がこれを使う')
+  await rm(home, { recursive: true, force: true })
+  await rm(root, { recursive: true, force: true })
+})
+
+test('🔴 著者が名乗らなければ、記録が在って解決しても刻まない —— 極性の反転はここに在る', async () => {
+  // 🔴 **2026-09-12 まで、この経路は記録から値を*作っていた*** ∴ 並走すれば**実在する他人の
+  // path** を黙って刻んだ。⚠ **いまは欄が置かれない ＝ 不在として現れる。**
+  const root = await unit()
+  const home = await mkdtemp(path.join(tmpdir(), 'fake-home-'))
+  await fakeTranscript(root, home, 'mine')
+  await recordSession(root, 'mine')
+  const { transcript, session } = await writeBaton(root, '---\ntask: T\n---\n\nbody', new Date(), home)
+  assert.equal(transcript, null, '記録から値を作ってはならない')
+  assert.equal(session.state, 'unclaimed')
+  assert.equal(session.recorded, 'mine', '記録は述べるために返る')
   const baton = await readBaton(root)
-  assert.equal(baton.transcript, null, '解決しない path を刻んではならない')
-  assert.ok(baton.composedAt, 'composed-at は刻まれ続ける')
-  assert.ok(home)
+  assert.equal(baton.transcript, null)
+  assert.ok(baton.composedAt, 'composed-at は機械の欄であり続ける —— 時計は機械が持っている')
+  await rm(home, { recursive: true, force: true })
+  await rm(root, { recursive: true, force: true })
+})
+
+test('名乗ったが解決しないときは欄を置かない —— 開けない path は欄が無いことより悪い', async () => {
+  const root = await unit()
+  const home = await mkdtemp(path.join(tmpdir(), 'fake-home-'))
+  const { transcript, session } = await writeBaton(
+    root,
+    '---\ntranscript: hallucinated-id\ntask: T\n---\n\nbody',
+    new Date(),
+    home,
+  )
+  assert.equal(transcript, null)
+  assert.equal(session.state, 'unresolved')
+  assert.equal(session.claimed, 'hallucinated-id', '何を名乗ったかを述べられるように返す')
+  assert.doesNotMatch(await readFile(activePath(root), 'utf8'), /transcript:/)
+  await rm(home, { recursive: true, force: true })
+  await rm(root, { recursive: true, force: true })
+})
+
+test('write は「機械はこの欄を埋めない」を人間に述べる', async () => {
+  // ⚠ **述べることが唯一の塞ぎ方である** —— 機械が値を作らなくなった以上、**名乗りが無い
+  // ことは出力でしか伝わらない。** 🔴 **黙って欄が消えれば、著者は欄が在ると思い続ける。**
+  const root = await unit()
+  await recordSession(root, 'some-other-session')
+  const cli = path.join(HERE, '..', '..', '..', 'carriers', 'claude', 'bearing', 'bin', 'bearing-handoff.mjs')
+  const out = execFileSync(process.execPath, [cli, 'write'], {
+    cwd: root,
+    env: { ...process.env, BEARING_HOME: process.env.BEARING_HOME },
+    input: '---\ntask: T\n---\n\nbody\n',
+    encoding: 'utf8',
+  })
+  assert.match(out, /機械はこの欄を埋めない/)
+  assert.match(out, /some-other-session/, '記録の中身を出す —— 出さなければ並走に気づけない')
+  assert.match(out, /あなたではない/, 'なぜ刻まないのかを述べる')
+  await rm(root, { recursive: true, force: true })
 })
 
 test('verb を省いた呼び出しは read へ倒れず、何も刻まない', async () => {

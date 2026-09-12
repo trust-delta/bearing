@@ -330,9 +330,13 @@ export async function transcriptPath(cwd, sessionId, home = os.homedir()) {
 /**
  * frontmatter に `transcript:` を刻む。**`composed-at` の直後に置く。**
  *
- * ⚠ **著者が書いた `transcript:` は除去する** —— **これは時計と同じ側の欄である**: 機械が
- * 知っている事実であって、著述の judgment ではない。⚠ **`path` が falsy なら何も足さない**
- * —— **解決しない path を刻むのは、欄が無いことより悪い**（読む側は開こうとして失う）。
+ * ⚠ **既に在る `transcript:` 行は落として、解いた値を 1 つだけ置く** —— 欄が 2 つ在る
+ * frontmatter を作らないためであり、**著者の値を捨てるためではない。** 🔴 **値の出所を
+ * 決めるのは `writeBaton` であり、2026-09-12 にそれは著者側へ移った**（`claimedTranscript`
+ * に理由）。
+ *
+ * ⚠ **`transcript` が falsy なら何も足さない** —— **解決しない path を刻むのは、欄が無い
+ * ことより悪い**（読む側は開こうとして失う）。
  */
 export function stampTranscript(markdown, transcript) {
   const m = markdown.match(/^---\r?\n([\s\S]*?\r?\n)---(\r?\n[\s\S]*)$/)
@@ -348,27 +352,106 @@ export function stampTranscript(markdown, transcript) {
 }
 
 /**
+ * 著者が frontmatter に名乗った `transcript:` の値。無ければ `null`。
+ *
+ * 🔴 **なぜ機械が導いた値を使わないのか**（2026-09-12 に値の出所をここへ移した）:
+ * 記録（`session`）が答えるのは「**いま**どのセッションか」＝ **最後に prompt を送った
+ * 対話**であって、**「この baton を著しているのは誰か」ではない。** ∴ 同じ unit で 2 つの
+ * 対話が並走すれば、**実在する他人の transcript を指した baton が黙って生まれる** ——
+ * ⚠ **`transcriptPath` の `stat` は実在しか見ず、同一性を見ない** ∴ この型に対しては
+ * 構造的に無力である。
+ *
+ * 🔴 **対して、著者は自分が誰かを知っている。** 導き損ねれば**実在しない path** になり、
+ * `resolveTranscript` が落として欄が消える —— ⚠ **落ち方が沈黙から不在へ変わる**
+ * （canon: 「丸ごと落ちれば不在として現れる（安い）。剥がれて運ばれれば確信として現れる
+ * （高い）」）。**移した理由は精度ではなく、失敗の型である。**
+ *
+ * ⚠ **記録は出典から*対照*へ降りた** —— 著者の値と食い違ったら、**それが並走の証拠**
+ * である（`transcriptState`）。
+ *
+ * 🔴 **並走はこの機体で既に起きていた**（実測 2026-09-12、対象: `~/.claude/projects/`
+ * のこの unit の dir —— **transcript 32 本のうち、時間帯が重なる対が 3 組**。相手は同じ
+ * cwd で打たれた短命な session である）。⚠ **記録が生まれる前の出来事 ∴ 実際に奪われた
+ * ことは観測していない** —— 観測したのは**並走そのもの**である。
+ */
+export function claimedTranscript(markdown) {
+  const m = String(markdown ?? '').match(/^---\r?\n([\s\S]*?\r?\n)---(\r?\n[\s\S]*)?$/)
+  if (!m) return null
+  const line = m[1].split(/\r?\n/).find((l) => /^transcript:/.test(l))
+  if (!line) return null
+  return line.replace(/^transcript:/, '').trim() || null
+}
+
+/**
+ * 著者が名乗った値を、**実在する絶対 path へ解く。** 解けなければ `null`。
+ *
+ * ⚠ **id 1 つでもよい** —— 🔴 **著者が地の真理を持つのは id の側だけである**: dir の規則は
+ * 我々が `~/.claude/projects/` を真似ているだけであり（人間が 2026-09-03 に「馴染み」を
+ * 理由に採った）、**向こうが変えれば黙って外れる** ∴ **dir は機械に導かせ、実在を確かめる。**
+ *
+ * ⚠ **相対 path は拒む。** baton は別の cwd で読まれる ∴ 相対 path は読む側で意味を変える。
+ */
+export async function resolveTranscript(unitRoot, claimed, home = os.homedir()) {
+  const raw = String(claimed ?? '').trim()
+  if (!raw) return null
+  if (/^[A-Za-z0-9_-]+$/.test(raw)) return transcriptPath(unitRoot, raw, home)
+  const p = raw.startsWith('~/') ? path.join(home, raw.slice(2)) : raw
+  if (!path.isAbsolute(p)) return null
+  try {
+    await stat(p)
+    return p
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 著者の値・記録・刻んだ結果の関係。**`write` がこれを人間に述べる。**
+ *
+ * ⚠ **`mismatch` を門にしない** —— canon は「衝突は『起きない』ではなく『起きたら述べる』
+ * で塞ぐ」と定めており、確認の門は*この呼び出しの前*、会話の中に在る。🔴 **そして機械は
+ * どちらが正しいかを決められない** —— 著者の値は身元の主張、記録は「最後に prompt を
+ * 送った対話」であり、**食い違いは人間が見るべき事実であって、機械が解く式ではない。**
+ *
+ * @returns {'agreed'|'mismatch'|'unrecorded'|'unresolved'|'unclaimed'}
+ */
+export function transcriptState(claimed, stamped, recorded) {
+  if (!claimed) return 'unclaimed'
+  if (!stamped) return 'unresolved'
+  if (!recorded) return 'unrecorded'
+  return path.basename(stamped).replace(/\.jsonl$/, '') === recorded ? 'agreed' : 'mismatch'
+}
+
+/**
  * 退避し、そのうえで著された baton を配置する。
  *
  * ⚠ **ここは確認の門を持たない** —— 確認の門は*この呼び出しの前*、会話の中に在り、そこで
  * 人間が「X を捨てた理由が落ちている」と言える。**ここに機械の門を置いても検査できるのは
  * 形だけであり、この門は形のために在るのではない。**
  */
-export async function writeBaton(unitRoot, markdown, date = new Date()) {
+export async function writeBaton(unitRoot, markdown, date = new Date(), home = os.homedir()) {
   const archived = await archiveActive(unitRoot, date)
   await mkdir(batonDir(unitRoot), { recursive: true })
   // ⚠ **持ち主は、書く側が刻む。** 読む側に刻ませれば、他所の unit が先に読んだだけで
   // 記録がその名になり、**衝突の検出そのものが衝突に汚染される。**
   await recordUnitRoot(unitRoot)
-  // ⚠ **transcript は `composed-at` と同じ側の欄である** —— 機械が知っている事実であって
-  // 著述の judgment ではない。🔴 **解決しない path は刻まない** ∴ `transcriptPath` が `null`
-  // を返したら欄そのものを置かない —— **開けない path は、欄が無いことより悪い**（読む側は
+  // 🔴 **値は著者、実在は機械、食い違いは述べる。** ⚠ **transcript は `composed-at` と同じ側の
+  // 欄ではない** —— 時計は機械が持っているが、**「この対話は誰か」は著者しか持っていない**
+  // （`claimedTranscript` に理由）。∴ 機械がするのは*解くこと*と*照合を述べること*だけで、
+  // **値を作ることはしない** —— **著者が名乗らなければ欄は置かれない。**
+  // 🔴 **解決しない path は刻まない** —— **開けない path は、欄が無いことより悪い**（読む側は
   // 開こうとして、無いと知る代わりに壊れていると知る）。
-  const sessionId = await readSession(unitRoot)
-  const transcript = await transcriptPath(unitRoot, sessionId)
+  const claimed = claimedTranscript(markdown)
+  const transcript = await resolveTranscript(unitRoot, claimed, home)
+  const recorded = await readSession(unitRoot)
   const text = stampTranscript(stampComposedAt(markdown, date), transcript)
   await writeFile(activePath(unitRoot), text.endsWith('\n') ? text : text + '\n', 'utf8')
-  return { path: activePath(unitRoot), archived, sessionId, transcript }
+  return {
+    path: activePath(unitRoot),
+    archived,
+    transcript,
+    session: { claimed, recorded, state: transcriptState(claimed, transcript, recorded) },
+  }
 }
 
 /**
