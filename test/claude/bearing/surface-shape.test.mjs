@@ -46,8 +46,52 @@ test('script が名指す id は、すべて HTML に在る', () => {
   assert.deepEqual(missing, [], `script が在らない id を引いている: ${missing.join(', ')}`)
 })
 
-test('契約 block は、ちょうど 2 つ —— frontmatter と木', () => {
+test('契約 block は、ちょうど 3 つ —— frontmatter と木と body', () => {
   const tags = [...html.matchAll(/data-contract="([^"]+)"/g)].map((m) => m[1]).sort()
   // ⚠ **増えたことに気づける形にしておく。** 契約が増えれば、それを取り出す test も要る。
-  assert.deepEqual(tags, ['aim-frontmatter', 'aim-tree'])
+  // 🔴 **`aim-body` は他の 2 つと質が違う** —— あの法は既に `lib/process.mjs` に住んでおり、
+  // 面のそれは**2 つ目の実装**である ∴ 取り出す test（`aim-body-shape.test.mjs`）が担うのは
+  // 契約の固定だけでなく、**実 corpus 全枚での両者の一致**である。
+  assert.deepEqual(tags, ['aim-body', 'aim-frontmatter', 'aim-tree'])
+})
+
+test('面が組む 3 つの pane と 3 つの tab は、HTML に在る', () => {
+  // ⚠ **id の実在は上の test が見ているが、あれは script が*引いた*ものだけを見る。**
+  // 🔴 **pane が 1 つ消えても script が引かなくなれば、あの test は黙って通る** ∴
+  // **切り方そのものを、ここで名指しで固定する。**
+  for (const id of ['t-tree', 't-human', 't-agent', 'pane-tree', 'pane-human', 'pane-agent']) {
+    assert.match(html, new RegExp(`id="${id}"`), `${id} が面から消えている`)
+  }
+  // ⚠ **役割も固定する** —— tablist が無ければ、押せる見た目の div が 3 つ並ぶだけになる。
+  assert.match(html, /role="tablist"/)
+  assert.equal([...html.matchAll(/role="tabpanel"/g)].length, 3)
+})
+
+test('面の字は、読み手の設定を上書きしない —— そして散文が monospace で描かれない', () => {
+  // 🔴 **人間が「読みにくい」と述べ、測ったら原因は 2 つとも構造だった**（2026-09-13）——
+  // ⑴ body が絶対 px で字を決めており、**読み手が browser に設定した大きさを上書きしていた**
+  // （他は `rem` ＝ `html` を見る ∴ **1 枚の中で 2 つの尺が混ざっていた**）⑵ `pre` が
+  // `font-family` を持たず、**この面でいちばん長い日本語の散文が UA 既定の monospace で
+  // 描かれていた。** ⚠ **contrast は原因ではない**（実測: muted が 5.36:1 / 6.07:1、AA 通過）。
+  //
+  // ⚠ **これは heuristic である** —— CSS の字面を見ているだけで、**描かれた結果は browser に
+  // しか無い。** 固定しているのは「二度と同じ形へ戻さない」ことだけである。
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) ?? [])[1] ?? ''
+  assert.ok(css.length > 500, 'style を取り出せていない —— 測っているのは対象ではなく正規表現である')
+  // ⚠ **comment を落としてから測る。** 過去の値は理由として字面に残っており、落とさなければ
+  // **直した当の記述が違反として出る。**
+  const rules = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  const px = [...rules.matchAll(/font(?:-size)?:[^;}]*?\b\d+(?:\.\d+)?px/g)].map((m) => m[0].trim())
+  assert.deepEqual(px, [], `字を絶対 px で決めている: ${px.join(' / ')}`)
+  // ⚠ **下限を持たせる** —— 直した値が次に小さく戻されても、ここが述べる。
+  const small = [...rules.matchAll(/font-size:\s*(\.\d+)(rem|em)/g)]
+    .filter((m) => parseFloat(m[1]) < 0.875)
+    .map((m) => m[0].trim())
+  assert.deepEqual(small, [], `本文より一段以上小さい字が在る: ${small.join(' / ')}`)
+  // 🔴 **`pre` の UA 既定は monospace である** —— node の body も節の原文も日本語の散文である。
+  for (const [sel, re] of [['pre#d-body', /pre#d-body\s*\{[^}]*\}/], ['pre.sec', /pre\.sec\s*\{[^}]*\}/]]) {
+    const block = rules.match(re)
+    assert.ok(block, `${sel} の規則が無い`)
+    assert.match(block[0], /font-family:\s*var\(--font\)/, `${sel} が family を明示していない —— 既定の monospace で描かれる`)
+  }
 })
