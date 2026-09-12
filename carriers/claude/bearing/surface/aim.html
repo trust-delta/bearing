@@ -538,6 +538,10 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
                     background: none; border: 0; color: inherit; cursor: pointer; border-radius: 3px; }
   .card h3 button:hover { background: var(--line); }
   .kind { color: var(--muted); font-size: .9rem; }
+  /* 🔴 **判断は目的に対して下される** —— muted にしない。⚠ **人間が「aim: 文がないと厳しい」と
+     述べた**（人間の観測 2026-09-13）—— **slug と state だけでは、何に対する escalation かが
+     画面に無い。** */
+  .card .aim { margin: -.2rem 0 .9rem; font-size: .95rem; line-height: 1.8; }
   /* 🔴 **`#d-body` と同じ理由で family を明示する** —— 節の原文も日本語の散文である。 */
   pre.sec { white-space: pre-wrap; word-break: break-word; margin: .2rem 0 1.1rem;
             font-family: var(--font); font-size: .95rem; line-height: 1.8; }
@@ -827,7 +831,7 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
    * 介さずに動かせる**」と述べており、**読んだ場所から 3 欄まで 1 手で渡らなければ、
    * 人間は木の面へ戻って slug を探し直すことになる。**
    */
-  function card(slug, aside) {
+  function card(slug, aside, aim) {
     const el = document.createElement('div')
     el.className = 'card'
     const h = document.createElement('h3')
@@ -846,6 +850,14 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
       h.append(k)
     }
     el.append(h)
+    // 🔴 **`aim:` を必ず運ぶ。** ⚠ **判断は目的に対して下される** —— slug と state だけでは
+    // 「何に対する escalation か」が画面に無い（人間の観測 2026-09-13:「aim: 文がないと厳しい」）。
+    // ⚠ **無いときは黙らない** —— `aim:` を持たない record は壊れており、空行で見せれば
+    // **「目的の無い node」が「目的を書き忘れた node」と同じ顔になる。**
+    const a = document.createElement('div')
+    a.className = 'aim'
+    a.textContent = aim ? `aim: ${aim}` : '⚠ aim: が無い —— この record は aim として壊れている'
+    el.append(a)
     return el
   }
 
@@ -882,7 +894,7 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
       if (b.escalation.empty) emptyHeads.push(`${r.slug}（ESCALATION）`)
       if (b.observation.empty) emptyHeads.push(`${r.slug}（OBSERVATION）`)
       if (!b.escalation.present && !b.observation.present) continue
-      const el = card(r.slug, r.state ? `state: ${r.state}` : null)
+      const el = card(r.slug, r.state ? `state: ${r.state}` : null, r.aim)
       if (b.escalation.present) {
         esc++
         addSec(el, '# ESCALATION —— 人間の判断が要る点', secText(b.escalation.rows))
@@ -933,7 +945,7 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
       const todos = b.marks.items.filter((it) => it.kind === 'todo')
       if (b.marks.unknown) unknown.push(r.slug)
       if (todos.length === 0 && b.marks.anomalies.length === 0) continue
-      const el = card(r.slug, `[done] ${b.marks.done} / [todo] ${b.marks.todo}`)
+      const el = card(r.slug, `[done] ${b.marks.done} / [todo] ${b.marks.todo}`, r.aim)
       if (todos.length) {
         nodesWithTodo++
         items += todos.length

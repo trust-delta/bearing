@@ -106,7 +106,7 @@ async function corpusRows() {
   for (const f of files.sort()) {
     const text = await readFile(path.join(REPO_AIMS, f), 'utf8')
     const rec = parseAimRecord(text)
-    rows.push({ slug: f.replace(/\.md$/, ''), text, readable: true, state: rec.state })
+    rows.push({ slug: f.replace(/\.md$/, ''), text, readable: true, state: rec.state, aim: rec.aim })
   }
   return rows
 }
@@ -139,6 +139,13 @@ test('人間の面の数は、`gatherBacklog` の数と一致する', async () =
   for (const slug of union) assert.match(body, new RegExp(slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
   assert.match(body, /# ESCALATION —— 人間の判断が要る点/)
   assert.match(body, /票 \d+ 枚/)
+  // 🔴 **`aim:` を運ぶ。** ⚠ **判断は目的に対して下される** —— slug と state だけでは
+  // 「何に対する escalation か」が画面に無い（人間の観測 2026-09-13）。
+  for (const slug of union) {
+    const aim = parseAimRecord(await readFile(path.join(REPO_AIMS, `${slug}.md`), 'utf8')).aim
+    assert.ok(aim, `${slug} に aim: が無い —— 測っていない`)
+    assert.ok(body.includes(`aim: ${aim}`), `${slug} の aim: 文が面に出ていない`)
+  }
 })
 
 test('エージェントの面の数は、`gatherBacklog` の open-todo と一致する', async () => {
@@ -155,6 +162,14 @@ test('エージェントの面の数は、`gatherBacklog` の open-todo と一�
 })
 
 // ── 不在と壊れを、黙って示さない ────────────────────────────────────────────
+
+test('aim: を持たない record は、空行ではなく壊れとして出す', () => {
+  // ⚠ **空行で見せれば「目的の無い node」が「目的を書き忘れた node」と同じ顔になる。**
+  S.renderAgent([
+    { slug: 'x', text: '---\nstate: open\n---\n\n# PROCESS\n- [todo] y\n', readable: true, state: 'open', aim: null },
+  ])
+  assert.match(textOf($('agent-list')), /aim: が無い/)
+})
 
 test('0 件は「番が無い」と読ませない —— 宣言待ちを数えていないことを述べる', () => {
   S.renderHuman([{ slug: 'x', text: '---\naim: a\nstate: open\n---\n\n# IS\n何も無い\n', readable: true, state: 'open' }])
