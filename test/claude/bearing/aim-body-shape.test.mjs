@@ -36,7 +36,7 @@ async function loadContract() {
   return globalThis.AimBody
 }
 
-const { parseBody, bodyOf } = await loadContract()
+const { parseBody, bodyOf, bodyOffset } = await loadContract()
 
 /** 面の出力を、あちらの 3 関数が返す形へ畳む。⚠ **比べられる形に揃えるだけで、値は触らない。** */
 const foldSurface = (body) => {
@@ -102,6 +102,37 @@ test('実 corpus 全枚で、面の `bodyOf` と `parseAimRecord` が同じ body
 
 test('frontmatter が無い text は、丸ごと body である', () => {
   assert.equal(bodyOf('# PROCESS\n- [todo] x\n'), '# PROCESS\n- [todo] x\n')
+})
+
+test('実 corpus 全枚で、body の n 行目は file の offset+n 行目である', async () => {
+  // 🔴 **面は `slug.md:NN` という引用の形を描く** ∴ **NN が body 相対のままなら、開く先が
+  // frontmatter の行数だけずれる。** ⚠ **ずれた参照は、開けない参照より悪い** —— **開いて
+  // しまい、そこには別の行が在る。**
+  //
+  // 🔴 **2026-09-13 に実際に踏んだ**: 人間が面から `dev-platform.md:49` を引用し、その file の
+  // 49 行目は `# PROCESS` だった（**実際の行は 54、offset は 5**）。⚠ **検出は人間の使い方に
+  // よるものであり、当方の門は 1 つもこれを見ていなかった** —— 面の数が `gatherBacklog` と
+  // 一致することは測っていたが、**行番号が何に対する番号かは誰も測っていなかった。**
+  const files = (await readdir(REPO_AIMS)).filter((f) => f.endsWith('.md') && f !== 'README.md')
+  assert.ok(files.length >= 5, `corpus が ${files.length} 枚 —— 読めていない`)
+  let checked = 0
+  for (const f of files) {
+    const text = await readFile(path.join(REPO_AIMS, f), 'utf8')
+    const off = bodyOffset(text)
+    assert.ok(off > 0, `${f} の offset が 0 —— frontmatter を数えていない`)
+    const fileLines = text.split(/\r?\n/)
+    const bodyLines = bodyOf(text).split(/\r?\n/)
+    // ⚠ **全行を突き合わせる。** 先頭だけ見れば、途中でずれる実装が通る。
+    for (let n = 1; n <= bodyLines.length; n++) {
+      assert.equal(fileLines[off + n - 1], bodyLines[n - 1], `${f}: body ${n} 行目が file ${off + n} 行目と違う`)
+      checked++
+    }
+  }
+  assert.ok(checked > 500, `${checked} 行しか突き合わせていない —— 測っていない`)
+})
+
+test('frontmatter が無ければ offset は 0', () => {
+  assert.equal(bodyOffset('# PROCESS\n- [todo] x\n'), 0)
 })
 
 // ══ corpus が踏んでいない形は、合成で踏む ════════════════════════════════════

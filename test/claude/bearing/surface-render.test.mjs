@@ -57,7 +57,11 @@ function node(tagName = 'div') {
     getAttribute(k) {
       return n.attrs[k] ?? null
     },
-    addEventListener() {},
+    listeners: {},
+    // ⚠ **握らなければ、押せない** —— コピーの口は押してみるまで何も主張しない。
+    addEventListener(type, fn) {
+      ;(n.listeners[type] ??= []).push(fn)
+    },
     querySelector() {
       return node('tbody')
     },
@@ -79,6 +83,20 @@ globalThis.document = {
 // 開けないのです」）も同時に走る。**持たせれば、その分岐は一度も走らない。**
 globalThis.window = {}
 
+// clipboard の stub。⚠ **node の `navigator` は getter である** ∴ 代入ではなく定義で差し替える。
+const clip = { last: null, fail: null }
+Object.defineProperty(globalThis, 'navigator', {
+  configurable: true,
+  value: {
+    clipboard: {
+      async writeText(t) {
+        if (clip.fail) throw clip.fail
+        clip.last = t
+      },
+    },
+  },
+})
+
 const html = await readFile(SURFACE, 'utf8')
 const blocks = [...html.matchAll(/<script type="module"([^>]*)>\n([\s\S]*?)\n<\/script>/g)]
 const run = async (src) => {
@@ -98,6 +116,16 @@ function textOf(n) {
   return [String(n.textContent ?? ''), ...n.children.map(textOf)].join('\n')
 }
 const $ = (id) => document.getElementById(id)
+
+/** 木の下から、この class を持つ node を集める。 */
+function findAll(n, cls, out = []) {
+  if (n.className?.split(' ').includes(cls)) out.push(n)
+  for (const k of n.children) findAll(k, cls, out)
+  return out
+}
+const press = async (n) => {
+  for (const fn of n.listeners?.click ?? []) await fn()
+}
 
 /** 実 corpus を、面が受け取る形（`renderAll` が組む rows）へ。 */
 async function corpusRows() {
@@ -228,4 +256,122 @@ test('節の原文は、前後の空行だけ落として運ばれる —— inl
     { raw: '', fenced: false },
   ]
   assert.equal(S.secText(rows), '⑴ `lib/process.mjs` を見よ')
+})
+
+// ── 引用として使える行番号か ────────────────────────────────────────────────
+
+test('🔴 label の行番号は file 相対である —— ずれた参照は開けない参照より悪い', async () => {
+  // 🔴 **2026-09-13 に踏んだ。** 人間が面から `dev-platform.md:49` を引用したが、その file の
+  // 49 行目は `# PROCESS` だった（**実際は 54、offset は 5**）—— ⚠ **検出は人間の使い方による
+  // ものであり、当方の門は 1 つもこれを見ていなかった。**
+  //
+  // ⚠ **行番号を字で固定しない**（corpus が動けば行は動く）—— **label が指す行に、その項目の
+  // 1 行目が実在することを assert する。** これは編集に耐え、しかも正確である。
+  const rows = await corpusRows()
+  S.renderAgent(rows)
+  const labels = [...textOf($('agent-list')).matchAll(/^(\S+)\.md:(\d+)$/gm)]
+  assert.ok(labels.length > 0, 'label を 1 つも拾えていない —— 測っているのは対象ではなく正規表現である')
+  for (const [, slug, no] of labels) {
+    const lines = (await readFile(path.join(REPO_AIMS, `${slug}.md`), 'utf8')).split(/\r?\n/)
+    assert.match(
+      lines[Number(no) - 1] ?? '',
+      /^- \[todo\]/,
+      `${slug}.md:${no} が [todo] の行を指していない（実際: ${JSON.stringify((lines[Number(no) - 1] ?? '').slice(0, 40))}）`,
+    )
+  }
+})
+
+test('人間の面の label は、1 つ残らず中身が在る行を file 相対で指す', async () => {
+  // 🔴 **「1 つでも在れば通る」形にしない。** ⚠ **変異試験で露見した**（2026-09-13）——
+  // ESCALATION の label から行番号を落としても、OBSERVATION 側が残っていれば通っていた
+  // ∴ **測っていたのは「どこかに在る」であって「すべてに在る」ではなかった。**
+  //
+  // ⚠ **label は class で拾う** —— 字面を走査すれば、**節の原文の中で `# ESCALATION` に
+  // 言及している散文**（この corpus に実在する）を label と取り違える。
+  const rows = await corpusRows()
+  S.renderHuman(rows)
+  const labels = findAll($('human-list'), 'seclabel')
+  assert.ok(labels.length > 0, 'label を 1 つも拾えていない')
+  const refs = []
+  for (const l of labels) {
+    const t = textOf(l).trim()
+    const m = t.match(/^(\S+)\.md:(\d+) # (ESCALATION|OBSERVATION)/)
+    assert.ok(m, `label が引用の形で始まっていない: ${JSON.stringify(t.slice(0, 60))}`)
+    refs.push([m[1], m[2]])
+    // 🔴 **節ごとに口が 1 つ在る** —— 無ければ、人間は手で選び直すことになる。
+    assert.equal(findAll(l, 'copy').length, 1, `${t.slice(0, 40)} に コピーの口が無い`)
+  }
+  for (const [slug, no] of refs) {
+    const lines = (await readFile(path.join(REPO_AIMS, `${slug}.md`), 'utf8')).split(/\r?\n/)
+    const line = lines[Number(no) - 1] ?? ''
+    // ⚠ **空行を指さない** —— 引用の頭は中身である。
+    assert.notEqual(line.trim(), '', `${slug}.md:${no} が空行を指している`)
+    assert.doesNotMatch(line, /^# /, `${slug}.md:${no} が見出しを指している —— 指すべきは最初の中身である`)
+  }
+})
+
+test('エージェントの面も、項目ごとに口を持つ', async () => {
+  // ⚠ **同じ理由で「どこかに在る」では測らない。**
+  S.renderAgent(await corpusRows())
+  const labels = findAll($('agent-list'), 'seclabel')
+  assert.ok(labels.length > 0, 'label を 1 つも拾えていない')
+  for (const l of labels) {
+    assert.equal(findAll(l, 'copy').length, 1, `${textOf(l).trim().slice(0, 40)} に コピーの口が無い`)
+  }
+})
+
+// ── コピーの口 ───────────────────────────────────────────────────────────────
+
+test('節ごとの口は、label と原文をまとめて渡す', async () => {
+  clip.fail = null
+  clip.last = null
+  S.renderHuman(await corpusRows())
+  const cards = $('human-list').children
+  const labels = findAll($('human-list'), 'seclabel')
+  const buttons = findAll($('human-list'), 'copy')
+  // 🔴 **数で固定する** —— card 丸ごとに 1 つ、節ごとに 1 つ。⚠ **変異試験で露見した**
+  // （2026-09-13）: `buttons.length > 1` は、節の口が全部消えても card の口で通っていた。
+  assert.equal(
+    buttons.length,
+    cards.length + labels.length,
+    `口が ${buttons.length} 個 —— card ${cards.length} ＋ 節 ${labels.length} でなければならない`,
+  )
+  // 節の口（最後の label の中の 1 つ）を押す。
+  await press(findAll(labels[labels.length - 1], 'copy')[0])
+  assert.ok(clip.last, '何も渡されていない')
+  assert.match(clip.last, /\.md:\d+/, '引用に使える形（slug.md:行）が入っていない')
+  assert.ok(clip.last.split('\n').length > 1, 'label だけで原文が入っていない')
+  assert.match(buttons[buttons.length - 1].textContent, /コピーした/, '押した結果が画面に出ていない')
+})
+
+test('card 丸ごとの口は、slug と aim: と全節を渡す', async () => {
+  clip.fail = null
+  S.renderAgent([
+    {
+      slug: 'x',
+      text: '---\naim: 目的の 1 文\nstate: open\n---\n\n# PROCESS\n- [todo] やること\n',
+      readable: true,
+      state: 'open',
+      aim: '目的の 1 文',
+    },
+  ])
+  const buttons = findAll($('agent-list'), 'copy')
+  await press(buttons[0])
+  assert.match(clip.last, /^x\.md/, '先頭が slug でない')
+  assert.match(clip.last, /aim: 目的の 1 文/, 'aim: が入っていない —— 判断は目的に対して下される')
+  assert.match(clip.last, /やること/, '節の中身が入っていない')
+})
+
+test('🔴 コピーが拒まれたら、黙らずに述べる', async () => {
+  // ⚠ **`file://` が secure context であることは実測されているが**（`# IS` の表、2026-09-03）
+  // **書き込みの可否そのものは測っていない** ∴ **拒まれる経路を先に固定する。**
+  clip.fail = Object.assign(new Error('denied'), { name: 'NotAllowedError' })
+  S.renderAgent([
+    { slug: 'x', text: '---\naim: a\n---\n\n# PROCESS\n- [todo] y\n', readable: true, state: 'open', aim: 'a' },
+  ])
+  const b = findAll($('agent-list'), 'copy')[0]
+  await press(b)
+  assert.match(b.textContent, /コピーできなかった/, '黙って何も起きない口になっている')
+  assert.match(b.textContent, /NotAllowedError/, '理由を落としてはならない')
+  clip.fail = null
 })
