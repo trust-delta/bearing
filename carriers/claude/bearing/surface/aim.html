@@ -445,31 +445,54 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
     color-scheme: light dark;
     --bg: #fbfbfa; --fg: #1c1b19; --muted: #6b6862;
     --line: #e2e0dc; --ok: #1f6f43; --ng: #a8331f; --card: #ffffff;
+
+    /* ── 字。⚠ **読みにくいと人間が述べた**（人間の観測 2026-09-13）—— 測ったら原因は 2 つで、
+       どちらも「小さい」ではなく**構造**だった。
+
+       🔴 **⑴ body が絶対 px で字を決めていた**（`font: 15px/1.7`）—— **読み手が browser に
+       設定した大きさを上書きする。** ⚠ **しかも他は `rem` である** ＝ `rem` は `html` を見る
+       ので**読み手の設定に従い**、body だけが従わない —— **1 枚の中で 2 つの尺が混ざっていた。**
+       ∴ **絶対 px を捨てる**（`1rem`）。**大きくしたのではなく、決めるのをやめた。**
+
+       🔴 **⑵ `pre` が font-family を持たず、UA 既定の monospace で描かれていた** ——
+       **node の body は、この面でいちばん長い日本語の散文である。** ∴ `--font` を当てる。
+
+       ⚠ **contrast は原因ではない**（実測 2026-09-13、対象: この面の 5 組 —— muted が light
+       5.36:1 / dark 6.07:1、fg が 16.62 / 14.63、いずれも AA 通過）∴ **色は動かしていない。**
+
+       ⚠ **どの face が実際に選ばれるかは測っていない** —— fontconfig と install 済みの font に
+       依り、**我々には見えない。** ここに在るのは**並び**であって、観測ではない。 */
+    --font: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+            "Noto Sans JP", "Noto Sans CJK JP", "Yu Gothic UI", Meiryo, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans Mono CJK JP", monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #171614; --fg: #e9e7e2; --muted: #9a958c;
             --line: #33312d; --ok: #6fcf97; --ng: #ef8a76; --card: #201f1c; }
   }
+  /* ⚠ **絶対 px を置かない** —— 読み手が browser に設定した大きさが、この面の基準である。 */
   body { margin: 0; background: var(--bg); color: var(--fg);
-         font: 15px/1.7 system-ui, sans-serif; }
+         font: 1rem/1.8 var(--font); }
+  /* ⚠ **`code` も既定の monospace に任せない** —— 既定は本文より一段小さく描かれる。 */
+  code { font-family: var(--mono); font-size: .95em; }
   main { max-width: 62rem; margin: 0 auto; padding: 2rem 1.25rem 5rem; }
   h1 { font-size: 1.35rem; margin: 0 0 .25rem; letter-spacing: .02em; }
-  .lede { color: var(--muted); margin: 0 0 1.75rem; font-size: .9rem; }
+  .lede { color: var(--muted); margin: 0 0 1.75rem; font-size: .95rem; line-height: 1.8; }
   button { font: inherit; padding: .55rem 1.1rem; border: 1px solid var(--line);
            border-radius: .4rem; background: var(--card); color: var(--fg); cursor: pointer; }
   button:hover { border-color: var(--muted); }
-  #note { margin: 1rem 0 0; font-size: .875rem; color: var(--muted); }
+  #note { margin: 1rem 0 0; font-size: .95rem; color: var(--muted); }
   .warn { color: var(--ng); }
-  table { width: 100%; border-collapse: collapse; margin-top: 1.75rem; font-size: .875rem; }
+  table { width: 100%; border-collapse: collapse; margin-top: 1.75rem; font-size: .9375rem; }
   th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line);
            vertical-align: top; }
   th { color: var(--muted); font-weight: 600; white-space: nowrap; }
-  td.slug { font-family: ui-monospace, monospace; white-space: nowrap; }
+  td.slug { font-family: var(--mono); white-space: nowrap; }
   td.aim { color: var(--muted); }
   .ok { color: var(--ok); } .ng { color: var(--ng); font-weight: 600; }
   .scroll { overflow-x: auto; }
   footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--line);
-           color: var(--muted); font-size: .8rem; }
+           color: var(--muted); font-size: .9rem; }
 
   /* 木と詳細を並べる。⚠ 狭い画面では縦に落とす —— 面が読めなくなれば、面ではない。 */
   .cols { display: grid; grid-template-columns: minmax(14rem, 22rem) 1fr; gap: 1.5rem; align-items: start; }
@@ -481,19 +504,21 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
                     font: inherit; color: inherit; border-radius: 3px; text-align: left; }
   nav#tree button:hover { background: var(--line); }
   nav#tree button[aria-current="true"] { background: var(--line); font-weight: 600; }
-  nav#tree .st { color: var(--muted); font-size: .8em; }
+  nav#tree .st { color: var(--muted); font-size: .875em; }
   section#detail { background: var(--card); border: 1px solid var(--line);
                    border-radius: 6px; padding: 1rem 1.2rem; }
-  section#detail label { display: block; margin: .8rem 0 .2rem; color: var(--muted); font-size: .85rem; }
+  section#detail label { display: block; margin: .8rem 0 .2rem; color: var(--muted); font-size: .9rem; }
   section#detail textarea, section#detail select, section#detail input {
     width: 100%; font: inherit; padding: .35rem .5rem;
     border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--fg); }
   section#detail textarea { min-height: 4.5rem; resize: vertical; }
-  pre#d-body { white-space: pre-wrap; word-break: break-word; max-height: 26rem; overflow-y: auto;
+  /* 🔴 **`font-family` を明示する。** ⚠ **`pre` の UA 既定は monospace であり、ここに入るのは
+     この面でいちばん長い日本語の散文である** —— 黙って monospace で描かれていた。 */
+  pre#d-body { white-space: pre-wrap; word-break: break-word; max-height: 30rem; overflow-y: auto;
                background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
-               padding: .8rem; font-size: .85rem; }
+               padding: .9rem; font-family: var(--font); font-size: .95rem; line-height: 1.8; }
   #problems { border: 1px solid var(--ng); border-radius: 6px; padding: .6rem 1rem; margin: 1rem 0; }
-  #problems h2 { font-size: .95rem; margin: .2rem 0 .5rem; color: var(--ng); }
+  #problems h2 { font-size: 1rem; margin: .2rem 0 .5rem; color: var(--ng); }
   #problems li { margin: .2rem 0; }
   .row { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
   details.check { margin-top: 2rem; }
@@ -505,16 +530,17 @@ globalThis.AimBody = { parseBody, scan, bodyOf }
                  background: none; color: var(--muted); margin-bottom: -1px; }
   .tabs button[aria-selected="true"] { border-color: var(--line); background: var(--card);
                                        color: var(--fg); font-weight: 600; }
-  .count { color: var(--muted); font-size: .85rem; margin: 0 0 1.25rem; white-space: pre-wrap; }
+  .count { color: var(--muted); font-size: .95rem; margin: 0 0 1.25rem; white-space: pre-wrap; line-height: 1.8; }
   .card { border: 1px solid var(--line); border-radius: .5rem; background: var(--card);
           padding: .9rem 1.1rem .4rem; margin: 0 0 1rem; }
-  .card h3 { margin: 0 0 .6rem; font-size: .95rem; font-weight: 400; }
-  .card h3 button { font-family: ui-monospace, monospace; font-weight: 600; padding: .1rem .3rem;
+  .card h3 { margin: 0 0 .6rem; font-size: 1rem; font-weight: 400; }
+  .card h3 button { font-family: var(--mono); font-weight: 600; padding: .1rem .3rem;
                     background: none; border: 0; color: inherit; cursor: pointer; border-radius: 3px; }
   .card h3 button:hover { background: var(--line); }
-  .kind { color: var(--muted); font-size: .8rem; }
-  pre.sec { white-space: pre-wrap; word-break: break-word; margin: .2rem 0 .9rem;
-            font: inherit; font-size: .84rem; }
+  .kind { color: var(--muted); font-size: .9rem; }
+  /* 🔴 **`#d-body` と同じ理由で family を明示する** —— 節の原文も日本語の散文である。 */
+  pre.sec { white-space: pre-wrap; word-break: break-word; margin: .2rem 0 1.1rem;
+            font-family: var(--font); font-size: .95rem; line-height: 1.8; }
 </style>
 
 <main>

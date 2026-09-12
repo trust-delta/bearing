@@ -66,3 +66,32 @@ test('面が組む 3 つの pane と 3 つの tab は、HTML に在る', () => {
   assert.match(html, /role="tablist"/)
   assert.equal([...html.matchAll(/role="tabpanel"/g)].length, 3)
 })
+
+test('面の字は、読み手の設定を上書きしない —— そして散文が monospace で描かれない', () => {
+  // 🔴 **人間が「読みにくい」と述べ、測ったら原因は 2 つとも構造だった**（2026-09-13）——
+  // ⑴ body が絶対 px で字を決めており、**読み手が browser に設定した大きさを上書きしていた**
+  // （他は `rem` ＝ `html` を見る ∴ **1 枚の中で 2 つの尺が混ざっていた**）⑵ `pre` が
+  // `font-family` を持たず、**この面でいちばん長い日本語の散文が UA 既定の monospace で
+  // 描かれていた。** ⚠ **contrast は原因ではない**（実測: muted が 5.36:1 / 6.07:1、AA 通過）。
+  //
+  // ⚠ **これは heuristic である** —— CSS の字面を見ているだけで、**描かれた結果は browser に
+  // しか無い。** 固定しているのは「二度と同じ形へ戻さない」ことだけである。
+  const css = (html.match(/<style>([\s\S]*?)<\/style>/) ?? [])[1] ?? ''
+  assert.ok(css.length > 500, 'style を取り出せていない —— 測っているのは対象ではなく正規表現である')
+  // ⚠ **comment を落としてから測る。** 過去の値は理由として字面に残っており、落とさなければ
+  // **直した当の記述が違反として出る。**
+  const rules = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  const px = [...rules.matchAll(/font(?:-size)?:[^;}]*?\b\d+(?:\.\d+)?px/g)].map((m) => m[0].trim())
+  assert.deepEqual(px, [], `字を絶対 px で決めている: ${px.join(' / ')}`)
+  // ⚠ **下限を持たせる** —— 直した値が次に小さく戻されても、ここが述べる。
+  const small = [...rules.matchAll(/font-size:\s*(\.\d+)(rem|em)/g)]
+    .filter((m) => parseFloat(m[1]) < 0.875)
+    .map((m) => m[0].trim())
+  assert.deepEqual(small, [], `本文より一段以上小さい字が在る: ${small.join(' / ')}`)
+  // 🔴 **`pre` の UA 既定は monospace である** —— node の body も節の原文も日本語の散文である。
+  for (const [sel, re] of [['pre#d-body', /pre#d-body\s*\{[^}]*\}/], ['pre.sec', /pre\.sec\s*\{[^}]*\}/]]) {
+    const block = rules.match(re)
+    assert.ok(block, `${sel} の規則が無い`)
+    assert.match(block[0], /font-family:\s*var\(--font\)/, `${sel} が family を明示していない —— 既定の monospace で描かれる`)
+  }
+})
