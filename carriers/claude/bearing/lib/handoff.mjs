@@ -242,6 +242,111 @@ export function stampComposedAt(markdown, date = new Date()) {
   return `---\n${front.join('\n')}\n---${m[2]}`
 }
 
+/** この unit で「いま話しているセッション」の id を書き留めた 1 行。 */
+export const SESSION_RECORD = 'session'
+
+export const sessionRecordPath = (unitRoot, env = process.env) =>
+  path.join(unitHome(unitRoot, env), SESSION_RECORD)
+
+/**
+ * いま話しているセッションの id を書き留める。
+ *
+ * ⚠ **`unit-root` と違い、これは上書きする。** あちらは衝突の唯一の証拠を守るために決して
+ * 上書きしないが、こちらが答えるのは「**いま**どのセッションか」であり、**古い答えを
+ * 保存する意味が無い** —— 保存すれば、baton に刻まれる transcript が前のセッションのものに
+ * なる。
+ *
+ * 🔴 **同じ unit で 2 つのセッションが並走すれば、この record を取り合う。** ⚠ **名前や
+ * hash で塞がない** —— canon は「衝突は『起きない』ではなく『起きたら述べる』で塞ぐ」と
+ * 定めている ∴ **刻む側が「どの id を刻んだか」を人間に述べる**（`bearing-handoff.mjs` の
+ * `write`）。**取り違えは、黙って起きたときだけ高い。**
+ *
+ * ⚠ **中身が変わらないなら書かない。** この record を書く hook は prompt ごとに走る ——
+ * 毎回 write すれば、何も変わっていない dir の mtime が動き続ける。
+ */
+export async function recordSession(unitRoot, sessionId, env = process.env) {
+  const id = String(sessionId ?? '').replace(/[^A-Za-z0-9_-]/g, '')
+  if (!id || id === 'unknown') return null
+  const file = sessionRecordPath(unitRoot, env)
+  try {
+    if ((await readFile(file, 'utf8')).trim() === id) return file
+  } catch {
+    // 無い・読めないは、書かない理由にならない。
+  }
+  await mkdir(path.dirname(file), { recursive: true })
+  await writeFile(file, id + '\n', 'utf8')
+  return file
+}
+
+/** 書き留めた session id。無ければ `null`。 */
+export async function readSession(unitRoot, env = process.env) {
+  try {
+    return (await readFile(sessionRecordPath(unitRoot, env), 'utf8')).trim() || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Claude Code の transcript が住む dir。
+ *
+ * ⚠ **`~/.claude/projects/` の dir 名は `unitSlug` と同じ規則である** —— **我々が向こうの
+ * 規則を真似ているのであって、向こうが我々に合わせているのではない**（人間が 2026-09-03 に
+ * 「馴染み」を理由に採った）∴ 🔴 **向こうが規則を変えれば、ここは黙って外れる。**
+ * ⚠ **だから `transcriptPath` は導いた path の実在を必ず確かめる** —— **解決しない path を
+ * 返さない。**
+ *
+ * ⚠ **平坦化するのは cwd である。** 向こうが keyed しているのは cwd であって unit root では
+ * ない —— bearing の model では「wrapper が cwd ならそれが unit」ゆえ一致するが、
+ * **一致を仮定していること自体は書き残す。**
+ *
+ * ⚠ **`home` を引数に取る** —— `bearingHome` と同じ理由（test が実機の home を触らない）。
+ */
+export const transcriptDir = (cwd, home = os.homedir()) =>
+  path.join(home, '.claude', 'projects', unitSlug(cwd))
+
+/**
+ * session id から transcript の path を導く。**実在を確かめてから返す。**
+ *
+ * 🔴 **`session_id` が transcript の file 名そのものであることは実測した**（2026-09-12、
+ * 対象: この機体に残る `aim-boot-ritual-<id>` marker 46 件 —— **46 件すべてに対応する
+ * `<id>.jsonl` が `~/.claude/projects/` のどれかの dir に在った**）。⚠ **dir の側は 1 件でしか
+ * 確かめていない** ∴ **実在の確認が、その 1 件を毎回やり直している。**
+ *
+ * @returns {Promise<string|null>} 実在しなければ `null`
+ */
+export async function transcriptPath(cwd, sessionId, home = os.homedir()) {
+  const id = String(sessionId ?? '').replace(/[^A-Za-z0-9_-]/g, '')
+  if (!id || id === 'unknown') return null
+  const p = path.join(transcriptDir(cwd, home), `${id}.jsonl`)
+  try {
+    await stat(p)
+    return p
+  } catch {
+    return null
+  }
+}
+
+/**
+ * frontmatter に `transcript:` を刻む。**`composed-at` の直後に置く。**
+ *
+ * ⚠ **著者が書いた `transcript:` は除去する** —— **これは時計と同じ側の欄である**: 機械が
+ * 知っている事実であって、著述の judgment ではない。⚠ **`path` が falsy なら何も足さない**
+ * —— **解決しない path を刻むのは、欄が無いことより悪い**（読む側は開こうとして失う）。
+ */
+export function stampTranscript(markdown, transcript) {
+  const m = markdown.match(/^---\r?\n([\s\S]*?\r?\n)---(\r?\n[\s\S]*)$/)
+  if (!m) return markdown
+  const front = m[1]
+    .split(/\r?\n/)
+    .filter((l) => !/^transcript:/.test(l))
+    .filter((l, i, a) => !(l === '' && i === a.length - 1))
+  if (!transcript) return `---\n${front.join('\n')}\n---${m[2]}`
+  const at = front.findIndex((l) => /^composed-at:/.test(l))
+  front.splice(at < 0 ? 0 : at + 1, 0, `transcript: ${transcript}`)
+  return `---\n${front.join('\n')}\n---${m[2]}`
+}
+
 /**
  * 退避し、そのうえで著された baton を配置する。
  *
@@ -255,9 +360,15 @@ export async function writeBaton(unitRoot, markdown, date = new Date()) {
   // ⚠ **持ち主は、書く側が刻む。** 読む側に刻ませれば、他所の unit が先に読んだだけで
   // 記録がその名になり、**衝突の検出そのものが衝突に汚染される。**
   await recordUnitRoot(unitRoot)
-  const text = stampComposedAt(markdown, date)
+  // ⚠ **transcript は `composed-at` と同じ側の欄である** —— 機械が知っている事実であって
+  // 著述の judgment ではない。🔴 **解決しない path は刻まない** ∴ `transcriptPath` が `null`
+  // を返したら欄そのものを置かない —— **開けない path は、欄が無いことより悪い**（読む側は
+  // 開こうとして、無いと知る代わりに壊れていると知る）。
+  const sessionId = await readSession(unitRoot)
+  const transcript = await transcriptPath(unitRoot, sessionId)
+  const text = stampTranscript(stampComposedAt(markdown, date), transcript)
   await writeFile(activePath(unitRoot), text.endsWith('\n') ? text : text + '\n', 'utf8')
-  return { path: activePath(unitRoot), archived }
+  return { path: activePath(unitRoot), archived, sessionId, transcript }
 }
 
 /**
