@@ -66,3 +66,17 @@ test('write.md の様式は人間の逐語の欄を持つ', async () => {
   assert.match(shape, /^## 逐語$/m, '様式から逐語の節が消えている')
   assert.match(shape, /言い換えてはならない/, '言い換えの禁止が消えている —— 節だけでは効かない')
 })
+
+test('write.md は transcript を機械の欄として扱い、read.md は何のための欄かを述べる', async () => {
+  // 🔴 **2026-09-11 に測った**（対象: 本 repo の圧縮要約）—— **native な圧縮は transcript を
+  // *貼らず*、絶対 path 1 本と「何を取りに行く欄か」の 1 行だけを置いていた**
+  // （transcript 6,431,899 字に対し要約 18,033 字 ＝ 0.28%）。⚠ **対して baton には欄が無く、
+  // 代わりに `<session-id>` が未解決の *path の形* が書かれていた** —— **読む側は開けない。**
+  // ⚠ **path だけでは足りない** —— **開く理由が無ければ開かれない** ∴ 用途の 1 行を対で見張る。
+  const write = await read(path.join('skills', 'handoff', 'write.md'))
+  assert.match(write, /`transcript:` も書かない/, '機械の欄であることが消えている')
+  assert.match(write, /開けない path は、欄が無いことより悪い/, '刻まない条件が消えている')
+  const rd = await read(path.join('skills', 'handoff', 'read.md'))
+  assert.match(rd, /`transcript:` が在れば/, '読む側の手順から消えている')
+  assert.match(rd, /原文は運ばない/, '何のために開く欄かが消えている —— path だけでは開かれない')
+})

@@ -187,7 +187,22 @@ async function migrate(unitRoot) {
 }
 
 async function main() {
-  const verb = process.argv[2] ?? 'read'
+  // 🔴 **verb を省いた呼び出しを `read` へ倒さない。** ⚠ **`read` は `read-at` を刻む ∴
+  // 引数を落としただけで不可逆な act が、確認も無く、黙って起きる** —— この repo が
+  // escalation の重さを測る尺（不可逆性 × 沈黙）の、両方に当たる形である。
+  // 🔴 **2026-09-12 に踏んだ**: `node -e 'import(...)'` で構文を確かめたところ `process.argv[2]`
+  // が `undefined` になり、**封印中の baton に「誰も読んでいない既読」が刻まれた**
+  // （`read-at: 2026-09-12T00:15:34Z`。canon の「この経路は書かれていても除去する」に従って戻した）。
+  // ⚠ **裸の呼び出しは canon のどこにも書かれていない** —— documented なのは `read` / `write` /
+  // `migrate` だけである ∴ **既定は契約ではなく実装の偶然だった。**
+  const verb = process.argv[2]
+  if (!verb) {
+    process.stderr.write(
+      'handoff: verb が無い。使えるのは: read | write | trace | migrate\n' +
+        '⚠ 既定では read へ倒さない —— read は `read-at` を刻む ∴ 取り消せない。\n',
+    )
+    return 2
+  }
   const unit = await resolveUnit(process.cwd())
 
   if (verb === 'migrate') return await migrate(unit.root)
@@ -228,9 +243,15 @@ async function main() {
       )
       return 2
     }
-    const { path: p, archived } = await writeBaton(unit.root, markdown)
+    const { path: p, archived, sessionId, transcript } = await writeBaton(unit.root, markdown)
     say(`baton を書いた: ${p}`)
     say(archived ? `旧 baton を退避した: ${archived}` : '退避すべき旧 baton は無かった')
+    // 🔴 **どの session を刻んだかを述べる。** ⚠ **同じ unit で 2 つの対話が並走すれば、
+    // session の記録を取り合う** —— **名前で塞がない代わりに、刻んだ結果を人間の目の前へ
+    // 出す**（canon の「衝突は『起きない』ではなく『起きたら述べる』で塞ぐ」）。
+    if (transcript) say(`transcript を刻んだ: ${transcript}`, `- session: \`${sessionId}\` —— **違う対話の id ならここで気づける**`)
+    else if (sessionId) say(`⚠ transcript を刻めなかった: session \`${sessionId}\` に対応する file が無い`)
+    else say('⚠ transcript を刻めなかった: この unit の session が記録されていない')
     say(
       '',
       '**何を残し何を省いたかを、1〜2 行で人間に報告すること。**',
@@ -267,6 +288,16 @@ async function main() {
   say(`baton: \`${baton.path}\``)
   sayUnitRootTrouble(baton.unitRoot)
   if (baton.composedAt) say(`- composed-at: \`${baton.composedAt}\``)
+  // 🔴 **transcript は「要約が原理的に運べないもの」の取り出し口である** —— 逐語・error の
+  // 原文・生成した code。⚠ **何のために在る欄かを併記する** —— path だけ置けば、読む側は
+  // 開く理由を持たない（native な圧縮の閉じ 1 行が、まさにこの形を採っている）。
+  if (baton.transcript) {
+    say(
+      `- transcript: \`${baton.transcript}\``,
+      '  —— **前の対話の逐語・error の原文・生成した code が要るときだけ開く。**',
+      '  ⚠ baton は「何が起きたか」を運ぶが、**原文は運ばない** ∴ ここが唯一の出所である。',
+    )
+  }
   if (stamp?.previousReadAt) {
     say(
       `- **過去に \`${stamp.previousReadAt}\` に読まれている** —— これを 1 行で人間に`,

@@ -42,7 +42,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { readBaton } from '../lib/baton.mjs'
-import { strandedBatons } from '../lib/handoff.mjs'
+import { recordSession, strandedBatons } from '../lib/handoff.mjs'
 import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
 import { quotePathForShell } from '../lib/shell.mjs'
 
@@ -173,6 +173,19 @@ try {
 
 const sessionId = String(input.session_id ?? '').replace(/[^A-Za-z0-9_-]/g, '') || 'unknown'
 const marker = path.join(os.tmpdir(), `aim-boot-ritual-${sessionId}`)
+
+// 🔴 **session の記録は marker の早期脱出より前に置く。** ⚠ **この hook の本体は 1 度しか
+// 走らず、しかも baton が無ければ何も書かない** —— そこに相乗りさせれば、**baton を初めて
+// 書く unit では記録が永久に生まれない**（= `write` が transcript を刻めない）。
+// ⚠ **これは儀式ではなく帳簿である** ∴ 儀式の門の外に置く。失敗しても黙る —— この hook の
+// bug でセッションを妨げない規則は、足した行にも同じく効く。
+try {
+  const unitForSession = await resolveUnit(resolveCwd(input))
+  await recordSession(unitForSession.root, sessionId)
+} catch {
+  // 記録できないことは、儀式を止める理由にならない。
+}
+
 if (existsSync(marker)) process.exit(0)
 
 try {

@@ -37,7 +37,7 @@ import { activePath, checkUnitRoot } from './handoff.mjs'
  * 報告する形になる** —— この機構が一貫して拒んできたものである。∴ **baton は返し、
  * 食い違いを `unitRoot` に載せて呼び出し側へ渡す。述べるのは面の仕事である。**
  *
- * @returns {Promise<{path: string, text: string, composedAt: string|null, readAt: string|null, task: string|null, unitRoot: {state: string, recorded: string|null, actual: string}}|null>}
+ * @returns {Promise<{path: string, text: string, composedAt: string|null, readAt: string|null, transcript: string|null, task: string|null, unitRoot: {state: string, recorded: string|null, actual: string}}|null>}
  */
 export async function readBaton(unitRoot) {
   // ⚠ **置き場の正本は `lib/handoff.mjs` 1 箇所である。** 読む側と書く側が別々に path を
@@ -59,6 +59,7 @@ export async function readBaton(unitRoot) {
     text,
     composedAt: field('composed-at'),
     readAt: field('read-at'),
+    transcript: field('transcript'),
     task: field('task'),
     unitRoot: await checkUnitRoot(unitRoot),
   }

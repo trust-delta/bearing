@@ -30,6 +30,12 @@ import {
   recordUnitRoot,
   checkUnitRoot,
   unitRootRecordPath,
+  recordSession,
+  readSession,
+  sessionRecordPath,
+  transcriptDir,
+  transcriptPath,
+  stampTranscript,
 } from '../../../carriers/claude/bearing/lib/handoff.mjs'
 import { readBaton } from '../../../carriers/claude/bearing/lib/baton.mjs'
 
@@ -438,4 +444,123 @@ test('an unreadable owner record is not collapsed into a match', async (t) => {
   await recordUnitRoot(root)
   await writeFile(unitRootRecordPath(root), '   \n', 'utf8')
   assert.equal((await checkUnitRoot(root)).state, 'unreadable')
+})
+
+// ══ transcript の pointer ═══════════════════════════════════════════════════
+//
+// 🔴 **なぜ機械が刻むのか。** native な圧縮は transcript を*貼らず*、**絶対 path 1 本と
+// 「何を取りに行く欄か」の 1 行**を置いていた（実測 2026-09-11、対象: 本 repo の圧縮要約 ——
+// transcript 6,431,899 字に対し要約 18,033 字 ＝ 0.28%）。⚠ **baton にはその欄が無く、代わりに
+// `~/.claude/projects/<平坦化した cwd>/<session-id>.jsonl` という *形* が書かれていた**
+// —— **`<session-id>` が未解決 ∴ 読む側は開けない。**
+//
+// 🔴 **`session_id` が transcript の file 名そのものであることは実測した**（2026-09-12、
+// この機体に残る marker 46 件すべてに対応する `<id>.jsonl` が在った）。⚠ **dir 名の規則は
+// 向こうのものを我々が真似ている** ∴ **導いた path は必ず実在を確かめる。**
+
+test('session の記録は読み戻せる', async () => {
+  const root = await unit()
+  await recordSession(root, 'abc-123')
+  assert.equal(await readSession(root), 'abc-123')
+})
+
+test('session の記録は上書きする —— unit-root と違い、答えるのは「いま」だからである', async () => {
+  // ⚠ **`unit-root` は決して上書きしない**（衝突の唯一の証拠を守るため）。🔴 **こちらは逆で
+  // なければならない** —— 保存すれば、baton に刻まれる transcript が前のセッションのものになる。
+  const root = await unit()
+  await recordSession(root, 'first')
+  await recordSession(root, 'second')
+  assert.equal(await readSession(root), 'second')
+})
+
+test('session の記録は、中身が同じなら書き直さない', async () => {
+  // ⚠ **この record を書く hook は prompt ごとに走る** —— 毎回 write すれば、何も変わって
+  // いない file の mtime が動き続ける。
+  const root = await unit()
+  await recordSession(root, 'same')
+  const before = (await import('node:fs/promises')).stat
+  const t1 = (await before(sessionRecordPath(root))).mtimeMs
+  await new Promise((r) => setTimeout(r, 15))
+  await recordSession(root, 'same')
+  assert.equal((await before(sessionRecordPath(root))).mtimeMs, t1)
+})
+
+test('session の記録は空と unknown を拒む', async () => {
+  const root = await unit()
+  assert.equal(await recordSession(root, ''), null)
+  assert.equal(await recordSession(root, 'unknown'), null)
+  assert.equal(await readSession(root), null)
+})
+
+test('transcript の path は実在を確かめてから返す —— 解決しない path を返さない', async () => {
+  // 🔴 **ここが向こうの規則の変化に対する唯一の防壁である。** dir 名の規則は Claude Code の
+  // ものを真似ており、**向こうが変えれば黙って外れる** ∴ **在ることを毎回確かめ直す。**
+  const home = await mkdtemp(path.join(tmpdir(), 'fake-home-'))
+  const cwd = '/w/x'
+  await mkdir(transcriptDir(cwd, home), { recursive: true })
+  await writeFile(path.join(transcriptDir(cwd, home), 'live-id.jsonl'), '{}\n', 'utf8')
+  assert.equal(await transcriptPath(cwd, 'live-id', home), path.join(transcriptDir(cwd, home), 'live-id.jsonl'))
+  assert.equal(await transcriptPath(cwd, 'missing-id', home), null, '無い file の path を返してはならない')
+  assert.equal(await transcriptPath(cwd, 'unknown', home), null)
+  assert.equal(await transcriptPath(cwd, '', home), null)
+})
+
+test('transcript は composed-at の直後に刻まれ、著者が書いた値は除去される', async () => {
+  // ⚠ **`read-at` と同じ扱いである** —— 機械が知っている事実であって著述ではない。
+  const out = stampTranscript('---\ncomposed-at: X\ntranscript: 著者が書いた嘘\ntask: T\n---\n\nbody', '/real.jsonl')
+  assert.match(out, /^---\ncomposed-at: X\ntranscript: \/real\.jsonl\ntask: T\n---/)
+  assert.doesNotMatch(out, /著者が書いた嘘/)
+})
+
+test('刻めないときは欄そのものを置かない —— 開けない path は欄が無いことより悪い', async () => {
+  const out = stampTranscript('---\ncomposed-at: X\ntranscript: 古い\n---\n\nbody', null)
+  assert.doesNotMatch(out, /transcript:/)
+  assert.match(out, /composed-at: X/)
+  // frontmatter が無い baton は、そもそも刻む場所が無い ∴ 触らない。
+  assert.equal(stampTranscript('no frontmatter', '/x.jsonl'), 'no frontmatter')
+})
+
+test('writeBaton は記録された session から transcript を刻む', async () => {
+  const root = await unit()
+  const home = await mkdtemp(path.join(tmpdir(), 'fake-home-'))
+  // ⚠ **`transcriptPath` は `os.homedir()` を既定に取る** ∴ writeBaton 経由では実機の home を
+  // 見る —— **実機に在るはずがない id を使い、「刻めないときは欄を置かない」側を固定する。**
+  await recordSession(root, 'nonexistent-session-id')
+  const { transcript, sessionId } = await writeBaton(root, '---\ntask: T\n---\n\nbody')
+  assert.equal(sessionId, 'nonexistent-session-id')
+  assert.equal(transcript, null)
+  const baton = await readBaton(root)
+  assert.equal(baton.transcript, null, '解決しない path を刻んではならない')
+  assert.ok(baton.composedAt, 'composed-at は刻まれ続ける')
+  assert.ok(home)
+})
+
+test('verb を省いた呼び出しは read へ倒れず、何も刻まない', async () => {
+  // 🔴 **2026-09-12 に踏んだ。** `node -e 'import("./bearing-handoff.mjs")'` で構文を確かめた
+  // ところ `process.argv[2]` が `undefined` になり、**既定の `read` が走って封印中の baton に
+  // 「誰も読んでいない既読」を刻んだ**（`read-at: 2026-09-12T00:15:34Z`）。⚠ **canon の
+  // 「この経路は書かれていても除去する」に従って戻した。**
+  // ⚠ **裸の呼び出しは canon のどこにも書かれていない** —— documented なのは
+  // `read` / `write` / `migrate` だけである ∴ **既定は契約ではなく実装の偶然だった。**
+  // 🔴 **尺は「不可逆性 × 沈黙」である** —— 引数を落としただけで、確認も無く、黙って起きた。
+  const root = await unit('---\ncomposed-at: 2020-01-01T00:00:00Z\ntask: T\n---\n\nbody\n')
+  const cli = path.join(HERE, '..', '..', '..', 'carriers', 'claude', 'bearing', 'bin', 'bearing-handoff.mjs')
+  let code = 0
+  let stderr = ''
+  try {
+    execFileSync(process.execPath, [cli], {
+      cwd: root,
+      env: { ...process.env, BEARING_HOME: process.env.BEARING_HOME },
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+  } catch (err) {
+    code = err.status
+    stderr = String(err.stderr ?? '')
+  }
+  assert.equal(code, 2, 'verb が無い呼び出しは 2 で落ちる')
+  assert.match(stderr, /verb が無い/)
+  assert.match(stderr, /取り消せない/, 'なぜ倒さないのかを述べる —— 述べなければ次に誰かが既定へ戻す')
+  const text = await readFile(activePath(root), 'utf8')
+  assert.doesNotMatch(text, /read-at:/, 'baton に触れてはならない')
 })
