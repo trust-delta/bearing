@@ -67,15 +67,28 @@ test('write.md の様式は人間の逐語の欄を持つ', async () => {
   assert.match(shape, /言い換えてはならない/, '言い換えの禁止が消えている —— 節だけでは効かない')
 })
 
-test('write.md は transcript を機械の欄として扱い、read.md は何のための欄かを述べる', async () => {
+test('write.md は transcript を著者の欄として扱い、read.md は何のための欄かを述べる', async () => {
   // 🔴 **2026-09-11 に測った**（対象: 本 repo の圧縮要約）—— **native な圧縮は transcript を
   // *貼らず*、絶対 path 1 本と「何を取りに行く欄か」の 1 行だけを置いていた**
   // （transcript 6,431,899 字に対し要約 18,033 字 ＝ 0.28%）。⚠ **対して baton には欄が無く、
   // 代わりに `<session-id>` が未解決の *path の形* が書かれていた** —— **読む側は開けない。**
   // ⚠ **path だけでは足りない** —— **開く理由が無ければ開かれない** ∴ 用途の 1 行を対で見張る。
+  //
+  // 🔴 **2026-09-12、値の出所が機械から著者へ移った**（人間の決定）。⚠ **機械が導ける値は
+  // 「最後に prompt を送った対話」であって「この baton を著している対話」ではない** ∴
+  // 並走すれば**実在する他人の path** を黙って刻む。**著者が導けば、外したとき path が
+  // 実在せず、欄が消える** —— 落ち方が沈黙から不在へ変わる。
   const write = await read(path.join('skills', 'handoff', 'write.md'))
-  assert.match(write, /`transcript:` も書かない/, '機械の欄であることが消えている')
+  assert.match(write, /`transcript:` は\*あなたが\*書く/, '著者の欄であることが消えている')
+  assert.match(write, /機械が代わりに埋めることはしない/, '機械が埋めない条件が消えている')
   assert.match(write, /開けない path は、欄が無いことより悪い/, '刻まない条件が消えている')
+  assert.match(write, /^### 自分の transcript$/m, '導き方の節が消えている —— 禁止だけでは書けない')
+  // ⚠ **節の切り出しは見出し行に錨を打つ** —— 本文の中にも同じ語で参照が在る ∴
+  // 文字列 split では**参照より後ろ・節より前**の何も無い区間を測ることになる。
+  const how = write.slice(write.search(/^### 自分の transcript$/m))
+  assert.match(how, /見て写してはならない/, '記録を写す経路の禁止が消えている')
+  assert.match(how, /mtime で漁ることも同じく禁じる/, 'mtime で漁る経路の禁止が消えている')
+  assert.match(how, /陽性対照/, '確かめ方が消えている —— 禁止だけ残れば、当てて書くことになる')
   const rd = await read(path.join('skills', 'handoff', 'read.md'))
   assert.match(rd, /`transcript:` が在れば/, '読む側の手順から消えている')
   assert.match(rd, /原文は運ばない/, '何のために開く欄かが消えている —— path だけでは開かれない')

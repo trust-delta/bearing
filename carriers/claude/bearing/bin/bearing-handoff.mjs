@@ -63,6 +63,61 @@ const say = (...l) => out.push(...l)
  * 記録を持たないのは正常である —— **不在を衝突として鳴らせば、既存の baton がすべて他所の
  * ものに見え、本物の衝突がその中に埋もれる。**
  */
+/**
+ * transcript の欄について、何が起きたかを述べる。
+ *
+ * 🔴 **述べることが唯一の塞ぎ方である。** 同じ unit で 2 つの対話が並走すれば session の
+ * 記録を取り合う —— **名前や hash では塞がない**（canon:「衝突は『起きない』ではなく
+ * 『起きたら述べる』で塞ぐ」）。⚠ **そして 2026-09-12 以降、機械はこの欄の値を作らない**
+ * （`lib/handoff.mjs` の `claimedTranscript` に理由）∴ **値が無いことも、記録と食い違う
+ * ことも、人間の目の前に出すほかに扱いようが無い。**
+ *
+ * ⚠ **`unresolved` と `unclaimed` を 1 つに畳んでいない** —— 前者は**名乗ったが外した**、
+ * 後者は**名乗っていない**であり、**次にすべきことが違う**（確かめ直す／そもそも導く）。
+ */
+function sayTranscript(transcript, session) {
+  const { claimed, recorded, state } = session
+  if (state === 'agreed') {
+    say(`transcript を刻んだ: ${transcript}`, '- 記録された session と一致した')
+    return
+  }
+  if (state === 'unrecorded') {
+    say(
+      `transcript を刻んだ: ${transcript}`,
+      '- ⚠ **この unit に session の記録が無い** —— **食い違っていないことの確認は取れていない。**',
+    )
+    return
+  }
+  if (state === 'mismatch') {
+    say(
+      `transcript を刻んだ: ${transcript}`,
+      `- 🔴 **記録された session と食い違う** —— 記録: \`${recorded}\``,
+      '  ⚠ **記録が答えるのは「最後に prompt を送った対話」である** ∴ これは**同じ unit で 2 つの',
+      '  対話が並走した証拠でありうる。開く前に確かめること。**',
+    )
+    return
+  }
+  if (state === 'unresolved') {
+    say(
+      `⚠ **transcript を刻めなかった** —— 著者が名乗った \`${claimed}\` は解決しない。`,
+      '- **開けない path は、欄が無いことより悪い** ∴ **欄そのものを置いていない。**',
+      '- 値は **自分の session の id か、その絶対 path**。導き方は `write.md` の「自分の transcript」に在る。',
+    )
+    return
+  }
+  say(
+    '⚠ **transcript を刻めなかった** —— 著者が `transcript:` を名乗っていない。',
+    '- 🔴 **機械はこの欄を埋めない。** 「この対話は誰か」を知っているのは著者だけである。',
+    ...(recorded
+      ? [
+          `- ⚠ 記録には \`${recorded}\` が在るが、それは**「最後に prompt を送った対話」**であって`,
+          '  **あなたではない** ∴ 機械はこれを刻まない。',
+        ]
+      : []),
+    '- 値は **自分の session の id か、その絶対 path**。導き方は `write.md` の「自分の transcript」に在る。',
+  )
+}
+
 function sayUnitRootTrouble(check) {
   if (!check || check.state === 'match' || check.state === 'absent') return
   if (check.state === 'unreadable') {
@@ -243,15 +298,10 @@ async function main() {
       )
       return 2
     }
-    const { path: p, archived, sessionId, transcript } = await writeBaton(unit.root, markdown)
+    const { path: p, archived, transcript, session } = await writeBaton(unit.root, markdown)
     say(`baton を書いた: ${p}`)
     say(archived ? `旧 baton を退避した: ${archived}` : '退避すべき旧 baton は無かった')
-    // 🔴 **どの session を刻んだかを述べる。** ⚠ **同じ unit で 2 つの対話が並走すれば、
-    // session の記録を取り合う** —— **名前で塞がない代わりに、刻んだ結果を人間の目の前へ
-    // 出す**（canon の「衝突は『起きない』ではなく『起きたら述べる』で塞ぐ」）。
-    if (transcript) say(`transcript を刻んだ: ${transcript}`, `- session: \`${sessionId}\` —— **違う対話の id ならここで気づける**`)
-    else if (sessionId) say(`⚠ transcript を刻めなかった: session \`${sessionId}\` に対応する file が無い`)
-    else say('⚠ transcript を刻めなかった: この unit の session が記録されていない')
+    sayTranscript(transcript, session)
     say(
       '',
       '**何を残し何を省いたかを、1〜2 行で人間に報告すること。**',
