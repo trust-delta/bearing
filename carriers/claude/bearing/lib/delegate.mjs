@@ -28,21 +28,34 @@ export const DELEGATE_GUARD = 'BEARING_DELEGATED'
 const CARRIER = ['carriers', 'claude', 'bearing']
 
 /**
- * 委譲先を選ぶ。委譲しないなら `null`。
+ * この dir とその祖先を、根まで順に返す。
+ *
+ * ⚠ **深さを決め打たない。** CLI は checkout の*どこから*打たれるか分からず、「`~/works/` の
+ * 直下 1 段だけを見る glob」はこの repo の `CLAUDE.md` が名指しで禁じている形である。根で
+ * 止まるので上界は在る。
+ *
+ * ⚠ **comment の中に閉じ記号を書かない** —— 2026-09-12 に `~/.claude/projects/` の 1 段下を
+ * 表す字を JSDoc へ書いて comment を早期に閉じ、同じ形を今日また踏んだ。
+ */
+function* ancestors(from) {
+  let dir = path.resolve(from)
+  for (;;) {
+    yield dir
+    const up = path.dirname(dir)
+    if (up === dir) return
+    dir = up
+  }
+}
+
+/**
+ * この root が bearing の checkout なら、そこの同名 file を返す。違うなら `null`。
  *
  * ⚠ **`plugin.json` の `name` まで見るのは、path の一致が弱すぎるからである。** 他 project
  * が bearing を vendor していれば同じ path が存在しうる ∴ 「そこに file が在る」だけを根拠に
  * 実行すると、無関係な repo の code を走らせる。
- *
- * @param {string} selfPath 走っている file の絶対 path
- * @param {string|null|undefined} projectDir `CLAUDE_PROJECT_DIR`
- * @param {Record<string, string|undefined>} env
  */
-export async function chooseDelegate(selfPath, projectDir, env = process.env) {
-  if (env[DELEGATE_GUARD]) return null // 既に委譲された側である。
-  if (!projectDir) return null // ⚠ 材料が無い ∴ 自分で走る。推測で他所の code を呼ばない。
-
-  const carrier = path.join(projectDir, ...CARRIER)
+async function targetIn(root, selfPath) {
+  const carrier = path.join(root, ...CARRIER)
   let manifest
   try {
     manifest = JSON.parse(await readFile(path.join(carrier, '.claude-plugin', 'plugin.json'), 'utf8'))
@@ -73,6 +86,40 @@ export async function chooseDelegate(selfPath, projectDir, env = process.env) {
   }
   if (targetReal === selfReal) return null
   return target
+}
+
+/**
+ * 委譲先を選ぶ。委譲しないなら `null`。
+ *
+ * ⚠ **起点は 2 つあり、同じものではない。**
+ *
+ * ⑴ **`CLAUDE_PROJECT_DIR` が在るなら、そこ 1 点だけを見る**（hook と statusline の経路）——
+ * harness が project の root を渡してくる ∴ 探す必要が無く、**2026-09-04 に変異試験で
+ * 確かめた振る舞いをここで 1 mm も動かさない。**
+ *
+ * ⑵ 🔴 **無いなら、`cwd` から祖先を辿る。** ⚠ **Bash tool から打つ CLI にはあの env が無い**
+ * （実測 2026-09-13、対象: この機体）∴ **旧い版は CLI で一切委譲せず、`# IS` の「cache 側の
+ * bin はすべて委譲を通る」が偽になっていた** —— **そして checkout の中で裸のコマンドを打つと
+ * cache が走り、置かれた skill を 1 版*戻した*。**
+ *
+ * ⚠ **これは「推測で他所の code を呼ぶ」ことではない。** 門は 1 つも緩めていない ——
+ * **`plugin.json` の `name` が `bearing` であることは依然として要る** ∴ **cwd が bearing の
+ * checkout の中に無ければ、辿った先のどこでも `null` になる。** 🔴 **CLI にとって cwd は
+ * 推測ではない** —— **そこから打たれたという事実そのものである。**
+ *
+ * @param {string} selfPath 走っている file の絶対 path
+ * @param {string|null|undefined} projectDir `CLAUDE_PROJECT_DIR`
+ * @param {Record<string, string|undefined>} env
+ * @param {string} cwd `projectDir` が無いときの起点
+ */
+export async function chooseDelegate(selfPath, projectDir, env = process.env, cwd = process.cwd()) {
+  if (env[DELEGATE_GUARD]) return null // 既に委譲された側である。
+  if (projectDir) return await targetIn(projectDir, selfPath)
+  for (const root of ancestors(cwd)) {
+    const target = await targetIn(root, selfPath)
+    if (target) return target
+  }
+  return null
 }
 
 /**
