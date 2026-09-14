@@ -55,9 +55,16 @@ state: open
 
 ⚠ **旧環境に残っているものを、消える前に検めた**（実測 2026-09-14、対象: `D:\trust_project\bearing` と `C:\Users\umu_s\.bearing`。**いずれも読み取りのみ** —— `--no-optional-locks` で index も書いていない）。⑴ **checkout は branch `carrier-boundary`（tip `d32fad2`）の上に在り、この branch は remote から既に消えている**（`git ls-remote --heads origin` は `main` 1 本だけ）∴ **あの 5 commit は、あの disk にしか無い。** ⚠ **だが主張は `main` に在る** —— `d32fad2` 時点の `dev-platform.md` を今の `main` のそれと突き合わせたところ、**差は `main` 側が持つ改良（sha → digest の振り替えとその説明）だけ**だった ∴ **失われるのは squash 前の粒度であって、記録ではない。** stash は 0 件。⑵ **baton 5 本が旧 home に在り、`active.md` は `read-at` 済み** ∴ **未読の引き継ぎは 1 本も無い。** 🔴 **どちらも、消すか残すかは人間の act である** —— 本 node は検めて述べるまでである。
 
-# ESCALATION
+✅ **2026-09-14、人間が「消えて OK」と決定し、両方を削除した**（人間の決定 2026-09-14）。⚠ **不可逆かつ沈黙する削除ゆえ、実行前に範囲を広げた** —— 先の突き合わせは `dev-platform.md` **1 枚**だけであり、**それでは足りなかった**（実測 2026-09-14、対象: 旧 repo の全 ref）:
 
-- ⚠ **旧環境（`D:` の checkout と `C:` の baton 5 本）を消すか残すかは、人間の act である** —— **上の `# IS` に、何が在って何が `main` に無いかを実測で置いた。** 🔴 **`carrier-boundary` の 5 commit はあの disk にしか無い**（remote から消えている）。**主張は `main` に在ると照合済みだが、消すのは私ではない。**
+- 🔴 **ref は 2 本ではなく 3 本あった** —— `carrier-boundary`(`d32fad2`) と `main`(`1b757f4`) のほかに、remote-tracking の `provenance-target-and-recount`(`3a181ae`) が残っていた。**最初の報告はこれを見ていない。**
+- ✅ **`carrier-boundary` は squash 先 `fa0d2dc`(#53) と木が完全一致**（差 0 file）。
+- ✅ **`3a181ae` は着地先 `2f88e1e`(#52) と、branch が触った 6 file を blob 単位で突き合わせた** —— 2 件は同一、**4 件の差はすべて #53 が test を carrier の外へ移したことによる path 更新**であり（`carriers/claude/bearing/test/` → `test/claude/bearing/`）、**`main` 側が新しい。落ちた主張は 0 である。**
+- ✅ **untracked も ignored も 0 件**（`status --porcelain --ignored`）∴ **git に無いものは 1 つも無かった。** stash 0 件、worktree 1 つ。
+- ⚠ **突き合わせのために旧 repo の ref を一時 fetch し、確認後に落とした**（`refs/oldwin/*` 6 本、`remote` は足していない）—— **残せば squash 前の粒度は保てたが、頼まれていない state を黙って置くことになる** ∴ 落とした。**主張は `main` に在る。**
+- ⚠ **`D:\trust_project\` には他 project が 6 つ在り、そちらには触れていない** —— 消したのは `bearing` 1 つと、**bearing の unit しか持たなかった** `C:\Users\umu_s\.bearing` である。
+
+🔴 **∴ この repo が Windows 側に持つものは、もう無い。**
 
 # PROCESS
 
