@@ -10,7 +10,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
+import { mkdtemp, mkdir, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -22,7 +22,7 @@ import {
   renderAimCodeFence,
   verifiedDigests,
 } from '../../../carriers/claude/bearing/lib/aim-code.mjs'
-import { readAimGraph } from '../../../carriers/claude/bearing/lib/corpus.mjs'
+import { readAimGraph, parseAimRecord } from '../../../carriers/claude/bearing/lib/corpus.mjs'
 
 const git = (root, args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' })
 
@@ -220,4 +220,48 @@ test('fence は出す列に sha を置かない —— 写させる値は digest
   assert.match(out, /# fields: slug \| code_digest \| moved_paths \| commits_since/)
   assert.match(out, /^alpha \| abc123abc123 \| a,b,c,d,\+2 \| 3$/m)
   assert.match(out, new RegExp('```' + AIM_CODE_FENCE_TAG.replace(/ /g, ' ')))
+})
+
+// canon が挙げる「慣例ラベル」と、機械が読む予約語が交わらないことを固定する門。
+//
+// 🔴 **2026-09-15 まで `検証:` が両側に在った** —— canon は慣例ラベルに挙げ、この module は
+// 承認記録として読んでいた。⚠ **機械は `@` の有無で分けており取り違えていない** ——
+// 🔴 **危うかったのは読み手で、句読点で意味を見分けることになっていた**（`td-apps-site` からの
+// 報告 2026-09-15、実際に 1 つの node で 2 つの意味が同居した）。
+//
+// ⚠ **字面ではなく振る舞いで測る** —— 語を言い当てずに済み、canon が慣例ラベルを 1 語増やした
+// ときも、その語が機械に読まれるなら落ちる。
+const CANON = path.join(
+  import.meta.dirname,
+  '../../../carriers/claude/bearing/templates/aim/aim-authoring.md',
+)
+
+const DAG_RECORD = (line) => '---\naim: x\n---\n\n# DAG\n\n- ' + line + '\n'
+
+test('慣例ラベルと機械の予約語は交わらない —— 読み手が語だけで見分けられる', async () => {
+  const canon = await readFile(CANON, 'utf8')
+  const listed = /慣例ラベル\s*([^）]*)）/.exec(canon)
+  assert.ok(listed, '慣例ラベルの列挙が canon に見つからない —— この門は何も測っていない')
+  const labels = [...listed[1].matchAll(/`([^`\n]+?):`/g)].map((m) => m[1])
+  assert.ok(labels.length >= 2, '慣例ラベルが ' + labels.length + ' 語 —— 列挙の形が変わった')
+
+  // 陽性対照 —— 予約語そのものは、両方の機構に確かに読まれる。
+  // ⚠ これが緑でなければ、下の空配列は「予約語でないこと」ではなく道具の沈黙を測っている。
+  assert.deepEqual(verifiedDigests('- 検証: @ abc123abc123 —— 理由'), ['abc123abc123'])
+  assert.deepEqual(parseAimRecord(DAG_RECORD('照合: [[y]] @ deadbeefdead')).collations, [
+    { slug: 'y', sha: 'deadbeefdead' },
+  ])
+
+  for (const label of labels) {
+    assert.deepEqual(
+      verifiedDigests('- ' + label + ': @ abc123abc123 —— 理由'),
+      [],
+      '慣例ラベル ' + label + ': が aim-code-stale の承認として読まれる',
+    )
+    assert.deepEqual(
+      parseAimRecord(DAG_RECORD(label + ': [[y]] @ deadbeefdead')).collations,
+      [],
+      '慣例ラベル ' + label + ': が drift-inter の照合として読まれる',
+    )
+  }
 })
