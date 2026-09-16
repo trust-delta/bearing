@@ -265,3 +265,55 @@ test('慣例ラベルと機械の予約語は交わらない —— 読み手が
     )
   }
 })
+
+// canon が frontmatter の欄を宛先として名指すとき、それが機械の実際に読む欄であることの門。
+//
+// 🔴 **2026-09-10 に `last-verified:` が退役したが、`# OBSERVATION` の節だけが取り残された**
+// —— 「観測したという証言は frontmatter（`state:` ／ `last-verified:`）に置かれ」。⚠ **同じ file の
+// 22 行目が「frontmatter はこの 3 つだけ」と述べており、34 行目がそれに反していた。**
+// **7 日後、消費者からの報告で露見した**（2026-09-17）—— ⚠ **こちらの機構は何も言わなかった。**
+//
+// 🔴 **害は「書けと言っている」ことである** —— **`# OBSERVATION` を書くときに読む節ゆえ、次の
+// 誰かが「`last-verified:` に書けばよい」と読む経路が残っていた。** ⚠ **書いても機械は読まない
+// ∴ 黙って落ちる**（`parseAimRecord` は 3 field しか見ない）。
+//
+// ⚠ **字面ではなく振る舞いで測る** —— 退役した語を並べて禁じるのではなく、**canon が名指す欄を
+// parser に渡して、実際に読まれるかを見る。** ∴ **将来 field が増えても減っても、門は自分で追う。**
+// ⚠ **射程は「`frontmatter（…）` の直接隣接」に限る**（実測 2026-09-17、対象: 本 canon）——
+// 間に散文を挟む形まで拾うと、**退役を述べる*経緯*の括弧を「宛先」と読んで鳴る**（この門を
+// 書いた当日に踏んだ）。🔴 **経緯を書けなくする門は、記録の作法と衝突する。**
+// ⚠ **∴ この門は「`frontmatter（…）` 以外の形で欄を名指す文」を見ていない** —— 見張るのは、
+// **退役した欄が取り残された実際の形**（`frontmatter（\`state:\` ／ \`last-verified:\`）に置かれ`）である。
+const FIELD_IN_FRONTMATTER = /frontmatter（([^）\n]*)）/g
+
+/**
+ * その名の frontmatter 欄を、parser が実際に値として読むか。
+ *
+ * ⚠ **足場の field を並べてはならない** —— parser は `^<key>:` の**最初の一致**を返す ∴
+ * 検査する field が足場と同名なら、読まれるのは足場の値であり、**読める欄が「読めない」と
+ * 報告される**（この試験を書いた当日に踏んだ）。∴ **検査する 1 欄だけを置く。**
+ */
+function parserReads(field) {
+  const rec = parseAimRecord(`---\n${field}: 値\n---\n本文\n`)
+  return Object.values(rec).includes('値')
+}
+
+test('canon が frontmatter の欄を名指すなら、機械がその欄を実際に読む', async () => {
+  const canon = await readFile(CANON, 'utf8')
+
+  // 陽性対照 —— 道具が「読む」と「読まない」を区別できることを先に示す。
+  // ⚠ これが緑でなければ、下の検査は対象ではなく道具の沈黙を測っている。
+  assert.equal(parserReads('state'), true, 'parser が `state:` を読まない —— 道具が壊れている')
+  assert.equal(parserReads('last-verified'), false, '退役した field が読まれている')
+
+  const named = new Set()
+  for (const m of canon.matchAll(FIELD_IN_FRONTMATTER)) {
+    for (const f of m[1].matchAll(/`([A-Za-z][A-Za-z0-9-]*):`/g)) named.add(f[1])
+  }
+  for (const field of named) {
+    assert.ok(
+      parserReads(field),
+      `canon は frontmatter の \`${field}:\` を宛先として名指すが、parser はその欄を読まない`,
+    )
+  }
+})
