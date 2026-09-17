@@ -357,13 +357,17 @@ function section3(rows, headings, name) {
   const all = rows.filter((r) => r.section === name)
   if (!headings.has(name)) return { heading: false, present: false, empty: false, rows: [], items: 0 }
   const counted = all.filter((r) => !r.fenced)
-  const present = counted.some((r) => r.line.trim() !== '')
+  // 🔴 **構造の判定は raw で行う** —— 剥いだ行は「何を言っているか」であって「何であるか」
+  // ではない。⚠ **2026-09-17、その混同が票を 1 枚落とした**（`lib/process.mjs` に経緯）:
+  // `` - `a` / `b` の… `` は剥いだ後 `- ` だけになり、list item に見えなくなる。
+  // ⚠ **fence の中は `counted` で既に外してある** ∴ raw を見ても引用を票と数えない。
+  const present = counted.some((r) => r.raw.trim() !== '')
   return {
     heading: true,
     present,
     empty: !present,
     rows: all,
-    items: counted.filter((r) => SLIP.test(r.line)).length,
+    items: counted.filter((r) => SLIP.test(r.raw)).length,
   }
 }
 
