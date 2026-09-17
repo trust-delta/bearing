@@ -111,6 +111,23 @@ const FENCE_LINE = /^ {0,3}(```+|~~~+)/
 const stripInlineCode = (line) => line.replace(/`[^`]*`/g, '')
 
 /**
+ * 🔴 **構造の判定に、剥いだ行を使ってはならない。**
+ *
+ * ⚠ **剥ぎが答えるのは「この行は何を言っているか」であって「この行は何であるか」ではない。**
+ * 🔴 **2026-09-17、その混同が実地で票を 1 枚落とした**（消費者からの escalation）——
+ * `` - `a` / `b` の今を知りたくなったとき… `` は、剥いだ後に `- ` だけが残り、`SLIP` の
+ * `\S` に一致しなくなる ∴ **list item として書かれた票が、票として数えられない。**
+ * ⚠ **法が名指すまさにその形である** —— **書いても機械は読まない ∴ 黙って落ちる。**
+ *
+ * ⚠ **剥ぎそのものは外さない** —— **inline span は引用であり、その中身を主張として読まない**
+ * という法は正しい。誤っていたのは*当てる先*である ∴ **構造は raw、内容は剥いだ行。**
+ *
+ * ⚠ **fence の中は、そもそも `rows` に入らない**（上の `if (inFence) return`）∴
+ * **raw を見ても、fence の中の list item を票と数えることはない。**
+ */
+const isListItem = (raw) => SLIP.test(raw)
+
+/**
  * body を 1 度だけ走査し、各行がどの top-level 節に属するかを付けて返す。
  *
  * 節は `# ` 見出しから次の `# ` 見出しまで走る。`aim-authoring.md` は body の section を
@@ -149,7 +166,7 @@ function scanSections(body) {
       return
     }
     if (section && /^#{2,}\s/.test(line) && !nested.has(section)) nested.set(section, line.trim())
-    rows.push({ line, no: i + 1, section })
+    rows.push({ raw, line, no: i + 1, section })
   })
   return { rows, nested, headings }
 }
@@ -215,8 +232,10 @@ export function parseObservation(body) {
   const { rows, headings } = scanSections(body)
   if (!headings.has('OBSERVATION')) return { present: false, empty: false, items: 0 }
   const own = rows.filter((r) => r.section === 'OBSERVATION')
-  const hasContent = own.some((r) => r.line.trim() !== '')
-  return { present: hasContent, empty: !hasContent, items: own.filter((r) => SLIP.test(r.line)).length }
+  // ⚠ **中身が在るかも raw で見る** —— **inline code だけの行を「無い」と述べるのは、
+  // 票として数えないことより重い嘘である**（この節の doc がそう述べている）。
+  const hasContent = own.some((r) => r.raw.trim() !== '')
+  return { present: hasContent, empty: !hasContent, items: own.filter((r) => isListItem(r.raw)).length }
 }
 
 /**

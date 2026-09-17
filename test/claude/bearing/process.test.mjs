@@ -446,3 +446,45 @@ test('a corpus with no OBSERVATION anywhere yields empty lists, not undefined', 
   assert.deepEqual(r.observationEmptyNodes, [])
   await rm(root, { recursive: true, force: true })
 })
+
+// 構造の判定を、剥いだ行で行わない —— 票が黙って落ちた形。
+//
+// 🔴 **2026-09-17、消費者から escalation が来た**（`trust-delta`）—— **`# OBSERVATION` に 14 票
+// 書かれているのに fence は 13 と出していた。** 落ちていたのは inline code span で*始まる*
+// 1 行である: `` - `a` / `b` の今を知りたくなったとき… `` —— **剥いだ後に `- ` だけが残り、
+// `SLIP` の `\S` に一致しない。**
+//
+// ⚠ **法が名指すまさにその形である** —— **書いても機械は読まない ∴ 黙って落ちる。**
+// 🔴 **剥ぎそのものは正しい**（inline span は引用である）—— **誤っていたのは当てる先であり、
+// 構造は raw、内容は剥いだ行で見る。**
+//
+// ⚠ **この門が無ければ、実地で捕まえる手は無かった** —— **報告元が自分の行を書き直した
+// 時点で、この機体のどの corpus にも該当は 0 件になる**（実測 2026-09-17）∴ **corpus を
+// 走査する門では守れない。合成した形で固定するほかない。**
+const OBS = (lines) => `# OBSERVATION\n\n${lines.join('\n')}\n`
+
+test('inline code で始まる list item も票である —— 剥いでから構造を見ない', () => {
+  // 陽性対照 —— 素の票は数えられる（数えられないなら、下の 1 は道具の沈黙ではない証明にならない）。
+  assert.equal(parseObservation(OBS(['- ふつうの票'])).items, 1)
+
+  // 実際に落ちた形（報告元の原文の骨格）。
+  assert.equal(
+    parseObservation(OBS(['- `trust-delta-site` / `trust-delta-zenn` の今を知りたくなったとき、索引の行から辿れて'])).items,
+    1,
+  )
+  // 行まるごとが code span でも、list item であることは変わらない。
+  assert.equal(parseObservation(OBS(['- `a`'])).items, 1)
+})
+
+test('剥ぎの法は保たれている —— fence の中の list item は票ではない', () => {
+  assert.equal(parseObservation(OBS(['```', '- 引用された票', '```'])).items, 0)
+  // 散文は票ではない —— raw を見るようにしても、そこは変わらない。
+  assert.equal(parseObservation(OBS(['これは散文である'])).items, 0)
+})
+
+test('inline code だけの節を「空」と述べない —— 票に数えないことより重い嘘である', () => {
+  const r = parseObservation(OBS(['`a`']))
+  assert.equal(r.present, true)
+  assert.equal(r.empty, false)
+  assert.equal(r.items, 0, '散文である ∴ 票ではない')
+})

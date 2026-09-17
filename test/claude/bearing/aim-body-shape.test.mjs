@@ -226,3 +226,47 @@ test('見出しが無い節は、空の節と別の顔を持つ', () => {
     { heading: true, present: false, empty: true },
   )
 })
+
+// ══ 合成した形での一致 —— corpus に現れるのを待たない ══════════════════════
+//
+// 🔴 **冒頭が述べた限界に、2026-09-17 に実地で当たった。** 消費者の escalation で
+// **両実装が同じ形を同じように取り落としていた**ことが分かった —— **inline code span で
+// *始まる* list item が、剥いだ後 `- ` だけになり票と数えられない。**
+//
+// ⚠ **そして corpus を走る門では守れない**: **報告元が自分の行を書き直した時点で、
+// この機体のどの corpus にも該当は 0 件になった**（実測 2026-09-17）∴ **実 corpus に対する
+// `deepEqual` は、片方だけ直しても・両方戻しても、等しく緑になる。**
+//
+// ∴ **一致を見る対象に、合成した body を足す。** ⚠ **ここに置くのは「両方が取り落とした
+// と分かっている形」だけである** —— **思いついた edge case の見本市にはしない。**
+const SYNTHETIC = [
+  {
+    name: 'inline code で始まる票（2026-09-17 に落ちた形）',
+    body: '# OBSERVATION\n\n- `a` / `b` の今を知りたくなったとき、索引の行から辿れて\n',
+    observationItems: 1,
+  },
+  {
+    name: '行まるごとが inline code の票',
+    body: '# OBSERVATION\n\n- `a`\n',
+    observationItems: 1,
+  },
+  {
+    name: 'inline code だけの散文 —— 票ではないが、節は空ではない',
+    body: '# OBSERVATION\n\n`a`\n',
+    observationItems: 0,
+  },
+  {
+    name: 'fence の中の list item —— 引用であって票ではない',
+    body: '# OBSERVATION\n\n```\n- 引用された票\n```\n',
+    observationItems: 0,
+  },
+]
+
+test('合成した body でも、面の契約と `lib/process.mjs` が同じ答えを返す', () => {
+  for (const c of SYNTHETIC) {
+    assert.deepEqual(foldSurface(c.body), foldNode(c.body), `${c.name} で 2 つの実装が食い違った`)
+    // ⚠ **一致だけでは足りない** —— **両方が同じように誤れば一致する。** ∴ 正しい値も固定する。
+    assert.equal(foldNode(c.body).observation.items, c.observationItems, `${c.name} の票数`)
+    assert.equal(foldSurface(c.body).observation.items, c.observationItems, `${c.name} の票数（面）`)
+  }
+})
