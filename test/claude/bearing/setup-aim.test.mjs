@@ -12,7 +12,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, writeFile, rm, readdir, cp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -360,4 +360,43 @@ test('法が同一でも skill が動いていれば、corpus の見直しを求
   assert.equal(r.status, 0)
   assert.match(r.stdout, /skill の中身が動いた/)
   assert.doesNotMatch(r.stdout, /版の数字だけ/)
+})
+
+// 走る複製は、自分の隣の `templates/` を置く —— `commands/setup-aim.md` が書いた順序の*理由*。
+//
+// 🔴 **2026-09-17、これが実地で刺さった**（消費者の報告）—— **`/plugin` の update の後、
+// `/reload-plugins` より*先に*このコマンドを打つと、PATH はまだ古い版を指しており、
+// 古い法が置かれ、しかも成功として報告される。** ⚠ **新しい版が同じ cache に在ることを
+// CLI は述べない** ∴ **壊れた顔をしない。**
+//
+// ⚠ **doc は「走る複製が自分の隣の templates/ を置くから」と説明している。** 🔴 **その説明が
+// 真であり続けることを、字面ではなく振る舞いで固定する** —— **root を env や cwd から引く形へ
+// 変えれば、順序の説明は偽になり、doc は理由を失ったまま残る。**
+test('走る複製は、自分の隣の templates/ を置く —— root は自分の居場所から引かれる', async (t) => {
+  const dir = await fresh(t)
+  const copy = await mkdtemp(path.join(tmpdir(), 'plugin-copy-'))
+  t.after(() => rm(copy, { recursive: true, force: true }))
+  await cp(ROOT, copy, { recursive: true })
+
+  // 複製の側の canon にだけ印を入れる —— どちらが置かれたかを中身で弁別する。
+  const MARK = '複製の側の canon である'
+  const canon = path.join(copy, 'templates', 'aim', 'aim-authoring.md')
+  await writeFile(canon, (await readFile(canon, 'utf8')) + `\n${MARK}\n`, 'utf8')
+
+  const r = spawnSync(process.execPath, [path.join(copy, 'bin', 'bearing-setup-aim.mjs')], {
+    encoding: 'utf8',
+    cwd: dir,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: dir, BEARING_DELEGATED: '1' },
+  })
+  assert.equal(r.status, 0, r.stderr)
+
+  const placed = await readFile(path.join(dir, SKILL_DIR, 'aim-authoring.md'), 'utf8')
+  assert.ok(placed.includes(MARK), '走らせたのは複製なのに、置かれたのは正本の側である')
+
+  // 陰性対照 —— 正本を走らせれば印は付かない。⚠ これが無ければ、上の一致は
+  // 「印が正本にも在る」でも説明がついてしまう。
+  const dir2 = await fresh(t)
+  assert.equal(run(dir2).status, 0)
+  const placed2 = await readFile(path.join(dir2, SKILL_DIR, 'aim-authoring.md'), 'utf8')
+  assert.ok(!placed2.includes(MARK), '正本を走らせたのに複製の印が置かれた')
 })
