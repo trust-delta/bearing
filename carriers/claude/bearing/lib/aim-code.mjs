@@ -41,6 +41,8 @@ import { DEFAULT_AIMS_DIR } from './corpus.mjs'
 import { isAimPath, parseCommitLog } from './drift.mjs'
 
 export const AIM_CODE_FENCE_TAG = 'bearing-aim-code-stale v1'
+/** 上の候補を path で転置した面。⚠ **候補が 1 つも無ければ出ない。** */
+export const AIM_CODE_BY_PATH_FENCE_TAG = 'bearing-aim-code-by-path v1'
 
 /**
  * 検証記録 —— 「読み直したが剥離していない」。🔴 **`検証:` は `# DAG` の予約語である** ——
@@ -261,6 +263,57 @@ export function renderAimCodeFence(items) {
       lines.push(`${it.slug} | ${it.digest} | ${shown}${rest} | ${it.commitsSince}`)
     }
   }
+  lines.push('```', '')
+  let out = lines.join('\n') + '\n'
+  // ⚠ **転置は候補と一緒に運ぶ** —— 別々に呼ばせれば、片方だけ出す経路が生まれ、そこでは壁が
+  // 壁のまま見える。呼ぶ側は 2 つ（aim-facts / corpus-delta）で、どちらも両方を要る。
+  if (Array.isArray(items) && items.length > 0) out += renderAimCodeByPathFence(items)
+  return out
+}
+
+/**
+ * 候補を path で転置する —— **その path が動いたことが、何 node を候補にしているか。**
+ *
+ * 🔴 **消費者 1 例で、候補 17 node のうち 14 が 1 file（駆動面の `CLAUDE.md`）だけで説明がついた**
+ * （`td-apps-site` からの提起 2026-09-19。向こうは bearing のこの lib を import して数えた）。
+ * **候補は node ごとに挙がるが、読む対象は動いた code の diff である** ∴ 1 つの file が N node に
+ * 共有されていれば、N 行の候補は 1 つの diff で説明がつく —— **読む費用は候補の数（Σ node の
+ * moved）ではなく、動いた path の数（∪ moved）に比例する。** この転置はそれを字面に出す。
+ *
+ * ⚠ **判定ではない。閾も除外も置かない** —— 閾は canon が既に禁じ、除外は「一度書いた行が以後の
+ * 変更を黙って吸収する」形そのものである。**多くの node に共有される file が動いたとき、それが
+ * *どの* node の主張に触れたかは diff を読まねば分からない**（同じ提起で、精読の結果「読み直す
+ * 理由が正当」と見た 3 node のうち 2 node は、動いた path がその共有 file 1 枚だけだった）。
+ * **候補の表は 1 行も減らず、この転置は同じ data の別の並びである。**
+ *
+ * @param {Array<{slug: string, moved: string[]}>} items
+ * @returns {Array<{path: string, slugs: string[]}>} 候補 node 数の多い順、同数なら path 順
+ */
+export function pivotByPath(items) {
+  const byPath = new Map()
+  for (const it of items) {
+    for (const p of it.moved) {
+      if (!byPath.has(p)) byPath.set(p, [])
+      byPath.get(p).push(it.slug)
+    }
+  }
+  return [...byPath.entries()]
+    .map(([p, slugs]) => ({ path: p, slugs: uniq(slugs).sort() }))
+    .sort((a, b) => b.slugs.length - a.slugs.length || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+}
+
+/** 転置に出す path の上限。⚠ **超えた分は数で述べる —— 黙って落とさない。** */
+const SHOW_PATHS = 6
+
+export function renderAimCodeByPathFence(items) {
+  const rows = pivotByPath(items)
+  const lines = ['```' + AIM_CODE_BY_PATH_FENCE_TAG, '# fields: path | nodes | slugs']
+  for (const r of rows.slice(0, SHOW_PATHS)) {
+    const shown = r.slugs.slice(0, SHOW).join(',')
+    const rest = r.slugs.length > SHOW ? `,+${r.slugs.length - SHOW}` : ''
+    lines.push(`${r.path} | ${r.slugs.length} | ${shown}${rest}`)
+  }
+  if (rows.length > SHOW_PATHS) lines.push(`# +${rows.length - SHOW_PATHS} path`)
   lines.push('```', '')
   return lines.join('\n') + '\n'
 }

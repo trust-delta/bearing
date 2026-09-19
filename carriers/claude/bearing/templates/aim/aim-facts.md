@@ -16,7 +16,7 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 
 各 block の 1 行目は `# fields: …` のヘッダで、以降が 1 行 1 record（` | ` 区切り）。
 
-### 6 枚の fence
+### 7 枚の fence
 
 | fence tag | fields | 何の事実か |
 | :-- | :-- | :-- |
@@ -25,9 +25,10 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 | `bearing-working-delta v1` | `slug \| uncommitted \| uncommitted_anchor_change \| untracked` | working tree にある未 commit / 未 track の node。presence のみで順序を含まない |
 | `bearing-unpushed v1` | `slug \| ahead_commits \| latest_sha \| latest_date` | commit 済だが remote に届いていない aim commit |
 | `bearing-aim-code-stale v1` | `slug \| code_digest \| moved_paths \| commits_since` | `[done]` mark と一緒に commit された code が、その後動いた node。⚠ **aim の主張と code の剥離**を見る唯一の面であり、**判定ではなく「読み直す理由が在る」までを述べる**。`検証:` 記録で片付く |
+| `bearing-aim-code-by-path v1` | `path \| nodes \| slugs` | 上の候補を path で転置したもの —— **その path が動いたことが、何 node を候補にしているか**。候補が 1 つも無ければ出ない。上限 6 行、超えた分は `# +N path` と述べる |
 | `bearing-awaiting-declaration v1` | `slug \| done_marks \| observations \| state` | エージェントが尽くし（mark が在り、その全てが `[done]`）、人間がまだ `state: done` を宣言していない node。`observations` は その node の `# OBSERVATION` の票数（0 なら `-`） |
 
-⚠ **前の 5 枚は git の事実だが、6 枚目だけは corpus の事実である。** git が読めなくても出る。
+⚠ **前の 6 枚は git の事実だが、7 枚目だけは corpus の事実である。** git が読めなくても出る。
 
 **drift が 2 枚に割れるのは、2 種の drift が trigger を共有しないため**である。「同一 aim 内」は anchor の*改訂*のみが隙間を開ける（誕生時、body は anchor と共に書かれる）が、「aim 同士」は*作成*も trigger になる（親を動かさずに子を足す形）。∴ 1 枚に畳むと、どちらかの trigger が黙って落ちる。
 
@@ -50,6 +51,8 @@ fence は **records が空でも必ず出る**。空の block は「**該当な�
 ⚠ **そして `observations` 列は、この fence が渡す*内容*である。** 番を渡すだけの fence は「あなたが見るべきものが在る」としか言えない ∴ **列が `-` の行は、人間に番だけを渡して材料を渡していない** —— それは corpus の欠陥であって、人間が読み落としているのではない。
 
 **aim-code-stale は verdict ではない。** footprint はまだ node 自身の code へ絞られておらず、repo 全体が動いただけかもしれない。挙がった slug は「**再検証する価値がありうる候補**」として扱う。判断不要な絞り込みは fan-out してよいが、**aim が code から剥離したという宣言は人間の act** である（`state: done` と同じ層）。
+
+**aim-code-by-path は、同じ候補を「何を読むか」の側から並べ直したものである。** 候補は node 単位で挙がるが、読む対象は動いた code の diff であり、⚠ **1 つの file が N node に共有されていれば、N 行の候補は 1 つの diff で説明がつく** —— 読む費用は候補の数ではなく、動いた path の数に比例する。∴ 候補の表を上から読む前に、この表で壁が何枚の煉瓦でできているかを見る。⚠ **だが集中は判定ではない** —— 多くの node に共有される file（駆動面・設定・共通の test）が動いたとき、それが *どの* node の主張に触れたかは diff を読まねば分からず、**共有されているという事実は「無関係」を意味しない**（消費者 1 例の実測 2026-09-19: 精読で読み直す理由が正当と見た 3 node のうち 2 node は、動いた path がその共有 file 1 枚だけだった）。
 
 ---
 

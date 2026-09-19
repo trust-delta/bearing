@@ -20,6 +20,9 @@ import {
   gatherAimCodeStale,
   prNumbers,
   renderAimCodeFence,
+  renderAimCodeByPathFence,
+  pivotByPath,
+  AIM_CODE_BY_PATH_FENCE_TAG,
   verifiedDigests,
 } from '../../../carriers/claude/bearing/lib/aim-code.mjs'
 import { readAimGraph, parseAimRecord } from '../../../carriers/claude/bearing/lib/corpus.mjs'
@@ -220,6 +223,54 @@ test('fence は出す列に sha を置かない —— 写させる値は digest
   assert.match(out, /# fields: slug \| code_digest \| moved_paths \| commits_since/)
   assert.match(out, /^alpha \| abc123abc123 \| a,b,c,d,\+2 \| 3$/m)
   assert.match(out, new RegExp('```' + AIM_CODE_FENCE_TAG.replace(/ /g, ' ')))
+})
+
+// ── path で転置した面 ────────────────────────────────────────────────────────
+//
+// 🔴 **消費者 1 例で、候補 17 node のうち 14 が 1 file だけで説明がついた**（`td-apps-site` からの
+// 提起 2026-09-19）。候補は node ごとに挙がるが読む対象は diff ∴ 共有 file が動けば N 行は 1 つの
+// diff で説明がつく。**転置はそれを字面に出す —— 判定はしない ∴ 候補の表は 1 行も減らない。**
+
+test('転置は「その path が動いたことが何 node を候補にしているか」を、多い順に並べる', () => {
+  // ⚠ 共有 file を path 順で*最後*に置く —— path 順と件数順が一致する例では、並びの変異が
+  // 捕まらない（最初に書いた例がそうだった）。
+  const rows = pivotByPath([
+    { slug: 'beta', moved: ['aa/b.mjs', 'zz/shared.md'] },
+    { slug: 'alpha', moved: ['zz/shared.md'] },
+    { slug: 'gamma', moved: ['aa/g.mjs', 'zz/shared.md'] },
+  ])
+  assert.deepEqual(rows, [
+    { path: 'zz/shared.md', slugs: ['alpha', 'beta', 'gamma'] },
+    { path: 'aa/b.mjs', slugs: ['beta'] },
+    { path: 'aa/g.mjs', slugs: ['gamma'] },
+  ])
+})
+
+test('報告された形そのもの —— 候補 17 のうち 14 が 1 file なら、先頭行がそれを述べる', () => {
+  // 🔴 消費者 1 例（td-apps-site、2026-09-19）の moved_paths を合成した。
+  const items = []
+  for (let i = 0; i < 14; i++) {
+    items.push({ slug: `n${String(i).padStart(2, '0')}`, digest: 'd', code: 1, moved: ['CLAUDE.md'], commitsSince: 3 })
+  }
+  items.push({ slug: 'app-fleet', digest: 'd', code: 4, moved: ['CLAUDE.md', 'data/README.md', 'data/vocabulary.json', 'tests/app-facts.test.ts'], commitsSince: 3 })
+  items.push({ slug: 'app-pipeline', digest: 'd', code: 2, moved: ['CLAUDE.md', 'docs/ideas/README.md'], commitsSince: 3 })
+  items.push({ slug: 'shared-infra', digest: 'd', code: 1, moved: ['docs/ideas/README.md'], commitsSince: 1 })
+  const out = renderAimCodeFence(items)
+  assert.match(out, new RegExp('```' + AIM_CODE_BY_PATH_FENCE_TAG))
+  const byPath = out.split('```' + AIM_CODE_BY_PATH_FENCE_TAG)[1]
+  assert.match(byPath, /# fields: path \| nodes \| slugs/)
+  assert.match(byPath, /^CLAUDE\.md \| 16 \| app-fleet,app-pipeline,n00,n01,\+12$/m, '先頭行が共有 file を述べていない')
+  assert.match(byPath, /^docs\/ideas\/README\.md \| 2 \| app-pipeline,shared-infra$/m)
+  // ⚠ 候補の表は 1 行も減らない —— 転置は判定ではない
+  assert.equal((out.match(/^n\d\d \| d \| CLAUDE\.md \| 3$/gm) ?? []).length, 14)
+})
+
+test('転置は上限を超えた分を数で述べ、候補が無ければ出ない', () => {
+  const items = [{ slug: 'a', digest: 'd', code: 8, moved: ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'], commitsSince: 1 }]
+  assert.match(renderAimCodeFence(items), /^# \+2 path$/m)
+  assert.equal(renderAimCodeByPathFence(items).split('\n').filter((l) => /^p\d \| /.test(l)).length, 6)
+  assert.doesNotMatch(renderAimCodeFence([]), new RegExp(AIM_CODE_BY_PATH_FENCE_TAG))
+  assert.doesNotMatch(renderAimCodeFence(null), new RegExp(AIM_CODE_BY_PATH_FENCE_TAG))
 })
 
 // canon が挙げる「慣例ラベル」と、機械が読む予約語が交わらないことを固定する門。
