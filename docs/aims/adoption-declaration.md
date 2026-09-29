@@ -96,6 +96,10 @@ HTML コメントゆえ、この宣言は消費者の context を 1 token も食
 
 ⚠ **この反転は、非 aim の drift へも効く前例である。** 「aim ではない別の drift も見る」構想があるなら、⚠ **それを `isEngaged` で gate してはならない** —— あれは *aim の* 述語である。**gate は機能ごとに、「repo に痕跡を残すか」で決まる**（本 node の `aim:`）: handoff は残さない ∴ 無条件、aim は残す ∴ 宣言を要求する。**非 aim の drift も、痕跡を残すかで自分の側が決まる。**
 
+🔴 **2026-09-30、痕跡を残さない側が、aim を採らない repo で実際に回っていると人間が述べた** —— ⚠ **逐語:「aimを使わないリポもでてきました　statuslineやhandoffだけでも上手く機能しています」**（人間の証言 2026-09-30）。挙がった 1 つは `3DCG`（Blender を操作する repo。`/mnt/c/Users/trust.delta/Documents/works/3DCG`）である（⚠ **機体の上で数えると、人間が名指していない `activity-log` も同じ側に居た** —— 一覧は [[consumer-evidence]] の `# IS`）。⚠ **当方が確かめたのは 3 つだけである**（実測 2026-09-30）: ⑴ **`docs/aims` が無い**（陽性対照: 同じ手段で同じ repo の `docs/setup.md` は読めた）⑵ **`CLAUDE.md` 75 行に `bearing:aim` の marker が無い** ∴ **corpus も宣言も持たない、表の下 2 行だけを使う repo である** ⑶ **baton が書かれ、読まれている**（`~/.bearing/units/-mnt-c-Users-trust-delta-Documents-works-3DCG/handoff/active.md` の composed-at `2026-09-27T20:30:31Z`・read-at `20:31:11Z`）。⚠ **statusline は人間の画面にしか無い** ∴ そちらは証言だけである。⚠ **そして、画面に aim 由来の行は出ていなかった**（人間の証言 2026-09-30）—— `# OBSERVATION` の 1 件目が求める形の観測である。⛔ **票は倒していない** —— ⚠ **この証言は当方が問うて得たものであり**、`# OBSERVATION` を「問うて返答を得る」形にすることは canon が戒めている ∴ **ここに置くのは証言の記録であり、満たされたと述べるのは人間の `state:` である。**
+
+⚠ **∴ 上段の「反転は前提から出た」の理由（aim を通したくない repo が baton まで手放さずに済む）は、設計が述べる理由から、実例を 1 つ持つ理由になった。** ⚠ **ただし 1 標本・1 人・1 機体である** —— **`3DCG` は人間本人の repo であり、共同の場で「向くこと自体への抵抗」が消えるかについて、この標本は何も述べない。** ⚠ **`/mnt/c` は win32 ではない** —— Claude Code は WSL で動いている（向こうの `CLAUDE.md` の「環境の前提」）∴ 述べられるのは **unit root が 9P 越しの NTFS に在っても、平坦化と baton が機能した**ことだけである（[[consumer-evidence]] の win32 の票には当たらない）。**再測**: `ls ~/.bearing/units/ | grep -- -mnt-c-` で unit が在ることを見る（⚠ **baton の中身は次に書かれた時点で archive へ退避される** ∴ 上の時刻は `archive/` の側で追う）。
+
 # PROCESS
 
 - [done] **hook 3 枚が、採用していない project で黙るようになった。** `aim-facts` / `boot-ritual` / `precompact` はいずれも出力 0 byte（実測）。⚠ **判定は `CLAUDE.md` の marker であり、`docs/aims/` の有無ではない** —— 後者では「aim と無関係な repo」と「採ったが node がまだ 0 の project」を区別できない

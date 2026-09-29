@@ -87,6 +87,20 @@ state: open
 
 🔴 **2026-09-14、win32 を主張する node はここだけになった。** [[dev-platform]] の `aim:` から「Windows でも行える」が落ちた（人間の決定 2026-09-14）—— ⚠ **あれは*開発者*の platform についての決定であり、*消費者*の platform について人間は何も決めていない** ∴ **配る先の win32 は、今もこの node の射程に在る。** ⚠ **だが証拠の出所が 1 本消えた**: 上の表と `# OBSERVATION` が頼っていた「**人間が別マシン（win32）で踏む**」経路は、**その人間が WSL 単独になったことで塞がる**（⚠ **2026-09-04 の 4 件のうち 2 件は、実際にその経路でしか出なかった**）。🔴 **∴ ここは「まだ覆っていない」から「覆う経路が無い」へ落ちた。** ⚠ **受け入れの前提（他 repo での使用が疑問を運び入れる）そのものは残るが、その脚のうち win32 の 1 本だけが折れている。** ⚠ **手段を立てるかは別の判断である** —— **本 node が今行うのは、空いたことを字面に出すところまでである**（⚠ **書かなければ、この空白は「まだ踏んでいないだけ」と同じ顔で残る**）。
 
+🔴 **2026-09-30、上の 2 段が述べた死角に実物が居た。** 人間が「aim を使わない repo も出てきた」と述べ、1 つを挙げた —— `3DCG`（`/mnt/c/Users/trust.delta/Documents/works/3DCG`。corpus も marker も持たず、handoff と statusline だけを使う。確かめた範囲は [[adoption-declaration]] の `# IS` に在る）。⚠ **この repo は、この node がこれまで使った数え方のどれにも映らない** —— 🔴 **理由が 2 つ重なっている**: ⑴ **`~/works` の外に在る**（2026-09-07 の `find ~/works -path '*/.claude/skills/aim'` も、2026-09-23 の「`docs/aims` を持つ repo は 8 つ」も、根を `~/works` に置いた）⑵ **数えた印がそもそも無い** —— **どちらの手段も「aim を採った跡」を探しており、採らない消費者は根をどこに置いても映らない。** ⚠ **∴ 「8 つ」は bearing の消費者の数ではなく、`~/works` の下で corpus を持つ repo の数である** —— **射程を書かなかったために、前者として読める形で残っていた。** 🔴 **機体の上で採らない消費者を拾える手段は `~/.bearing/units/` である** —— ⚠ **baton の置き場としてではなく、`session` の記録として**: `boot-ritual` が prompt ごとに、**採用の gate を通さず** cwd の unit へ session id を書く（`c0acd13`、2026-09-12 から）∴ **それ以後に bearing を載せたセッションが立った cwd は、handoff を使っていなくても dir として残る**（⚠ **repo には残らない** —— 痕跡の法には触れない）。**実測 2026-09-30**（対象: この機体の `~/.bearing/units/` 18 dir。各 unit root の `CLAUDE.md` の marker と `docs/aims` の有無を見た）:
+
+| 種類 | unit | 数 |
+| :-- | :-- | :-- |
+| 採った repo | `AutoPlayNotes` / `bearing` / `last-visit` / `td-apps-site` / `trust-delta` / `trust-delta-site` / `vr-flat-viewer` | 7 |
+| 🔴 **採らない repo** | `3DCG`（baton 3 世代）／ `activity-log`（baton 在り。⚠ **人間が名指していない 2 つ目**） | 2 |
+| wrapper（git repo でない） | `~/works`（baton 在り）／ `tmai`（baton 在り。中の `tmai-core` は corpus を持つが marker を持たない） | 2 |
+| 🔴 **repo の下位 dir** | `3DCG` の下 4 つ／ `vr-flat-viewer/app/src/main` | 5 |
+| 検査の残骸 | scratchpad 2 つ | 2 |
+
+⚠ **下位 dir の 5 つは、そこでセッションが立ったのではない** —— 🔴 **5 つとも、root で立ったセッションの id が記録されていた**（`~/.claude/projects/` の root 側の transcript と一致。そこに下位 dir の transcript dir は無い）。**エージェントが途中で `cd` し、hook の入力の `cwd` がそれに追随した** —— 例: `fb45170c` の transcript は `cwd` が root と `assets/generated/cinderella` の間を 5 往復している。⚠ **statusline は `workspace.project_dir` を先に読むので動かないが、hook の入力には `cwd` しか無い**（`lib/unit.mjs` の `resolveCwd`）。⛔ **害はまだ出ていない** —— 下位 dir の 5 つが持つのは `session` 1 枚だけで、**baton は 1 枚も割れていない**。⚠ **だが割れうる形は在る**（`bearing-handoff.mjs` は `process.cwd()` から unit を引く ∴ `cd` した shell で打った `/bearing:handoff-w` は、下位 dir の unit へ baton を書くはずである —— **code を読んでの推定であり、走らせてはいない**）。**直すかは [[session-handoff]] の判断である** —— ここでは射程として記す。
+
+⚠ **∴ この一覧も国勢調査ではない**: 2026-09-12 より前にしか立っていない cwd、別機体、そして bearing を載せていないセッションは映らない。**再測**: `for u in ~/.bearing/units/*; do echo "$u $(cat "$u/unit-root" 2>/dev/null)"; done` と、各 root の `grep -c bearing:aim CLAUDE.md` / `test -d docs/aims`。⚠ **`/mnt/c` は win32 ではない**（Claude Code は WSL で動いている）∴ **上の段の「win32 の脚が折れている」は、この標本では継がれない。**
+
 # ESCALATION
 
 - **aim の保守（散文に残った作業・問い・古い言及を洗い出す）を、bearing が配る手順として持つか。** ⚠ **候補であって推薦ではない。** 材料は `# IS` の表の 6 行目と、その下の段落にある。⑴ **何もしない** —— 人間が汎用の指示文で頼めば、1 例（2026-09-23）で答え合わせの 6 箇所すべてと、それ以外に 11 件を拾った。費用は、**頼むかどうか・いつ頼むかが人間の記憶に残る**こと（⚠ 頼まなければ、0/0 は黙って偽のまま面に出続ける）。⑵ **skill か command に手順として同梱する** —— 頼む費用は下がる。だが、**いつ走らせるかは依然として人間が決める。** canon が動く ∴ 消費者に判断が生じる。⑶ **散文の中の作業を機械で数える** —— ⛔ **bearing 側の走査が文言で探して落とした**（下の段落）。3 件のうち 1 件は、**2 つの node をつなげて初めて問いになる形**だった ∴ **文言の検出では原理的に拾えない。** 偽陽性の費用も測っていない。**選ぶのは人間である。**
