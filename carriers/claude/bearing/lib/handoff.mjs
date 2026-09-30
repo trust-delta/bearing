@@ -288,6 +288,40 @@ export async function readSession(unitRoot, env = process.env) {
 }
 
 /**
+ * Bash tool から打たれた CLI が、**このセッションの unit root** を引く。
+ *
+ * 🔴 **CLI の `process.cwd()` は agent の `cd` に追随する** —— 下位 dir で打った
+ * `write` は、root の baton を退避せず、下位 dir の unit に別の baton を置く。⚠ **そして
+ * Bash tool の env に `CLAUDE_PROJECT_DIR` は無い**（実測 2026-09-03 と 2026-09-30）∴ hook と
+ * 同じ手（`resolveCwd`）は使えない。⚠ **代わりに `CLAUDE_CODE_SESSION_ID` が在る**（実測
+ * 2026-09-30、Claude Code 2.1.284。hook が記録した `session` と一致した）。
+ *
+ * ∴ **cwd から上へ辿り、この session id を記録している unit を探す。** ⚠ **上るのは
+ * `resolveUnit` の「決して上らない」に反しない** —— あちらは cwd から project を*推測*
+ * しないための規則であり、ここが従うのは推測ではなく **hook が残した記録**である。
+ * 記録の無い祖先は root と見做さない。
+ *
+ * ⚠ **見つからなければ `null`** —— 呼ぶ側は cwd へ落ちる（直す前の挙動）。同じ unit で
+ * 2 つのセッションが並走すれば記録は後の側に取られる（`recordSession`）∴ 先の側は
+ * ここで `null` を得る。**取り違えるのではなく、直す前へ戻るだけである。**
+ *
+ * @param {string} cwd
+ * @param {string|undefined} sessionId
+ * @returns {Promise<string|null>}
+ */
+export async function sessionUnitRoot(cwd, sessionId, env = process.env) {
+  const id = String(sessionId ?? '').replace(/[^A-Za-z0-9_-]/g, '')
+  if (!id || id === 'unknown') return null
+  let dir = path.resolve(cwd)
+  for (;;) {
+    if ((await readSession(dir, env)) === id) return dir
+    const up = path.dirname(dir)
+    if (up === dir) return null
+    dir = up
+  }
+}
+
+/**
  * Claude Code の transcript が住む dir。
  *
  * ⚠ **`~/.claude/projects/` の dir 名は `unitSlug` と同じ規則である** —— **我々が向こうの

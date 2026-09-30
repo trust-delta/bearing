@@ -53,13 +53,29 @@ test('どの面も、自前の cwd 解決を持たない', async () => {
 })
 
 test('解決の順序 —— 対象は project_dir、立ち位置ではない', () => {
+  // ⚠ env は明示する —— 既定の `process.env` に `CLAUDE_PROJECT_DIR` が居れば、下の連鎖を
+  // 測らずに緑になる。
+  const none = {}
   assert.equal(
-    resolveCwd({ workspace: { project_dir: '/p', current_dir: '/p/carriers/claude' } }),
+    resolveCwd({ workspace: { project_dir: '/p', current_dir: '/p/carriers/claude' } }, '/f', none),
     '/p',
   )
   // ⚠ 連鎖は上位が欠けても壊れない ∴ 揃える前の挙動を下回る面は 1 つも無い。
-  assert.equal(resolveCwd({ workspace: { current_dir: '/c' } }), '/c')
-  assert.equal(resolveCwd({ cwd: '/x' }), '/x')
-  assert.equal(resolveCwd({}, '/fallback'), '/fallback')
-  assert.equal(resolveCwd(null, '/fallback'), '/fallback')
+  assert.equal(resolveCwd({ workspace: { current_dir: '/c' } }, '/f', none), '/c')
+  assert.equal(resolveCwd({ cwd: '/x' }, '/f', none), '/x')
+  assert.equal(resolveCwd({}, '/fallback', none), '/fallback')
+  assert.equal(resolveCwd(null, '/fallback', none), '/fallback')
+})
+
+test('hook の入力の cwd は agent の cd に追随する ∴ CLAUDE_PROJECT_DIR がそれに勝つ', () => {
+  // 実測 2026-09-30 の形: `cd carriers/claude` の直後、hook は `cwd` に下位 dir を受け取り、
+  // env の `CLAUDE_PROJECT_DIR` だけが root に留まった。
+  const env = { CLAUDE_PROJECT_DIR: '/p' }
+  assert.equal(resolveCwd({ cwd: '/p/carriers/claude' }, '/p/carriers/claude', env), '/p')
+  // `current_dir` も立ち位置である —— env より先に読めば statusline で同じ形が戻る。
+  assert.equal(resolveCwd({ workspace: { current_dir: '/p/sub' } }, '/f', env), '/p')
+  // statusline が渡す `project_dir` は env と同じ問いに答える ∴ 先に読んで変わらない。
+  assert.equal(resolveCwd({ workspace: { project_dir: '/q' } }, '/f', env), '/q')
+  // ⚠ 空文字は無いのと同じに扱う —— 空の env で root を失わない。
+  assert.equal(resolveCwd({ cwd: '/x' }, '/f', { CLAUDE_PROJECT_DIR: '' }), '/x')
 })

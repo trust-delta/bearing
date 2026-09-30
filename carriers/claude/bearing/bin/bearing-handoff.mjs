@@ -30,7 +30,7 @@ import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import {
   ACTIVE, ARCHIVE, activePath, archiveDir, batonDir, checkUnitRoot, listArchive, moveFile,
-  recordUnitRoot, stampReadAt,
+  recordUnitRoot, sessionUnitRoot, stampReadAt,
   strandedBatons, writeBaton,
 } from '../lib/handoff.mjs'
 import { readBaton } from '../lib/baton.mjs'
@@ -258,7 +258,17 @@ async function main() {
     )
     return 2
   }
-  const unit = await resolveUnit(process.cwd())
+  // 🔴 **unit は shell の立ち位置ではなく、このセッションの対象から引く** —— agent が `cd`
+  // した shell で打てば、`process.cwd()` は下位 dir を指す（`sessionUnitRoot`）。
+  const here = process.cwd()
+  const root =
+    process.env.CLAUDE_PROJECT_DIR ||
+    (await sessionUnitRoot(here, process.env.CLAUDE_CODE_SESSION_ID)) ||
+    here
+  if (path.resolve(root) !== path.resolve(here)) {
+    say(`unit root: \`${root}\` —— shell の cwd（\`${here}\`）ではなく、このセッションが立った root から引いた。`, '')
+  }
+  const unit = await resolveUnit(root)
 
   if (verb === 'migrate') return await migrate(unit.root)
 

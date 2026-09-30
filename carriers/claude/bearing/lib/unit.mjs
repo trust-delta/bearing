@@ -112,7 +112,17 @@ async function resolveAimsDirs(root, repos) {
  * `input.cwd || process.cwd()`、statusline は `project_dir` 優先。**同じセッションの
  * 同じ瞬間に、面ごとに別の unit を読む形が実在していた。**
  *
- * ⚠ **連鎖は上位が欠けても壊れない** —— `workspace` を渡されない呼び出しでは
+ * 🔴 **hook の入力は `workspace` を持たず、`cwd` は agent の `cd` に追随する** ∴ 2 番目に
+ * `CLAUDE_PROJECT_DIR` を読む（実測 2026-09-30、Claude Code 2.1.284、PostToolBatch hook）:
+ * agent が `carriers/claude` へ `cd` した直後、`input.cwd` と hook の `process.cwd()` は
+ * どちらもそこへ動き、**`CLAUDE_PROJECT_DIR` だけが root に留まった。** ⚠ **踏んでいた**:
+ * 消費者 2 repo で、root で立ったセッションが下位 dir を別の unit として記録していた
+ * （`~/.bearing/units/` に 5 件。`docs/aims/consumer-evidence.md`）。⚠ **`current_dir` より先に置く**
+ * —— あちらも立ち位置であって対象ではない。
+ * 再測: hook に `input.cwd` と `process.env.CLAUDE_PROJECT_DIR` を書き出す 1 行を足し、
+ * Bash で `cd` してから次の tool batch を待つ。
+ *
+ * ⚠ **連鎖は上位が欠けても壊れない** —— `workspace` も env も無い呼び出しでは
  * `input.cwd` へ、それも無ければ `fallback` へ落ちる ∴ **揃えても、揃える前の挙動を
  * 下回る面は 1 つも無い。**
  *
@@ -121,10 +131,17 @@ async function resolveAimsDirs(root, repos) {
  *
  * @param {{workspace?: {project_dir?: string, current_dir?: string}, cwd?: string}|null|undefined} input
  * @param {string} fallback
+ * @param {Record<string, string|undefined>} env
  * @returns {string}
  */
-export function resolveCwd(input, fallback = process.cwd()) {
-  return input?.workspace?.project_dir || input?.workspace?.current_dir || input?.cwd || fallback
+export function resolveCwd(input, fallback = process.cwd(), env = process.env) {
+  return (
+    input?.workspace?.project_dir ||
+    env.CLAUDE_PROJECT_DIR ||
+    input?.workspace?.current_dir ||
+    input?.cwd ||
+    fallback
+  )
 }
 
 /**
