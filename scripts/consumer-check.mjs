@@ -27,8 +27,11 @@
 //
 // ═══ cwd を消費者へ倒さないと、この job は bearing 自身を測る ═══════════════
 //
-// ⚠ **hook は `process.cwd()` から unit を解決する**（`bin/aim-facts.mjs`、`cwd` が project と
-// いう目的の文の帰結）—— `CLAUDE_PROJECT_DIR` でも stdin の `cwd` でもない。⚠ **2026-09-05、
+// ⚠ **hook は `lib/unit.mjs` の `resolveCwd` で unit を解決する** —— `CLAUDE_PROJECT_DIR`、
+// 次に stdin の `cwd`、最後に `process.cwd()`（2026-09-30 から env が先。agent の `cd` に
+// 追随しないのは env だけだった）∴ `runBin` は **3 つとも**消費者へ倒す。⚠ **この段は
+// 2026-09-05 には「`process.cwd()` から。env でも stdin でもない」と述べており、09-06 に解決が
+// 揃った時点で古くなっていた。** ⚠ **2026-09-05、
 // この job を書く途中で実際に踏んだ**: cwd を倒さずに走らせたところ、hook は「採っていない
 // 消費者」について **bearing 自身の open-todo 9 を報告した。** ∴ 肯定側の検査は**合成消費者を
 // 名指していること**まで見る —— 「空でないこと」だけを見る門は、bearing を測りながら緑になる。

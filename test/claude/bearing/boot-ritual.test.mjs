@@ -183,3 +183,27 @@ test('旧い置き場に取り残された baton も、儀式を一度だけ発�
   // 二度は言わない。促しは promise ではなく、繰り返せば単なる騒音になる。
   assert.equal(run({ session_id: session, cwd: root }).stdout, '')
 })
+
+// ── session の記録は、立ち位置ではなく対象の unit へ ─────────────────────────
+// 🔴 **踏んでいた**（実測 2026-09-30）: root で立ったセッションで agent が下位 dir へ `cd`
+// すると、hook の入力の `cwd` はそこへ動き、**下位 dir が別の unit として記録された**
+// （消費者 2 repo で 5 件）。⚠ **`CLAUDE_PROJECT_DIR` だけが root に留まった。**
+
+test('agent が cd した後の prompt でも、session は project dir の unit へ記録される', async (t) => {
+  const { readSession } = await import('../../../carriers/claude/bearing/lib/handoff.mjs')
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-ritual-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const sub = path.join(root, 'assets', 'generated')
+  await mkdir(sub, { recursive: true })
+  const id = freshSession()
+  const res = spawnSync(process.execPath, [HOOK], {
+    input: JSON.stringify({ session_id: id, cwd: sub }),
+    encoding: 'utf8',
+    cwd: sub,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: root },
+  })
+  assert.equal(res.status, 0)
+  assert.equal(await readSession(root), id)
+  // ⚠ 割れていないことそのものを見る —— 下位 dir に unit が生まれていない。
+  assert.equal(await readSession(sub), null)
+})

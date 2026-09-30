@@ -33,6 +33,7 @@ import {
   recordSession,
   readSession,
   sessionRecordPath,
+  sessionUnitRoot,
   transcriptDir,
   transcriptPath,
   stampTranscript,
@@ -493,6 +494,76 @@ test('session の記録は空と unknown を拒む', async () => {
   assert.equal(await recordSession(root, ''), null)
   assert.equal(await recordSession(root, 'unknown'), null)
   assert.equal(await readSession(root), null)
+})
+
+// ── cd した shell から打たれた CLI ──────────────────────────────────────────
+// 🔴 **agent が `cd` すると、Bash tool の `process.cwd()` は下位 dir を指す**（実測 2026-09-30）。
+// ⚠ **Bash tool の env に `CLAUDE_PROJECT_DIR` は無いが、`CLAUDE_CODE_SESSION_ID` は在る** ∴
+// hook が記録した session を手掛かりに root へ戻る。
+
+test('下位 dir から、このセッションを記録した祖先を root として引く', async (t) => {
+  const root = await unit()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const sub = path.join(root, 'assets', 'generated', 'cinderella')
+  await mkdir(sub, { recursive: true })
+  await recordSession(root, 'sess-1')
+  assert.equal(await sessionUnitRoot(sub, 'sess-1'), root)
+  // 立ち位置が root そのものでも同じ答えである。
+  assert.equal(await sessionUnitRoot(root, 'sess-1'), root)
+})
+
+test('記録の無い祖先は root と見做さない —— 上るのは推測ではなく記録に従うためである', async (t) => {
+  const root = await unit()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const sub = path.join(root, 'a', 'b')
+  await mkdir(sub, { recursive: true })
+  // 陽性対照: 同じ fixture で記録が在れば見つかる。
+  await recordSession(root, 'mine')
+  assert.equal(await sessionUnitRoot(sub, 'mine'), root)
+  // 別のセッションの記録は、自分の root の証拠ではない（並走で記録を取られた形）。
+  await recordSession(root, 'other')
+  assert.equal(await sessionUnitRoot(sub, 'mine'), null)
+  // id が無ければ探さない —— 空の id が空の記録と一致して root を捏造しないように。
+  assert.equal(await sessionUnitRoot(sub, undefined), null)
+  assert.equal(await sessionUnitRoot(sub, ''), null)
+  assert.equal(await sessionUnitRoot(sub, 'unknown'), null)
+})
+
+const runCliFrom = (cwd, verb, env, input) =>
+  execFileSync(process.execPath, [path.join(HERE, '..', '..', '..', 'carriers', 'claude', 'bearing', 'bin', 'bearing-handoff.mjs'), verb], {
+    cwd, encoding: 'utf8', input,
+    env: { ...process.env, CLAUDE_PROJECT_DIR: '', CLAUDE_CODE_SESSION_ID: '', ...env },
+  })
+
+test('cd した shell で打った write は、root の baton を退避し、下位 dir に baton を割らない', async (t) => {
+  const root = await unit('---\ncomposed-at: 2026-09-01T00:00:00Z\n---\n\nold\n')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const sub = path.join(root, 'assets', 'refs')
+  await mkdir(sub, { recursive: true })
+  await recordSession(root, 'sess-w')
+  const out = runCliFrom(sub, 'write', { CLAUDE_CODE_SESSION_ID: 'sess-w' }, '## Task\n\nnew\n')
+  assert.match(out, /shell の cwd/)
+  assert.match(await readFile(activePath(root), 'utf8'), /new/)
+  assert.equal((await listArchive(root)).length, 1)
+  // ⚠ 割れていないことそのものを見る —— 下位 dir の unit に baton の dir が生まれていない。
+  assert.equal(existsSync(batonDir(sub)), false)
+})
+
+test('CLAUDE_PROJECT_DIR が在れば、それが記録より先に効く', async (t) => {
+  const root = await unit('---\ncomposed-at: 2026-09-01T00:00:00Z\n---\n\nhere\n')
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const sub = path.join(root, 'x')
+  await mkdir(sub, { recursive: true })
+  const out = runCliFrom(sub, 'read', { CLAUDE_PROJECT_DIR: root })
+  assert.match(out, /here/)
+})
+
+test('手掛かりが何も無ければ、直す前と同じく cwd を unit にする', async (t) => {
+  const root = await unit()
+  t.after(() => rm(root, { recursive: true, force: true }))
+  const out = runCliFrom(root, 'read', {})
+  assert.doesNotMatch(out, /shell の cwd/)
+  assert.match(out, /fresh start/)
 })
 
 test('transcript の path は実在を確かめてから返す —— 解決しない path を返さない', async () => {
