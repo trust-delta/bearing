@@ -1,0 +1,31 @@
+{"id":"adoption-contract","label":"採用前に読む契約の面","note":"採用を検討する人へ、何が置かれ何の act が人間に残るかを述べる面の書き方と置き場。","origin":"agent"}
+{"id":"aim-scope","label":"柱と目的の射程","note":"aim: が何点を担うか、前身 tmai との関係、反証条件など目的の範囲に関するものを集める。","origin":"agent"}
+{"id":"baton-format","label":"baton の様式と載せるもの","note":"baton に何を載せ何を載せないか、欄と規律（逐語・較正・transcript pointer など）。","origin":"agent"}
+{"id":"body-parsing","label":"本文の読み取り","note":"aim body の節や票を機械がどう読み、lib と面の 2 実装をどう揃えるかに関するものを集める。","origin":"agent"}
+{"id":"canon-location","label":"正本の置き場","note":"規律や skill の正本がどこに住み、何が生成物・複製になるか。","origin":"agent"}
+{"id":"ci-verdict","label":"CI の判定と照合","note":"/bearing:ci がどの commit のどの層を見て、どう 1 語の判定へ至るか。","origin":"agent"}
+{"id":"component-boundary","label":"機能間の境界","note":"handoff と aim のように、機能同士が互いの採用や置き場に依存しないための分離。","origin":"agent"}
+{"id":"consumer-stance","label":"配った先への構え","note":"配布した先の repo に対して配る側が何を見て何をしないかに関するものを集める。","origin":"agent"}
+{"id":"delivery-mechanics","label":"届け方の実装","note":"委譲・面ごとの更新の届き方・shell への path・license・自己検知など、供給物が実際に届き動く仕組みに関するものを集める。","origin":"agent"}
+{"id":"dev-env","label":"開発環境","note":"開発がどの platform・機体の上で行われ、その環境差をどう扱うかに関する判断と理解を集める。","origin":"agent"}
+{"id":"display-design","label":"面の設計","note":"statusline などの表示面に何をどう描き、不在や幅をどう扱うかに関するものを集める。","origin":"agent"}
+{"id":"drift-mechanics","label":"ズレ検知の機構","note":"intra / inter / aim-code-stale などの fence が何を候補にし、照合・承認で何を落とすかに関するものを集める。","origin":"agent"}
+{"id":"handoff-experiment","label":"引き継ぎ方式の比較実験","note":"baton とネイティブ圧縮を比べる手順・封印・交絡の扱い。","origin":"agent"}
+{"id":"handoff-value","label":"引き継ぎの価値の所在","note":"baton がネイティブ圧縮・/resume と比べて何を担い、なぜ選んで引き継ぐのかという理解。","origin":"agent"}
+{"id":"language-line","label":"言語の判別線","note":"どの文を指示者の母語へ寄せ、どの token・面を英語のまま／英語併置で残すかの線引き。","origin":"agent"}
+{"id":"law-placement","label":"法の置き方と opt-in","note":"CLAUDE.md への marker 付き block、opt-in の宣言、置かれた法の状態の述べ方に関するものを集める。","origin":"agent"}
+{"id":"main-path","label":"主経路の移行","note":"CLI から Desktop（Remote Control）への主経路の移行と、それに伴う退役・休眠・追跡性に関するものを集める。","origin":"agent"}
+{"id":"ownership","label":"目的と手段の所有の境界","note":"aim: と frontmatter は人間、body はエージェントという所有の分割と、その境界での振る舞い。","origin":"agent"}
+{"id":"platform-axis","label":"platform の差","note":"win32 と POSIX など実行環境の違いで黙って壊れるものを、判定の集約と両分岐の検査で塞ぐことに関するものを集める。","origin":"agent"}
+{"id":"purpose","label":"目的（aim:）","note":"aim: の一文を固定・改訂した決定","origin":"agent"}
+{"id":"record-practice","label":"記録の作法","note":"欄の振り分け・参照の中身・観測の階級など、記録の書き方と保守に関するものを集める。","origin":"agent"}
+{"id":"release-cadence","label":"版の出し方","note":"いつ・何を理由に版を上げて配信するかに関するものを集める。","origin":"agent"}
+{"id":"retirement","label":"手段の退役","note":"aim を dead にし、機構を外すときの判断と後始末。","origin":"agent"}
+{"id":"self-repo-policy","label":"bearing 自身の repo 方針","note":"bearing を 1 つの repo として運用するときの選択（track・ignore など）で、消費者への規則ではないもの。","origin":"agent"}
+{"id":"supply-scope","label":"供給のスコープ","note":"plugin をどのスコープで宣言・install し、載っている事実がどこに残るかに関する判断と理解を集める。","origin":"agent"}
+{"id":"surface-bounds","label":"経路ごとの器と表示の上界","note":"起動経路ごとに実在する表示の器（statusline・command・会話注入・mod・Artifact）と、そこで揃えられる範囲の線引き。","origin":"agent"}
+{"id":"surface-layout","label":"面の構成と表示","note":"面が何をどう描き、どう割り、どう読ませるか。","origin":"agent"}
+{"id":"surface-reach","label":"面への到達","note":"人間が面を開いて corpus へ届くまでの経路（browser・path 形・置き場・複製の鮮度）。","origin":"agent"}
+{"id":"surface-writeback","label":"面からの書き戻し","note":"面が frontmatter をどう書き換え、何を書かずに止まるか。","origin":"agent"}
+{"id":"unit-home","label":"機体側の置き場と unit の解決","note":"~/.bearing/units/ の配置・命名・衝突検出と、どの unit に属するかの引き方。","origin":"agent"}
+{"id":"work-accounting","label":"残務・判断・観測の会計","note":"[todo]・# ESCALATION・# OBSERVATION・宣言待ちへ何をどう振り分け、数が嘘をつかないようにするか。","origin":"agent"}

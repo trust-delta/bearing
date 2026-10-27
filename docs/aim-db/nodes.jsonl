@@ -1,0 +1,13 @@
+{"aim":"bearingが何を目指し、どのような機構で達成しようとしているか。何を要求されてどのようなactが残されるのか。採用を検討する人に伝える面をもつ","feature":"make-law","id":"adoption-brief","parent":"bearing","state":"done"}
+{"aim":"plugin はリポジトリに痕跡を残す前に、その repo が宣言した採用を要求する。痕跡を残さないものには何も要求しない","feature":"make-law","id":"adoption-declaration","parent":"bearing","state":"open"}
+{"aim":"開発を駆動する目的を、人間だけが動かせる不動点としてリポジトリに保持し、エージェントは達成手段だけを担う","feature":"record-corpus","id":"aim-tree","parent":"bearing","state":"open"}
+{"aim":"対象ハーネスが提供する可能範囲内で作業に有効な情報を表示する機能をもつ","feature":"output-statusline","id":"ambient-display","parent":"bearing","state":"open"}
+{"aim":"標準的なコーディングハーネスに欠けている「目的の保持・ズレの検知」を、ハーネスを置き換えずに外付けの拡張として供給する","id":"bearing","parent":null,"state":"open"}
+{"aim":"配布するものは、消費者として動くことが機械的に確かめられている","feature":"output-dist","id":"consumer-evidence","parent":"bearing","state":"open"}
+{"aim":"開発は WSL で行う。Windows でも行えることは、もう要求しない","feature":"whole-env","id":"dev-platform","parent":"bearing","state":"open"}
+{"aim":"人間は自分の領域である目的の木を、構造のまま見て、エージェントを介さずに動かせる","feature":"output-surface","id":"human-domain","parent":"bearing","state":"open"}
+{"aim":"使用言語をエージェントに指示を出す人間の母語に合わせる","feature":"make-writing","id":"native-language","parent":"bearing","state":"done"}
+{"aim":"調査や実測の記録は、どの時点で真であったかを明記し、記録以降も恒久的に真であるかのようには記載しない","feature":"make-writing","id":"observation-provenance","parent":"bearing","state":"open"}
+{"aim":"目的と、それを実装した手段や隣接する目的とのズレを、安く機械的に可視化する。判定はしない","feature":"output-drift","id":"purpose-drift","parent":"bearing","state":"open"}
+{"aim":"セッションを跨ぐ文脈は、ネイティブ圧縮に委ねず、何を残し何を捨てるかを選んで引き継ぐ","feature":"output-facts","id":"session-handoff","parent":"bearing","state":"dead"}
+{"aim":"同一エージェントの起動経路が複数ある場合、そのUI上の表示を可能な限り揃える","feature":"whole-env","id":"surface-parity","parent":"bearing","state":"open"}
