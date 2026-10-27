@@ -112,7 +112,7 @@ test('hook が呼ぶだけの bin は、PATH の名前空間に出ない', async
   // ⚠ **hook は絶対 path で呼ぶ** ∴ exec bit は要らない。付けなければ裸で呼ばれることも
   // なく、**一般名のままで安全である** —— 改名が要るのは、人間やエージェントが打つものだけ。
   if (unreadable()) return t.skip(SKIP)
-  for (const f of ['aim-facts.mjs', 'boot-ritual.mjs', 'corpus-delta.mjs', 'precompact.mjs']) {
+  for (const f of ['aim-facts.mjs', 'corpus-delta.mjs']) {
     assert.equal(await isExec(f), false, `${f} に exec bit が付いている`)
   }
 })

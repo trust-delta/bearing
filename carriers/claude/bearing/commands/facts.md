@@ -1,5 +1,5 @@
 ---
-description: aim / 未読 baton / drift を、いま会話へ 1 度だけ出す。statusline を持たない面（デスクトップの Code）から同じ事実へ届くための手段
+description: aim / drift を、いま会話へ 1 度だけ出す。statusline を持たない面（デスクトップの Code）から同じ事実へ届くための手段
 allowed-tools: Bash(aim-facts.mjs:*)
 disable-model-invocation: true
 ---

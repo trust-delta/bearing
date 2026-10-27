@@ -58,6 +58,8 @@ state: open
 
 ⚠ **2026-10-27、この面は主経路で人間の目に入らなくなった**（[[bearing]] の `# IS` 末尾）—— **主経路が Desktop（Remote Control）へ移り、statusline はそこに描かれない**（型の読み ＋ 当方の env の実測。[[surface-parity]] の `# IS` 末尾）。⚠ **上の前提（デスクトップの Code に statusline は置けない）は覆っていない** —— **覆ったのは、その前提が「副経路の欠落」で済んでいたことのほうである。** 代わりの器の候補（mod の帯・枠）と、それを採るかの判断は [[surface-parity]] の `# ESCALATION` に置いた。
 
+⚠ **同日、2 行目から `baton 未読` を外した**（0.35.0、[[session-handoff]] の退役）。⚠ **statusline そのものは残す**（人間の決定 2026-10-27「残しておいてみましょう」）—— 主経路では見えないが、退役ではなく休眠である。
+
 # PROCESS
 
 - [done] **CLI 向けの statusline を実装した。** 1 行目に model / effort / branch / context / rate limit、2 行目に aim・todo・観測待ち・未読 baton・未 commit / 未 push / drift。⚠ **fence は cache を経ず正本の lib を直接呼ぶ** —— 実測 70ms で debounce 300ms に十分収まり、間接層を挟めば二重実装が生まれるからである

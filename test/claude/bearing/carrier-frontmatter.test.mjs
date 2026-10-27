@@ -29,9 +29,14 @@ async function carriers() {
   }
   // ⚠ `templates/` は skill として登録されないが、`setup-aim` が消費者の `.claude/skills/aim/` へ
   // 置く ∴ 置かれた先で同じ壊れ方をする —— 同じ門を通す。
+  // ⚠ **`skills/` は 2026-10-27 に空になり消えた**（handoff の退役）∴ 在るときだけ見る。
   for (const base of ['skills', 'templates']) {
     const dir = path.join(ROOT, base)
-    for (const d of await readdir(dir, { withFileTypes: true })) {
+    const entries = await readdir(dir, { withFileTypes: true }).catch((e) => {
+      if (e.code === 'ENOENT') return []
+      throw e
+    })
+    for (const d of entries) {
       if (d.isDirectory()) found.push(path.join(dir, d.name, 'SKILL.md'))
     }
   }

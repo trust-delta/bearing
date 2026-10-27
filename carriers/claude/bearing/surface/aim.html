@@ -954,11 +954,20 @@ globalThis.AimBody = { parseBody, scan, bodyOf, bodyOffset }
     let slips = 0
     const emptyHeads = []
     const unreadable = []
+    const dead = []
     for (const r of rows) {
       // ⚠ **読めない file をここに空欄で並べない** —— 木の面の verdict と `problems` が
       // 別に述べている。**だが黙って落とさない**: 何件落としたかを下で述べる。
       if (!r.readable) {
         unreadable.push(r.slug)
+        continue
+      }
+      // 🔴 **`state: dead` は数えない** —— facts の `gatherBacklog` と同じ除外である。
+      // ⚠ **2026-10-27 まで、この面は dead を数えていた** —— corpus に dead が 1 つも無い間は
+      // 2 つの数が一致し、初めての dead（`session-handoff`）で食い違った。**黙って落とさず**、
+      // 何件除いたかを下で述べる。
+      if (r.state === 'dead') {
+        dead.push(r.slug)
         continue
       }
       const b = parseBody(bodyOf(r.text))
@@ -996,6 +1005,7 @@ globalThis.AimBody = { parseBody, scan, bodyOf, bodyOffset }
     // 何も書かれていないものを人間に渡すことと、書かれたものを無いと述べることは別である。
     if (emptyHeads.length) parts.push(`⚠ 見出しだけで中身が無い節: ${emptyHeads.join(' / ')}`)
     if (unreadable.length) parts.push(`⚠ 読めない file ${unreadable.length} 件はこの面に出していない: ${unreadable.join(' / ')}`)
+    if (dead.length) parts.push(`state: dead の node ${dead.length} 件は数えていない（facts と同じ）: ${dead.join(' / ')}`)
     if (esc === 0 && obs === 0) {
       // 🔴 **0 件を「番が無い」と読ませない。** この面は `state:` の宣言待ちを数えていない。
       parts.push('⚠ この 2 節に中身を持つ node は 0 件 —— **番が無いという意味ではない**（宣言待ちはこの面が数えていない）。')
@@ -1014,9 +1024,15 @@ globalThis.AimBody = { parseBody, scan, bodyOf, bodyOffset }
     let anomalies = 0
     const unknown = []
     const unreadable = []
+    const dead = []
     for (const r of rows) {
       if (!r.readable) {
         unreadable.push(r.slug)
+        continue
+      }
+      // 🔴 **`state: dead` は数えない** —— `renderHuman` と同じ理由である（facts の除外に揃える）。
+      if (r.state === 'dead') {
+        dead.push(r.slug)
         continue
       }
       const b = parseBody(bodyOf(r.text))
@@ -1052,6 +1068,7 @@ globalThis.AimBody = { parseBody, scan, bodyOf, bodyOffset }
     // 「やることが無い」へ畳んではならない —— 捏造された done より正直な unknown が勝つ。
     if (unknown.length) parts.push(`⚠ # PROCESS が在るのに読める mark が無い node: ${unknown.join(' / ')}`)
     if (unreadable.length) parts.push(`⚠ 読めない file ${unreadable.length} 件はこの面に出していない: ${unreadable.join(' / ')}`)
+    if (dead.length) parts.push(`state: dead の node ${dead.length} 件は数えていない（facts と同じ）: ${dead.join(' / ')}`)
     if (nodesWithTodo === 0) parts.push('⚠ [todo] を持つ node は 0 件 —— **尽くしたという意味ではない**（mark を 1 つも持たない node も 0 件に含まれない）。')
     $('agent-count').textContent = parts.join('\n')
   }

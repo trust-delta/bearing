@@ -11,9 +11,9 @@ placed in your repository if you adopt, and which acts stay yours afterwards.**
 
 What coding harnesses do not have is a durable answer to the questions that **outlive a
 session** — "what is this for", "what did we decide and why", "has the code drifted from the
-reason it was written". bearing grafts three mechanisms onto that gap: **aim** (a tree of
-purposes and means), **handoff** (a baton authored *before* compaction), and **drift** (cheap
-mechanical surfacing of divergence). ⚠ **It replaces no harness and adds no place for
+reason it was written". bearing grafts mechanisms onto that gap: **aim** (a tree of
+purposes and means) and **drift** (cheap mechanical surfacing of divergence). ⚠ A third,
+**handoff** (a baton authored *before* compaction), was retired on 2026-10-27. ⚠ **It replaces no harness and adds no place for
 anything to run.** The table of what each does is in [`README.en.md`](../README.en.md), under
 "Three mechanisms".
 
@@ -36,12 +36,10 @@ directory, and nothing is written into the repository at all.
 | (you write them) | **your repo's `docs/aims/`** | The aim nodes themselves. `--dir` declares a different location |
 | `/bearing:setup-statusline` | `~/.claude/` and one line in user settings | The statusline. ⚠ **Nothing is written to the project** |
 | `/bearing:setup-surface` | `~/.claude/bearing-aim.html` | One page for reading the tree in a browser |
-| `/bearing:handoff-w` | `~/.bearing/units/<unit>/` | The baton. ⚠ **Outside the repository** (`BEARING_HOME` moves it) |
 
 ⚠ **In a repository that has not adopted aim, the hooks emit zero bytes.** Without the law
 block they stay silent — **even if a corpus is present.** Using something is not a declaration
-that you want this mechanism engaged. (The one exception is an unread baton; handoff does not
-depend on aim.)
+that you want this mechanism engaged.
 
 ⚠ **Removal is provided as fully as placement** — `/bearing:setup-aim --remove` takes the
 block out (the skill stays; once placed it is yours). `/bearing:setup-statusline --uninstall`
@@ -64,9 +62,7 @@ substitute.**
    ⚠ **Until you answer, that node moves for nobody.**
 5. **Read the `# OBSERVATION` ballots** — the agent writes down what one would have to see for
    the aim to count as satisfied. ⚠ **Seeing it is yours.**
-6. **Run handoff** — `/bearing:handoff-w` (author) and `/bearing:handoff-r` (read).
-   ⚠ **The model cannot invoke them** (archiving a baton cannot be undone) ∴ **you always run them.**
-7. **Take updates** — `claude plugin update`, plus `/bearing:setup-aim --update` to realign
+6. **Take updates** — `claude plugin update`, plus `/bearing:setup-aim --update` to realign
    what was placed. ⚠ **Some surfaces say nothing when they fall behind** ∴ updating is an
    explicit act.
 
@@ -153,7 +149,7 @@ who overlooked something.**
 ⚠ **The surface says nothing beyond this.** 🔴 **It does not say which is heavier or what to
 clear first** — **allocating attention is judgement, not observation, and it is your act.**
 
-(The same line also shows `baton 未読` / `未commit` / `未push` / `drift`. Those are facts about
+(The same line also shows `未commit` / `未push` / `drift`. Those are facts about
 git, not about the corpus.)
 
 ## What is not asked of you
@@ -163,8 +159,8 @@ git, not about the corpus.)
 - **Designing the tree up front** — not required. ⚠ **A node may be born with a purpose and a
   parent, and have its body added later.** The tree **accretes backwards from verification**;
   a specification does not come first and drive it.
-- **Adopting all of it** — not required. ⚠ **handoff does not depend on aim** ∴ you can use the
-  baton alone. The statusline and the browser surface install independently too.
+- **Adopting all of it** — not required. The statusline and the browser surface install
+  independently.
 
 ## The shape this assumes
 

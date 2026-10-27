@@ -63,7 +63,7 @@ fi
 # ⚠ **`test/` はこの一覧に無い**（人間の決定 2026-09-10）—— 開発用の test を同梱する意味が無い ∴
 # `test/claude/bearing/` へ出した。**載せ直すことは、配ると宣言することである。**
 plugin_rel="carriers/claude/bearing"
-carrier_allowed=".claude-plugin LICENSE README.en.md README.md bin commands hooks lib skills surface templates"
+carrier_allowed=".claude-plugin LICENSE README.en.md README.md bin commands hooks lib surface templates"
 
 carrier_seen="$(git -C "$repo_root" ls-files -- "$plugin_rel" | sed "s|^$plugin_rel/||" | cut -d/ -f1 | sort -u)"
 [ -n "$carrier_seen" ] || { echo "error: carrier に tracked file が 1 つも無い" >&2; exit 1; }

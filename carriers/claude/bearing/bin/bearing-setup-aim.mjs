@@ -54,7 +54,7 @@
 //
 // ═══ なぜ project ごとの opt-in なのか ═════════════════════════════════════
 //
-// **bearing は 1 つの単位ではない。** handoff と statusline の 1 行目は corpus に何も依存せず
+// **bearing は 1 つの単位ではない。** statusline の 1 行目は corpus に何も依存せず
 // **どの project でも使える**が、aim の規律は corpus を前提にし、**採っていない repo では邪魔に
 // なる**。∴ aim の規律だけをここで opt-in にする。
 //
