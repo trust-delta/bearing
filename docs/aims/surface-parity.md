@@ -39,6 +39,13 @@ state: open
 
   ⚠ **2026-10-27、人間はこれを開いたまま残した**（逐語: 「**残しておいてみましょう　modで何ができるか不透明でaimの情報が見れるかどうかも今後のaimの動向を左右します**」）。∴ **mod で aim の情報が見えるかは、この node だけでなく木全体の行き先に効く判断材料として扱われている。** 同日、主経路は Desktop に確定した（[[bearing]] の `# IS` 末尾）。⚠ **`/bearing:facts` の説明から「未読 baton」を外した**（0.35.0、handoff の退役）。
 
+  ✅ **2026-10-27、測った —— 主経路（Remote Control）では mod は描けなかった**（実測。対象: 作業機の hub が立てた Remote Control のセッション、Claude Code 2.1.306、試作の mod `aim-band`）。mod は読み込まれ、`session.start` と `turn.complete` が走り、bearing の statusline を `$.process.run` で実行して aim の 1 行（`bearing repo   aim 13   todo 3 …`）を作り、`$.fs.write` も通った。🔴 **だが `$.session.surfaces()` は空（`[]`）で、`session.attach` は一度も発火せず、`AbovePrompt` の描画は一度も求められなかった**（人間の観測でも帯は出なかった）。∴ **人間が Desktop で見ている画面は、このセッションの描画の面として登録されていない。** ⚠ **会話への注入は届いている**（同じセッションで SessionStart の facts と corpus-delta を受け取った）∴ この経路の器は 2026-09-07 の上界と同じく「会話へ載る形」だけである。
+  再測: mod の `session.start` で `$.session.surfaces()` を書き出す。⚠ 試作は測った後に消した。
+
+  ⚠ **Desktop が自分で立てるローカルセッションでは描ける余地が在る**（reference の読みであって実測ではない）—— **だが人間はそこを使わない**（逐語: 「**ローカルセッションは基本使わない（特にWSLが必要なrepo持ちセッション＝codeで動くほとんど）方針**」）∴ **主経路では候補 ⑴ は成り立たない。** ⚠ **1 セッション・1 版での実測である** —— 将来の版で Remote Control の画面が描画の面としてつながれば、変わりうる。
+
+  続いて人間の依頼で、**Artifact を aim の面にした試作**を非公開で publish した（2026-10-27）。corpus を bearing の lib で数えたスナップショット（`aim:`・親・状態・判断待ち・観測の票・残務）で、Desktop・mobile・どの機械からも開ける。⚠ **常時の表示ではない** —— エージェントが publish したときだけ更新される。⚠ **試作の段階で 1 つ踏んだ**: `dead` の node に「判断待ち」の印が付く作りになっており、数（facts と同じく dead を除く）と印が食い違った。publish の前に直した。**評価は人間の観測待ちである。**
+
 # PROCESS
 
 - [done] **2 つの経路が持つ UI を実測し、非対称を上の表にした。** 出典は docs（statusline / interactive-mode / desktop）と実際の画面である。⚠ **記録は上の表そのものであって、別の file ではない** —— 実測の作業ログは machine-local に在るが repo には載らない（#6）∴ ここから名指すと、clone した者には辿れない参照になる

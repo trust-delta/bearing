@@ -60,6 +60,8 @@ state: open
 
 ⚠ **同日、2 行目から `baton 未読` を外した**（0.35.0、[[session-handoff]] の退役）。⚠ **statusline そのものは残す**（人間の決定 2026-10-27「残しておいてみましょう」）—— 主経路では見えないが、退役ではなく休眠である。
 
+⚠ **2026-10-27、Desktop 側で同じ事実を常時見せる道を測り、主経路では閉じていた** —— mod は Remote Control のセッションの描画の面に届かなかった（[[surface-parity]] の `# ESCALATION`）。∴ **この node の器は、今も CLI の statusline だけである**（休眠）。
+
 # PROCESS
 
 - [done] **CLI 向けの statusline を実装した。** 1 行目に model / effort / branch / context / rate limit、2 行目に aim・todo・観測待ち・未読 baton・未 commit / 未 push / drift。⚠ **fence は cache を経ず正本の lib を直接呼ぶ** —— 実測 70ms で debounce 300ms に十分収まり、間接層を挟めば二重実装が生まれるからである
