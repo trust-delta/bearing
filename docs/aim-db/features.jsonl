@@ -1,0 +1,11 @@
+{"confirmedAt":"2026-10-28","frame":"make","id":"make-law","label":"法の配置と採用","note":"setup-aim、CLAUDE.md の法の block、採用の宣言","order":2,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"make","id":"make-writing","label":"aim の書き方","note":"正本と aim skill（templates/aim/）、記録の作法","order":1,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"output","id":"output-dist","label":"配布と版","note":"plugin のスコープ・cache・委譲・license、版の出し方、配った先への構え","order":5,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"output","id":"output-drift","label":"ズレの検知","note":"drift・剥離・未 push などの fence","order":1,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"output","id":"output-facts","label":"facts の注入と変化の通知","note":"SessionStart・PostToolBatch の hook、/bearing:facts","order":2,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"output","id":"output-statusline","label":"statusline と CI 表示","note":"bearing-statusline、/bearing:ci","order":3,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"output","id":"output-surface","label":"木の面","note":"aim.html、Artifact","order":4,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"record","id":"record-corpus","label":"aim corpus","note":"docs/aims/ の node、frontmatter と本文","order":1,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"record","id":"record-machine","label":"機体の記録","note":"session の記録、CI の結果（~/.bearing/units/）","order":2,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"whole","id":"whole-env","label":"作業環境と主経路","note":"Desktop／Remote Control、handoff の退役、repo の外の追跡性","order":2,"origin":"human-confirmed"}
+{"confirmedAt":"2026-10-28","frame":"whole","id":"whole-purpose","label":"目的と範囲","note":"aim:・柱・前身 tmai・個人開発の前提","order":1,"origin":"human-confirmed"}
