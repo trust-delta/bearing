@@ -345,9 +345,9 @@ export async function readDeclaration(root) {
  * 告げられない。** それは [[ambient-display]] の 2 行目が引き受ける（corpus を見つけたが
  * 採用されていない、と 1 行で述べる）。
  *
- * ⚠ **baton はこの述語に掛からない。** handoff は `docs/aims/` に何も依存せず、どの project
- * でも使える ∴ ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。呼ぶ側が
- * baton をこの gate の外で読むこと。
+ * ⚠ **2026-10-27 まで、baton だけがこの述語に掛からない例外だった**（handoff は aim に依存
+ * しないため）。handoff の退役で例外は無くなった。⚠ **gate の外に残るのは CI と session の
+ * 記録だけである** —— どちらも aim についての事実ではない。
  *
  * @param {{adopted: boolean}} facts
  * @returns {boolean}

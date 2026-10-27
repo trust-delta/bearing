@@ -101,6 +101,8 @@ state: open
 
 ⚠ **∴ この一覧も国勢調査ではない**: 2026-09-12 より前にしか立っていない cwd、別機体、そして bearing を載せていないセッションは映らない。**再測**: `for u in ~/.bearing/units/*; do echo "$u $(cat "$u/unit-root" 2>/dev/null)"; done` と、各 root の `grep -c bearing:aim CLAUDE.md` / `test -d docs/aims`。⚠ **`/mnt/c` は win32 ではない**（Claude Code は WSL で動いている）∴ **上の段の「win32 の脚が折れている」は、この標本では継がれない。**
 
+⚠ **2026-10-27、`session` の記録の書き手が移った** —— handoff の退役（0.35.0）で `boot-ritual`（UserPromptSubmit、prompt ごと）が去り、**`aim-facts`（SessionStart）が採用の gate より前に書く。** ∴ **上の数え方はそのまま使える**（aim を採らない repo も記録される。`test/claude/bearing/session-record.test.mjs` が固定する）。⚠ **ただし記録の契機が「prompt」から「セッションの開始（startup / clear / resume）」へ変わった** —— SessionStart の matcher に `fork` は無い ∴ **Desktop で fork したセッションは記録されない可能性がある**（型の読みであって実測ではない）。
+
 # ESCALATION
 
 - **aim の保守（散文に残った作業・問い・古い言及を洗い出す）を、bearing が配る手順として持つか。** ⚠ **候補であって推薦ではない。** 材料は `# IS` の表の 6 行目と、その下の段落にある。⑴ **何もしない** —— 人間が汎用の指示文で頼めば、1 例（2026-09-23）で答え合わせの 6 箇所すべてと、それ以外に 11 件を拾った。費用は、**頼むかどうか・いつ頼むかが人間の記憶に残る**こと（⚠ 頼まなければ、0/0 は黙って偽のまま面に出続ける）。⑵ **skill か command に手順として同梱する** —— 頼む費用は下がる。だが、**いつ走らせるかは依然として人間が決める。** canon が動く ∴ 消費者に判断が生じる。⑶ **散文の中の作業を機械で数える** —— ⛔ **bearing 側の走査が文言で探して落とした**（下の段落）。3 件のうち 1 件は、**2 つの node をつなげて初めて問いになる形**だった ∴ **文言の検出では原理的に拾えない。** 偽陽性の費用も測っていない。**選ぶのは人間である。**

@@ -28,7 +28,7 @@ from the reason it was written*. Those questions outlive a session. A session do
 | | what it does |
 | --- | --- |
 | **aim** | A tree of purpose-and-means, one file per purpose. The `aim:` line is the human's, and the agent may not rewrite it. |
-| **handoff** | A baton authored before the context is compacted, so what carries forward is *chosen* rather than whatever survived truncation. |
+| **handoff** | ⚠ **Retired in 0.35.0** (the human's decision, 2026-10-27). It was a baton authored before compaction; the human judged compaction and the harness's own session continuity to be enough ([`session-handoff`](docs/aims/session-handoff.md)). |
 | **drift** | Cheap machine detection of purposes whose body has moved away from the purpose it claims to serve, or away from its neighbours. It makes candidates visible. It does not judge them. |
 
 ## What this is not
@@ -96,8 +96,7 @@ copies already out there still stop.
 version and a hash of the body, so `--check` tells **"the version is old" apart from "a human
 edited the block"** — in the second case it stops and says so instead of replacing it.
 
-⚠ **In a project that has not opted in the hooks emit zero bytes** (one exception: an unread
-baton — handoff does not depend on aim). 🔴 **A corpus is not enough: without the marker it stays silent.** ⚠ **That was not true until
+⚠ **In a project that has not opted in the hooks emit zero bytes**. 🔴 **A corpus is not enough: without the marker it stays silent.** ⚠ **That was not true until
 2026-09-05**, when the predicate was `marker || corpus` — a migration convenience, so that a
 project already writing nodes would not be silenced for lacking a mark. **That day the corpus was
 dropped from the predicate** (`isEngaged` in `lib/claude-md.mjs` reads `adopted` alone): **having a

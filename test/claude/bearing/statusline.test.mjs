@@ -140,27 +140,25 @@ test('renderBearing —— aim を採っていない project では、行その�
   // ⚠ **「不在を黙って消さない」が守るのは*採ろうとして採れなかった*ものである。**
   // 採用していない project に corpus が無いのは不在ではなく、元から無い —— そこへ
   // `corpus 無し` を描くのは、元から無いものを消えたものと同じ声で述べることである。
-  assert.equal(line(renderBearing('not-engaged', { batonUnread: false })), '')
+  assert.equal(line(renderBearing('not-engaged', {})), '')
   assert.equal(line(renderBearing('not-engaged', null)), '')
 })
 
-test('renderBearing —— 採っていなくても baton 未読だけは述べる', () => {
-  // ⚠ **handoff は aim ではない。** baton は `docs/aims/` に何も依存せず、どの project でも
-  // 使える ∴ ここで黙らせることは aim の沈黙ではなく **handoff の欠落**になる。
-  assert.equal(line(renderBearing('not-engaged', { batonUnread: true })), 'bearing   baton 未読')
-})
-
-test('renderBearing —— 採用済みで corpus が空なら、そう言い、baton も落とさない', () => {
-  assert.equal(line(renderBearing('no-corpus', { batonUnread: false })), 'bearing   corpus 無し')
-  assert.equal(
-    line(renderBearing('no-corpus', { batonUnread: true })),
-    'bearing   corpus 無し   baton 未読',
-  )
+test('renderBearing —— handoff の退役後、baton はどの state でも描かれない', () => {
+  // ⚠ **かつて未読の baton だけが gate の例外だった**（2026-10-27 に handoff を退役）。
+  // 旧い facts の形が渡っても、例外が戻らないことを固定する。
+  assert.equal(line(renderBearing('not-engaged', { batonUnread: true })), '')
+  assert.equal(line(renderBearing('no-corpus', { batonUnread: true })), 'bearing   corpus 無し')
+  const facts = {
+    aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 0, batonUnread: true,
+    working: 0, unpushed: 0, drift: 0,
+  }
+  assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5')
 })
 
 test('renderBearing —— 静かなときは静かである', () => {
   const facts = {
-    aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 0, batonUnread: false,
+    aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 0,
     working: 0, unpushed: 0, drift: 0,
   }
   assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5')
@@ -168,13 +166,13 @@ test('renderBearing —— 静かなときは静かである', () => {
 
 test('renderBearing —— 異常だけが現れる', () => {
   const facts = {
-    aimCount: 5, openTodo: 2, awaiting: 3, blindAwaiting: 0, escalation: 1, batonUnread: true,
+    aimCount: 5, openTodo: 2, awaiting: 3, blindAwaiting: 0, escalation: 1,
     working: 2, unpushed: 1, drift: 4,
   }
   assert.equal(
     line(renderBearing('ok', facts)),
     'bearing   aim 5   todo 2   宣言待ち 3   escalation 1   ' +
-      'baton 未読   未commit 2   未push 1   drift 4',
+      '未commit 2   未push 1   drift 4',
   )
 })
 
@@ -182,7 +180,7 @@ test('renderBearing —— escalation は人間の番の隣に立ち、採れな
   // ⚠ **`宣言待ち` の隣であることに意味がある。** 「見れば済む」と「決めなければ誰も
   // 進めない」は、どちらも**人間が動かない限り動かない** ∴ 人間の側の残りが 1 箇所で読める。
   const facts = {
-    aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 2, batonUnread: false,
+    aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 2,
     working: 0, unpushed: 0, drift: 0,
   }
   assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5   escalation 2')
@@ -199,7 +197,7 @@ test('renderBearing —— 採れなかったことを 0 と描かない', () =>
   // 畳めば、読み手は「未 push は無い」と読む —— corpus fence が一貫して拒んできた誤読で
   // あり、statusline でだけ許す理由は無い。
   const facts = {
-    aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 0, batonUnread: false,
+    aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 0,
     working: null, unpushed: null, drift: null,
   }
   assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5   未commit ?   未push ?   drift ?')
@@ -237,7 +235,7 @@ test('描かれる文字はすべて幅が確定している', () => {
     },
   }
   const facts = {
-    aimCount: 5, openTodo: 2, awaiting: 3, blindAwaiting: 0, escalation: 1, batonUnread: true,
+    aimCount: 5, openTodo: 2, awaiting: 3, blindAwaiting: 0, escalation: 1,
     working: 2, unpushed: null, drift: 4,
   }
   // ⚠ **`state` を渡し忘れないこと。** 1 引数で呼ぶと `facts` が `state` の位置に入り、
@@ -250,7 +248,8 @@ test('描かれる文字はすべて幅が確定している', () => {
   const first = renderSession(input, 'feature/x', now)
   const second = renderBearing('ok', facts)
   assert.equal(first.length, 6, `1 行目が痩せている: ${first.map(strip).join(' / ')}`)
-  assert.equal(second.length, 9, `2 行目が痩せている: ${second.map(strip).join(' / ')}`)
+  // ⚠ 2026-10-27 に `baton 未読` が去り、9 から 8 になった。
+  assert.equal(second.length, 8, `2 行目が痩せている: ${second.map(strip).join(' / ')}`)
   for (const seg of [...first, ...second]) {
     assert.deepEqual(widthUnsafeChars(seg), [], `幅の確定しない文字: ${strip(seg)}`)
     // ⚠ 色名の綴り誤りは色を落とさず、文字列 `undefined` を値の前に置く（`heat` を見よ）。
@@ -359,7 +358,7 @@ test('provenance —— 名前が前方一致するだけの別 project を repo
 })
 
 test('renderBearing —— repo の複製であることは label に出る', () => {
-  const facts = { aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 0, batonUnread: false, working: 0, unpushed: 0, drift: 0 }
+  const facts = { aimCount: 5, openTodo: 0, awaiting: 0, blindAwaiting: 0, escalation: 0, working: 0, unpushed: 0, drift: 0 }
   assert.equal(line(renderBearing('ok', facts, 'repo')), 'bearing repo   aim 5')
   assert.deepEqual(widthUnsafeChars(line(renderBearing('ok', facts, 'repo'))), [])
 })
@@ -368,7 +367,7 @@ test('renderBearing —— 票の無い宣言待ちだけが `観測票なし` �
   // ⚠ **健全なとき 0 ＝ 出ない。** この面が最も持たない予算は幅であり、既定を毎回描くのは
   // 何も告げずにそれを食うことである。
   const facts = {
-    aimCount: 5, openTodo: 0, awaiting: 3, blindAwaiting: 0, escalation: 0, batonUnread: false,
+    aimCount: 5, openTodo: 0, awaiting: 3, blindAwaiting: 0, escalation: 0,
     working: 0, unpushed: 0, drift: 0,
   }
   assert.equal(line(renderBearing('ok', facts)), 'bearing   aim 5   宣言待ち 3')

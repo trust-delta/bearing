@@ -37,6 +37,8 @@ state: open
 
 - 🔴 **上界（2026-09-07）を、mod という器を入れて引き直すか。** 上界は「経路ごとに実在する器」が引くと述べ、デスクトップの器を「会話への注入」とした。⚠ **2.1.306 の型定義と reference は、hooks module（mod）が `ui.render` で `desktop` と `mobile` の面に `Pane`（会話の傍らの枠）と `AbovePrompt`（入力欄の上の帯）を描け、`$.ui.status` / `$.ui.toast` を持つと述べる**（型の読みであって実測ではない。⚠ **bearing の plugin が hooks module を載せて Desktop／mobile に描けるかは、誰も測っていない**）。**真なら、デスクトップ側にも token を食わない常駐の器が在る** ∴ 2026-09-01 の表の 4 行目（aim／baton／drift がデスクトップに無い）と、[[ambient-display]] の帰結が動く。⚠ **[[ambient-display]] の前提（デスクトップの Code に statusline は置けない）そのものは動かない** —— mod は statusline ではない。**候補**: ⑴ 上界を引き直し、mod の帯／枠で 2 行目を描く ⑵ 引き直さない（会話への注入のまま）⑶ 描けるかだけを試作で先に測る（⚠ mod の有効化を問う確認が人間に 1 度出る）。⚠ **[[bearing]] の `# ESCALATION`（主経路を受けて CLI 側をどうするか）の答えに左右される。**
 
+  ⚠ **2026-10-27、人間はこれを開いたまま残した**（逐語: 「**残しておいてみましょう　modで何ができるか不透明でaimの情報が見れるかどうかも今後のaimの動向を左右します**」）。∴ **mod で aim の情報が見えるかは、この node だけでなく木全体の行き先に効く判断材料として扱われている。** 同日、主経路は Desktop に確定した（[[bearing]] の `# IS` 末尾）。⚠ **`/bearing:facts` の説明から「未読 baton」を外した**（0.35.0、handoff の退役）。
+
 # PROCESS
 
 - [done] **2 つの経路が持つ UI を実測し、非対称を上の表にした。** 出典は docs（statusline / interactive-mode / desktop）と実際の画面である。⚠ **記録は上の表そのものであって、別の file ではない** —— 実測の作業ログは machine-local に在るが repo には載らない（#6）∴ ここから名指すと、clone した者には辿れない参照になる

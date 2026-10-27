@@ -52,7 +52,6 @@ node scripts/lang-report.mjs                          # 言語の測定（落ち
 | 単位 | carrier のどこに住むか |
 | :-- | :-- |
 | `aim` | `templates/aim/`（4 枚）・`commands/setup-aim.md` |
-| `handoff` | `skills/handoff/`（3 枚） |
 | `statusline` | `commands/setup-statusline.md` |
 | `surface` | `commands/setup-surface.md`・`surface/aim.html` |
 
@@ -63,8 +62,7 @@ node scripts/lang-report.mjs                          # 言語の測定（落ち
 （[`adoption-declaration`](docs/aims/adoption-declaration.md)）。⚠ **`frame.md` は置かれない** ——
 `CLAUDE.md` の法の block と SessionStart hook が運ぶ ∴ 置けば同じ 6 箇条が 3 箇所に住む。
 
-⚠ **handoff は plugin の skill として載る。** baton は repo に痕跡を残さない ∴ 宣言を要求せず、
-どの project でも `/bearing:handoff r` / `w` で使える。⚠ **入口はもう 1 組在る** —— `/bearing:handoff-r` / `-w` は**引数を名前に畳んだだけの別名**であり、**儀式の正本は skill の側にしか無い**（人間の指摘 2026-09-07: 引数つきの形はサジェストから選んでもそのままでは打てない）。
+⚠ **handoff は 0.35.0 で退役した**（人間の決定 2026-10-27）—— かつて `skills/handoff/`（3 枚）と別名の command 2 枚に住んでいた。∴ `skills/` は今 carrier に無い。
 
 ⚠ **carrier は必ず、それが名指す道具のコマンドを載せること。** 誰も名指さない道具は誰も走らせ
 ない道具であり、儀式は手作業に戻る。

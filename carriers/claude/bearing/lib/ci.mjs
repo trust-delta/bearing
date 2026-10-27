@@ -18,7 +18,7 @@ import { promisify } from 'node:util'
 
 import { runGit } from './git.mjs'
 
-import { unitHome } from './handoff.mjs'
+import { unitHome } from './unit-home.mjs'
 
 const run = promisify(execFile)
 

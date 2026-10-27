@@ -1,7 +1,8 @@
 // unit の解決は 1 つである —— 面ごとに別の corpus を読む形を、機構で止める。
 //
 // 🔴 **2026-09-06 まで、解決は 3 通りに割れていた。** `aim-facts` は `process.cwd()`、
-// `boot-ritual` / `corpus-delta` / `precompact` は `input.cwd || process.cwd()`、
+// `boot-ritual` / `corpus-delta` / `precompact` は `input.cwd || process.cwd()`（`boot-ritual` と
+// `precompact` は 2026-10-27、handoff の退役とともに消えた）、
 // statusline は `workspace.project_dir` 優先。⚠ **同じセッションの同じ瞬間に、面ごとに
 // 別の unit を読む形が実在していた** —— agent が `cd` すれば分岐は現実になり、実際に
 // statusline の 2 行目が `corpus 未取得` へ落ちて発覚している。
@@ -18,7 +19,7 @@ import { resolveCwd } from '../../../carriers/claude/bearing/lib/unit.mjs'
 
 const BIN = path.join(import.meta.dirname, '..', '..', '..', 'carriers', 'claude', 'bearing', 'bin')
 /** unit を解決する面。⚠ **数え漏らしを防ぐため、名前を先に書き下す。** */
-const FACES = ['aim-facts', 'boot-ritual', 'corpus-delta', 'precompact', 'statusline']
+const FACES = ['aim-facts', 'corpus-delta', 'statusline']
 
 const read = (name) => readFile(path.join(BIN, `${name}.mjs`), 'utf8')
 

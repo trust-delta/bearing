@@ -218,6 +218,23 @@ test('見出しだけの節は「在る」と数えず、黙っても落とさ�
   assert.match($('human-count').textContent, /見出しだけで中身が無い節: x（ESCALATION）/)
 })
 
+test('state: dead の node は、どちらの面でも数えず、除いたことを述べる', () => {
+  // 🔴 **facts（`gatherBacklog`）は dead を除く** ∴ 面が数えれば、同じ corpus について 2 つの
+  // 数が立つ。⚠ **2026-10-27、corpus に初めて dead が生まれて食い違いが露見した** —— それまで
+  // は dead が 0 件で、一致は偶然だった。
+  const dead = { slug: 'gone', text: '---\naim: a\nstate: dead\n---\n\n# ESCALATION\n- 決めて\n\n# PROCESS\n- [todo] y\n\n# OBSERVATION\n- 見て\n', readable: true, state: 'dead', aim: 'a' }
+  const live = { slug: 'alive', text: '---\naim: b\nstate: open\n---\n\n# ESCALATION\n- 決めて\n\n# PROCESS\n- [todo] z\n', readable: true, state: 'open', aim: 'b' }
+  S.renderHuman([dead, live])
+  // 陽性対照: 生きている node は数えられている。
+  assert.match($('human-count').textContent, /ESCALATION に中身を持つ node: 1 件/)
+  assert.match($('human-count').textContent, /OBSERVATION に中身を持つ node: 0 件/)
+  assert.match($('human-count').textContent, /state: dead の node 1 件は数えていない.*gone/)
+  assert.doesNotMatch(textOf($('human-list')), /gone/)
+  S.renderAgent([dead, live])
+  assert.match($('agent-count').textContent, /\[todo\] を持つ node: 1 件（項目 合計 1）/)
+  assert.match($('agent-count').textContent, /state: dead の node 1 件は数えていない.*gone/)
+})
+
 test('読めない file は空欄で並べず、何件落としたかを述べる', () => {
   S.renderHuman([{ slug: 'broken', text: 'frontmatter が無い', readable: false }])
   assert.equal($('human-list').children.length, 0)

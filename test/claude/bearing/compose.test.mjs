@@ -17,10 +17,13 @@ import { fileURLToPath } from 'node:url'
 
 import { loadDesired, renderBlock } from '../../../carriers/claude/bearing/lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR } from '../../../carriers/claude/bearing/lib/corpus.mjs'
-import { activePath, batonDir } from '../../../carriers/claude/bearing/lib/handoff.mjs'
+import { unitHome } from '../../../carriers/claude/bearing/lib/unit-home.mjs'
 
-// ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
-// baton** —— を読み書きする。
+// ⚠ **unit の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
+// 記録** —— を読み書きする。
+
+/** 退役前の handoff が baton を置いていた path。⚠ **機構はもう読まない** —— 読まないことの試験に使う。 */
+const leftoverBaton = (root) => path.join(unitHome(root), 'handoff', 'active.md')
 process.env.BEARING_HOME = mkdtempSync(path.join(tmpdir(), 'bearing-home-'))
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -106,20 +109,14 @@ test('aim を採っていない project では 1 byte も出さない', async ()
   await rm(root, { recursive: true, force: true })
 })
 
-test('採っていない project でも、未読の baton だけは述べる', async () => {
-  // ⚠ **handoff は aim ではない。** baton は `docs/aims/` に何も依存せず、どの project でも
-  // 使える ∴ ここで黙るのは aim の沈黙ではなく handoff の欠落である。
+test('採っていない project では、機体に baton が残っていても 1 byte も出さない', async () => {
+  // ⚠ **かつて未読の baton だけが gate の例外だった。** 2026-10-27 に handoff を退役させた ∴
+  // 残った baton を読む者はもういない —— 例外が戻らないことを固定する。
   const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   execFileSync('git', ['init', '-q', root])
-  await mkdir(batonDir(root), { recursive: true })
-  await writeFile(
-    activePath(root),
-    '---\ncomposed-at: 2026-09-03T00:00:00Z\ntask: x\n---\n\n本文\n',
-  )
-  const out = compose(root)
-  assert.match(out, /前回どこで止まったか/)
-  assert.doesNotMatch(out, /# aim frame/, "aim については 1 行も述べない")
-  assert.doesNotMatch(out, /open-todo/)
+  await mkdir(path.dirname(leftoverBaton(root)), { recursive: true })
+  await writeFile(leftoverBaton(root), '---\ncomposed-at: 2026-09-03T00:00:00Z\ntask: x\n---\n\n本文\n')
+  assert.equal(compose(root), '')
   await rm(root, { recursive: true, force: true })
 })
 
@@ -205,29 +202,21 @@ test('a node blocked on the human is counted, and it is not a todo', async () =>
   await rm(dir, { recursive: true, force: true })
 })
 
-test('an absent baton says so, and warns against reading silence as emptiness', async () => {
+test('採った project でも、残った baton は surface されず、触られもしない', async () => {
+  // ⚠ **退役は機構を止めたのであって、人間の機体に残った baton を消す理由ではない**
+  // （`lib/unit-home.mjs` 冒頭）∴ 読まず、書かず、消さない。
   const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   const root = path.join(dir, 'proj')
-  await mkdir(root, { recursive: true })
+  await mkdir(path.dirname(leftoverBaton(root)), { recursive: true })
   await corpusRepo(root, ['alpha'])
-  const out = compose(root)
-  assert.match(out, /この unit に baton は無い/)
-  assert.match(out, /空の baton は空の project ではない/)
-  await rm(dir, { recursive: true, force: true })
-})
-
-test('a baton is surfaced in full, with the reading procedure left to the agent', async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
-  const root = path.join(dir, 'proj')
-  await mkdir(batonDir(root), { recursive: true })
-  await corpusRepo(root, ['alpha'])
-  const file = activePath(root)
+  const file = leftoverBaton(root)
   const baton = '---\ncomposed-at: 2026-08-31T11:00:00Z\ntask: t\n---\n\n## Settled\nA THING WE SETTLED\n'
   await writeFile(file, baton)
   const out = compose(root)
-  assert.match(out, /A THING WE SETTLED/)
-  assert.match(out, /は\*\*刻んでいない\*\*/)
-  // hook はそこへ書いていてはならない。
+  // 陽性対照: facts そのものは出ている。
+  assert.match(out, /# aim facts/)
+  assert.doesNotMatch(out, /A THING WE SETTLED/)
+  assert.doesNotMatch(out, /前回どこで止まったか|baton/)
   const { readFile } = await import('node:fs/promises')
   assert.equal(await readFile(file, 'utf8'), baton)
   await rm(dir, { recursive: true, force: true })
@@ -308,27 +297,6 @@ test('扱えない在り処の宣言は、既定として黙って動かない',
   const out = compose(root)
   assert.match(out, /読めない/)
   await rm(root, { recursive: true, force: true })
-})
-
-test('旧い置き場に取り残された baton は、fresh start と呼ばれない', async (t) => {
-  // ⚠ **在るのに無いと報告する形は、この機構が一貫して拒んできたものである。**
-  // 2026-09-03、CLI だけ塞いで面を塞ぎ忘れ、この行が実際に嘘をついた。
-  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
-  t.after(() => rm(root, { recursive: true, force: true }))
-  await withAim(root)
-  await mkdir(path.join(root, '.handoff', 'archive'), { recursive: true })
-  await writeFile(path.join(root, '.handoff', 'active.md'), '---\ntask: old\n---\n\nold\n')
-  const out = compose(root)
-  assert.match(out, /旧い置き場に baton が取り残されている/)
-  assert.match(out, /bearing-handoff\.mjs migrate/)
-  assert.doesNotMatch(out, /fresh start である/)
-})
-
-test('取り残しが無ければ、これまで通り fresh start と述べる', async (t) => {
-  const root = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
-  t.after(() => rm(root, { recursive: true, force: true }))
-  await withAim(root)
-  assert.match(compose(root), /fresh start である/)
 })
 
 test('番を渡された node が、何を見ればよいかを持っているかが frame に出る', async () => {

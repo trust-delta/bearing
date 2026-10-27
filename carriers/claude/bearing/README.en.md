@@ -31,24 +31,22 @@ Requires Node. There is no build step, no daemon and no server — the hooks are
 
 | hook | when | what |
 | --- | --- | --- |
-| `SessionStart` | a session opens | injects the frame, the outstanding baton, per-repo corpus fences, the open-todo and escalation counts |
-| `UserPromptSubmit` | once, before the first turn acts | states the baton's reading procedure — a `SessionStart` hook's output is context, and context is not a turn, so nothing else guarantees the ritual runs |
+| `SessionStart` | a session opens | injects the frame, per-repo corpus fences, the open-todo and escalation counts; records the session for the unit whether or not aim is adopted |
 | `PostToolBatch` | the corpus moved under the session | re-states only the facts that actually changed |
-| `PreCompact` | auto-compaction is about to happen | stops it **once**, so a baton can be authored instead of the context being dropped unchosen |
 
-⚠ `PreCompact` never blocks a compaction a human asked for. Overriding a person's
-own act with a ritual meant to serve them is the inversion this refuses.
+⚠ **handoff (the baton) was retired in 0.35.0** (the human's decision, 2026-10-27) — the
+`UserPromptSubmit` and `PreCompact` hooks and the `/bearing:handoff` skill and its aliases are gone.
+⚠ **Batons left on a machine (`~/.bearing/units/<unit>/handoff/`) are neither read nor deleted.**
 
-One skill ships with it: `/bearing:handoff` (`r` to read, `w` to write) — ⚠ **two aliases carry the argument in the name** so they can be picked straight from the suggestion list: `/bearing:handoff-r` and `/bearing:handoff-w` (**they hold no procedure — they just call the skill with the argument**). ⚠ **The aim discipline is
+⚠ **The aim discipline is
 not a plugin skill** — `/bearing:setup-aim` places it under the adopting project's `.claude/skills/aim/`
 as a project skill, and from then on it belongs to that repo.
 
 ### aim is opt-in per project
 
-The handoff skills and the status line's first row are useful in any
+The status line's first row is useful in any
 project, but the aim discipline presumes a corpus — so in a repo that has
-not opted in, the SessionStart hook emits **not one byte** (except an unread
-baton, which is handoff, not aim). Once, in a project that wants it:
+not opted in, the SessionStart hook emits **not one byte**. Once, in a project that wants it:
 
 ```
 /bearing:setup-aim

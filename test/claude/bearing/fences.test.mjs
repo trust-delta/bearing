@@ -1,4 +1,4 @@
-// unpushed・sha 判定・baton の各層の test。
+// unpushed・sha 判定の各層の test。（baton の層は 2026-10-27、handoff の退役とともに外した。）
 //
 // git に面したものは、本物の upstream を持つ本物の repository に対して走る: ⚠
 // `@{upstream}..HEAD` が何を意味するかは **git の ref graph についての事実**であり、
@@ -14,11 +14,9 @@ import path from 'node:path'
 
 import { gatherUnpushed, renderUnpushedFence, parseUnpushedLog } from '../../../carriers/claude/bearing/lib/unpushed.mjs'
 import { isShaLike } from '../../../carriers/claude/bearing/lib/git.mjs'
-import { readBaton } from '../../../carriers/claude/bearing/lib/baton.mjs'
-import { activePath, batonDir } from '../../../carriers/claude/bearing/lib/handoff.mjs'
 
-// ⚠ **baton の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
-// baton** —— を読み書きする。
+// ⚠ **unit の家を temp へ倒す。** 倒さなければ、test は `~/.bearing/` —— **人間の実際の
+// 記録** —— を読み書きする。
 process.env.BEARING_HOME = mkdtempSync(path.join(tmpdir(), 'bearing-home-'))
 
 const git = (root, args) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' })
@@ -134,54 +132,4 @@ test('isShaLike rejects a date — the retired field used to carry dates', () =>
   assert.equal(isShaLike('9d9cb31'), true)
   assert.equal(isShaLike('2026-05-15'), false)
   assert.equal(isShaLike(null), false)
-})
-
-// ── the baton ────────────────────────────────────────────────────────────────
-
-test('a baton at the canonical path is read, with its front matter', async () => {
-  const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
-  await mkdir(batonDir(root), { recursive: true })
-  await writeFile(
-    activePath(root),
-    '---\ncomposed-at: 2026-08-31T11:00:00Z\ntask: wiring the hook\n---\n\n## ▶ Task\nx\n',
-  )
-  const b = await readBaton(root)
-  assert.equal(b.composedAt, '2026-08-31T11:00:00Z')
-  assert.equal(b.task, 'wiring the hook')
-  assert.equal(b.readAt, null)
-  await rm(root, { recursive: true, force: true })
-})
-
-test('a previously-read baton reports its read-at rather than hiding it', async () => {
-  // 正本: 事実を 1 行で述べる。読むことを拒まない。警告もしない。
-  const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
-  await mkdir(batonDir(root), { recursive: true })
-  await writeFile(
-    activePath(root),
-    '---\ncomposed-at: 2026-08-28T01:00:00Z\nread-at: 2026-08-30T02:00:00Z\n---\n\nx\n',
-  )
-  const b = await readBaton(root)
-  assert.equal(b.readAt, '2026-08-30T02:00:00Z')
-  await rm(root, { recursive: true, force: true })
-})
-
-test('reading does NOT stamp read-at — that is step 3 of a procedure with 4-6 after it', async () => {
-  const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
-  await mkdir(batonDir(root), { recursive: true })
-  const file = activePath(root)
-  const original = '---\ncomposed-at: 2026-08-31T11:00:00Z\n---\n\nx\n'
-  await writeFile(file, original)
-  await readBaton(root)
-  const { readFile } = await import('node:fs/promises')
-  assert.equal(await readFile(file, 'utf8'), original)
-  await rm(root, { recursive: true, force: true })
-})
-
-test('no baton, and an empty baton, are both a fresh start', async () => {
-  const root = await mkdtemp(path.join(tmpdir(), 'aim-baton-'))
-  assert.equal(await readBaton(root), null)
-  await mkdir(batonDir(root), { recursive: true })
-  await writeFile(activePath(root), '\n\n')
-  assert.equal(await readBaton(root), null)
-  await rm(root, { recursive: true, force: true })
 })

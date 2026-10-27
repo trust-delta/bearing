@@ -13,31 +13,6 @@
         ]
       }
     ],
-    "PreCompact": [
-      {
-        "matcher": "auto",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/precompact.mjs\"",
-            "timeout": 10,
-            "statusMessage": "bearing: 閾値 —— 圧縮する代わりに引き継ぐ"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/boot-ritual.mjs\"",
-            "timeout": 10,
-            "statusMessage": "bearing: 未処理の baton がある"
-          }
-        ]
-      }
-    ],
     "PostToolBatch": [
       {
         "hooks": [

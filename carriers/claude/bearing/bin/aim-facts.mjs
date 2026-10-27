@@ -8,11 +8,12 @@
 //
 //   FRAME        所有の分割は、利用可能な最も強い挿入経路でエージェントに届かねばならない。
 //                さもなくばそれは単なる助言である
-//   BATON        context がセッション境界を越えるのは**選ばれた**ときであって、切り詰めを
-//                生き延びたときではない
 //   DRIFT fence  安い機械検知が検査面を可視化する —— その上に何が在るかは判定しない
-//   UNPUSHED     既に done だが、次に判断する人にまだ届いていない作業。baton は forward に
-//                選ばれるゆえ、これを過少報告する
+//   UNPUSHED     既に done だが、次に判断する人にまだ届いていない作業
+//
+// ⚠ **かつて BATON（前回どこで止まったか）が在った。** 2026-10-27、人間が handoff を
+// 退役させ（`docs/aims/session-handoff.md`）、ここから外した。⚠ **session の記録だけは
+// この hook が引き継いだ** —— 以前は UserPromptSubmit の hook が prompt ごとに書いていた。
 //   CHECKPOINT   目的は、それを実装した code から剥離しうる。その剥離は surface できねば
 //                ならない
 //   OPEN-TODO    未実装の手段が backlog である: **数は述べ、triage はしない**
@@ -49,7 +50,7 @@ import {
   readDeclaration, isEngaged,
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
-import { strandedBatons } from '../lib/handoff.mjs'
+import { recordSession } from '../lib/unit-home.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -174,42 +175,22 @@ function renderRepo(r) {
   say(renderAimCodeFence(r.aimCode).trimEnd(), '')
 }
 
-/**
- * 未読の baton を surface する。
- *
- * ⚠ **2 つの経路がここを呼ぶ** —— aim を採った project の facts と、採っていない project の
- * handoff だけの出力である。**文言が割れれば、片方の project の人間だけが手順を知らされる。**
- */
-/** unit の中なら相対で、外なら絶対で。⚠ **登り始める相対 path は説明ではなく謎である。** */
-function relativeIfInside(root, target) {
-  const rel = path.relative(root, target)
-  return rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? rel : target
-}
-
-function sayBatonPresent(unit, baton) {
-  say(
-    // ⚠ **unit の外に在る path を相対で描かない。** baton は repo の外に住む ∴ 相対にすると
-    // `../../.bearing/...` と登り始め、**どこに在るのかがかえって読めなくなる。**
-    `baton: \`${relativeIfInside(unit.root, baton.path)}\`` +
-      (baton.composedAt ? ` · composed-at \`${baton.composedAt}\`` : '') +
-      (baton.readAt ? ` · **read-at \`${baton.readAt}\`（既に一度読まれている）**` : ''),
-    '',
-    '**`handoff` skill が同梱する `read.md`（`/bearing:handoff-r`）の手順 2〜6 に従うこと**（⚠ handoff は',
-    'aim と別であり、aim corpus には依存しない）—— この hook は baton を surface',
-    'したが `read-at` は**刻んでいない**。手順 4〜6（未 push aim の surface・pointers の',
-    '読み込み・現在地の報告）はあなたの仕事である。',
-    '',
-    baton.text.trimEnd(),
-    '',
-  )
-}
-
 async function main(input) {
   // ⚠ **他の 4 面と同じ解決を通る。** ここだけ `process.cwd()` を直に読んでいた ∴
   // agent が `cd` した先を unit と読み、**同じセッションの同じ瞬間に、面ごとに別の
   // corpus を見る形**が実在していた（`lib/unit.mjs` の `resolveCwd`）。
   const cwd = resolveCwd(input)
   const unit = await resolveUnit(cwd)
+
+  // 🔴 **session の記録は採用の gate より前に置く。** ⚠ **これは aim の機構ではなく帳簿で
+  // ある** —— aim を採らない消費者もこの記録で数えている（`lib/unit-home.mjs`）。失敗しても
+  // 黙る: 帳簿の bug でセッションの開始を妨げない。
+  try {
+    await recordSession(unit.root, input?.session_id)
+  } catch {
+    // 記録できないことは、facts を止める理由にならない。
+  }
+
   const repos = []
   for (const repo of unit.repos) repos.push(await repoFacts(repo))
 
@@ -224,17 +205,10 @@ async function main(input) {
   // statusline との間に 2 つ目の結論が生まれる（2026-09-03 に実際に食い違った形）。
   const declaration = await readDeclaration(unit.root)
   aimEngaged = isEngaged(declaration)
-  const baton = await readBatonSafe(unit.root)
 
-  if (!aimEngaged) {
-    // ⚠ **handoff は aim ではない。** baton は `docs/aims/` に何も依存せず、どの project でも
-    // 使える ∴ **ここで baton を黙らせることは、aim の沈黙ではなく handoff の欠落である。**
-    if (baton) {
-      say('# bearing —— 前回どこで止まったか', '')
-      sayBatonPresent(unit, baton)
-    }
-    return { unit, repos: withCorpus }
-  }
+  // ⚠ **採っていない project では 1 byte も出さない。** かつては未読の baton だけが例外
+  // だったが、handoff の退役（2026-10-27）で例外は無くなった。
+  if (!aimEngaged) return { unit, repos: withCorpus }
 
   // ⚠ **frame は unit に 1 つ ∴ primary の在り処で埋める。** repo ごとに違う場合、
   // 各 repo の事実の側が自分の在り処を述べる —— 法は 1 つ、事実は repo ごと。
@@ -265,8 +239,7 @@ async function main(input) {
   )
   say(`# aim facts —— unit: ${unit.name} —— 構成時刻 ${new Date().toISOString()}`)
   say(
-    `> repo ${repos.length} 個、うち corpus を持つもの ${withCorpus.length} 個 · ` +
-      `baton: ${baton ? 'あり' : 'なし'}`,
+    `> repo ${repos.length} 個、うち corpus を持つもの ${withCorpus.length} 個`,
     '',
   )
 
@@ -331,39 +304,6 @@ async function main(input) {
       'とは別である: **壊れた記録は、無い記録より声が大きい。**',
       '',
     )
-  }
-
-  // ── baton ─────────────────────────────────────────────────────────────────
-  say('## ▶ 前回どこで止まったか', '')
-  if (!baton) {
-    // ⚠ **旧い置き場に取り残された baton は、無い baton ではない。** そこを見ずに
-    // 「fresh start」と述べれば、**在るのに無いと報告する** —— この機構が一貫して拒んで
-    // きた形であり、2026-09-03 に実際にこの行がそれをやった。
-    const stranded = await strandedBatons(unit.root)
-    if (stranded.length > 0) {
-      for (const l of stranded) {
-        say(`⚠ **旧い置き場に baton が取り残されている**（\`${l.dir}\`）—— active ${l.active ? 1 : 0} 本 / archive ${l.archived} 本。`)
-      }
-      say(
-        '',
-        '**この機構はもうそこを読まない ∴ これは fresh start ではない。** 移すには:',
-        '',
-        '    bearing-handoff.mjs migrate',
-        '',
-        '⚠ **移動は人間の act である** —— エージェントは述べるところで止まること。',
-        '',
-      )
-    } else {
-      say(
-        '*この unit に baton は無い —— これは fresh start である。*',
-        '',
-        '⚠ **空の baton は空の project ではない。** 拾うものが無いと結論する前に、下の',
-        'backlog 数を読むこと。',
-        '',
-      )
-    }
-  } else {
-    sayBatonPresent(unit, baton)
   }
 
   // ── repo ごとの aim 事実 ──────────────────────────────────────────────────
@@ -495,15 +435,6 @@ async function main(input) {
   // `.claude/skills/aim/` へ置き、置いた後はその repo のものである —— 在るか、直されたか、
   // 消されたかは repo の policy であって、hook が毎セッション検める対象ではない。
   return { unit, repos: withCorpus }
-}
-
-async function readBatonSafe(unitRoot) {
-  try {
-    const { readBaton } = await import('../lib/baton.mjs')
-    return await readBaton(unitRoot)
-  } catch {
-    return null
-  }
 }
 
 /**

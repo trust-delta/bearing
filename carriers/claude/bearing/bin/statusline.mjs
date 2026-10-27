@@ -6,7 +6,7 @@
 // 既に持っており、CLI はそれを持たない。∴ 1 行目が運ぶのは *CLI 側の欠落*であって、
 // デスクトップの人間が見ていないものではない。
 //
-// ⚠ **2 行目だけが、どちらの UI にも無いものを運ぶ** —— aim / baton / corpus の動き。
+// ⚠ **2 行目だけが、どちらの UI にも無いものを運ぶ** —— aim / corpus の動き。
 // hook はそれを両面へ注入できるが（hook はデスクトップでも走る）、注入は token を食い、
 // 会話に割り込む。statusline は **token を消費しない** ∴ 「常に見えていてほしいが、
 // 毎ターン喋られると邪魔なもの」の置き場として、hook とは別の面である。
@@ -31,7 +31,6 @@ import { gatherBacklog } from '../lib/process.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherDrift } from '../lib/drift.mjs'
-import { readBaton } from '../lib/baton.mjs'
 import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -203,7 +202,7 @@ export function renderSession(input, branch, now = Date.now(), ci = null) {
   else seg.push(field('git', paint(C.cyan, branch)))
 
   // ⚠ **CI は 1 行目に置く。** aim とは無関係な事実であり、[[adoption-declaration]] の
-  // gate で黙らせれば、採っていない repo が CI を見失う —— baton と同じ例外である。
+  // gate で黙らせれば、採っていない repo が CI を見失う。
   // ⚠ **面はここで `gh` を起こさない**（`lib/ci.mjs` 冒頭）—— 描くのは置かれた結果だけ。
   if (ci) {
     const tone = { ok: C.green, bad: C.red, wait: C.yellow, unknown: C.faint }[ci.tone] ?? C.faint
@@ -276,11 +275,8 @@ export function renderBearing(state, facts, from = null, aimsDirs = []) {
   // corpus が在るか、`CLAUDE.md` に法の block が在るか。2 つの面が違う条件で黙れば、
   // **同じ project が面ごとに別の姿を持つ。**
   //
-  // ⚠ **ただし baton は別である。** handoff は `docs/aims/` に何も依存せず、どの project でも
-  // 使える ∴ **ここで baton を黙らせることは、aim の沈黙ではなく handoff の欠落になる。**
-  if (state === 'not-engaged') {
-    return facts?.batonUnread ? [...seg, paint(C.yellow, 'baton 未読')] : []
-  }
+  // ⚠ **かつて未読の baton だけが例外だった**が、handoff の退役（2026-10-27）で無くなった。
+  if (state === 'not-engaged') return []
 
   // ⚠ **corpus は在るが採用されていない。** 2026-09-05 に述語から corpus を落とした ∴
   // ここは**黙る**のが正しい —— だが **黙る機構は自分の存在を告げられない**（`isEngaged`）。
@@ -288,8 +284,7 @@ export function renderBearing(state, facts, from = null, aimsDirs = []) {
   // 色で重さを付ければ、**採用を促す面**になる —— それは注意予算の割り当てであって観測では
   // ない。⚠ **この行が居る場所そのものが「採用すればここに事実が出る」を語っている。**
   if (state === 'unadopted') {
-    const line = [...seg, field('aim', paint(C.faint, '未採用')), field('corpus', paint(C.faint, facts?.aimCount ?? '?'))]
-    return facts?.batonUnread ? [...line, paint(C.yellow, 'baton 未読')] : line
+    return [...seg, field('aim', paint(C.faint, '未採用')), field('corpus', paint(C.faint, facts?.aimCount ?? '?'))]
   }
 
   // ⚠ `docs/aims/` を持たない repo は**構造的に正常**である ∴ 警告色を与えない。
@@ -306,10 +301,7 @@ export function renderBearing(state, facts, from = null, aimsDirs = []) {
     const custom = aimsDirs.filter((d) => d && d !== DEFAULT_AIMS_DIR)
     const safe = custom.filter((d) => widthUnsafeChars(d).length === 0)
     const where = safe.length > 0 ? ` (${safe.join(',')})` : custom.length > 0 ? ' (別の在り処)' : ''
-    // ⚠ **採用済みの project では baton も述べる。** corpus が空であることは、baton が
-    // 未読であることを何も打ち消さない —— 2 つは別の事実である。
-    const line = [...seg, paint(C.faint, `corpus 無し${where}`)]
-    return facts?.batonUnread ? [...line, paint(C.yellow, 'baton 未読')] : line
+    return [...seg, paint(C.faint, `corpus 無し${where}`)]
   }
   // ⚠ 一方 **repo が見つからない**は clean ではない。`resolveUnit` は cwd から*下*を
   // 探す ∴ repo の subdirectory で起動すれば、corpus は在るのに見つからない。
@@ -340,10 +332,6 @@ export function renderBearing(state, facts, from = null, aimsDirs = []) {
   // 面が述べてよいことではない。⚠ **そして数の側にも判定は無い**: 数えているのは
   // 「票が 0 枚の宣言待ち node」という構造であって、書くべきだったかどうかではない。
   counter('観測票なし', facts.blindAwaiting, C.blue)
-
-  // ⚠ baton は「未読」だけを鳴らす。読み終えた baton も、baton が無いこと（fresh start）
-  // も、構造的に正常な状態であって知らせるべき事実ではない。
-  if (facts.batonUnread) seg.push(paint(C.yellow, 'baton 未読'))
 
   counter('未commit', facts.working, C.yellow)
   counter('未push', facts.unpushed, C.yellow)
@@ -410,14 +398,10 @@ async function gatherFacts(input) {
   // ⚠ `''` は detached HEAD、`null` は git を読めなかったこと。**別の事実である。**
   const branch = branchRaw === null ? null : branchRaw.trim()
 
-  // ⚠ **baton は aim ではない ∴ engaged の判定より先に読む。** aim を採っていない project
-  // でも「baton 未読」だけは述べねばならない —— handoff はどこでも使えるからである。
-  const baton = await readBaton(unit.root).catch(() => null)
-  const batonUnread = Boolean(baton && !baton.readAt)
   // ⚠ **置かれた結果を読むだけである** —— 採るのは `bin/bearing-ci.mjs` の仕事。
-  // ⚠ **どの state でも読む** —— CI は aim の採用と無関係だからである（baton と同じ例外）。
+  // ⚠ **どの state でも読む** —— CI は aim の採用と無関係だからである。
   const ci = ciSegment(await readCi(unit.root).catch(() => null), branch)
-  const notEngaged = { state: 'not-engaged', facts: { batonUnread }, branch, ci }
+  const notEngaged = { state: 'not-engaged', facts: {}, branch, ci }
 
   // ⚠ **述語は hook と同じ 1 つを通る**（`lib/claude-md.mjs` の `isEngaged`）—— 結論を
   // ここで組み直せば、同じ project が面ごとに別の姿を持つ。
@@ -453,7 +437,7 @@ async function gatherFacts(input) {
   if (perRepo.length === 0) {
     if (!engaged) return notEngaged
     const aimsDirs = [...new Set(unit.repos.map((r) => r.aimsDir ?? DEFAULT_AIMS_DIR))]
-    return { state: 'no-corpus', facts: { batonUnread }, branch, aimsDirs, ci }
+    return { state: 'no-corpus', facts: {}, branch, aimsDirs, ci }
   }
 
   // ⚠ **corpus が在る経路にも同じ gate を通す。** ここを素通りさせれば、採用していない
@@ -461,11 +445,10 @@ async function gatherFacts(input) {
   // ⚠ **ただし完全な沈黙にはしない** —— corpus を見つけたことだけは述べる（`renderAim`）。
   if (!engaged) {
     const aimCount = perRepo.reduce((n, r) => n + r.slugs.length, 0)
-    return { state: 'unadopted', facts: { batonUnread, aimCount }, branch, ci }
+    return { state: 'unadopted', facts: { aimCount }, branch, ci }
   }
 
-  // ⚠ baton は unit に 1 つである（repo ではなく unit root に置かれる）∴ 畳まない。
-  return { state: 'ok', branch, ci, facts: { ...foldRepos(perRepo), batonUnread } }
+  return { state: 'ok', branch, ci, facts: foldRepos(perRepo) }
 }
 
 async function readStdin() {

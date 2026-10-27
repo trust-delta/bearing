@@ -100,6 +100,8 @@ HTML コメントゆえ、この宣言は消費者の context を 1 token も食
 
 ⚠ **∴ 上段の「反転は前提から出た」の理由（aim を通したくない repo が baton まで手放さずに済む）は、設計が述べる理由から、実例を 1 つ持つ理由になった。** ⚠ **ただし 1 標本・1 人・1 機体である** —— **`3DCG` は人間本人の repo であり、共同の場で「向くこと自体への抵抗」が消えるかについて、この標本は何も述べない。** ⚠ **`/mnt/c` は win32 ではない** —— Claude Code は WSL で動いている（向こうの `CLAUDE.md` の「環境の前提」）∴ 述べられるのは **unit root が 9P 越しの NTFS に在っても、平坦化と baton が機能した**ことだけである（[[consumer-evidence]] の win32 の票には当たらない）。**再測**: `ls ~/.bearing/units/ | grep -- -mnt-c-` で unit が在ることを見る（⚠ **baton の中身は次に書かれた時点で archive へ退避される** ∴ 上の時刻は `archive/` の側で追う）。
 
+⚠ **2026-10-27、上の「例外は 1 つだけ在る」（未読の baton）は無くなった** —— [[session-handoff]] が `dead` になり、handoff の機構を 0.35.0 で外した ∴ **採っていない repo で hook は例外なく黙る。** ⚠ **gate の外に残るのは CI の表示と session の記録だけ**であり、どちらも aim についての事実ではない。⚠ **`precompact` の 2 条件の段も、hook ごと過去のものになった。**
+
 # PROCESS
 
 - [done] **hook 3 枚が、採用していない project で黙るようになった。** `aim-facts` / `boot-ritual` / `precompact` はいずれも出力 0 byte（実測）。⚠ **判定は `CLAUDE.md` の marker であり、`docs/aims/` の有無ではない** —— 後者では「aim と無関係な repo」と「採ったが node がまだ 0 の project」を区別できない

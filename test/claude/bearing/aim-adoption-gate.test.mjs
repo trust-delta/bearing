@@ -153,7 +153,7 @@ test('--remove は、corpus を持つ repo に対しても「黙る」と断言�
 test('corpus を見つけたが採用されていない、は 2 行目が 1 行だけ述べる', () => {
   // ⚠ **これが反転の唯一の代償を埋める面である**（`isEngaged` の説明）—— 採用するまで機構は
   // 完全に黙る ∴ **黙る機構は自分の存在を告げられない。**
-  const line = renderBearing('unadopted', { batonUnread: false, aimCount: 11 }).join(' ')
+  const line = renderBearing('unadopted', { aimCount: 11 }).join(' ')
   assert.match(line, /未採用/)
   assert.match(line, /11/)
 })
@@ -161,11 +161,12 @@ test('corpus を見つけたが採用されていない、は 2 行目が 1 行�
 test('corpus が無ければ 2 行目は完全に黙る —— 未採用とは述べない', () => {
   // ⚠ **`docs/aims/` を持たない repo に「aim 未採用」と述べれば、それは全 project に居座る**
   // 勧誘の行になる。述べてよいのは corpus を実際に見つけたときだけである。
-  assert.deepEqual(renderBearing('not-engaged', { batonUnread: false }), [])
+  assert.deepEqual(renderBearing('not-engaged', {}), [])
 })
 
-test('未採用でも baton の未読だけは述べる —— handoff は aim ではない', () => {
-  const line = renderBearing('unadopted', { batonUnread: true, aimCount: 2 }).join(' ')
-  assert.match(line, /baton 未読/)
-  assert.match(renderBearing('not-engaged', { batonUnread: true }).join(' '), /baton 未読/)
+test('handoff の退役後、採っていない project の 2 行目に baton は現れない', () => {
+  // ⚠ **かつて未読の baton だけが gate の例外だった**（2026-10-27 に handoff を退役）。
+  // 旧い facts の形が渡っても、例外が戻らないことを固定する。
+  assert.deepEqual(renderBearing('not-engaged', { batonUnread: true }), [])
+  assert.doesNotMatch(renderBearing('unadopted', { batonUnread: true, aimCount: 2 }).join(' '), /baton/)
 })

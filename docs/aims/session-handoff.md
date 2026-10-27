@@ -1,10 +1,14 @@
 ---
 aim: セッションを跨ぐ文脈は、ネイティブ圧縮に委ねず、何を残し何を捨てるかを選んで引き継ぐ
 parent: bearing
-state: open
+state: dead
 ---
 
 # IS
+
+🔴 **2026-10-27、人間がこの aim を `dead` にした**（逐語: 「**deadにしましょう（必要になったら戻せるのがaimのいいところです）**」「**引かせてみましょう（既に/compactの一定の優位性も本repoで確認済、今回セッション跨ぎも一定の解消を得ています）**」）。前提として、人間は主経路を Claude Desktop（Remote Control）へ移し、CLI を自分からは立ち上げないと述べた（[[bearing]] の `# IS` 末尾）。⚠ **これは「目的が満たされた」ではなく「この手段を持つ必要が限りなく低下した」という判断である** —— 継続は `/compact` が、セッションを跨ぐことはハーネス側（Desktop の分岐 brief・残り続けるセッション）が一定まで担う、と人間が判断した。
+
+⚠ **機構は 0.35.0 で外した**（`# PROCESS` 末尾）。⚠ **機体に残った baton は読まず、消しもしない** —— 退役は機構を止めたのであって、作業がどこにも残っていない破棄をする理由ではない。⚠ **戻すときの足場**: 外した code は git の履歴に在る（0.34.0 まで）。以下の本文は、退役した時点の記録としてそのまま残す。
 
 **圧縮との差は「選んだかどうか」である。** ネイティブ圧縮は反応的で不可視であり、落ちたものを誰も選んでいない。⚠ **本 node の価値は baton の構造ではなく authoring の judgment にある** —— 何を残し何を「git と目的から再導出できる」として捨てるか、その判断こそ圧縮に欠けているものだ ∴ **機械が触ってよいのは判断でない部分だけ**（退避・刻印・機械的な差分）で、取捨には一切触れない。
 
@@ -170,6 +174,8 @@ state: open
 - 🔴 **fork で立ったセッションに facts を注入するか。** fork は会話全体を引き継ぐ ∴ 注入済みの facts も持つが、それは分岐する前の時点のものである。
 - 🔴 **repo の外の作業の引き継ぎ**（統括 repo の決定 #21 から。人間の整理、本機の Claude 経由 2026-10-27: 「repo の中の作業は remote に集まるので問題はない。問題は repo の外の作業」）。⚠ **`# IS` は「machine-local は今も目的の帰結である」と述べる** ∴ **機械を跨ぐ層を足すことは、その不変に触れる。** 本機の Claude の案は、置き換えではなく、`/bearing:handoff w` のときに要約を Artifact にも書く「追加の層」である。添えられた指摘は 2 点: ⑴ hook はシェルで Docs のコネクタを呼べない ∴ 未読の検知が注意力頼みになる ⑵ 他の機械の項は再開の材料ではなく参考にとどめる（別の機械の作業ツリーを前提にした内容のため）。⚠ **当方の読みを 1 つ足す**: Remote Control の hub を通す限り、作業は作業機で走る ∴ machine-local が崩れるのは、本機で直接立てたセッションだけである（導出であって実測ではない）。
 
+⚠ **2026-10-27、`dead` により上の判断待ちは閉じた**（`# IS` 冒頭）。⚠ **handoff に固有でないものは移した** —— worktree が corpus を見失う欠陥は [[aim-tree]] の `# PROCESS` へ、repo の外の作業の記録は [[bearing]] の `# ESCALATION` へ。
+
 # PROCESS
 
 - [done] **handoff の名指し先を、repo の path から skill の同梱物へ移した。** `boot-ritual.mjs` / `precompact.mjs` / `aim-facts.mjs` の 3 枚。⚠ **回帰の門も置いた** —— hook の出力が aim の repo path を 1 文字も含まないことを検査する（⚠ **先行の試験はその欠陥のほうを固定していた**: `/_guide\/handoff\.md/` に一致することを要求していた）。⚠ **門を鈍いままにするため、説明の文言からも path の字を落とした** —— 字が在れば、門は本物の回帰と説明を区別できない
@@ -313,8 +319,7 @@ state: open
 
 - [done] 🔴 **unit を「agent が今どこに立っているか」ではなく「このセッションが何を対象にしているか」から引くようにした**（人間の決定 2026-09-30:「project dir に固定する方向で直して」）。⚠ **踏んでいた**: 消費者 2 repo で、root で立ったセッションが下位 dir を別の unit として記録していた（`~/.bearing/units/` に 5 件。[[consumer-evidence]] の `# IS`）。**原因は 2 経路**で、どちらも agent の `cd` に追随していた。⑴ **hook** —— 入力は `workspace` を持たず `cwd` だけであり、それが動く。**実測 2026-09-30**（Claude Code 2.1.284、PostToolBatch hook に書き出す 1 行を一時的に足し、Bash で `cd carriers/claude` した直後）: `input.cwd` と hook の `process.cwd()` は下位 dir へ動き、**`CLAUDE_PROJECT_DIR` だけが root に留まった** ∴ `resolveCwd` の 2 番目に env を置いた（`workspace.project_dir` の次、`current_dir` より前）。⑵ **CLI** —— `bearing-handoff.mjs` は `process.cwd()` を読み、**Bash tool の env に `CLAUDE_PROJECT_DIR` は無い**（同日再測。2026-09-03 と同じ）。⚠ **代わりに `CLAUDE_CODE_SESSION_ID` が在り、hook が記録した `session` と一致した** ∴ `sessionUnitRoot` が **cwd から上へ辿り、この session id を記録している unit を root とする**。⚠ **上るのは `resolveUnit` の「決して上らない」に反しない** —— あちらは cwd から project を*推測*しない規則であり、ここが従うのは hook の*記録*である。⚠ **見つからなければ cwd へ落ちる**（直す前の挙動。並走で記録を取られた側もここへ落ちる —— 取り違えず、戻るだけ）。root が cwd と違えば、CLI はそれを 1 行述べる。✅ **変異試験を 3 つ当てた**（実測 2026-09-30）: CLI を `process.cwd()` へ戻すと `handoff.test.mjs` の 2 本、`resolveCwd` から env を外すと `cwd-resolution.test.mjs` の 1 本と `boot-ritual.test.mjs` の 1 本が赤、復元で 588 本緑・`consumer-check` 28/28。⚠ **`cd` した shell で `write` が baton を割る経路は、直す前にも踏んでいない** —— **code を読んでの推定を test が再現した**のであって、実地の割れを直したのではない。⚠ **既に下位 dir に生まれた 5 つの unit（`session` 1 枚ずつ）は消していない** —— 人間の home の下のものである。⚠ **`CLAUDE_CODE_SESSION_ID` と `CLAUDE_PROJECT_DIR` はハーネスの env であり、日付の無い約束ではない** —— 消えれば CLI は黙って cwd へ落ちる（直す前へ戻るだけで、割れを新たには作らない）。**再測**: `echo $CLAUDE_CODE_SESSION_ID; cat ~/.bearing/units/<unit>/session` が一致するか
 
-- [todo] **worktree の `.git`（file）を repo として認める。** `resolveUnit` の `isDir(.git)` が worktree を落とし、corpus を見失う（`# IS` 末尾、実測 2026-10-27）。⚠ **これは見失う側の欠陥であり、worktree を本体と同じ unit とみなすかは別の問いである**（`# ESCALATION`）。⚠ **`lib/unit.mjs` は facts・statusline・corpus-delta も使う** ∴ 直せばこの node の外にも効く。
-- [todo] **未読のまま archive へ退避される baton を、退避した側が述べるようにする。** 並行する `w` で、前の baton が読まれずに沈む（`# IS` 末尾、コードの読み）。
+- [done] **handoff を退役させた**（人間の決定 2026-10-27、0.35.0）。`UserPromptSubmit`（`boot-ritual`）と `PreCompact`（`precompact`）の hook、`/bearing:handoff` の skill と別名 2 枚、`bearing-handoff.mjs`、`lib/baton.mjs` を外し、facts と statusline から baton の表示を外した。⚠ **session の記録は残した** —— 消費者を数える手段だからである（[[consumer-evidence]]）。書き手は prompt ごとの `boot-ritual` から SessionStart の `aim-facts` へ移した（毎 prompt の node 起動をやめた。本機のように起動が遅い環境で重いため）。置き場の規則は `lib/unit-home.mjs` に残した（CI の結果と session の記録が住む）。⚠ **この日の朝に置いた `[todo]` 2 つは外した** —— worktree の欠陥は [[aim-tree]] へ移し、未読 baton の退避は機構ごと無くなった。
 
 # OBSERVATION
 

@@ -148,8 +148,9 @@ let seq = 0
  * 出荷 copy の bin を 1 本走らせる。
  *
  * ⚠ **`cwd` は必ず消費者である**（上の見出しコメント）。⚠ **session id は毎回新しい** ——
- * `precompact` は `os.tmpdir()` の marker で「セッションにつき一度」を守る ∴ 使い回せば
- * 2 度目以降は黙り、その沈黙は検査の成功に見える。
+ * hook は session ごとの状態を `os.tmpdir()` に置く ∴ 使い回せば前の呼び出しの状態を
+ * 引き継ぎ、その沈黙や差分は検査の成功に見える。（2026-10-27 まで、`precompact` の
+ * 「セッションにつき一度」の marker がこの理由だった。）
  */
 function runBin(env0, shipped, bin, { cwd, args = [], input = {} } = {}) {
   const payload = typeof input === 'string'
@@ -200,7 +201,7 @@ async function main() {
     ...process.env,
     // ⚠ 委譲の guard。構造の側の塞ぎは「消費者が carrier manifest を持たない」ことである。
     BEARING_DELEGATED: '1',
-    // ⚠ **人間の実 baton と実 settings を触らせない。** 倒さなければ、この job は
+    // ⚠ **人間の実際の記録と実 settings を触らせない。** 倒さなければ、この job は
     // `~/.bearing/` と `~/.claude/settings.json` を書き換える。
     BEARING_HOME: path.join(base, 'bearing-home'),
     CLAUDE_CONFIG_DIR: path.join(base, 'claude-config'),
@@ -419,9 +420,21 @@ async function main() {
 
   // ── C. hook —— 採用の宣言で黙り、述べる ──────────────────────────────────
 
-  const HOOKS = ['aim-facts.mjs', 'boot-ritual.mjs', 'corpus-delta.mjs', 'precompact.mjs']
+  // ⚠ **2026-10-27 に 4 枚から 2 枚になった**（handoff の退役で `boot-ritual` と `precompact` が
+  // 去った）。⚠ **一覧が出荷物の hooks.json と食い違えば、検査は在る hook を測らずに緑になる**
+  // ∴ 下の検査が突き合わせる。
+  const HOOKS = ['aim-facts.mjs', 'corpus-delta.mjs']
 
-  await check('⑺ 採っておらず baton も無い repo で、hook 4 枚は 1 byte も出さない', async () => {
+  await check('hook の一覧は、出荷物の hooks.json が名指すものと一致する', async () => {
+    const conf = JSON.parse(await readFile(path.join(shipped, 'hooks', 'hooks.json'), 'utf8'))
+    const named = Object.values(conf.hooks).flat().flatMap((m) => m.hooks)
+      .map((h) => h.command.match(/bin\/([^"/]+\.mjs)/)?.[1]).filter(Boolean)
+    must(JSON.stringify([...new Set(named)].sort()) === JSON.stringify([...HOOKS].sort()),
+      `hooks.json は ${named.join('、')} を名指す —— 一覧が古い`)
+    return HOOKS.join('、')
+  })
+
+  await check('⑺ 採っていない repo で、hook は 1 byte も出さない', async () => {
     const said = []
     for (const h of HOOKS) {
       const r = runBin(env0, shipped, h, { cwd: plain })
@@ -429,7 +442,7 @@ async function main() {
       must(r.status === 0, `${h} が exit=${r.status} で終わった`)
     }
     must(said.length === 0, `黙るべき hook が述べた: ${said.join('、')}`)
-    return '4 枚とも 0 byte / exit 0'
+    return `${HOOKS.length} 枚とも 0 byte / exit 0`
   })
 
   await check('採った repo で aim-facts は述べ、しかも**その合成消費者を名指す**', async () => {
@@ -445,39 +458,32 @@ async function main() {
     return 'unit: adopted / open-todo: 1'
   })
 
-  await check('採った repo で precompact は exit 2 の stderr で遮断する', async () => {
-    const r = runBin(env0, shipped, 'precompact.mjs', { cwd: adopted, input: { trigger: 'auto' } })
-    must(r.status === 2, `exit=${r.status} —— 遮断は exit 2 である`)
-    must(/一度だけ.*遮断/.test(r.stderr), `遮断を述べていない: ${r.stderr.slice(0, 200)}`)
-    must(r.stdout === '', 'stdout へ書いた —— PreCompact の経路は stderr である')
-    return `stderr ${r.stderr.length} byte`
-  })
-
-  await check('人間が呼んだ圧縮（manual）は決して遮断しない', async () => {
-    const r = runBin(env0, shipped, 'precompact.mjs', { cwd: adopted, input: { trigger: 'manual' } })
-    must(r.status === 0, `exit=${r.status} —— 人の act を我々の儀式で上書きしない`)
-    must(r.stdout === '' && r.stderr === '', `manual で述べた: ${r.stdout}${r.stderr}`)
-    return '沈黙 / exit 0'
-  })
-
-  await check('唯一の例外 —— 採っていない repo でも、未読の baton は述べる', async () => {
-    const baton = '---\ncomposed-at: 2026-01-01T00:00:00Z\ntask: 合成した baton\n---\n\n## ▶ Task\n\n合成である。\n'
-    const w = runBin(env0, shipped, 'bearing-handoff.mjs', { cwd: withBaton, args: ['write'], input: baton })
-    must(w.status === 0, `baton を書けなかった: ${w.stderr}`)
-    const boot = runBin(env0, shipped, 'boot-ritual.mjs', { cwd: withBaton })
-    must(boot.stdout.length > 0, '採っていない repo で baton の未読を黙った —— 在るのに無いと報告する形である')
-    const facts = runBin(env0, shipped, 'aim-facts.mjs', { cwd: withBaton })
-    must(facts.stdout.length > 0, 'aim-facts が baton を黙った —— hook と面は同じ例外を持つ')
-    return `boot-ritual ${boot.stdout.length} byte / aim-facts ${facts.stdout.length} byte`
-  })
-
-  await check('その例外は baton に閉じる —— aim の fence も open-todo も出さない', async () => {
-    const r = runBin(env0, shipped, 'aim-facts.mjs', { cwd: withBaton })
-    for (const leak of ['open-todo', 'escalation:', 'bearing-drift-intra', 'bearing-awaiting-declaration', '# aim frame']) {
-      must(!r.stdout.includes(leak), `採っていない repo へ「${leak}」が漏れた`)
+  await check('handoff の入口は出荷物に無い', async () => {
+    // ⚠ **2026-10-27、人間が handoff を退役させた**（`docs/aims/session-handoff.md`）。
+    for (const gone of ['skills/handoff', 'commands/handoff-r.md', 'commands/handoff-w.md',
+      'bin/bearing-handoff.mjs', 'bin/boot-ritual.mjs', 'bin/precompact.mjs']) {
+      const there = await stat(path.join(shipped, gone)).then(() => true, () => false)
+      must(!there, `${gone} が出荷物に残っている`)
     }
-    must(/baton:/.test(r.stdout), 'baton を名指していない')
-    return 'baton のみ'
+    return '6 箇所とも無い'
+  })
+
+  await check('退役前の baton が機体に残っていても、採っていない repo の hook は黙る', async () => {
+    // ⚠ **退役は機構を止めたのであって、残った baton を消す理由ではない** ∴ 消費者の機体には
+    // baton が残りうる。⚠ **置き場の規則を出荷 lib から import せずに書く**（上の刻印と同じ理由）。
+    const slug = path.resolve(withBaton).replace(/[^A-Za-z0-9-]/g, '-')
+    const dir = path.join(env0.BEARING_HOME, 'units', slug, 'handoff')
+    await mkdir(dir, { recursive: true })
+    const baton = '---\ncomposed-at: 2026-01-01T00:00:00Z\ntask: 合成した baton\n---\n\n合成である。\n'
+    await writeFile(path.join(dir, 'active.md'), baton)
+    const said = []
+    for (const h of HOOKS) {
+      const r = runBin(env0, shipped, h, { cwd: withBaton })
+      if (r.stdout.length + r.stderr.length > 0) said.push(`${h}: ${r.stdout.length}+${r.stderr.length} byte`)
+    }
+    must(said.length === 0, `残った baton に hook が反応した: ${said.join('、')}`)
+    must(await readFile(path.join(dir, 'active.md'), 'utf8') === baton, '残った baton が書き換えられた')
+    return 'hook は黙り、baton は触られていない'
   })
 
   await check('corpus を持つが採用していない repo では、hook が黙る', async () => {
@@ -509,7 +515,7 @@ async function main() {
     // corpus は残っている —— 外すことは、持っている corpus を捨てることではない。
     const still = await stat(path.join(unadopted, 'docs', 'aims', 'root.md')).catch(() => null)
     must(still !== null, 'corpus が消えた')
-    return 'hook 4 枚が黙り、corpus は残った'
+    return `hook ${HOOKS.length} 枚が黙り、corpus は残った`
   })
 
   await check('採っていない repo でも、面は corpus を見つけたことだけは述べる', async () => {
@@ -521,24 +527,6 @@ async function main() {
     must(/未採用/.test(sl.stdout), `未採用と述べていない: ${JSON.stringify(sl.stdout)}`)
     must(!/todo|escalation/.test(sl.stdout), `面が aim の事実を描いた: ${JSON.stringify(sl.stdout)}`)
     return '「未採用」の 1 行のみ'
-  })
-
-  await check('採っていない repo でも、未読の baton だけは述べる', async () => {
-    const baton = '---\ncomposed-at: 2026-01-01T00:00:00Z\ntask: 合成\n---\n\n## ▶ Task\n\n合成である。\n'
-    const w = runBin(env0, shipped, 'bearing-handoff.mjs', { cwd: unadopted, args: ['write'], input: baton })
-    must(w.status === 0, `baton を書けなかった: ${w.stderr}`)
-    const facts = runBin(env0, shipped, 'aim-facts.mjs', { cwd: unadopted })
-    must(facts.stdout.length > 0, '採っていない repo で baton の未読を黙った —— aim の沈黙ではなく handoff の欠落である')
-    for (const leak of ['open-todo', 'bearing-drift-intra', '# aim frame']) {
-      must(!facts.stdout.includes(leak), `採っていない repo へ「${leak}」が漏れた`)
-    }
-    const boot = runBin(env0, shipped, 'boot-ritual.mjs', { cwd: unadopted })
-    must(boot.stdout.length > 0, '採っていない repo で boot-ritual が baton を黙った')
-    // ⚠ **precompact は handoff の機構である** —— baton が在ることは handoff 自身の証拠
-    // ∴ aim を採っていなくても発火する。**2 つの条件は対等ではない。**
-    const pc = runBin(env0, shipped, 'precompact.mjs', { cwd: unadopted, input: { trigger: 'auto' } })
-    must(pc.status === 2, `採っていない repo で precompact が黙った（exit=${pc.status}）—— baton が在れば handoff は生きている`)
-    return `baton のみ ${facts.stdout.length} byte / boot-ritual ${boot.stdout.length} byte / precompact 遮断`
   })
 
   await check('撤去された --decline は、素通りして採用しない', async () => {
