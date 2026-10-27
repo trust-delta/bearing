@@ -192,6 +192,33 @@ state: open
 
 ⚠ **置き先は `./CLAUDE.md` に限る。** docs は `./.claude/CLAUDE.md` も project instructions と認めるが、**compaction 後の再注入の表は "Project-root CLAUDE.md" としか書いておらず、あちらが含まれるか読み取れない** ∴ **確実な方だけを使う。** ⚠ **2026-09-03 の実装では「両方在れば止まる」を採らなかった** ——止まる理由は「どれが正か機械が決められない」ときに在るが、書き先は最初から 1 つに決まっている ∴ 曖昧さは無い。**`./.claude/CLAUDE.md` は触らず、在ることだけを述べる**（人間の file を我々の都合で動かさない）。⚠ **`.claude/rules/` に 1 枚置く道も在り、`paths:` 無しなら `CLAUDE.md` と同じ優先度・同じ再注入を持つ** —— **人間が `CLAUDE.md` を選んだ**（2026-09-03）。⚠ **費用は隠さず明示する**: 差し込む法は 12 行（約 1.9KB）で、`CLAUDE.md` の 200 行目安に対して **約 6% を消費者の予算から取る。**
 
+🔴 **2026-10-27、主経路が CLI から Claude Desktop（Remote Control）へ移ると、人間が述べた**（逐語: 「**bearingの意義は標準ハーネスでは足りない部分を補うことが命題でした。今回、CLI主体からデスクトップ（リモートコントロール）を主体に移行することで、補えなくなったもの・補う必要がなくなったものなどが出てきていると思います**」）。人間はそれまで WezTerm＋tmux の CLI だけを使っていた。本機（会社の私用 PC、Windows 11）で Desktop を使い始め、作業機の WSL では統括 repo の hub が Remote Control で常駐し、作業窓はそこから開かれる。
+
+🔴 **3 柱の中身は動いていない。動いたのは、補い方が前提にしていた 2 つである** —— ⑴ **常駐表示の器**（statusline は Desktop／Remote 経由では人間の目に入らない）⑵ **「1 つの path に 1 つのセッションが直列に続く」形**（Desktop はセッションを分岐させ、並行させ、worktree で立てる）。⚠ **同時に、補う器も増えた。** 洗い出しの結果を置く。確信の階級を各行に付ける —— 〔実測〕は当方が 2026-10-27 に測ったもの、〔先方〕は本機の Claude の実測（2026-10-26〜27）でこちらは再測していないもの、〔型〕は Claude Code 2.1.306 の mod の型定義と reference の読み、〔読み〕は bearing のコードの読み、〔未〕は誰も確かめていないもの。
+
+| 区分 | 項目 | 階級 | 宛先 |
+| :-- | :-- | :-- | :-- |
+| 補う必要が消えた | context／rate limit（statusline 1 行目）→ Desktop の usage ring | 〔未〕usage ring は 2026-09-01 の観測。Remote 経由の表示では見ていない | [[surface-parity]] |
+| 補う必要が消えた | CI の通過／失敗（`/bearing:ci`）→ Desktop の CI status bar | 〔未〕同上 | [[surface-parity]] |
+| 補う必要が消えた | 同じ日の継続 → Desktop が分岐時に書く brief、残り続けるセッション | 〔先方〕⚠ brief は bearing の外で書かれ、確信の階級を運ばない | [[session-handoff]] |
+| 補えなくなった | statusline 2 行目（aim／todo／未読 baton／drift） | 〔実測〕＋〔型〕Remote Control の子セッションは描く端末を持たない | [[ambient-display]] |
+| 補えなくなった | 人間が木を直接動かす面（`aim.html`） | 〔読み〕作業機の disk 上の file ∴ 本機・mobile の browser から開けない | [[human-domain]] |
+| 補えなくなった | PreCompact の督促 | 〔先方〕話題ごとに分岐すると圧縮が起きにくい | [[session-handoff]] |
+| 前提が崩れた | unit が path で決まる | 〔実測〕worktree は別の unit になり、`.git` が file ゆえ corpus も見失う | [[session-handoff]] |
+| 前提が崩れた | baton の直列 | 〔読み〕並行する `w` で、前の baton が読まれずに archive へ沈む | [[session-handoff]] |
+| 前提が崩れた | SessionStart の matcher に `fork` が無い | 〔型〕〔未〕Desktop の fork がその source で立つかは測っていない | [[session-handoff]] |
+| 前提が崩れた | 本機の hook（16.8 秒・打ち切り・`node: not found`） | 〔先方〕 | [[dev-platform]] |
+| 増えた器 | mod の `Pane`／`AbovePrompt`／`$.ui.status`／`$.ui.toast`（`desktop`・`mobile` の面） | 〔型〕〔未〕bearing の plugin から描けるかは測っていない | [[surface-parity]] |
+| 増えた器 | `session.end`（settings の `SessionEnd`） | 〔型〕全 hook で 1.5 秒の上限 ∴ baton を著す時間は無い | [[session-handoff]] |
+| 増えた器 | Artifact／Claude Docs（機械を跨ぐ、repo の外の記録） | 〔先方〕hook からは呼べない | [[session-handoff]] |
+| 増えた器 | セッション間の message | 〔実測〕この洗い出しの発端は、本機の Desktop セッションから届いた message である | —— |
+
+⚠ **変わらず要るもの**: aim corpus・drift の検知・facts の注入・corpus-delta・handoff の「選ぶ」側（確信の階級・逐語・射程を運ぶこと）。⚠ **「ハーネスに相当するものが無い」は、上の表の出典を見た範囲での主張である** —— Desktop の機能を網羅して確かめたわけではない。
+
+🔴 **当方の読みを 1 つ置く**（導出であって実測ではない）—— **Remote Control の hub を通す限り、作業は物理的に作業機で走る** ∴ **baton が machine-local であることは、むしろ前より筋が通る。** 崩れるのは、本機の WSL で直接立てたセッションだけである。
+
+再測: `env | grep -E '^CLAUDE_CODE_(ENVIRONMENT_KIND|ENTRYPOINT)='`（2026-10-27 のこのセッションでは `bridge` / `sdk-cli`）
+
 # ESCALATION
 
 - 🔴 **走っている複製は、自分より新しい複製が同じ cache に在ることを述べない。** ⚠ **実測 2026-09-17**（対象: 消費者と同じ条件 —— bearing の checkout の外に作った使い捨て repo。⚠ **外で測るのは `setup-aim` が委譲するからである**）: **`0.30.0/bin/` の CLI で `setup-aim` を打つと、古い canon が置かれ**（`検証:` が慣例ラベルに 1 件・退役した欄を宛先に名指す行 1 件）**「末尾へ置いた（v0.30.0）」と成功を報告し、⚠ 同じ cache に `0.32.0` が在ることには 1 語も触れない。** **機構は `bin/bearing-setup-aim.mjs` の `const root = path.join(import.meta.dirname, '..')`** —— **CLI は自分の隣の `templates/` を置く。**
@@ -213,6 +240,8 @@ state: open
 - 🔴 **3 柱で足りているか —— 4 つ目の柱を立てるか。** 上の `# IS` は **「3 点である根拠は、今のところ『実際に足りなかった』以上のものではない」**「**4 つ目が現れれば `aim:` は動きうる**」と述べている ∴ **これは `aim:` の改訂を問う判断であり、エージェントには閉じられない。** 材料は `# PROCESS` の「1 サイクルの詰まり」の表に在る（2026-09-06、1 標本 —— 7 件のうち 3 柱に当たるのは 1 件）。⚠ **だが「どれにも当たらない」は「柱が足りない」を意味しない** —— 2026-09-02、人間は statusline を **「4 つ目の欠落ではなく、3 点をスムーズに遂行させる手段である」**と判定している（`# IS`）∴ 要るのは ⑴ **柱が足りない** ⑵ **柱を支える層に属する** ⑶ **そもそも柱の話ではない**（道具の性質）の振り分けであり、⚠ **足す根拠は「実際に足りなかった」と同じ強さを要る。** ⚠ **1 標本では偶然かどうかが分からない** ∴ 判断の前に `# OBSERVATION` の 2 標本目が要る。
 
   ⚠ **この判断待ちは、`7777715`（節を導入した commit）から 2026-09-06 まで `# OBSERVATION` の票として置かれていた** —— 🔴 **欄違いであって、内容は動いていない。** 正本は `# OBSERVATION` を「**人間が何を見れば、この aim が満たされたと言えるか**」だけの欄と定め、**判断そのものは `# ESCALATION`** へ振り分けている（`aim-authoring.md`）。⚠ **害は数字に出ていた**: 材料を数えるはずの `observation` が判断待ちで膨らみ、**裏側で `escalation: 0` が続いていた** —— 正本自身が「**書けば人間に届き、書かなければ届かない**」と述べている（人間の指摘 2026-09-06）
+
+- 🔴 **主経路が Desktop（Remote Control）へ移ることを、木としてどう受けるか**（2026-10-27。上の `# IS` 末尾の洗い出しから）。⚠ **移ること自体は人間が述べた** ∴ ここで問うのはその先である。⚠ **`aim:`（「ハーネスを置き換えずに外付けの拡張として供給する」）は、文言を動かさずに読める** —— 3 柱の中身は変わっていない。**だが各 node が「何で補うか」を決めたときの前提が動いた** ∴ **判断が 3 つ要る**: ⑴ **CLI 側の補いを副経路として保つか、畳むか**（statusline・`/bearing:ci`・PreCompact の督促）。⑵ [[surface-parity]] の上界（2026-09-07）を、mod という器を入れて引き直すか（あちらの `# ESCALATION`）。⑶ [[session-handoff]] の発火点・worktree の unit・repo の外の記録（あちらの `# ESCALATION`）。⚠ **⑵⑶ は ⑴ の答えに左右される** —— ⑴ で CLI を保つなら、⑵⑶ の一部は「副経路だけの穴」として扱える。⚠ **これは依存の向きを述べたのであって、順位ではない。**
 
 # PROCESS
 

@@ -32,6 +32,8 @@ state: open
 | `access(shim, X_OK)` が **win32 では常に成功する** ∴ 装着の検査が何も見ていなかった | [[ambient-display]] | 常に緑 |
 | checkout の改行が CRLF になり、**`node --test` が ✖10・`consumer-check` が NG 4** | 本 node（実測 2026-09-10） | ⚠ **同じ commit の CI は緑** |
 | 開発が WSL へ統一され、旧機体の baton 5 本が**別 home に取り残された** | 本 node（実測 2026-09-14） | ⚠ **機構は現在の home しか見ない ∴ 何も述べない。だがこれは設計どおりである**（baton は machine-local）—— **未読は 1 本も無い**（`active.md` は `read-at` 済み） |
+| 本機（2 台目の WSL）で bearing の hook が `node: not found` で落ちた —— node が fnm で入っており、非対話シェルに PATH が通らない（作業機は nvm で通る） | 本 node（本機の Claude の実測。対象は 2026-10-22 の 3DCG のセッション。⚠ こちらでは再測していない） | ⚠ 人間の画面に出たかは聞いていない |
+| 本機の Desktop の WSL セッションで、SessionStart hook が 16.8 秒かかり（上限 20 秒）、`~` で開くと打ち切られた（`hook_cancelled`）。⚠ 作業機では `aim-facts.mjs` が 0.54 秒だった（実測 2026-10-27、`time node carriers/claude/bearing/bin/aim-facts.mjs`）∴ corpus の組み立てそのものではない。原因は測っていない | 本 node（本機の Claude の実測 2026-10-26〜27。[[bearing]] の `# IS` 末尾） | 🔴 **「画面上はほとんど目立たない」**（本機の Claude の言）—— 打ち切られれば facts は 1 行も届かない |
 
 ## 🔴 法は既に在った。2 つ目の実装が、それを通らなかった
 

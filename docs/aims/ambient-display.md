@@ -56,6 +56,8 @@ state: open
 
 ⚠ **試験では原理的に届かない。** `test/claude/bearing/bearing-statusline.test.mjs` は `shimDiffers` を合成 fixture で検査しており**関数は正しい**が、⚠ **検査しているのは*配る側の* shim であって、*置かれた複製*は機体の上にしか無い** ∴ **CI がどれだけ緑でも、その機体の複製が古いかどうかは 1 バイトも述べていない。** ⚠ **[[consumer-evidence]] は「配るものが消費者として動くことを機械的に確かめる」node だが、*置かれた複製*はその機械層の射程の外に在る** —— **確かめられるのは配る側までであり、機体の上に置かれたものは、そこに居る者しか測れない。**
 
+⚠ **2026-10-27、この面は主経路で人間の目に入らなくなった**（[[bearing]] の `# IS` 末尾）—— **主経路が Desktop（Remote Control）へ移り、statusline はそこに描かれない**（型の読み ＋ 当方の env の実測。[[surface-parity]] の `# IS` 末尾）。⚠ **上の前提（デスクトップの Code に statusline は置けない）は覆っていない** —— **覆ったのは、その前提が「副経路の欠落」で済んでいたことのほうである。** 代わりの器の候補（mod の帯・枠）と、それを採るかの判断は [[surface-parity]] の `# ESCALATION` に置いた。
+
 # PROCESS
 
 - [done] **CLI 向けの statusline を実装した。** 1 行目に model / effort / branch / context / rate limit、2 行目に aim・todo・観測待ち・未読 baton・未 commit / 未 push / drift。⚠ **fence は cache を経ず正本の lib を直接呼ぶ** —— 実測 70ms で debounce 300ms に十分収まり、間接層を挟めば二重実装が生まれるからである

@@ -108,6 +108,13 @@ state: open
 
 🔴 **そして封印は「体感を比較するための処置」から「交絡を除くための処置」へ意味が変わった。** ⚠ **事前登録はこれを持っていなかった** —— **あれは体感の比較として書かれ、交絡としては `w` の棚卸し効果 1 つしか挙げていない。** ✅ **2 つ目を人間が供給した。**
 
+🔴 **2026-10-27、Claude Desktop がセッションを分岐させる形が現れた**（本機の Claude の実測 2026-10-26〜27。⚠ こちらでは再測していない。全体の洗い出しは [[bearing]] の `# IS` 末尾）—— 区切りの後に別の話題を出すと「新しいセッションで開始するか」を提案され、分けると今のセッションが brief を書いて新しいセッションを立てる。**fresh**（brief だけを渡す）と **fork**（会話全体を引き継ぐ）が在り、**古いセッションも残って並行する。** ⚠ **これは baton の前提「同じ unit で前が終わり、次が始まる」を、偶然の並走（`# PROCESS` の 2026-09-12）から日常の形へ変える。** 当方が確かめたこと:
+
+- 〔実測 2026-10-27、対象: scratchpad の使い捨て repo と `git worktree add` で作った worktree。`lib/unit.mjs` / `lib/handoff.mjs` を直接呼んだ〕🔴 **worktree は別の unit になり**（`unitSlug` は path を平坦化するだけ）、**しかも corpus を見失う** —— `resolveUnit` は `.git` を *directory として* 探すが、worktree の `.git` は file である ∴ `repos: []`。本体の checkout では repo 1 つと `docs/aims` を解決した（陽性対照）。⚠ **Desktop が worktree でセッションを立てるとき、baton は共有されず、facts・drift・statusline の 2 行目も corpus を失う。**
+  再測: worktree の path を `resolveUnit()` と `unitSlug()` に渡す。
+- 〔コードの読み〕**並行して `w` しても、前の baton は失われない** —— `writeBaton` は `archiveActive` で前の `active.md` を `archive/<stamp>.md` へ rename する（同じ秒でも番号を付ける）。⚠ **失われるのは「読まれること」である** —— 読む側が surface するのは `active.md` だけ ∴ **未読の baton が黙って archive に沈む。**
+- 〔型の読み、2.1.306〕**SessionStart の `source` は `'startup' | 'resume' | 'clear' | 'compact' | 'fork'` を持つ。** ⚠ **bearing の matcher は `startup|clear|resume`** ∴ **fork で立ったセッションには facts が注入されない可能性がある**（⚠ Desktop の fork がこの source で立つかは、誰も測っていない）。
+
 # ESCALATION
 
 🔴 **票 ① の形そのものを問い直すかどうか。** ⚠ **票は「native な圧縮に任せた場合より実際に良かったか」という*比較*を問うており、勝ち負けの答えしか受け取れない。** **だが 2026-09-09 の観測は、勝ち負けでない答えを返した**（AutoPlayNotes のエージェント、⚠ **自己申告 ＋ n=1**）—— 🔴 **「要約は会話について完全で、仕事の立ち位置について沈黙する。baton はその逆。競合ではなく、失うものの向きが違う 2 つである。」**
@@ -151,6 +158,17 @@ state: open
 ⚠ **2026-09-11、その「選ぶこと」に実測から中身が入った**（当方の導出。⚠ **確定は人間の act**）—— 🔴 **選ぶ対象は「何を残すか」ではなく「圧縮が構造的に運べないもの」である。** **測った限りそれは確信の階級と射程であり**（`# PROCESS` ⑷）、⚠ **`write.md` の様式にその欄が無い**: `Settled` / `Open & next` / `Tried & set aside` はどれも**「何を」の分類**であって、**「どれだけ確かか」の分類ではない。** 🔴 **候補**: 原則に「**他人の系についての主張を運ぶなら、日付・対象・射程を一緒に運ぶ。運べないなら運ばない**」を足す。⚠ **これは `# IS` 冒頭を否定しない —— 狭める**: **judgment の対象が「何が重要か」から「圧縮が落とす*種類*」へ移る。** ⚠ **同時に、逐語の欄は native が既に持っている ∴ そこを baton の売りにはできない。**
 
 🔴 **2026-09-11、人間が方向を述べた**（逐語: 「**不足は補い、取り入れるべきは取り入れるのが良さそうです**」）—— ⚠ **票は閉じないが、選択肢が 1 つ落ちた**: **「native と競う」でも「native に譲る」でもなく、両方向である。** ∴ 🔴 **不足を補う側 ＝ 較正（階級と射程）、取り入れる側 ＝ 逐語の欄。** ⚠ **`# IS` 冒頭の書き換えは依然として開いている** —— **人間はまだ「価値は authoring の judgment に在る」を書き換えていない。**
+
+🔴 **2026-10-27、プロセスの境界が、ハーネスの側から日常の形で現れた** —— **Desktop のセッション分岐**（`# IS` 末尾）。⚠ **上の候補 ⑷（発火点はプロセスの境界）に、Desktop が自前の brief で応えている形である** —— **だが brief は bearing の外で書かれ、`~/.bearing` に残らず、確信の階級も運ばない**（本機の Claude の指摘）。⚠ **本機の Claude が人間に示した当面の使い分けは**「同じ repo で前の作業が終わっているなら同じセッションを続け、並行させたいときだけ分ける。baton はその repo を離れるとき（その日の作業を終えるとき、機械を替えるとき）に、最後まで残ったセッションが書く」**であり、候補 ⑷ に近い** —— **採るのは人間である。**
+
+⚠ **訂正（2026-10-27、追記）—— 上段 2026-09-10 の「『terminal を閉じる直前』の hook は無い」は不正確だった。** **settings の `SessionEnd` は在り、mod の `session.end` もそれを映す**（2.1.306 の型の読み。`/clear` でも `reason: 'clear'` で発火する）。🔴 **正しくは「在るが、エージェントに書く時間を与えない」である** —— mod の `session.end` は全 hook で 1.5 秒の上限を持つ ∴ **baton を著すことはできず、「`w` されずに終わった」と印を付けるのが上限である。** ⚠ **2026-09-10 の文は、他人の系を日付の無い現在形で書いていた** —— 当時 `SessionEnd` が在ったかを、私は確かめていない。
+
+判断が要る点（いずれも [[bearing]] の `# ESCALATION`「主経路を受けて何を保つか」の答えに左右される）:
+
+- 🔴 **発火点**: 候補 ⑷ を採り、Desktop の分岐や `session.end` の印に乗せるか。
+- 🔴 **worktree を本体と同じ unit とみなすか。** 同じとみなせば baton を共有し、別とみなせば worktree ごとに baton が立つ。⚠ **同じとみなすほど、並行するセッションが同じ `active.md` を書く頻度は上がる。** ⚠ **corpus を見失う欠陥は、この判断と独立に直せる**（`# PROCESS`）。
+- 🔴 **fork で立ったセッションに facts を注入するか。** fork は会話全体を引き継ぐ ∴ 注入済みの facts も持つが、それは分岐する前の時点のものである。
+- 🔴 **repo の外の作業の引き継ぎ**（統括 repo の決定 #21 から。人間の整理、本機の Claude 経由 2026-10-27: 「repo の中の作業は remote に集まるので問題はない。問題は repo の外の作業」）。⚠ **`# IS` は「machine-local は今も目的の帰結である」と述べる** ∴ **機械を跨ぐ層を足すことは、その不変に触れる。** 本機の Claude の案は、置き換えではなく、`/bearing:handoff w` のときに要約を Artifact にも書く「追加の層」である。添えられた指摘は 2 点: ⑴ hook はシェルで Docs のコネクタを呼べない ∴ 未読の検知が注意力頼みになる ⑵ 他の機械の項は再開の材料ではなく参考にとどめる（別の機械の作業ツリーを前提にした内容のため）。⚠ **当方の読みを 1 つ足す**: Remote Control の hub を通す限り、作業は作業機で走る ∴ machine-local が崩れるのは、本機で直接立てたセッションだけである（導出であって実測ではない）。
 
 # PROCESS
 
@@ -294,6 +312,9 @@ state: open
   ⚠ **実地ではまだ 1 度も走っていない。** 🔴 **封印下 ∴ `w` を打っていない** —— 確かめたのは test と、著者値を渡した直接呼び出しだけである。⚠ **他 repo で回しても走らない**（実測 2026-09-12、対象: `~/.claude/plugins/cache/trust-delta/bearing/` —— **17 版すべてに `recordSession` が 0 件**、そして `lib/delegate.mjs` は **bearing の checkout の中だけ** working tree へ委譲する）∴ 🔴 **実地の観測には版上げが先に要る。**
 
 - [done] 🔴 **unit を「agent が今どこに立っているか」ではなく「このセッションが何を対象にしているか」から引くようにした**（人間の決定 2026-09-30:「project dir に固定する方向で直して」）。⚠ **踏んでいた**: 消費者 2 repo で、root で立ったセッションが下位 dir を別の unit として記録していた（`~/.bearing/units/` に 5 件。[[consumer-evidence]] の `# IS`）。**原因は 2 経路**で、どちらも agent の `cd` に追随していた。⑴ **hook** —— 入力は `workspace` を持たず `cwd` だけであり、それが動く。**実測 2026-09-30**（Claude Code 2.1.284、PostToolBatch hook に書き出す 1 行を一時的に足し、Bash で `cd carriers/claude` した直後）: `input.cwd` と hook の `process.cwd()` は下位 dir へ動き、**`CLAUDE_PROJECT_DIR` だけが root に留まった** ∴ `resolveCwd` の 2 番目に env を置いた（`workspace.project_dir` の次、`current_dir` より前）。⑵ **CLI** —— `bearing-handoff.mjs` は `process.cwd()` を読み、**Bash tool の env に `CLAUDE_PROJECT_DIR` は無い**（同日再測。2026-09-03 と同じ）。⚠ **代わりに `CLAUDE_CODE_SESSION_ID` が在り、hook が記録した `session` と一致した** ∴ `sessionUnitRoot` が **cwd から上へ辿り、この session id を記録している unit を root とする**。⚠ **上るのは `resolveUnit` の「決して上らない」に反しない** —— あちらは cwd から project を*推測*しない規則であり、ここが従うのは hook の*記録*である。⚠ **見つからなければ cwd へ落ちる**（直す前の挙動。並走で記録を取られた側もここへ落ちる —— 取り違えず、戻るだけ）。root が cwd と違えば、CLI はそれを 1 行述べる。✅ **変異試験を 3 つ当てた**（実測 2026-09-30）: CLI を `process.cwd()` へ戻すと `handoff.test.mjs` の 2 本、`resolveCwd` から env を外すと `cwd-resolution.test.mjs` の 1 本と `boot-ritual.test.mjs` の 1 本が赤、復元で 588 本緑・`consumer-check` 28/28。⚠ **`cd` した shell で `write` が baton を割る経路は、直す前にも踏んでいない** —— **code を読んでの推定を test が再現した**のであって、実地の割れを直したのではない。⚠ **既に下位 dir に生まれた 5 つの unit（`session` 1 枚ずつ）は消していない** —— 人間の home の下のものである。⚠ **`CLAUDE_CODE_SESSION_ID` と `CLAUDE_PROJECT_DIR` はハーネスの env であり、日付の無い約束ではない** —— 消えれば CLI は黙って cwd へ落ちる（直す前へ戻るだけで、割れを新たには作らない）。**再測**: `echo $CLAUDE_CODE_SESSION_ID; cat ~/.bearing/units/<unit>/session` が一致するか
+
+- [todo] **worktree の `.git`（file）を repo として認める。** `resolveUnit` の `isDir(.git)` が worktree を落とし、corpus を見失う（`# IS` 末尾、実測 2026-10-27）。⚠ **これは見失う側の欠陥であり、worktree を本体と同じ unit とみなすかは別の問いである**（`# ESCALATION`）。⚠ **`lib/unit.mjs` は facts・statusline・corpus-delta も使う** ∴ 直せばこの node の外にも効く。
+- [todo] **未読のまま archive へ退避される baton を、退避した側が述べるようにする。** 並行する `w` で、前の baton が読まれずに沈む（`# IS` 末尾、コードの読み）。
 
 # OBSERVATION
 
