@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-x02"
+  ],
+  "category": "purpose",
+  "feature": "record-corpus",
+  "node": "bearing",
+  "seq": 33,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "記録は docs/aim-db/<種類>/<id>.json の 1 件 1 file にする。作業窓は会話ごとに worktree を切るので、1 つの file への並行の追記は merge のたびに衝突するため。"
+}

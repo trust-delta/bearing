@@ -15,7 +15,13 @@ import path from 'node:path'
 export const DEFAULT_AIM_DB_DIR = 'docs/aim-db'
 
 /** 記録が持つ collection。⚠ 並びは読み手に見せる順でもある。 */
-export const COLLECTIONS = ['nodes', 'features', 'categories', 'decisions', 'interpretations']
+export const COLLECTIONS = ['nodes', 'features', 'categories', 'decisions', 'interpretations', 'questions']
+
+/**
+ * 問いの状態。⚠ **問いは人間の判断待ちである**（2026-10-29、本文の `# ESCALATION` から移した）——
+ * 答えが出たら、その答えの決定を `answeredBy` で名指して `answered` にする。問いそのものは消さない。
+ */
+export const QUESTION_STATUSES = ['open', 'answered']
 
 /** 固定の枠。機能は repo ごとに `features` が持ち、枠だけはどの repo でも同じ。 */
 export const FRAMES = [
@@ -91,14 +97,15 @@ export async function readStore(repoRoot, dir = DEFAULT_AIM_DB_DIR) {
  */
 export function validateStore(store) {
   const problems = []
-  const ids = (c) => new Set(store[c].map((x) => x.id))
+  const ids = (c) => new Set((store[c] ?? []).map((x) => x.id))
   const nodes = ids('nodes')
   const features = ids('features')
   const categories = ids('categories')
   const decisions = ids('decisions')
   const frames = new Set(FRAMES.map(([k]) => k))
   for (const c of COLLECTIONS) {
-    for (const x of store[c]) if (!ID.test(x.id)) problems.push(`${c}/${x.id}: id の形が不正`)
+    // ⚠ 種類が足される前の形（`questions` を持たない）も読めるように、欠けた種類は空と読む。
+    for (const x of store[c] ?? []) if (!ID.test(x.id)) problems.push(`${c}/${x.id}: id の形が不正`)
   }
   for (const n of store.nodes) {
     if (!n.aim) problems.push(`nodes/${n.id}: aim が無い`)
@@ -128,6 +135,16 @@ export function validateStore(store) {
     for (const b of i.basis ?? []) {
       if (!decisions.has(b)) problems.push(`interpretations/${i.id}: 実在しない決定を名指す ${b}`)
     }
+  }
+  for (const q of store.questions ?? []) {
+    if (!nodes.has(q.node)) problems.push(`questions/${q.id}: 未定義の node ${q.node}`)
+    if (!q.text) problems.push(`questions/${q.id}: text が無い`)
+    if (!QUESTION_STATUSES.includes(q.status)) problems.push(`questions/${q.id}: 未定義の status ${q.status}`)
+    if (q.status === 'answered' && !(q.answeredBy ?? []).length) problems.push(`questions/${q.id}: answered なのに答えの決定を名指さない`)
+    for (const d of q.answeredBy ?? []) {
+      if (!decisions.has(d)) problems.push(`questions/${q.id}: 実在しない決定を名指す ${d}`)
+    }
+    if (q.feature && !features.has(q.feature)) problems.push(`questions/${q.id}: 未定義の機能 ${q.feature}`)
   }
   return problems
 }
@@ -168,7 +185,9 @@ export function summarizeStore(store, { recent = 5 } = {}) {
     .filter((d) => d.date)
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (b.seq ?? 0) - (a.seq ?? 0)))
     .slice(0, recent)
-  return { features, unassigned, latest, totals: { decisions: store.decisions.length, current: current.length } }
+  // ⚠ **開いた問いは全件を返す** —— 人間の判断待ちは、数ではなく中身が要る。撤回した目的の問いは除く。
+  const open = (store.questions ?? []).filter((q) => q.status === 'open' && !dead.has(q.node))
+  return { features, unassigned, latest, open, totals: { decisions: store.decisions.length, current: current.length } }
 }
 
 /** 1 行に収める。⚠ 字数で切るのは表示のためだけで、記録そのものは切らない。 */
@@ -195,6 +214,11 @@ export function renderAimDbSection(summary, { dir = DEFAULT_AIM_DB_DIR, problems
     lines.push(`- | - | 機能が未割り当て | ${summary.unassigned.decisions} | ${summary.unassigned.current} | -`)
   }
   lines.push('```', '')
+  if (summary.open?.length) {
+    lines.push(`人間の判断を待っている問い（${summary.open.length} 件）:`, '')
+    for (const q of summary.open) lines.push(`- \`${q.id}\` [${featureLabel.get(q.feature) ?? '機能なし'}] ${clip(q.text, 90)}`)
+    lines.push('')
+  }
   if (summary.latest.length) {
     lines.push(`直近の人間の決定（新しい順に ${summary.latest.length} 件）:`, '')
     for (const d of summary.latest) {
@@ -210,4 +234,35 @@ export function renderAimDbSection(summary, { dir = DEFAULT_AIM_DB_DIR, problems
     '',
   )
   return lines.join('\n')
+}
+
+/**
+ * 開いた問いの id だけを読む。記録を持たない repo では `null`。
+ *
+ * ⚠ **statusline のための軽い読み** —— statusline は描くたびに走る ∴ 全件（数百）を読まず、
+ * 問いの dir だけを読む。撤回した目的の問いは除かない（node を読まない軽さと引き換えである）。
+ */
+export async function readOpenQuestions(repoRoot, dir = DEFAULT_AIM_DB_DIR) {
+  const base = path.join(repoRoot, dir)
+  try {
+    await readdir(base)
+  } catch {
+    return null
+  }
+  let names = []
+  try {
+    names = (await readdir(path.join(base, 'questions'))).filter((n) => n.endsWith('.json'))
+  } catch {
+    return []
+  }
+  const open = []
+  for (const n of names) {
+    try {
+      const q = JSON.parse(await readFile(path.join(base, 'questions', n), 'utf8'))
+      if (q?.status === 'open') open.push(n.slice(0, -'.json'.length))
+    } catch {
+      // 読めない問いは数えない。⚠ facts の側（readStore）が読めないことを述べる。
+    }
+  }
+  return open.sort()
 }

@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "bearing-x04",
+    "bearing-x05",
+    "bearing-x06"
+  ],
+  "category": "purpose",
+  "feature": "output-facts",
+  "node": "bearing",
+  "seq": 37,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "記録を持つ repo では、facts・statusline・corpus の差分の通知のいずれも、本文から数える残務・宣言待ち・判断待ち・観測を出さず、判断待ちは問いから数える。記録を持たない repo の挙動は変えない。"
+}

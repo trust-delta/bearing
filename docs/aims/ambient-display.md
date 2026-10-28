@@ -4,6 +4,8 @@ parent: bearing
 state: open
 ---
 
+⚠ **2026-10-29 に、この本文は凍結した** —— 以後の記録（人間の決定・エージェントの解釈・問い）は `docs/aim-db/` に書く（人間の決定 `bearing-x03`。運用は `CLAUDE.md` の「aim の記録 —— この repo での試行」）。以下は凍結した時点の記録として残す。目的の木（上の `aim:`・`parent:`・`state:`）は今も人間のものとしてここに在る。
+
 # IS
 
 **埋めるのは「面ごとの欠落」であって、新しい事実ではない。** 同じ Claude Code でも、デスクトップの Code は usage ring（context と plan usage）と CI status bar を **UI として持ち、CLI はどちらも持たない**。⚠ **footer の PR badge だけは両面に在る** —— stdin の `pr.*` は docs いわく footer の badge を mirror する（docs の読みであって実測ではない。2026-09-01 に interactive-mode を読んだ。⚠ **再測は安い**: open な PR を持つ branch で CLI の footer を見る）∴ **statusline に PR を描けば CLI では重複になる**。⚠ **この 1 文は 2026-09-05 まで「CLI は 1 つも持たない」と述べており、[[surface-parity]] の表（PR の review state は両面で揃っている）と食い違っていた** —— しかも誤っていたほうが、**直後に自分で立てる「両面に同じものを描けば片方では重複になる」を踏み抜く前提**だった。⚠ **∴「作業に有効な情報」とは、道具が持っていない情報のことではなく、*その面に出ていない*情報のことである** —— 何が有効かは面ごとに違い、両面に同じものを描けば片方では重複になる。

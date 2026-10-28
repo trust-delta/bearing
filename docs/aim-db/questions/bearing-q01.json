@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-17",
+  "feature": "output-dist",
+  "node": "bearing",
+  "note": "人間が 2026-09-17 に採ったのは「setup-aim.md に順序を書く」だけで、本文は「上の候補（CLI が新しい版を知らせる）は開いたままである」と明記している。",
+  "options": [
+    "CLI が新しい版の存在を 1 行で知らせる（止めず、/reload-plugins を名指すだけ）",
+    "何もしない（順序を間違えても、打ち直せば直る）"
+  ],
+  "recordedAt": "2026-10-28T15:39:07.252Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/bearing.md:246",
+  "status": "open",
+  "text": "古い版の `setup-aim` の CLI が、同じ cache にもっと新しい版があることを黙っている。CLI が自分の版と cache の中の最新版を比べ、違えば 1 行知らせるようにするか。そのセンサーは、ハーネスの cache の並び（`<root>/<版>/`）という他人の系に頼ることになる。"
+}

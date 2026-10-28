@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-x06"
+  ],
+  "category": "purpose",
+  "feature": "make-law",
+  "node": "bearing",
+  "seq": 32,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "試行の運用の法は CLAUDE.md の法の block の外に置き、配っている法（templates/ と block）には触れない。block と食い違う点は、試行の節が勝つと明記する。"
+}

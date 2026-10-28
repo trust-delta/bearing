@@ -327,3 +327,14 @@ test('観測票の無い backlog は 0 と描かれ、`undefined` にならな�
   assert.match(body, /observation: 0/)
   assert.ok(!body.includes('undefined'))
 })
+
+test('記録を docs/aim-db/ に一本化した repo（trial）は、本文から数える open-todo 等を差分の通知にも出さない', () => {
+  const backlog = { openTodoNodes: 3, escalationNodes: ['a'], unknownNodes: [], anomalies: [], awaitingNodes: [] }
+  const legacy = renderCorpusDelta({ repos: [{ label: 'old', working: [], backlog }] })
+  // 陽性対照: 記録を持たない repo は、今まで通り数える。
+  assert.match(legacy, /\*\*open-todo: 3\*\*/)
+  const trial = renderCorpusDelta({ repos: [{ label: 'new', working: [], backlog, trial: true }] })
+  assert.doesNotMatch(trial, /\*\*open-todo:/)
+  assert.doesNotMatch(trial, /\*\*escalation:/)
+  assert.match(trial, /new は記録を `docs\/aim-db\/` に一本化している（試行）/)
+})

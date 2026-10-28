@@ -4,6 +4,8 @@ parent: bearing
 state: done
 ---
 
+⚠ **2026-10-29 に、この本文は凍結した** —— 以後の記録（人間の決定・エージェントの解釈・問い）は `docs/aim-db/` に書く（人間の決定 `bearing-x03`。運用は `CLAUDE.md` の「aim の記録 —— この repo での試行」）。以下は凍結した時点の記録として残す。目的の木（上の `aim:`・`parent:`・`state:`）は今も人間のものとしてここに在る。
+
 # IS
 
 **判別線は「人が読む文か、機械が parse する token か」である。** 母語に寄せるのは前者だけで、後者は英語のまま据え置く —— fence のタグ（`bearing-drift-intra v1`）と field 名（`slug | anchor_commit | …`）はセッションが parse する契約であり、値も slug も英語である ∴ **これを訳すのは言語の統一ではなく契約の破壊**である。識別子・関数名・ファイル名も同じ側に立つ。逆に、hook が stdout へ出す散文・fence の `# none — …` コメント・skill の `description`・canon・aim node・code 内コメントは、いずれも**読まれるために書かれた文** ∴ 母語へ寄せる。

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "purpose",
+  "feature": "output-facts",
+  "node": "bearing",
+  "seq": 35,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "セッション開始時には記録の全件ではなく要約（機能ごとの件数・直近の決定・開いた問い・引き方）を注入する。決定は増え続けるので、全文を載せれば文脈を量に比例して食うため。"
+}
