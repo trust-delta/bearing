@@ -1,0 +1,14 @@
+{
+  "category": "retirement",
+  "date": "2026-10-27",
+  "feature": "whole-env",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 48,
+  "source": "docs/aims/session-handoff.md:322",
+  "summary": "handoff の機構を 0.35.0 で退役させる。"
+}

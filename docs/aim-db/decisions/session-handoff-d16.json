@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-08",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "session-handoff",
+  "quote": "もしかしたら haiku かもしれない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 16,
+  "source": "docs/aims/session-handoff.md:67",
+  "summary": "ネイティブ圧縮はどんな指示でどのモデルが畳むのかが使う側に示されない。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 1,
+  "source": "docs/aims/ambient-display.md:9",
+  "status": "current",
+  "text": "埋めるのは面ごとの欠落であり、作業に有効な情報とはその面に出ていない情報である。PR は CLI の footer に在るため statusline に描けば重複になる。"
+}

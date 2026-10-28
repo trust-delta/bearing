@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "session-handoff-d01",
+    "session-handoff-d02",
+    "session-handoff-d48"
+  ],
+  "category": "retirement",
+  "feature": "whole-env",
+  "node": "session-handoff",
+  "seq": 26,
+  "source": "docs/aims/session-handoff.md:11 docs/aims/session-handoff.md:177 docs/aims/session-handoff.md:322",
+  "status": "current",
+  "text": "handoff は退役し、hook・skill・別名・CLI・baton の表示は外れている。session の記録と置き場の規則（lib/unit-home.mjs）は消費者の計数と CI の結果のために残し、機体に残った baton は読まず消さず、戻すときの足場は git の履歴（0.34.0 まで）に置く。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-17",
+  "feature": "make-law",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "setup-aim.md に順序を書いておきましょう",
+  "recordedAt": "2026-10-27T15:56:02.462Z",
+  "recordedBy": "agent",
+  "seq": 39,
+  "source": "docs/aims/bearing.md:252",
+  "summary": "古い複製で setup-aim が走る問題に対し、候補 ⑴ を採り commands/setup-aim.md に打つ順序を書く。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d28"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "bearing",
+  "seq": 25,
+  "source": "docs/aims/bearing.md:149 docs/aims/bearing.md:151 docs/aims/bearing.md:193 docs/aims/bearing.md:315",
+  "status": "current",
+  "text": "静的な法は project root の ./CLAUDE.md に独立行の HTML コメント marker（版・在り処・本文 sha）付き block として置き、実行時にしか出せない事実は hook で出す。./.claude/CLAUDE.md は触らず、人間が手を入れた block も古い block も置き直さず述べて止まる。"
+}

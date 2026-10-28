@@ -1,0 +1,6 @@
+{
+  "aim": "同一エージェントの起動経路が複数ある場合、そのUI上の表示を可能な限り揃える",
+  "feature": "whole-env",
+  "parent": "bearing",
+  "state": "open"
+}

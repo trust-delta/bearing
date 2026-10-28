@@ -1,0 +1,14 @@
+{
+  "category": "drift-mechanics",
+  "date": "2026-09-10",
+  "feature": "output-drift",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "purpose-drift",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 6,
+  "source": "docs/aims/purpose-drift.md:68",
+  "summary": "aim と code の join は履歴の中に在り、[done] mark を書き入れた commit がその mark の指す code を一緒に持っていると指摘した。"
+}

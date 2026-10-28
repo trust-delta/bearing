@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "make-law",
+  "node": "consumer-evidence",
+  "seq": 2,
+  "source": "docs/aims/consumer-evidence.md:11 docs/aims/consumer-evidence.md:13",
+  "status": "superseded",
+  "text": "with-aim が canon を消費者へ置き、place/current/stale/edited/unknown の 5 状態を持ち、bearing ではそのうち current しか起こりえない。"
+}

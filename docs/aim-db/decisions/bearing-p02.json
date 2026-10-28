@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-10-27",
+  "feature": "whole-purpose",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "bearing",
+  "quote": "標準的なコーディングハーネスに欠けている「目的の保持・ズレの検知」を、ハーネスを置き換えずに外付けの拡張として供給する",
+  "recordedAt": "2026-10-27T16:08:08.460Z",
+  "recordedBy": "agent",
+  "seq": 34.5,
+  "source": "git 7db4f1f docs/aims/bearing.md の aim:",
+  "summary": "目的を改訂し、「文脈の引き継ぎ」を降ろして 2 点にした。文言はエージェントが出した候補 A で、人間がそれを選んだ（bearing-d34・d35）。"
+}

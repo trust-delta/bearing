@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-02",
+  "feature": "whole-env",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "surface-parity",
+  "quote": "同一エージェントの起動経路が複数ある場合、そのUI上の表示を可能な限り揃える",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git e7aecd6 docs/aims/surface-parity.md の aim:",
+  "summary": "surface-parity の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

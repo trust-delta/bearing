@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "human-domain-d04",
+    "human-domain-d05",
+    "human-domain-d09"
+  ],
+  "category": "surface-writeback",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 26,
+  "source": "docs/aims/human-domain.md:74 docs/aims/human-domain.md:96 docs/aims/human-domain.md:142 docs/aims/human-domain.md:143 docs/aims/human-domain.md:145",
+  "status": "current",
+  "text": "観測されたのは描画まで（木・frontmatter 部・3 タブの表示）であり、面から state: を書き換えて file が動くこと・同時書き込みの拒否・番の受け渡しとして働いたかは未観測のまま。往復の恒等を固定しているのは契約 block の test であって実 corpus への書き込みではない。"
+}

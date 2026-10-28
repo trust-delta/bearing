@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-10",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 25,
+  "source": "docs/aims/session-handoff.md:142",
+  "summary": "嵩んだ context による品質低下の防止は /compact が同等以上に果たしており、ハーネスに不足しているのは session（process）を跨いで必要な文脈を引き渡せる点である。"
+}

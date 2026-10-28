@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d42"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 6,
+  "source": "docs/aims/bearing.md:258 docs/aims/bearing.md:285 docs/aims/bearing.md:287 docs/aims/bearing.md:321",
+  "status": "current",
+  "text": "4 つ目の柱を立てるかは、標準ハーネス＋bearing で回したサイクルの詰まりの表を材料にするが、1 標本（7 件中 3 柱に当たるのは 1 件、それも人間が捕まえた）では判断できず、2 標本目を要する。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-17",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "session-handoff",
+  "quote": "bearing の更新を引くために `/compact` では用が足りない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 27,
+  "source": "docs/aims/session-handoff.md:146",
+  "summary": "配った先で bearing の更新を引くには /compact では足りなかった（後に d28 で手順の問題と訂正）。"
+}

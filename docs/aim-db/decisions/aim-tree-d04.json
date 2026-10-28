@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": "2026-09-10",
+  "feature": "record-corpus",
+  "form": "paraphrase",
+  "kind": "言明",
+  "node": "aim-tree",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 4,
+  "source": "docs/aims/aim-tree.md:33",
+  "summary": "aim は repo を問わず機能することを要求する。"
+}

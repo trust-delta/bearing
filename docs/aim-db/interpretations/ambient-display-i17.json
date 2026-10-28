@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 17,
+  "source": "docs/aims/ambient-display.md:81",
+  "status": "current",
+  "text": "2 行目の label は「宣言待ち」で、人間に番を渡しながら観測票を 1 枚も持たない node が在るときだけ「観測票なし」を出す。健全なとき 0 で幅を食わない。"
+}

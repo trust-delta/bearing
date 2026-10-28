@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d22"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 19,
+  "source": "docs/aims/bearing.md:140 docs/aims/bearing.md:142 docs/aims/bearing.md:308",
+  "status": "current",
+  "text": "plugin は自分の実体が載っているかを検査せず、hook と skill が不在時に黙ることは負うと決めた費用である。不在を述べるのは plugin の外（~/.claude/）に住む statusline の shim だけである。"
+}

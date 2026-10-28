@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-08",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "言明",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 15,
+  "source": "docs/aims/session-handoff.md:63",
+  "summary": "ネイティブ圧縮はそのセッションを続けるための要約であり、新しいセッションへ運ぶ情報とは目的が違う（∴ 選ぶ基準が違う）。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "main-path",
+  "feature": "whole-env",
+  "node": "human-domain",
+  "seq": 11,
+  "source": "docs/aims/human-domain.md:60",
+  "status": "current",
+  "text": "Remote Control で作業機のセッションを別の機械から操るとき、面と corpus は作業機の disk に在るため操っている機械の browser からは開けず、人間が木を直接動かせるのは作業機の前に居るときに限られる（配置とコードの読み）。"
+}

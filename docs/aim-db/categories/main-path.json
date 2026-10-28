@@ -1,0 +1,5 @@
+{
+  "label": "主経路の移行",
+  "note": "CLI から Desktop（Remote Control）への主経路の移行と、それに伴う退役・休眠・追跡性に関するものを集める。",
+  "origin": "agent"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "baton-format",
+  "date": "2026-09-06",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "確かに覆せるかもしれませんが、現状の機構の実際の動作に不満が出たときに見直すべきであり、PR が merge された時点から今までにおいて問題が出ていないなら、その妥当性を検証すべき時ではない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 4,
+  "source": "docs/aims/session-handoff.md:15",
+  "summary": "merge 済みの決定は判断待ちではなく済んだ決定として baton に載せない。見直しの発火点は時間ではなく不満である。"
+}

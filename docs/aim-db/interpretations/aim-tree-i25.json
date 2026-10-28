@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "ownership",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 25,
+  "source": "docs/aims/aim-tree.md:134",
+  "status": "current",
+  "text": "frontmatter が人間の手でしか動いていないことを今守っているのは、エージェントが指示に従っているという事実だけである。"
+}

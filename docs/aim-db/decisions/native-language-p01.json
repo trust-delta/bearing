@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-01",
+  "feature": "make-writing",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "native-language",
+  "quote": "使用言語をエージェントに指示を出す人間の母語に合わせる",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 8adf6a2 docs/aims/operator-language.md の aim:",
+  "summary": "native-language の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-05",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 11,
+  "source": "docs/aims/adoption-declaration.md:87",
+  "summary": "setup-* は、どこへ書くか（setup-aim は project、setup-statusline は home）を説明文で明示する"
+}

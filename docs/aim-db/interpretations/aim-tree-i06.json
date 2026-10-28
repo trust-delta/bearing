@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "aim-tree-d01"
+  ],
+  "category": "ownership",
+  "feature": "make-writing",
+  "node": "aim-tree",
+  "seq": 6,
+  "source": "docs/aims/aim-tree.md:23 docs/aims/aim-tree.md:25 docs/aims/aim-tree.md:27",
+  "status": "current",
+  "text": "# IS はエージェントの解釈を置く節であり、解釈を足すときは問わずに書く。問うべきは人間の所有物である aim: を動かすときであり、迷ったときは触る先の所有者で escalate か記録かを選ぶ。"
+}

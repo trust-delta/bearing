@@ -1,0 +1,14 @@
+{
+  "category": "ci-verdict",
+  "date": "2026-09-07",
+  "feature": "output-statusline",
+  "form": "verbatim",
+  "kind": "指摘",
+  "node": "surface-parity",
+  "quote": "走るはずと知って計測する必要がある。機械的な判別だけでなく、人間やエージェントの判断あってこそ",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 15,
+  "source": "docs/aims/surface-parity.md:124",
+  "summary": "「走るはず」を知るには機械的な判別だけでは足りず、人間やエージェントの判断が要る。"
+}

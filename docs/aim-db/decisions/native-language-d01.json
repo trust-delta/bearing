@@ -1,0 +1,14 @@
+{
+  "category": "language-line",
+  "date": null,
+  "feature": "make-writing",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "native-language",
+  "quote": "エージェントへの指示は、英語と日本語の混在よりも、どちらかに統一した方が質が高い。",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/native-language.md:11",
+  "summary": "言語の統一のほうが混在より指示の質が高い、という前提を人間が推論として述べた。"
+}

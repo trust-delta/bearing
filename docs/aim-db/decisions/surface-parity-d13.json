@@ -1,0 +1,14 @@
+{
+  "category": "ci-verdict",
+  "date": "2026-09-07",
+  "feature": "output-statusline",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "surface-parity",
+  "quote": "より正確で穴のない手段、または齟齬の少ない方法が見えるまで",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 13,
+  "source": "docs/aims/surface-parity.md:104",
+  "summary": "commit status を見ない・粒度が workflow である穴を承知のうえで、暫定で gh run list の層に留まる。"
+}

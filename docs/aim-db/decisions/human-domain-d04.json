@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "human-domain",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 4,
+  "source": "docs/aims/human-domain.md:72",
+  "summary": "面の画面が初めて観測され、木の描画と人間が操作できる frontmatter 部が確認された"
+}

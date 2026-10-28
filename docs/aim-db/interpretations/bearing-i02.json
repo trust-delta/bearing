@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 2,
+  "source": "docs/aims/bearing.md:10",
+  "status": "current",
+  "text": "手段は標準ハーネスを置き換えない外付けの拡張に限られ、現時点では Claude Code の plugin である。plugin は手段であって目的ではない。"
+}

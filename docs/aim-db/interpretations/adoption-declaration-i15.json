@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d06"
+  ],
+  "category": "release-cadence",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 15,
+  "source": "docs/aims/adoption-declaration.md:63 docs/aims/adoption-declaration.md:126",
+  "status": "current",
+  "text": "「corpus を見よ」の警告は版の数字ではなく置かれるものの指紋（法の本文 sha と skill の指紋）で判定し、法と skill のどちらが動いたかを名指す。版だけが動いたときもそう述べ、--check と SessionStart hook も同じ 1 文を述べる。"
+}

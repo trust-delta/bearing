@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 3,
+  "source": "docs/aims/purpose-drift.md:13 docs/aims/purpose-drift.md:19 docs/aims/purpose-drift.md:93",
+  "status": "current",
+  "text": "悪いセンサーは無いセンサーに劣る。観測できなかったときはそう言い、fence は「ズレ無し」と「噛む履歴が無い」を別の文言で述べ、知らないことを「ズレ無し」へ畳まない。"
+}

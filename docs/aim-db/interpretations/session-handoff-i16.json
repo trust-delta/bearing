@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d45"
+  ],
+  "category": "baton-format",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 16,
+  "source": "docs/aims/session-handoff.md:292 docs/aims/session-handoff.md:294 docs/aims/session-handoff.md:296",
+  "status": "superseded",
+  "text": "baton の transcript: の値は機械が session の記録から導く。導いた path は毎回実在を確かめ、開けなければ欄を置かない。"
+}

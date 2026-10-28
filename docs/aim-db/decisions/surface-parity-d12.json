@@ -1,0 +1,14 @@
+{
+  "category": "ci-verdict",
+  "date": "2026-09-07",
+  "feature": "output-statusline",
+  "form": "paraphrase",
+  "kind": "その他",
+  "node": "surface-parity",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 12,
+  "source": "docs/aims/surface-parity.md:83",
+  "summary": "「走るはず」を教える外側の層（GitHub REST）を測るよう依頼した。"
+}

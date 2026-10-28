@@ -1,0 +1,16 @@
+{
+  "basis": [
+    "bearing-d29",
+    "bearing-d30",
+    "bearing-d31",
+    "bearing-d32",
+    "bearing-d33"
+  ],
+  "category": "main-path",
+  "feature": "whole-env",
+  "node": "bearing",
+  "seq": 28,
+  "source": "docs/aims/bearing.md:195 docs/aims/bearing.md:222 docs/aims/bearing.md:224 docs/aims/bearing.md:231",
+  "status": "current",
+  "text": "主経路は Desktop（Remote Control）であり、handoff は 0.35.0 で退役して hook は aim-facts と corpus-delta の 2 枚になった。CLI 側の補い（statusline・/bearing:ci・ambient-display）は退役ではなく休眠として残す。"
+}

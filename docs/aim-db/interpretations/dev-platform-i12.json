@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d01"
+  ],
+  "category": "platform-axis",
+  "feature": "output-dist",
+  "node": "dev-platform",
+  "seq": 12,
+  "source": "docs/aims/dev-platform.md:76",
+  "status": "current",
+  "text": "platform に依る分岐を機械が列挙し CI の出力に出すことは未了であり、今は grep しか手段が無く、分岐が増えても誰も述べない。根拠は配る先に在る。"
+}

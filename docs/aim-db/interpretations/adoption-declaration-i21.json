@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d11"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 21,
+  "source": "docs/aims/adoption-declaration.md:87 docs/aims/adoption-declaration.md:117",
+  "status": "current",
+  "text": "setup-* は説明文でどこへ書くかを述べる。setup-aim は repo、setup-statusline は home に書き、これは scope の選択ではなく置くものの性質（repo の corpus についての宣言か、home を含む path か）による。"
+}

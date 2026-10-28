@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d06"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 13,
+  "source": "docs/aims/adoption-declaration.md:61 docs/aims/adoption-declaration.md:67 docs/aims/adoption-declaration.md:122",
+  "status": "current",
+  "text": "block と skill は 1 組として扱い、判定をすべて済ませてから書く。skill の一致は中身だけで（改行は正規化）見て、欠けた 1 枚も不一致に数え、--check の終了値は組の判定で、採っていない repo は赤くしない。消えるのが我々の置いたものそのものなら打った act で足り、手元の何かかもしれないなら止めて人間に出す（--update は両方に効く）。"
+}

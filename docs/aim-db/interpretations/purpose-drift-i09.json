@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "purpose-drift-d05",
+    "purpose-drift-d06",
+    "purpose-drift-d07"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 9,
+  "source": "docs/aims/purpose-drift.md:68 docs/aims/purpose-drift.md:70",
+  "status": "current",
+  "text": "aim-code-stale は [done] mark を書いた commit から aim と code を join し、PR 単位で「読み直す理由が在る」までを述べ、剥離したとは判定しない。"
+}

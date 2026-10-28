@@ -1,0 +1,14 @@
+{
+  "category": "platform-axis",
+  "date": "2026-09-04",
+  "feature": "output-statusline",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "ambient-display",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 9,
+  "source": "docs/aims/ambient-display.md:71",
+  "summary": "statusline の面が 3 つのセッションから黙って消えたことを観測した。"
+}

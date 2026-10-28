@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "ambient-display-d05"
+  ],
+  "category": "law-placement",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 24,
+  "source": "docs/aims/ambient-display.md:41 docs/aims/ambient-display.md:43",
+  "status": "superseded",
+  "text": "2 行目は corpus（docs/aims/）の有無で採用を推測して gate し、採っていない project にも「corpus 無し」を描く。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d47"
+  ],
+  "category": "unit-home",
+  "feature": "record-machine",
+  "node": "session-handoff",
+  "seq": 11,
+  "source": "docs/aims/session-handoff.md:320",
+  "status": "current",
+  "text": "unit はセッションが対象にしている project dir から引く。hook は CLAUDE_PROJECT_DIR を cwd より優先し、CLI は CLAUDE_CODE_SESSION_ID を記録している unit を上へ辿って root とし、見つからなければ cwd へ落ちる。"
+}

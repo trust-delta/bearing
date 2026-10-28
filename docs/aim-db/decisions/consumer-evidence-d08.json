@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-07",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "consumer-evidence",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 8,
+  "source": "docs/aims/consumer-evidence.md:65",
+  "summary": "setup-aim が CLAUDE.md だけを更新し skill に触らない配信の穴を、人間がこの repo で捕まえた。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 6,
+  "source": "docs/aims/adoption-brief.md:23 docs/aims/adoption-brief.md:31 docs/aims/adoption-brief.md:33",
+  "status": "current",
+  "text": "面には版で腐る字（node 数・版番号・その日の count）を literal で持たせず、構造と act だけを述べる。実数が要る箇所は placeholder にする。"
+}

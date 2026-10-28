@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "ambient-display-d03"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "ambient-display",
+  "seq": 5,
+  "source": "docs/aims/ambient-display.md:19 docs/aims/ambient-display.md:21",
+  "status": "current",
+  "text": "本 node は柱ではなく柱を滑らかにするもので、bearing の 3 点は動かない。どの面とどの面を揃えるかは surface-parity が述べ、本 node はこの面に何をどう描くかだけを持つ。"
+}

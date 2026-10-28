@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d39"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "make-law",
+  "node": "bearing",
+  "seq": 22,
+  "source": "docs/aims/bearing.md:252 docs/aims/bearing.md:254",
+  "status": "current",
+  "text": "setup-aim を打つ順序（/plugin の update → /reload-plugins → setup-aim）を commands/setup-aim.md に書き、「走る複製は自分の隣の templates/ を置く」という理由を test で固定している。自分より新しい版が cache に在ることを述べるセンサーは開いたままである。"
+}

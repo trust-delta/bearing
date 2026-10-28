@@ -1,0 +1,15 @@
+{
+  "basis": [
+    "bearing-d24",
+    "bearing-d25",
+    "bearing-d26",
+    "bearing-d27"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 20,
+  "source": "docs/aims/bearing.md:159 docs/aims/bearing.md:161 docs/aims/bearing.md:165 docs/aims/bearing.md:167 docs/aims/bearing.md:175 docs/aims/bearing.md:185",
+  "status": "current",
+  "text": "同じ更新は面ごとに別の時定数で届く: slash command の一覧はプロセスで固まり、Bash の PATH はそのプロセスで最初に Bash を叩いた時点で固まり、skill の実体の解決は呼び出しごとに追随し、statusline は設定変更で即座に切り替わる。/reload-plugins は PATH の凍結を解き、/clear は解かない。"
+}

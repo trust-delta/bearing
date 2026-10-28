@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": null,
+  "feature": "whole-purpose",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "bearing",
+  "quote": "私の開発は bearing では足りず、pty-server などのエージェントが起動する場と、標準 harness では届かない機能が必要だった",
+  "recordedAt": "2026-10-27T15:56:02.462Z",
+  "recordedBy": "agent",
+  "seq": 20,
+  "source": "docs/aims/bearing.md:134",
+  "summary": "bearing では足りず、エージェントが起動する場と標準 harness で届かない機能が必要になったとき tmai は戻る（tmai の復活条件）。"
+}

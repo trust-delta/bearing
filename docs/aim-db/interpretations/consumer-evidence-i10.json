@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 10,
+  "source": "docs/aims/consumer-evidence.md:55",
+  "status": "current",
+  "text": "委譲（lib/delegate.mjs）は自分の古い版を食べないためのもので外せない。cache と working tree のずれは path に依る振る舞いだけである。"
+}

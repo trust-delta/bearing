@@ -1,0 +1,14 @@
+{
+  "category": "unit-home",
+  "date": "2026-09-03",
+  "feature": "record-machine",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 31,
+  "source": "docs/aims/session-handoff.md:184",
+  "summary": "別マシンの実機で面が旧置き場の取り残しを述べ、人間が baton を移し、空になった旧 dir を自分で消した。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-17",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "consumer-evidence",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 17,
+  "source": "docs/aims/consumer-evidence.md:127",
+  "summary": "消費者について見るべき軸は、その repo にある法と実際の aim との drift であって、法の版の新旧ではない。"
+}

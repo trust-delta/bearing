@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 6,
+  "source": "docs/aims/ambient-display.md:23 docs/aims/ambient-display.md:68",
+  "status": "current",
+  "text": "使う文字は ASCII printable と Wide が確定した日本語だけで、構造は記号ではなく色と余白が作る。Ambiguous 幅の文字は widthUnsafeChars と test が機構として止める。"
+}

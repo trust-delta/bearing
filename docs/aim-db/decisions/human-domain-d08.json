@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "提案",
+  "node": "human-domain",
+  "quote": "提案ですが、タブ化するのはどうでしょう　tree human agentの3つです（名は後ほど）。treeは今の見せ方。humanはESCALATIONとOBSERVATIONを見せます。agentではtodoをみせます",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 8,
+  "source": "docs/aims/human-domain.md:84",
+  "summary": "面を tree / human / agent の 3 タブに割り、human に ESCALATION と OBSERVATION、agent に todo を見せる（名は後で決める）"
+}

@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "aim-tree-d10",
+    "aim-tree-d06"
+  ],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "aim-tree",
+  "seq": 12,
+  "source": "docs/aims/aim-tree.md:79 docs/aims/aim-tree.md:81 docs/aims/aim-tree.md:83 docs/aims/aim-tree.md:85 docs/aims/aim-tree.md:87",
+  "status": "current",
+  "text": "判断は目的と現状に対して下されるのに # IS が 1 画面に収まらない。これは面では閉じられない記録の形の問題であり、冒頭段落が自足しているかは機械に測れないので、法の側で要求しないかぎり面は要約を出せない。"
+}

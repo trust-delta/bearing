@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 14,
+  "source": "docs/aims/surface-parity.md:55",
+  "status": "current",
+  "text": "CI は採用の gate の外の 1 行目に置く。30 分を過ぎた採取は「CI 古い」、run 0 本は「CI 無し」、gh の不在・認証の不在・時間切れは「CI 不明」とし、branch が違う結果は描かない。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d17"
+  ],
+  "category": "law-placement",
+  "feature": "record-machine",
+  "node": "adoption-declaration",
+  "seq": 10,
+  "source": "docs/aims/adoption-declaration.md:11 docs/aims/adoption-declaration.md:18 docs/aims/adoption-declaration.md:49 docs/aims/adoption-declaration.md:53 docs/aims/adoption-declaration.md:109 docs/aims/adoption-declaration.md:112",
+  "status": "superseded",
+  "text": "baton は repo の外（~/.bearing/units/<平坦化した unit root>/handoff/）に住み unit root には何も作らないので痕跡を残さない側に立ち、未読の baton は採っていない project でも述べる唯一の例外として hook と面が持つ（precompact は baton が在れば発火する）。"
+}

@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "bearing-d18",
+    "bearing-d34",
+    "bearing-d35"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 3,
+  "source": "docs/aims/bearing.md:120 docs/aims/bearing.md:124 docs/aims/bearing.md:227 docs/aims/bearing.md:262",
+  "status": "current",
+  "text": "柱は観測された欠落から後ろ向きに立てたものであり、現在は「目的の保持・ズレの検知」の 2 点である。柱を足すのも降ろすのも aim: の改訂であり人間の act である。"
+}

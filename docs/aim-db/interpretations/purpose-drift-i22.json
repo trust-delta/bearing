@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 22,
+  "source": "docs/aims/purpose-drift.md:19",
+  "status": "superseded",
+  "text": "履歴が育つまで drift の fence は当面沈黙する。"
+}

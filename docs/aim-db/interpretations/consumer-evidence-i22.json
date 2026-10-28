@@ -1,0 +1,16 @@
+{
+  "basis": [
+    "consumer-evidence-d13",
+    "consumer-evidence-d14",
+    "consumer-evidence-d15",
+    "consumer-evidence-d16",
+    "consumer-evidence-d17"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 22,
+  "source": "docs/aims/consumer-evidence.md:123 docs/aims/consumer-evidence.md:125 docs/aims/consumer-evidence.md:127",
+  "status": "current",
+  "text": "配った先の振る舞いの票は要求ではなく配る側の学びのための観察である。消費者は法を改変しても急場凌ぎをしてもよく、未修正は待機でありうるので、その repo がその後に動いたかと、法と aim の drift を併せて見る。"
+}

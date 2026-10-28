@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "surface-parity-d03"
+  ],
+  "category": "surface-bounds",
+  "feature": "whole-env",
+  "node": "surface-parity",
+  "seq": 7,
+  "source": "docs/aims/surface-parity.md:28",
+  "status": "current",
+  "text": "上界を引くのは経路ごとに実在する器（CLI は statusline と command、デスクトップは会話へ載る形）であり、その器で届かない面は構造的に届かない。補いの鮮度・費用・手数は上界の問いではなく手段の側にある。"
+}

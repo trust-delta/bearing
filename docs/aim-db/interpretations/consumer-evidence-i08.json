@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 8,
+  "source": "docs/aims/consumer-evidence.md:23 docs/aims/consumer-evidence.md:25",
+  "status": "current",
+  "text": "門が落ちることは 6 つの変異で確かめており、CI では set -o pipefail で tee が落ちた検査を緑にしないようにしている。"
+}

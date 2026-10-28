@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d31"
+  ],
+  "category": "unit-home",
+  "feature": "record-machine",
+  "node": "session-handoff",
+  "seq": 10,
+  "source": "docs/aims/session-handoff.md:184",
+  "status": "current",
+  "text": "旧置き場に取り残された baton は CLI と面が同じ検出で見つけ、「読め」ではなく「移せ」と述べる。在るものを無いと報告せず、旧 dir を消すのは人間の act として残す。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "record-machine",
+  "node": "consumer-evidence",
+  "seq": 19,
+  "source": "docs/aims/consumer-evidence.md:104",
+  "status": "current",
+  "text": "session の記録は aim-facts（SessionStart）が採用の gate より前に書き、aim を採らない repo も記録される。記録の契機はセッションの開始であり、fork したセッションは記録されない可能性がある。"
+}

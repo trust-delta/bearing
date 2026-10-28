@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 4,
+  "source": "docs/aims/session-handoff.md:13 docs/aims/session-handoff.md:21 docs/aims/session-handoff.md:31 docs/aims/session-handoff.md:243 docs/aims/session-handoff.md:255",
+  "status": "current",
+  "text": "機械が触ってよいのは判断でない部分（退避・刻印・機械的な差分）だけであり、取捨には触れない。自動圧縮の直前に 1 度だけ差し止めて選択を人へ返し、人が自ら打った /compact は決して差し止めない。"
+}

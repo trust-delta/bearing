@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "human-domain-d02",
+    "human-domain-d03"
+  ],
+  "category": "surface-reach",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 9,
+  "source": "docs/aims/human-domain.md:54 docs/aims/human-domain.md:56",
+  "status": "current",
+  "text": "到達範囲は Chromium 系に限られる前提を FSA の対応状況から引き継いでいるが、実測ではない。加えて、どの path 形で面を開き corpus を選ぶかが効き、UNC 経路は拒まれ WSLg から Linux path を選ぶ経路は通った。理由（UNC を通らないことが効くか）は測っていない。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-07",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 12,
+  "source": "docs/aims/session-handoff.md:47",
+  "summary": "新しいプロセスでサジェストに handoff / handoff-r / handoff-w の 3 項が並んだ（1 機体・1 セッション）。"
+}

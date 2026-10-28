@@ -1,0 +1,14 @@
+{
+  "category": "handoff-experiment",
+  "date": "2026-09-11",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "session-handoff",
+  "quote": "封印したからこそ情報が得られている",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 23,
+  "source": "docs/aims/session-handoff.md:109",
+  "summary": "handoff を封印したことで初めて圧縮についての情報が得られている。"
+}

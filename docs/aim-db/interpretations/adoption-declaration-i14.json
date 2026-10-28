@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d06"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 14,
+  "source": "docs/aims/adoption-declaration.md:69 docs/aims/adoption-declaration.md:71 docs/aims/adoption-declaration.md:73 docs/aims/adoption-declaration.md:75 docs/aims/adoption-declaration.md:124",
+  "status": "current",
+  "text": "置いた SKILL.md の frontmatter（context に載らない場所）に版と 3 枚の指紋を 1 行で刻み、刻印が今の中身を指していれば我々の置いたものとして揃え、止まるのは刻印が無いか中身と食い違うときだけにする。中身が一致して刻印だけ無いものは黙って刻む。台帳ではなく、既に置かれた刻印無しの複製は区別できないままで、誰が更新を決めるかも変えない。"
+}

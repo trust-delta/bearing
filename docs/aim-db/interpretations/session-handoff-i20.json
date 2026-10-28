@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "session-handoff-d24",
+    "session-handoff-d25",
+    "session-handoff-d26"
+  ],
+  "category": "handoff-value",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 20,
+  "source": "docs/aims/session-handoff.md:134 docs/aims/session-handoff.md:138 docs/aims/session-handoff.md:140 docs/aims/session-handoff.md:144 docs/aims/session-handoff.md:148 docs/aims/session-handoff.md:160",
+  "status": "current",
+  "text": "/compact はプロセスを保つので継続に強く、/resume はプロセスの境界を埋めるが、どちらも何を残し何を捨てるかを問わない。∴ 残る不足は跨ぐことではなく跨ぐときに選ぶことであり、発火点の候補は圧縮の直前ではなくプロセスの境界である。"
+}

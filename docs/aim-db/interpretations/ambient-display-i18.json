@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 18,
+  "source": "docs/aims/ambient-display.md:67",
+  "status": "current",
+  "text": "fence は cache を経ず正本の lib を直接呼び、二重実装を作らない。"
+}

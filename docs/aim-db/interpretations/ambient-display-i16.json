@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 16,
+  "source": "docs/aims/ambient-display.md:70",
+  "status": "current",
+  "text": "working tree の複製が描いているときは label に `bearing repo` を出し、cache なら黙る。判定は委譲の印ではなく自分の位置で行う。"
+}

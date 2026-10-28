@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 6,
+  "source": "docs/aims/consumer-evidence.md:19 docs/aims/consumer-evidence.md:21 docs/aims/consumer-evidence.md:112",
+  "status": "current",
+  "text": "委譲を塞いだことは BEARING_DELEGATED だけでなく合成消費者が carrier の manifest を持たないことでも見る。各 bin の cwd は消費者へ倒し、肯定側の検査は合成消費者を名指していることまで見て、session id は毎回新しくする。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-07",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 11,
+  "source": "docs/aims/session-handoff.md:45",
+  "summary": "引数つきの /bearing:handoff はサジェストから選んでもそのまま打てず、CLI でもデスクトップでも r/w を手で足すことになる。"
+}

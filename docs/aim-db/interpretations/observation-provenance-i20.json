@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "observation-provenance-d05"
+  ],
+  "category": "record-practice",
+  "feature": "record-corpus",
+  "node": "observation-provenance",
+  "seq": 20,
+  "source": "docs/aims/observation-provenance.md:55",
+  "status": "current",
+  "text": "法を置く前の実測は遡って書き直さないので、本 node は bearing の主張を書き換えない。CLAUDE.md を tracked にした事実の正本は本 node の PROCESS が持ち、bearing へは複製しない。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "human-domain-d15"
+  ],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 24,
+  "source": "docs/aims/human-domain.md:127 docs/aims/human-domain.md:129 docs/aims/human-domain.md:131",
+  "status": "current",
+  "text": "引用の単位ごと（節ごと・card 丸ごと）にコピーの口を置き、人間の面の label も引用の形にする。clipboard が拒まれたら理由ごと画面に出す。これは aim: が述べる人間→corpus ではなく人間→エージェントの意思疎通を助けるもので、aim: の文言には触れていない。"
+}

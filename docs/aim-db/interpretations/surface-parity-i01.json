@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-bounds",
+  "feature": "whole-env",
+  "node": "surface-parity",
+  "seq": 1,
+  "source": "docs/aims/surface-parity.md:9",
+  "status": "current",
+  "text": "CLI・デスクトップの Code・web は設定・hook・skill を共有するのに画面に出るものが違い、経路を変えるたびに何が見えていないかを覚え直す負担を人間が払っている。"
+}

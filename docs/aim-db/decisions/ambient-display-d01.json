@@ -1,0 +1,14 @@
+{
+  "category": "display-design",
+  "date": "2026-09-01",
+  "feature": "output-statusline",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "ambient-display",
+  "quote": "デスクトップの Code では statusline が出ない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/ambient-display.md:13",
+  "summary": "デスクトップの Code では statusline が表示されないことを観測した。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "unit-home",
+  "date": "2026-09-30",
+  "feature": "record-machine",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "project dir に固定する方向で直して",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 47,
+  "source": "docs/aims/session-handoff.md:320",
+  "summary": "unit は agent の cd に追随する cwd ではなく、セッションの project dir に固定して引く。"
+}

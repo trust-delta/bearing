@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d27"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "session-handoff",
+  "seq": 21,
+  "source": "docs/aims/session-handoff.md:146 docs/aims/session-handoff.md:150",
+  "status": "superseded",
+  "text": "/compact で bearing の更新を引けなかった配り先の一件は、プロセス境界が必要になった実地の事例である。"
+}

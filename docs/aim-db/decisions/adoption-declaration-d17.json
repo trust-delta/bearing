@@ -1,0 +1,14 @@
+{
+  "category": "self-repo-policy",
+  "date": "2026-09-03",
+  "feature": "record-machine",
+  "form": "paraphrase",
+  "kind": "確定",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 17,
+  "source": "docs/aims/adoption-declaration.md:112",
+  "summary": "baton の置き場の移行完了を人間が宣言し、bearing の .gitignore から .handoff/ の行を落とした"
+}

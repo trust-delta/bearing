@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 25,
+  "source": "docs/aims/human-domain.md:137",
+  "status": "current",
+  "text": "人間の番・エージェントの残務の両面で state: dead の node を数えず、除いた件数と slug を面に述べて facts の gatherBacklog と数を揃える。"
+}

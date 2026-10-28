@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 20,
+  "source": "docs/aims/purpose-drift.md:39 docs/aims/purpose-drift.md:41 docs/aims/purpose-drift.md:112",
+  "status": "current",
+  "text": "承認の粒度は node の code 集合全体で 1 digest のままであり、承認がほぼ書かれていない状態をどう読むか、粒度を file 単位にするかは人間の判断に残る。"
+}

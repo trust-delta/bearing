@@ -1,0 +1,6 @@
+{
+  "aim": "開発を駆動する目的を、人間だけが動かせる不動点としてリポジトリに保持し、エージェントは達成手段だけを担う",
+  "feature": "record-corpus",
+  "parent": "bearing",
+  "state": "open"
+}

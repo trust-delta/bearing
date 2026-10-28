@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "指摘",
+  "node": "human-domain",
+  "quote": "ESCALATIONの中身がnodeを頭から読み直さずに判断できるかですが、aim:文がないと厳しいかもです",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 12,
+  "source": "docs/aims/human-domain.md:114",
+  "summary": "ESCALATION を node を読み直さずに判断するには aim: 文が面に無いと厳しいと人間が述べた"
+}

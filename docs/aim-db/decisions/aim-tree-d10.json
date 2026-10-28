@@ -1,0 +1,14 @@
+{
+  "category": "record-practice",
+  "date": "2026-09-13",
+  "feature": "make-writing",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "aim-tree",
+  "quote": "ESCALATIONの中身がnodeを頭から読み直さずに判断できるかですが、aim:文がないと厳しいかもです。ISあってこそでもありますが、ISは現状ボリュームが問題ですね",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 10,
+  "source": "docs/aims/aim-tree.md:79",
+  "summary": "escalation を判断するには aim: 文が要り、# IS は今のボリュームでは判断の文脈として重すぎる。"
+}

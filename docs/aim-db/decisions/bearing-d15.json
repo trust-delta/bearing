@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-19",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "td-apps-site へは bearing 自体の配信にて回答とします",
+  "recordedAt": "2026-10-27T15:56:02.462Z",
+  "recordedBy": "agent",
+  "seq": 15,
+  "source": "docs/aims/bearing.md:100",
+  "summary": "td-apps-site からの提起には、個別の返信ではなく bearing の配信（0.33.0）で回答する。"
+}

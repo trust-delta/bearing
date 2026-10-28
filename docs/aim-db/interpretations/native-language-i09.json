@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "native-language-d05"
+  ],
+  "category": "language-line",
+  "feature": "output-dist",
+  "node": "native-language",
+  "seq": 9,
+  "source": "docs/aims/native-language.md:28",
+  "status": "current",
+  "text": "開発の手引きは README から CONTRIBUTING.md へ分離して日本語のみとし、英語版 README にはそれが日本語のみである理由まで書く。無いことを黙って示すのは沈黙の形として拒む。CONTRIBUTING.md は classify-paths の docs allowlist へ名指しで足す。"
+}

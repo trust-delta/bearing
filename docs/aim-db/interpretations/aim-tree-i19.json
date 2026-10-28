@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 19,
+  "source": "docs/aims/aim-tree.md:108",
+  "status": "current",
+  "text": "corpus の在り処は resolveUnit 1 箇所で「repo 自身の宣言 → unit root の宣言 → 既定」の順に解決し、そこから配る。"
+}

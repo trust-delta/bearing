@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 12,
+  "source": "docs/aims/ambient-display.md:47 docs/aims/ambient-display.md:51 docs/aims/ambient-display.md:53 docs/aims/ambient-display.md:55 docs/aims/ambient-display.md:57",
+  "status": "current",
+  "text": "検出器の沈黙が意味を持つのは検出器が在ると別途確かめた後だけである。穴は、描くものが消える・面が装着されていない・置かれた複製が古く検出器を持たない、の 3 段あり、3 段目は面が正常に見え、CI の射程の外に在る。"
+}

@@ -1,0 +1,6 @@
+{
+  "aim": "開発は WSL で行う。Windows でも行えることは、もう要求しない",
+  "feature": "whole-env",
+  "parent": "bearing",
+  "state": "open"
+}

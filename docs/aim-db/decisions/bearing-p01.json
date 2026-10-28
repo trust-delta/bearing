@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-01",
+  "feature": "whole-purpose",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "bearing",
+  "quote": "標準的なコーディングハーネスに欠けている「目的の保持・文脈の引き継ぎ・ズレの検知」を、ハーネスを置き換えずに外付けの拡張として供給する",
+  "recordedAt": "2026-10-27T16:08:08.460Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 7b2aa74 docs/aims/bearing.md の aim:",
+  "summary": "bearing の目的を固定した（corpus の誕生）。文言を誰が打ったかは記録に無い。"
+}

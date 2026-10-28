@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "session-handoff-d04",
+    "session-handoff-d29"
+  ],
+  "category": "baton-format",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 5,
+  "source": "docs/aims/session-handoff.md:15 docs/aims/session-handoff.md:19 docs/aims/session-handoff.md:99 docs/aims/session-handoff.md:277 docs/aims/session-handoff.md:287",
+  "status": "current",
+  "text": "baton は数や参照を裸で運んではならない。載せるならその場で主張ごと畳み、数には出し直す手を同じ場所に添える。畳めないもの・済んだ決定・階級を運べない主張は baton ではなく corpus に属する。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "purpose-drift-d08"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 23,
+  "source": "docs/aims/purpose-drift.md:85",
+  "status": "superseded",
+  "text": "照合の宛先は commit sha（anchor_commit）である。"
+}

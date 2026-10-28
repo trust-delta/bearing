@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-bounds",
+  "feature": "whole-env",
+  "node": "surface-parity",
+  "seq": 4,
+  "source": "docs/aims/surface-parity.md:15 docs/aims/surface-parity.md:17 docs/aims/surface-parity.md:18 docs/aims/surface-parity.md:19 docs/aims/surface-parity.md:20 docs/aims/surface-parity.md:21 docs/aims/surface-parity.md:22",
+  "status": "current",
+  "text": "CLI とデスクトップの Code の間には、context/plan usage・CI の通過/失敗・aim/baton/drift の表示に非対称があり、PR の review state だけが揃っている。"
+}

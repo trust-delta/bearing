@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 16,
+  "source": "docs/aims/observation-provenance.md:40",
+  "status": "current",
+  "text": "provenance-report の測る単位は bullet であり、file の集合は git ls-files から採り、root は git rev-parse --show-toplevel で明示解決する。0 件しか拾えなければ健全ではなく道具の故障と述べるよう、陽性対照を出力と test に持たせる。"
+}

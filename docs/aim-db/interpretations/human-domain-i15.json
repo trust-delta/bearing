@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-writeback",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 15,
+  "source": "docs/aims/human-domain.md:68 docs/aims/human-domain.md:70 docs/aims/human-domain.md:82",
+  "status": "current",
+  "text": "読めない file は 3 欄ごと編集不可にし（空欄で見せれば書き戻しで空として disk に落ちる）、corpus に無い親も選択肢に残し、root から辿れない node も木の下に描く。picker は最初から readwrite で訊く。不在を黙って示さないことを全経路で守る。"
+}

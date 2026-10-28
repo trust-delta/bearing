@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-d04",
+    "bearing-d05"
+  ],
+  "category": "release-cadence",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 12,
+  "source": "docs/aims/bearing.md:18 docs/aims/bearing.md:71 docs/aims/bearing.md:73 docs/aims/bearing.md:74 docs/aims/bearing.md:76",
+  "status": "current",
+  "text": "version の bump は release の一部であり、上げない限り既存の利用者は古い cache を持ち続ける。版は 2 本立てで出す: templates/ が動かない bump は溜めずに出し、templates/ が動く bump はまとめて何が動いたかを添える。surface/aim.html だけが動く bump は corpus に触れず打ち直し 1 回で済む。"
+}

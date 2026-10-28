@@ -1,0 +1,15 @@
+{
+  "basis": [
+    "session-handoff-d22",
+    "session-handoff-d23",
+    "session-handoff-d42",
+    "session-handoff-d44"
+  ],
+  "category": "handoff-experiment",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 25,
+  "source": "docs/aims/session-handoff.md:109 docs/aims/session-handoff.md:113 docs/aims/session-handoff.md:251 docs/aims/session-handoff.md:253 docs/aims/session-handoff.md:278 docs/aims/session-handoff.md:286",
+  "status": "current",
+  "text": "封印は体感の比較ではなく、handoff 常用下で変わっていた圧縮の性質という交絡を除く処置であり、w の棚卸し効果という取り除けない交絡を避けるため定期的な w は打たない。圧縮の観測は bearing の 3 柱を軸に、圧縮がどこを埋めどこを埋めないかを測り、埋まらない所だけを bearing の仕事とみなす。"
+}

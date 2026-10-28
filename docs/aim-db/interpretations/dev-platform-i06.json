@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d03"
+  ],
+  "category": "dev-env",
+  "feature": "whole-env",
+  "node": "dev-platform",
+  "seq": 6,
+  "source": "docs/aims/dev-platform.md:52 docs/aims/dev-platform.md:54 docs/aims/dev-platform.md:56",
+  "status": "current",
+  "text": "開発は WSL 上の 1 つの場で行われ、checkout も home も WSL 側に在るため、drive を跨ぐ形は無い。開発者の platform は 1 つで、CI の ubuntu がそれを覆う。"
+}

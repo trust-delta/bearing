@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "human-domain-d13",
+    "human-domain-d14"
+  ],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "human-domain",
+  "seq": 22,
+  "source": "docs/aims/human-domain.md:116 docs/aims/human-domain.md:118",
+  "status": "current",
+  "text": "IS の分量は面では直せない記録の形の問題なので aim-tree の ESCALATION へ上げる。エージェントの残務の面が変えたのは人間待ちの混ざりが見えるかどうかであって混ざりそのものではなく、どれが人間待ちかは面も当方も判定しない。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d05"
+  ],
+  "category": "unit-home",
+  "feature": "record-machine",
+  "node": "session-handoff",
+  "seq": 9,
+  "source": "docs/aims/session-handoff.md:29 docs/aims/session-handoff.md:186",
+  "status": "current",
+  "text": "home の下の置き場は repo と device を跨ぎうるのが通常形であり、移動は rename を試し EXDEV のときだけ copy + unlink（COPYFILE_EXCL）へ落とす。"
+}

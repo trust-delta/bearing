@@ -1,0 +1,14 @@
+{
+  "category": "baton-format",
+  "date": "2026-09-12",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "/compactは前回会話のjsonlを貼ってましたっけ？だとしたら同じようにした方がいいかと思いまして",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 45,
+  "source": "docs/aims/session-handoff.md:292",
+  "summary": "圧縮が前の会話の transcript に触れているなら、baton も同じようにしたほうがよい。"
+}

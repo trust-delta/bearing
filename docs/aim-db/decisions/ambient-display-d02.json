@@ -1,0 +1,14 @@
+{
+  "category": "display-design",
+  "date": "2026-09-05",
+  "feature": "output-statusline",
+  "form": "verbatim",
+  "kind": "確定",
+  "node": "ambient-display",
+  "quote": "デスクトップの Code に statusline は置けない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 2,
+  "source": "docs/aims/ambient-display.md:13",
+  "summary": "デスクトップの Code に statusline は置けないことを、観測で覆す対象ではない前提として確定した。"
+}

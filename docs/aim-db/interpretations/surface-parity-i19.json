@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "surface-parity-d14",
+    "surface-parity-d08"
+  ],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 19,
+  "source": "docs/aims/surface-parity.md:108 docs/aims/surface-parity.md:110 docs/aims/surface-parity.md:112",
+  "status": "current",
+  "text": "PR が在る場では判定を statusCheckRollup.state に委ね自分で畳まない。揃え方は同じ集合を見ることではなく同じ判定に至ることであり、内訳だけは contexts で取る。これで status context も job 粒度も EXPECTED も見える。"
+}

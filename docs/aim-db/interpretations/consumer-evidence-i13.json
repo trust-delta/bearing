@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d08"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 13,
+  "source": "docs/aims/consumer-evidence.md:61 docs/aims/consumer-evidence.md:65 docs/aims/consumer-evidence.md:67 docs/aims/consumer-evidence.md:68 docs/aims/consumer-evidence.md:69 docs/aims/consumer-evidence.md:70 docs/aims/consumer-evidence.md:72 docs/aims/consumer-evidence.md:74 docs/aims/consumer-evidence.md:76 docs/aims/consumer-evidence.md:78",
+  "status": "current",
+  "text": "運び入れの標本は、どれも機構ではなく、他 repo を触る行為・消費者側エージェントの精読・人間の指示文が捕まえた。配った版を当てる act が承認を落とした件だけは bearing の設計の欠陥であり、本 repo で再現できた。"
+}

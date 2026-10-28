@@ -1,0 +1,5 @@
+{
+  "label": "CI の判定と照合",
+  "note": "/bearing:ci がどの commit のどの層を見て、どう 1 語の判定へ至るか。",
+  "origin": "agent"
+}

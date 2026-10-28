@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "aim-tree-d13"
+  ],
+  "category": "release-cadence",
+  "feature": "output-dist",
+  "node": "aim-tree",
+  "seq": 17,
+  "source": "docs/aims/aim-tree.md:104 docs/aims/aim-tree.md:106 docs/aims/aim-tree.md:133",
+  "status": "current",
+  "text": "canon に触る変更は marker の本文 sha と版を動かし、採用 repo は版差から古さを読めるが、何が変わったか（条項が減ったこと）は知らされない。"
+}

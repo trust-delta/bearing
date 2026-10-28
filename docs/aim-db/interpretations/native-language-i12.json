@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "make-writing",
+  "node": "native-language",
+  "seq": 12,
+  "source": "docs/aims/native-language.md:26",
+  "status": "current",
+  "text": "code 内コメント（bin/ lib/ test/ gen/）は日本語で書き、前身の node 名や存在しない path のような解決しない参照は、導出の理由だけを前提として残して名を落とす。"
+}

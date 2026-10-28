@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 8,
+  "source": "docs/aims/ambient-display.md:31 docs/aims/ambient-display.md:33 docs/aims/ambient-display.md:35 docs/aims/ambient-display.md:73",
+  "status": "current",
+  "text": "装着は /bearing:setup-statusline で ~/.claude/ に shim を置き user settings に 1 行を書く形であり、shim が走るたびに install record を読んで今の版へ橋渡しするため、1 行から version が消え bump で腐らない。npm は使わない。"
+}

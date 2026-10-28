@@ -1,0 +1,14 @@
+{
+  "category": "handoff-experiment",
+  "date": "2026-09-09",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 37,
+  "source": "docs/aims/session-handoff.md:213",
+  "summary": "票 ① の代理という弱い問いでも、安く 1 日で測れるなら強い問いを待たずに進む。"
+}

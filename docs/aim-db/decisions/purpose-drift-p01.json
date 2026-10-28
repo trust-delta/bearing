@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-01",
+  "feature": "output-drift",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "purpose-drift",
+  "quote": "目的と、それを実装した手段や隣接する目的とのズレを、安く機械的に可視化する。判定はしない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 7b2aa74 docs/aims/purpose-drift.md の aim:",
+  "summary": "purpose-drift の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "session-handoff-d15",
+    "session-handoff-d16",
+    "session-handoff-d17"
+  ],
+  "category": "handoff-value",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 1,
+  "source": "docs/aims/session-handoff.md:13 docs/aims/session-handoff.md:65 docs/aims/session-handoff.md:67 docs/aims/session-handoff.md:69",
+  "status": "current",
+  "text": "ネイティブ圧縮との差は、何を残し何を捨てるかを誰かが選んだかどうかにある。価値は baton の構造ではなく authoring の judgment にあり、それは読める canon（見える指示）と会話をしてきた当のエージェント（同じモデル）が揃って初めて judgment と呼べる。"
+}

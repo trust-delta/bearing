@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-17",
+  "feature": "make-writing",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "consumer-evidence",
+  "quote": "last-visit の根拠については暫定放置。禁止は実害が確認できてからが合理だと判断します",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 5,
+  "source": "docs/aims/consumer-evidence.md:51",
+  "summary": "消費者が作った label（根拠:）を canon で禁止するかは、実害が確認できるまで保留する。"
+}

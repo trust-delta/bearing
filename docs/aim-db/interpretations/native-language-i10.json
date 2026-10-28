@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "make-writing",
+  "node": "native-language",
+  "seq": 10,
+  "source": "docs/aims/native-language.md:21",
+  "status": "current",
+  "text": "既に push された commit message は言語の統一を理由に書き換えない。履歴の rewrite は別の act である。"
+}

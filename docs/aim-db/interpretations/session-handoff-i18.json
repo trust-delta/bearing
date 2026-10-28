@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "handoff-value",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 18,
+  "source": "docs/aims/session-handoff.md:101 docs/aims/session-handoff.md:235 docs/aims/session-handoff.md:237 docs/aims/session-handoff.md:259 docs/aims/session-handoff.md:261 docs/aims/session-handoff.md:270 docs/aims/session-handoff.md:272 docs/aims/session-handoff.md:274",
+  "status": "current",
+  "text": "ネイティブ圧縮の要約は会話の内側（人間の逐語、却下理由の多く、直前の turn に在った数）をよく保つが、会話の土台（corpus、確信の階級と射程、hedge）は落とすか剥いで運ぶ。保存の忠実さは正しさの保証ではなく、要約は誤りも等しく運ぶ。"
+}

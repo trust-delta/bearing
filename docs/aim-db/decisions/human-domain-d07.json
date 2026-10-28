@@ -1,0 +1,14 @@
+{
+  "category": "surface-reach",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "human-domain",
+  "quote": "aim が在ることが見える程度",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 7,
+  "source": "docs/aims/human-domain.md:78",
+  "summary": "面を開いた人間が「aim が在ることが見える程度」と述べた（置かれていた複製が古い版のままだった）"
+}

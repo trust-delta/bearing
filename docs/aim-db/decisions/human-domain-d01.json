@@ -1,0 +1,14 @@
+{
+  "category": "surface-writeback",
+  "date": "2026-09-03",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "human-domain",
+  "quote": "[[native-language]] は観測完了",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/human-domain.md:13",
+  "summary": "人間が native-language の観測完了を述べ、その着地にエージェント介在を含む 3 手を要した（aim: の「介さずに」が畳む対象の実例）"
+}

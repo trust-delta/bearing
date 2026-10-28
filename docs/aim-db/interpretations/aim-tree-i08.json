@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "aim-tree-d03",
+    "aim-tree-d04"
+  ],
+  "category": "ownership",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 8,
+  "source": "docs/aims/aim-tree.md:31 docs/aims/aim-tree.md:33 docs/aims/aim-tree.md:35",
+  "status": "current",
+  "text": "frontmatter は aim: / parent: / state: の 3 field であり、aim⊥code の剥離は purpose-drift の aim-code-stale が [done] mark の commit から引くので、人間は sha を 1 文字も書かない。既存の last-verified: 行は知らない frontmatter として保たれ後方互換になる。"
+}

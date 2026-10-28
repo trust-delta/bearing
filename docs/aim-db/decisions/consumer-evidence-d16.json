@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-17",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "consumer-evidence",
+  "quote": "配られたものをどうするかは repo に任せましょう。法を改変するもよし、更新を待つまで急場凌ぎをするも良しです。配る側が感知せずとも良い。（ただし bearing 発展の参考に観察はしている、という状態で合意してください）",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 16,
+  "source": "docs/aims/consumer-evidence.md:123",
+  "summary": "配られたものの扱いは repo に任せ、配る側は感知しないが、観察していることを述べた状態で観察する。"
+}

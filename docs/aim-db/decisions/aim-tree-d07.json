@@ -1,0 +1,14 @@
+{
+  "category": "work-accounting",
+  "date": "2026-09-13",
+  "feature": "make-writing",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "aim-tree",
+  "quote": "エージェントの残務に人間待ちが混ざっていないかは機構そのものよりaim bodyの書き方によるかもしれません。混ざってはいますが、混ざっていると認識できるようになったことが意味を生みます",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 7,
+  "source": "docs/aims/aim-tree.md:59",
+  "summary": "面で見るとエージェントの残務に人間待ちは混ざっているが、混ざっていると認識できるようになったことに意味がある。"
+}

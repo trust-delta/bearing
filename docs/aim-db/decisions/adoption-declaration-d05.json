@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-05",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 5,
+  "source": "docs/aims/adoption-declaration.md:57",
+  "summary": "setup-aim は宣言と一緒に規律（CLAUDE.md の block と .claude/skills/aim/）も置き、置いたところで責任が終わる。置いた後の扱いと古さは repo のものであり、追随しないことは中立である"
+}

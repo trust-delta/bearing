@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 2,
+  "source": "docs/aims/adoption-brief.md:11",
+  "status": "current",
+  "text": "述べるのは corpus のどこにも 1 箇所には書かれていないもの、すなわち採ると何が repo に置かれ、その後どの act が人間に残り続けるかである。adoption-declaration・aim-tree・human-domain に散っているが、どれも採る前に読むものとしては書かれていない。"
+}

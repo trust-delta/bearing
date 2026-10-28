@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 7,
+  "source": "docs/aims/adoption-declaration.md:33 docs/aims/adoption-declaration.md:45 docs/aims/adoption-declaration.md:47 docs/aims/adoption-declaration.md:110",
+  "status": "current",
+  "text": "同じ事実を運ぶ面が複数あるなら黙る述語は 1 つでなければならず、lib/claude-md.mjs の isEngaged に集め、aim-facts / statusline / corpus-delta / precompact の 4 面すべてがそこを通る。面を数え落とさないことが先である。"
+}

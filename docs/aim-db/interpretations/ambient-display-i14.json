@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "ambient-display-d09"
+  ],
+  "category": "platform-axis",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 14,
+  "source": "docs/aims/ambient-display.md:71 docs/aims/ambient-display.md:72",
+  "status": "current",
+  "text": "装着の 1 行はシェルを通る文字列として node を前置して書き、装着の検査は書いたその 1 行をシェルへ通して走らせる。証明できるのは「どこでも走らない」ことまでである。"
+}

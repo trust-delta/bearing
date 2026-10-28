@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d10"
+  ],
+  "category": "canon-location",
+  "feature": "make-writing",
+  "node": "adoption-declaration",
+  "seq": 19,
+  "source": "docs/aims/adoption-declaration.md:83 docs/aims/adoption-declaration.md:119",
+  "status": "current",
+  "text": "original/ を畳んだ後は carriers/claude/bearing/ が正本で、aim の規律は templates/ へ写し（skills/ に置けば bearing:aim と aim が並ぶ）、bearing 自身の .claude/skills/aim/ も置かれたものになって bearing は自分の消費者の 1 つになる。"
+}

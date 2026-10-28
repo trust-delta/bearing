@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d01"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 1,
+  "source": "docs/aims/consumer-evidence.md:9 docs/aims/consumer-evidence.md:11",
+  "status": "current",
+  "text": "bearing は正本を持つため、消費者として異常な状態を原理的に持てず、消費者の状態に対して退化している。この node は、配布前に確認するという運用と、それが実際に覆う範囲との落差を埋める。"
+}

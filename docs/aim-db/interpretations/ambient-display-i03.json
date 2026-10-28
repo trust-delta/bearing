@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "ambient-display-d01",
+    "ambient-display-d02"
+  ],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 3,
+  "source": "docs/aims/ambient-display.md:13 docs/aims/ambient-display.md:15",
+  "status": "current",
+  "text": "デスクトップには statusline を描く面が無く、設定が共有されても黙って描かれない。埋められるのはハーネスが持つ面の上だけであり、面そのものは作れない。"
+}

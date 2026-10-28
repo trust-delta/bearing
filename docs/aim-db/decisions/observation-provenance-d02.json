@@ -1,0 +1,14 @@
+{
+  "category": "record-practice",
+  "date": "2026-09-04",
+  "feature": "record-corpus",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "observation-provenance",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 2,
+  "source": "docs/aims/observation-provenance.md:19",
+  "summary": "エージェントが bearing.md に既に在る事実を「穴」と報告し、正しかった過去の観測を「誤読」と訂正しかけた 2 件を、人間が捕まえた。"
+}

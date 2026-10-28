@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "whole-purpose",
+  "node": "native-language",
+  "seq": 5,
+  "source": "docs/aims/native-language.md:15",
+  "status": "current",
+  "text": "到達範囲より人間自身の可用性を先に置き、当面のターゲットは日本語話者とする。日本語は現在の値であって定数ではなく、母語や対象が変われば手段が動く。"
+}

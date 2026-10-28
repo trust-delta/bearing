@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 14,
+  "source": "docs/aims/observation-provenance.md:40",
+  "status": "current",
+  "text": "scripts/provenance-report.mjs が docs/aims/** と repo root の CLAUDE.md を走査し、「実測」「観測」を含む単位のうち日付を持たないものを候補として挙げる。CI の provenance job で走るが報告であって門ではなく常に exit 0 で終わり、fence の中は測らない。"
+}

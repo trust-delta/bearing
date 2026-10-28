@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": "2026-09-02",
+  "feature": "whole-purpose",
+  "form": "paraphrase",
+  "kind": "判定",
+  "node": "surface-parity",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/surface-parity.md:13",
+  "summary": "経路ごとの UI の食い違いは bearing の柱ではなく、3 点の遂行を妨げる摩擦として扱う。"
+}

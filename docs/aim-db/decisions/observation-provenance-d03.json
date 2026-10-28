@@ -1,0 +1,14 @@
+{
+  "category": "record-practice",
+  "date": "2026-09-04",
+  "feature": "record-corpus",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "observation-provenance",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 3,
+  "source": "docs/aims/observation-provenance.md:21",
+  "summary": "corpus の量そのものへの対処（実測を boot で読まれない層へ分離する置き場）は保留し、「さらに膨れたら」の合図が出てから採る。"
+}

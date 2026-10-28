@@ -1,0 +1,8 @@
+{
+  "confirmedAt": "2026-10-28",
+  "frame": "output",
+  "label": "facts の注入と変化の通知",
+  "note": "SessionStart・PostToolBatch の hook、/bearing:facts",
+  "order": 2,
+  "origin": "human-confirmed"
+}

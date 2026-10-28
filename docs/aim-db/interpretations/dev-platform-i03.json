@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "dev-platform-d01",
+    "dev-platform-d03"
+  ],
+  "category": "platform-axis",
+  "feature": "whole-env",
+  "node": "dev-platform",
+  "seq": 3,
+  "source": "docs/aims/dev-platform.md:15 docs/aims/dev-platform.md:17 docs/aims/dev-platform.md:19 docs/aims/dev-platform.md:56",
+  "status": "current",
+  "text": "platform 由来の失敗は非対称かつ沈黙であり、CI は ubuntu 1 本ゆえ win32 でだけ壊れるものは機械に映らない。開発者側ではこれは塞ぐ穴ではなく受け入れた条件であり、残る非対称は配る先の側に在る。"
+}

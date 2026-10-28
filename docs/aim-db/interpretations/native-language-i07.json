@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "output-dist",
+  "node": "native-language",
+  "seq": 7,
+  "source": "docs/aims/native-language.md:17 docs/aims/native-language.md:27",
+  "status": "current",
+  "text": "読む面の README は日本語を正本とし、英語版を README.en.md として相互リンク付きで併置する（root と plugin の 2 組）。2 枚は必ず drift し機械はそれを検知しないので、食い違えば日本語側が正と先に決めておく。"
+}

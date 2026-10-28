@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d18"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 26,
+  "source": "docs/aims/adoption-declaration.md:136 docs/aims/adoption-declaration.md:138 docs/aims/adoption-declaration.md:146 docs/aims/adoption-declaration.md:148 docs/aims/adoption-declaration.md:150",
+  "status": "superseded",
+  "text": "with-aim が消費者の _guide/ へ canon を置き、5 状態と台帳 .bearing-canon.json で最新へ追随させる。古いまま黙っていること自体が drift である。"
+}

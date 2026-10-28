@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "output-statusline",
+  "node": "adoption-brief",
+  "seq": 4,
+  "source": "docs/aims/adoption-brief.md:17",
+  "status": "current",
+  "text": "面に毎ターン出る 4 つの数（todo / 宣言待ち / escalation / 観測票なし）は「人間の番がいくつ渡っているか」を述べる数であり、その意味がどこにも書かれていなければ読み手には数字が並ぶだけになる。"
+}

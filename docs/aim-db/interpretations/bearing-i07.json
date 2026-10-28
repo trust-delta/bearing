@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d01"
+  ],
+  "category": "supply-scope",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 7,
+  "source": "docs/aims/bearing.md:12 docs/aims/bearing.md:14",
+  "status": "superseded",
+  "text": "plugin の供給は tracked な project の .claude/settings.json（extraKnownMarketplaces＋enabledPlugins）で行う。"
+}

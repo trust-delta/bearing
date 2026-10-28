@@ -1,0 +1,6 @@
+{
+  "aim": "セッションを跨ぐ文脈は、ネイティブ圧縮に委ねず、何を残し何を捨てるかを選んで引き継ぐ",
+  "feature": "output-facts",
+  "parent": "bearing",
+  "state": "dead"
+}

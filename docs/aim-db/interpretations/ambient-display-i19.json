@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "ambient-display-d02",
+    "ambient-display-d08"
+  ],
+  "category": "main-path",
+  "feature": "whole-env",
+  "node": "ambient-display",
+  "seq": 19,
+  "source": "docs/aims/ambient-display.md:59 docs/aims/ambient-display.md:61 docs/aims/ambient-display.md:63",
+  "status": "current",
+  "text": "主経路の Desktop（Remote Control）では statusline は描かれず、mod も描画の面に届かない。この node の器は CLI の statusline だけで、退役ではなく休眠として残す。"
+}

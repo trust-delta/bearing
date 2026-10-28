@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-15",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "consumer-evidence",
+  "quote": "報告元は版をあげたあとに向こうで自浄してもらいましょう",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 13,
+  "source": "docs/aims/consumer-evidence.md:123",
+  "summary": "報告してきた消費者 repo の修正は、版を上げた後に向こうで行ってもらい、こちらは直さない。"
+}

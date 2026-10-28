@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-10-28",
+  "feature": "whole-purpose",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "さしあたり、書いてもらった形でやってみましょう",
+  "recordedAt": "2026-10-27T16:29:03.050Z",
+  "recordedBy": "agent",
+  "seq": 44,
+  "source": "会話 2026-10-28",
+  "summary": "エージェントが提案した機能の一覧（全体・作る・記録する・出力する の 4 枠、11 機能）を、このまま採る。最初の 1 回は人間が確定する（後からはエージェントが立てて人間が直す）。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "purpose-drift-d04"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "purpose-drift",
+  "seq": 19,
+  "source": "docs/aims/purpose-drift.md:57",
+  "status": "current",
+  "text": "「潰せている」は本 repo の corpus の形に依存する結論であり、配った先では成り立たない可能性がある。破壊的なミスが出ていないことは機構の手柄とは限らない。"
+}

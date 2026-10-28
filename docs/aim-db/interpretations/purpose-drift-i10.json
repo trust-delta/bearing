@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "purpose-drift-d05"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 10,
+  "source": "docs/aims/purpose-drift.md:72 docs/aims/purpose-drift.md:74",
+  "status": "current",
+  "text": "aim-code-stale の承認は # DAG の `検証: @ <code_digest>` で書き、宛先は path と blob の対を畳んだ code の内容である。squash を跨いで生き残り、code が動けば自動で失効する。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 4,
+  "source": "docs/aims/human-domain.md:17 docs/aims/human-domain.md:30 docs/aims/human-domain.md:32",
+  "status": "current",
+  "text": "実現可能性は実測で、file:// でも FSA は使え、readwrite の許可は 1 ダイアログで得られ、handle は IndexedDB でブラウザ再起動をまたいで残る。日常の費用は起動後の最初の 1 クリックだけである。"
+}

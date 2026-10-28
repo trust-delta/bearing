@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": null,
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "purpose-drift",
+  "quote": "aim は repo を問わず機能する",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 9,
+  "source": "docs/aims/purpose-drift.md:85",
+  "summary": "aim の機構は配り先の repo（merge 慣習）を問わず機能しなければならないと要求した。"
+}

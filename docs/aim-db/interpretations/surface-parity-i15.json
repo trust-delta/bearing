@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "surface-parity-d08",
+    "surface-parity-d09"
+  ],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 15,
+  "source": "docs/aims/surface-parity.md:56",
+  "status": "superseded",
+  "text": "/bearing:ci は gh run list --limit 20 を打ち、先頭 run の headSha と同じ commit の run だけを最悪値へ畳み、内訳と headSha を JSON と stdout に残す。"
+}

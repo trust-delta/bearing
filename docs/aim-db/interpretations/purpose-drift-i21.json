@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "purpose-drift-d03"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 21,
+  "source": "docs/aims/purpose-drift.md:116 docs/aims/purpose-drift.md:117 docs/aims/purpose-drift.md:118",
+  "status": "current",
+  "text": "fence が挙げた node が見るに値したか、外部の系の変化を踏んだか、照合: の維持に人間の手間が掛かっていないかは、人間にしか分からない。"
+}

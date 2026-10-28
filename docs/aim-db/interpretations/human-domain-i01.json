@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 1,
+  "source": "docs/aims/human-domain.md:9",
+  "status": "current",
+  "text": "壊れているのは可視性ではなく所有と可視性の逆立ちである。エージェントは全 file を読んで木を再構成できるが、木を所有する人間には見えず、「人間だけが動かせる」は名目に留まっている。本 node はその落差を埋める。"
+}

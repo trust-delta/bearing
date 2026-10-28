@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "surface-parity-d04",
+    "surface-parity-d05",
+    "surface-parity-d06"
+  ],
+  "category": "surface-bounds",
+  "feature": "output-surface",
+  "node": "surface-parity",
+  "seq": 9,
+  "source": "docs/aims/surface-parity.md:42 docs/aims/surface-parity.md:45",
+  "status": "current",
+  "text": "主経路（Remote Control）では mod の描画の面が登録されず、使える器は会話へ載る形だけである。描ける余地のあるローカルセッションは使わないので、mod の帯や枠で aim を常時出す候補は主経路では成り立たない。"
+}

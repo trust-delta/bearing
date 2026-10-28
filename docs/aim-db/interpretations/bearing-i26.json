@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d23"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "bearing",
+  "seq": 26,
+  "source": "docs/aims/bearing.md:153 docs/aims/bearing.md:316",
+  "status": "current",
+  "text": "marker は aim の opt-in の宣言を兼ね、marker も corpus も無い repo では hook は 0 byte で完全に黙る。corpus が在れば印の有無に関わらず喋り、印は repo 自身の CLAUDE.md を先に、unit root を既定として読む。"
+}

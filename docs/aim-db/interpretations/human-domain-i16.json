@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "human-domain-d08"
+  ],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 16,
+  "source": "docs/aims/human-domain.md:84 docs/aims/human-domain.md:86",
+  "status": "current",
+  "text": "面は所有で 3 つに割る —— 木（構造と人間の 3 欄）／人間の番（ESCALATION と OBSERVATION）／エージェントの残務（[todo]）。lib/process.mjs の 3 分割を画面に写したもので、並べ替えず slug 順に並べ、card の slug から木の面のその node へ跳べる。タブの名は人間が後で決める。"
+}

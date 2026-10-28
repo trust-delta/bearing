@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d05"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 12,
+  "source": "docs/aims/adoption-declaration.md:57 docs/aims/adoption-declaration.md:59 docs/aims/adoption-declaration.md:115",
+  "status": "current",
+  "text": "setup-aim は CLAUDE.md の block と .claude/skills/aim/ を置き、置いた瞬間からそれらはその repo のものになる。track・修正・開示はすべて repo の policy で、plugin は置いたものを追随させない。既に在る skill は潰さず述べて止まる。"
+}

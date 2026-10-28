@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-30",
+  "feature": "output-statusline",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 16,
+  "source": "docs/aims/adoption-declaration.md:99",
+  "summary": "aim を採らない repo の画面に aim 由来の行は出ていなかったと人間が証言した"
+}

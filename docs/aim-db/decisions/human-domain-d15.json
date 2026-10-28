@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "提案",
+  "node": "human-domain",
+  "quote": "私はこのhtmlを見て貴方に伝える。上の段落のように。だからコピペするんです。「dev-platform.md:49」の部分など。コピーボタンがあるといいですね。意思疎通が容易になります",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 15,
+  "source": "docs/aims/human-domain.md:127",
+  "summary": "人間は面を見てコピペでエージェントに伝えるので、slug.md:NN などを写すコピーボタンが欲しいと提案した"
+}

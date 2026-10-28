@@ -1,0 +1,14 @@
+{
+  "category": "main-path",
+  "date": "2026-10-27",
+  "feature": "whole-env",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "surface-parity",
+  "quote": "ローカルセッションは基本使わない（特にWSLが必要なrepo持ちセッション＝codeで動くほとんど）方針",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 6,
+  "source": "docs/aims/surface-parity.md:45",
+  "summary": "Desktop が自分で立てるローカルセッションは基本使わない方針とする。"
+}

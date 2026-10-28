@@ -1,0 +1,14 @@
+{
+  "category": "ci-verdict",
+  "date": "2026-09-07",
+  "feature": "output-statusline",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "surface-parity",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 9,
+  "source": "docs/aims/surface-parity.md:56",
+  "summary": "/bearing:ci は CI が走っている前提で打たれるので、手元の HEAD と照合せず、間近に走った CI が全て通ったかを見る。"
+}

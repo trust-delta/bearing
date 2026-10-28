@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "purpose-drift-d10"
+  ],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "purpose-drift",
+  "seq": 13,
+  "source": "docs/aims/purpose-drift.md:94",
+  "status": "current",
+  "text": "`検証:` は aim-code-stale の承認だけを指す予約語であり、慣例ラベルはどれも 2 つの機構に読まれないことを振る舞いで試験する。# PROCESS で「何で確かめたか」を書く用法は canon に足していない。"
+}

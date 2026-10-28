@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-10",
+  "feature": "whole-env",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "dev-platform",
+  "quote": "開発は WSL と Windows のどちらでも行えるようにする。ただし、優先は WSL である",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git fa0d2dc docs/aims/dev-platform.md の aim:",
+  "summary": "dev-platform の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

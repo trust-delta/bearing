@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 3,
+  "source": "docs/aims/adoption-brief.md:13 docs/aims/adoption-brief.md:15",
+  "status": "current",
+  "text": "README は aim とは何かを人間へ説明しておらず、実質の説明である aim-authoring.md はエージェント宛かつ消費者の repo へ置かれるものなので、採用前の人間が読む面としては存在しない。"
+}

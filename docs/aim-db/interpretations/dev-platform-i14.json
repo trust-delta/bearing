@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "dev-env",
+  "feature": "output-facts",
+  "node": "dev-platform",
+  "seq": 14,
+  "source": "docs/aims/dev-platform.md:35 docs/aims/dev-platform.md:36",
+  "status": "current",
+  "text": "2 台目の WSL 機では、fnm で入れた node が非対話シェルの PATH に無く hook が落ちたこと、SessionStart hook が上限近くまで遅く打ち切られうることが報告されており、原因は測られていない。"
+}

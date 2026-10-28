@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-30",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "adoption-declaration",
+  "quote": "aimを使わないリポもでてきました　statuslineやhandoffだけでも上手く機能しています",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 15,
+  "source": "docs/aims/adoption-declaration.md:99",
+  "summary": "aim を使わない repo が出てきており、statusline や handoff だけでも上手く機能していると人間が述べた（例: 3DCG）"
+}

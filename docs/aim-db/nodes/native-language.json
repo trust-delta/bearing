@@ -1,0 +1,6 @@
+{
+  "aim": "使用言語をエージェントに指示を出す人間の母語に合わせる",
+  "feature": "make-writing",
+  "parent": "bearing",
+  "state": "done"
+}

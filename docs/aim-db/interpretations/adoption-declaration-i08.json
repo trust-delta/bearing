@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 8,
+  "source": "docs/aims/adoption-declaration.md:35 docs/aims/adoption-declaration.md:37",
+  "status": "superseded",
+  "text": "採用を降りるには CLAUDE.md の単独行 <!-- bearing:aim declined --> を --decline で置き、「宣言していない」と「降りた」を別の状態として扱う。"
+}

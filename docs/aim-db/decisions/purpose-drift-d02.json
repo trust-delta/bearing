@@ -1,0 +1,14 @@
+{
+  "category": "drift-mechanics",
+  "date": "2026-09-07",
+  "feature": "output-drift",
+  "form": "paraphrase",
+  "kind": "言明",
+  "node": "purpose-drift",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 2,
+  "source": "docs/aims/purpose-drift.md:29",
+  "summary": "払う理由は、払わなければ人間が整合を頼む・エージェントが不整合の判断を差し戻す・片方だけを見て誤るという形で後から人間が払うことになるからだと述べた。"
+}

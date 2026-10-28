@@ -1,0 +1,14 @@
+{
+  "category": "dev-env",
+  "date": "2026-09-14",
+  "feature": "whole-env",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "dev-platform",
+  "quote": "消えて OK",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 4,
+  "source": "docs/aims/dev-platform.md:60",
+  "summary": "旧 Windows 側の checkout（D:\\trust_project\\bearing）と旧 home の ~/.bearing を削除してよいと決め、削除した。"
+}

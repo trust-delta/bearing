@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d02"
+  ],
+  "category": "consumer-stance",
+  "feature": "make-law",
+  "node": "consumer-evidence",
+  "seq": 3,
+  "source": "docs/aims/consumer-evidence.md:13 docs/aims/consumer-evidence.md:15",
+  "status": "current",
+  "text": "setup-aim が置くのは CLAUDE.md の block と .claude/skills/aim/ の 2 つで、置いた後は repo のものである。bearing が検められるのは置く瞬間（template との一致・marker・既存を潰さないこと）だけである。"
+}

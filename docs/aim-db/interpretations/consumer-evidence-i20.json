@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d05"
+  ],
+  "category": "consumer-stance",
+  "feature": "make-writing",
+  "node": "consumer-evidence",
+  "seq": 20,
+  "source": "docs/aims/consumer-evidence.md:51",
+  "status": "current",
+  "text": "消費者 label（根拠:）の閉じ／開きは決めず、こちらが同じ語を予約語にするなど実際に衝突したときを発火条件とする。"
+}

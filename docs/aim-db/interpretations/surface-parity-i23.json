@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 23,
+  "source": "docs/aims/surface-parity.md:114 docs/aims/surface-parity.md:133",
+  "status": "current",
+  "text": "面の 1 語は PR が在れば statusCheckRollup、無ければ gh run list --commit から来る。これは 2 つの実装ではなく 2 つの問いだが、1 語はどちらの層かを運ばない。"
+}

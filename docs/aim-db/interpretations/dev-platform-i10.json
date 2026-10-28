@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "platform-axis",
+  "feature": "output-dist",
+  "node": "dev-platform",
+  "seq": 10,
+  "source": "docs/aims/dev-platform.md:74",
+  "status": "current",
+  "text": "出荷物の mode は working tree ではなく index（git ls-files -s）に訊き、引けなければ検査は落ちる側に倒れる。"
+}

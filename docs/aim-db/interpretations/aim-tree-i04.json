@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "aim-tree",
+  "seq": 4,
+  "source": "docs/aims/aim-tree.md:15",
+  "status": "current",
+  "text": "前身からは動く実装を運ぶが、外付け拡張として妥当かという正当化は運ばず、ここで使いながら書き直す。"
+}

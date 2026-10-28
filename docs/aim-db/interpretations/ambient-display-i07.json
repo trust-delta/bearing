@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 7,
+  "source": "docs/aims/ambient-display.md:25 docs/aims/ambient-display.md:27 docs/aims/ambient-display.md:29",
+  "status": "current",
+  "text": "plugin は statusLine key を宣言できず、plugin の bin/ は statusline の PATH に入らないため、装着の 1 行と path は人間の側に残る。この面は docs に無いが実在する $CLAUDE_PROJECT_DIR に依る。"
+}

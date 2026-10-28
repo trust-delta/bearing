@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 10,
+  "source": "docs/aims/observation-provenance.md:29 docs/aims/observation-provenance.md:31 docs/aims/observation-provenance.md:33",
+  "status": "current",
+  "text": "/compact を常用する運用では圧縮がチャットを記録に昇格させるため、チャット中の裸の数も記録と同じ害を持つ。エージェント側の是正（数を述べる前に走らせる）は法を変えずにできるが、記録の作法の列挙にチャットを足すかは射程の判断として人間に委ねている。"
+}

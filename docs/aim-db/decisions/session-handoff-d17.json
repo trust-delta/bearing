@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-08",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "session-handoff",
+  "quote": "見える指示で、会話と同じモデルが authoring すること",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 17,
+  "source": "docs/aims/session-handoff.md:69",
+  "summary": "人間が求めるのは、見える指示で会話と同じモデルが baton を authoring することである。"
+}

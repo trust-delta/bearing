@@ -1,0 +1,14 @@
+{
+  "category": "supply-scope",
+  "date": "2026-09-04",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "consumer-evidence",
+  "quote": "本リポで効果確認できていないものは配布しない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/consumer-evidence.md:9",
+  "summary": "この repo で効果を確認できていないものは配布しない。"
+}

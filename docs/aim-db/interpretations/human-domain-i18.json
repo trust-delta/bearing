@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 18,
+  "source": "docs/aims/human-domain.md:75 docs/aims/human-domain.md:90 docs/aims/human-domain.md:94",
+  "status": "current",
+  "text": "面の門は 2 層で、surface-shape は script が parse でき名指す id が実在すること（と字の規則）だけを、surface-render は document を stub して描画を実際に呼び面の数が gatherBacklog と一致することを固定する。stub は browser ではなく、固定できるのは論理であって見え方ではない。"
+}

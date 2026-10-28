@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "aim-tree-d07",
+    "aim-tree-d08",
+    "aim-tree-d09"
+  ],
+  "category": "work-accounting",
+  "feature": "make-writing",
+  "node": "aim-tree",
+  "seq": 11,
+  "source": "docs/aims/aim-tree.md:61 docs/aims/aim-tree.md:67 docs/aims/aim-tree.md:69 docs/aims/aim-tree.md:71 docs/aims/aim-tree.md:73 docs/aims/aim-tree.md:75",
+  "status": "current",
+  "text": "判別線は読む者によって答えが割れる。mark の見出しは自力で着手できるかを、項目の全文は閉じるまでに誰かの判断が要るかを測っており、着手可能で下流に人間の判断点を抱える第 3 の形が在る。"
+}

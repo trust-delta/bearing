@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 5,
+  "source": "docs/aims/adoption-declaration.md:25",
+  "status": "superseded",
+  "text": "述語は adopted || hasCorpus で、移行の便宜のため採用を宣言していない repo でも corpus があれば機構が口を開く。"
+}

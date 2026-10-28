@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-14",
+  "feature": "whole-env",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "dev-platform",
+  "quote": "開発は WSL で行う。Windows でも行えることは、もう要求しない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1001,
+  "source": "git 2d97d2a docs/aims/dev-platform.md の aim:",
+  "summary": "dev-platform の目的を改訂した。文言を誰が打ったかは記録に無い。"
+}

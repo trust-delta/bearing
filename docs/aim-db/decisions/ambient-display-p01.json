@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-02",
+  "feature": "output-statusline",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "ambient-display",
+  "quote": "対象ハーネスが提供する可能範囲内で作業に有効な情報を表示する機能をもつ",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git e7aecd6 docs/aims/ambient-display.md の aim:",
+  "summary": "ambient-display の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

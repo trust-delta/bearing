@@ -1,0 +1,5 @@
+{
+  "label": "経路ごとの器と表示の上界",
+  "note": "起動経路ごとに実在する表示の器（statusline・command・会話注入・mod・Artifact）と、そこで揃えられる範囲の線引き。",
+  "origin": "agent"
+}

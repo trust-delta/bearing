@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 2,
+  "source": "docs/aims/ambient-display.md:11",
+  "status": "current",
+  "text": "statusline は token を消費せず会話に割り込まず黙って在り続ける面であり、毎ターン喋られると邪魔だが常に見えていてほしいもの（aim 数・drift・未 commit など）を置く。"
+}

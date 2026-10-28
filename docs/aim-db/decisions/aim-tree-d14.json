@@ -1,0 +1,14 @@
+{
+  "category": "work-accounting",
+  "date": "2026-09-06",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "aim-tree",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 14,
+  "source": "docs/aims/aim-tree.md:115",
+  "summary": "11 node 中 10 が宣言待ちに並び、倒せば目的が全て達成されたと読める状態について問うた。"
+}

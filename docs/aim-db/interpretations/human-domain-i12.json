@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "main-path",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 12,
+  "source": "docs/aims/human-domain.md:62",
+  "status": "current",
+  "text": "Remote Control の先へ届く候補として置いた Artifact の試作は読むだけのスナップショットで state: を書き換える口を持たず、読む面の置き換えにはなるが動かす面にはならない。"
+}

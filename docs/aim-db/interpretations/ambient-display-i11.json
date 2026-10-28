@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "ambient-display-d05",
+    "ambient-display-d06"
+  ],
+  "category": "law-placement",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 11,
+  "source": "docs/aims/ambient-display.md:41 docs/aims/ambient-display.md:43 docs/aims/ambient-display.md:75 docs/aims/ambient-display.md:76",
+  "status": "current",
+  "text": "2 行目は hook と同じ述語（CLAUDE.md に法の block が在るか）で gate する。corpus が在って未採用のときだけ警告色なしで「aim 未採用 / corpus N」と述べ、corpus が無ければ完全に黙る。"
+}

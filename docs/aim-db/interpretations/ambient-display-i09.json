@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "ambient-display-d07"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 9,
+  "source": "docs/aims/ambient-display.md:37 docs/aims/ambient-display.md:49 docs/aims/ambient-display.md:74",
+  "status": "current",
+  "text": "shim は plugin の外に住むため本体が載っていなくても走り、「載っていない」を理由つきで述べられる。plugin 側は自分の実体を検査しないので、この面が不在を述べる唯一の面である。"
+}

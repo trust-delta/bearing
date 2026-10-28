@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "dev-platform",
+  "seq": 16,
+  "source": "docs/aims/dev-platform.md:103 docs/aims/dev-platform.md:107 docs/aims/dev-platform.md:109",
+  "status": "current",
+  "text": "照合の宛先は自分の branch の commit sha ではなく anchor の digest で書く。squash merge を慣習とする repo では branch の sha は main に残らない。"
+}

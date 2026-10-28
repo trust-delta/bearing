@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "ambient-display-d04"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 10,
+  "source": "docs/aims/ambient-display.md:39",
+  "status": "current",
+  "text": "bearing 自身の repo でも user スコープの 1 行だけで面が出る。cache 側の bin は checkout の中に居ると分かれば working tree へ委譲する。"
+}

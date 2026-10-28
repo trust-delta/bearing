@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-08",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "session-handoff",
+  "quote": "land 前に見れることが大きいのかも",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 20,
+  "source": "docs/aims/session-handoff.md:77",
+  "summary": "baton が効き始める前に人間が見られることが大きいのかもしれない、という仮説。"
+}

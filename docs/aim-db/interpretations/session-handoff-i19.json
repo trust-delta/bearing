@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "handoff-value",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 19,
+  "source": "docs/aims/session-handoff.md:215 docs/aims/session-handoff.md:239 docs/aims/session-handoff.md:241",
+  "status": "current",
+  "text": "圧縮は当人からは見えず、それは受動的な性質ではなく、要約が「言及するな」と指示している結果である。要約と baton の核の差は確信度ではなく、要約が決定を記述し baton の Settled が「触るな」と処方する点にある。"
+}

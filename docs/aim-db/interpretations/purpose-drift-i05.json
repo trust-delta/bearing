@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "purpose-drift-d01",
+    "purpose-drift-d02",
+    "purpose-drift-d03"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 5,
+  "source": "docs/aims/purpose-drift.md:29 docs/aims/purpose-drift.md:35",
+  "status": "current",
+  "text": "照合: の 1 行は、判断が人間の記憶からもエージェントの context からも失われたときに効く前払いである。条件は人間の手間が掛からないことで、人間の手が要る形に変われば判断は人間へ戻る。"
+}

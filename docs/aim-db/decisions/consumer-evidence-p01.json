@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-04",
+  "feature": "output-dist",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "consumer-evidence",
+  "quote": "配布するものは、消費者として動くことが機械的に確かめられている",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 4a4d83c docs/aims/consumer-evidence.md の aim:",
+  "summary": "consumer-evidence の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

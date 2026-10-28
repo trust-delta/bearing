@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "supply-scope",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 6,
+  "source": "docs/aims/adoption-declaration.md:29 docs/aims/adoption-declaration.md:31 docs/aims/adoption-declaration.md:91",
+  "status": "current",
+  "text": "project scope の enabledPlugins: false は user scope の plugin を覆す実在の手だが（plugin list の報告で実測）、束を丸ごと落とす。aim だけを黙らせる手（採用しないこと）とは落とす範囲が違い、あの switch が repo の宣言になるのは .claude/settings.json が tracked のときだけである。"
+}

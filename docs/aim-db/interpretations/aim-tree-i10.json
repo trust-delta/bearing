@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "aim-tree-d05"
+  ],
+  "category": "work-accounting",
+  "feature": "make-law",
+  "node": "aim-tree",
+  "seq": 10,
+  "source": "docs/aims/aim-tree.md:39 docs/aims/aim-tree.md:41 docs/aims/aim-tree.md:43",
+  "status": "current",
+  "text": "現行の [todo] の判別線「自力で完了を確認できる」と除外の列挙（人間の観測・判断）は、外部依存の解消待ちを todo として通し、open-todo を同じ理由で嘘にしうる。欠けているのは理由ではなく列挙である。"
+}

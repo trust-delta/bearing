@@ -1,0 +1,14 @@
+{
+  "category": "handoff-experiment",
+  "date": "2026-09-09",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "提案",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 32,
+  "source": "docs/aims/session-handoff.md:193",
+  "summary": "票 ① を、同じ軌跡の上で full context の judgment と圧縮後の judgment を並べる形で観測できるようにする（形の確定も同日）。"
+}

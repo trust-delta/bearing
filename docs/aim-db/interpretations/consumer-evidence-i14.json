@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d09"
+  ],
+  "category": "record-practice",
+  "feature": "record-corpus",
+  "node": "consumer-evidence",
+  "seq": 14,
+  "source": "docs/aims/consumer-evidence.md:80 docs/aims/consumer-evidence.md:82 docs/aims/consumer-evidence.md:84",
+  "status": "current",
+  "text": "open-todo: 0 / escalation: 0 は corpus が形式に沿って書かれているかにしか答えず、散文に残った作業や問いは機構にとって構造的に沈黙する。"
+}

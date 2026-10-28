@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "surface-parity-d07"
+  ],
+  "category": "surface-bounds",
+  "feature": "output-surface",
+  "node": "surface-parity",
+  "seq": 10,
+  "source": "docs/aims/surface-parity.md:47",
+  "status": "current",
+  "text": "Artifact を aim の面にした試作は Desktop・mobile・どの機械からも開けるが常時の表示ではなく、エージェントが publish したときだけ更新される。dead の node には判断待ちの印を付けない。"
+}

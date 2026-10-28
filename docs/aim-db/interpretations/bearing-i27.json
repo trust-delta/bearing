@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-d12",
+    "bearing-d13"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "bearing",
+  "seq": 27,
+  "source": "docs/aims/bearing.md:85 docs/aims/bearing.md:87 docs/aims/bearing.md:89 docs/aims/bearing.md:317",
+  "status": "current",
+  "text": "置かれた block の状態は 無い／今の版／古い／人間が手を入れた／読めない を畳まずに分けて述べ、本文が同一なら差が在ったことと問題でないことを両方述べる。「問題はない」という判定は byte 比較で閉じる場合に限る。"
+}

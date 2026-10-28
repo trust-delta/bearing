@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-10",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "session-handoff",
+  "quote": "当日の作業の継続にあたっては `w` → `/clear` → `r` よりも `/compact` のほうが良さそう",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 24,
+  "source": "docs/aims/session-handoff.md:132",
+  "summary": "同日の作業継続には w → /clear → r より /compact のほうが良さそうだ。"
+}

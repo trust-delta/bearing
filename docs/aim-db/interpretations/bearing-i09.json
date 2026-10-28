@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d02"
+  ],
+  "category": "supply-scope",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 9,
+  "source": "docs/aims/bearing.md:20 docs/aims/bearing.md:33 docs/aims/bearing.md:43 docs/aims/bearing.md:45 docs/aims/bearing.md:49 docs/aims/bearing.md:108 docs/aims/bearing.md:314",
+  "status": "current",
+  "text": "enabledPlugins は load の switch であって install ではなく、載っている事実は untracked な installed_plugins.json の record にしか無い。clone しただけでは、この repo でも何も載らない。README の autoUpdate と install の記述は、食い違う実測を並べて確からしさとして述べ、振る舞いを断定しない。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "work-accounting",
+  "date": "2026-09-12",
+  "feature": "make-law",
+  "form": "verbatim",
+  "kind": "指摘",
+  "node": "aim-tree",
+  "quote": "先日とあるrepoで、外部依存待ちがtodoとして記述されていたのを暫定でESCALATIONにおいたのですが、別のrepoでも同様の事象を確認。現在の法はエージェントには「外部依存の解消確認はtodo」と捉えられるようです",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 5,
+  "source": "docs/aims/aim-tree.md:39",
+  "summary": "2 repo で外部依存待ちが [todo] として書かれており、現行の法はエージェントにそう読まれている（暫定で ESCALATION へ移した）。"
+}

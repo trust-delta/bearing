@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "make-writing",
+  "node": "native-language",
+  "seq": 2,
+  "source": "docs/aims/native-language.md:9 docs/aims/native-language.md:25",
+  "status": "current",
+  "text": "fence のタグ・field 名・値・slug・識別子・関数名・ファイル名はセッションが parse する契約なので英語のまま据え置く。これを訳すのは言語の統一ではなく契約の破壊である。"
+}

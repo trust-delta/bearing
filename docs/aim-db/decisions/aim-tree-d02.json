@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-08",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "aim-tree",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 2,
+  "source": "docs/aims/aim-tree.md:29",
+  "summary": "「問うたなら書け」の規則はこの repo の corpus にだけ置き、配る canon（aim-authoring.md）へは昇格させない。"
+}

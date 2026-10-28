@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 13,
+  "source": "docs/aims/observation-provenance.md:41",
+  "status": "current",
+  "text": "日付は対象とセットで要る。日付だけが付いた断定は射程が広すぎることを字面から読み取れず、限界を明記した観測が公開面で広げられて出荷される経路になる。推定を corpus へ着地させる前に、他所へ伝播していないかを grep で確かめる。"
+}

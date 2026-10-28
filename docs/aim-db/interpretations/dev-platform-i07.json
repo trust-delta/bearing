@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d04"
+  ],
+  "category": "dev-env",
+  "feature": "whole-env",
+  "node": "dev-platform",
+  "seq": 7,
+  "source": "docs/aims/dev-platform.md:58 docs/aims/dev-platform.md:60 docs/aims/dev-platform.md:62 docs/aims/dev-platform.md:63 docs/aims/dev-platform.md:64 docs/aims/dev-platform.md:65 docs/aims/dev-platform.md:66 docs/aims/dev-platform.md:67 docs/aims/dev-platform.md:69",
+  "status": "current",
+  "text": "この repo が Windows 側に持つものは無い。旧 checkout と旧 home は全 ref・untracked・stash まで検めて主張が main に在ることを確かめてから削除され、他 project には触れていない。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "component-boundary",
+  "date": "2026-09-04",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 9,
+  "source": "docs/aims/session-handoff.md:35",
+  "summary": "実装が 2 箇所（hook が repo 内 path を正本と名指す・with-aim が handoff.md を _guide/ に置く）で aim との分離を破っていた。"
+}

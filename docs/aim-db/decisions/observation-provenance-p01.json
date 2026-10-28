@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-04",
+  "feature": "make-writing",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "observation-provenance",
+  "quote": "調査や実測の記録は、どの時点で真であったかを明記し、記録以降も恒久的に真であるかのようには記載しない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 2736cf2 docs/aims/observation-provenance.md の aim:",
+  "summary": "observation-provenance の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

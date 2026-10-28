@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 13,
+  "source": "docs/aims/surface-parity.md:55",
+  "status": "current",
+  "text": "CI は採る側（bin/bearing-ci.mjs が ~/.bearing/units/<unit>/ci.json へ採取時刻つきで置く）と読む側（statusline）を分け、statusline は決して gh を起こさない。分離は test が固定する。"
+}

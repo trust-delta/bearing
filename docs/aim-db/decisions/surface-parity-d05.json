@@ -1,0 +1,14 @@
+{
+  "category": "surface-bounds",
+  "date": "2026-10-27",
+  "feature": "output-surface",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "surface-parity",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 5,
+  "source": "docs/aims/surface-parity.md:42",
+  "summary": "Remote Control のセッションで試作 mod の帯は人間の Desktop 画面に出なかった。"
+}

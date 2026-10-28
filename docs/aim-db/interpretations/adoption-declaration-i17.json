@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 17,
+  "source": "docs/aims/adoption-declaration.md:81 docs/aims/adoption-declaration.md:116",
+  "status": "current",
+  "text": "block は path ではなく skill 名を指し、version・cache path・不在の手当てを持たない。cache path は version を含み旧版が残るので、path を書けば commit された block が腐る。"
+}

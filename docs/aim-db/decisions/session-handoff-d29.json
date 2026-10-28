@@ -1,0 +1,14 @@
+{
+  "category": "baton-format",
+  "date": "2026-09-11",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "不足は補い、取り入れるべきは取り入れるのが良さそうです",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 29,
+  "source": "docs/aims/session-handoff.md:164",
+  "summary": "ネイティブ圧縮と競うのでも譲るのでもなく、baton の不足（較正）を補い、圧縮の良い点（逐語の欄）を取り入れる。"
+}

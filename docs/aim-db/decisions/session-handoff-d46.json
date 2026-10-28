@@ -1,0 +1,14 @@
+{
+  "category": "baton-format",
+  "date": "2026-09-12",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "提案",
+  "node": "session-handoff",
+  "quote": "素直に自身のjsonlを書くようにhandoff指示文に入れるのは？それならLLM的解釈で一定の精度は出ると思うのですが",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 46,
+  "source": "docs/aims/session-handoff.md:308",
+  "summary": "baton の transcript: には著者が自分の jsonl を書くよう canon に指示する（採用された）。"
+}

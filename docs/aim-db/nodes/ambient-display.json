@@ -1,0 +1,6 @@
+{
+  "aim": "対象ハーネスが提供する可能範囲内で作業に有効な情報を表示する機能をもつ",
+  "feature": "output-statusline",
+  "parent": "bearing",
+  "state": "open"
+}

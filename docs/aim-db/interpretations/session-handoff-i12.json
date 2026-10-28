@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "session-handoff-d08",
+    "session-handoff-d09",
+    "session-handoff-d10"
+  ],
+  "category": "component-boundary",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 12,
+  "source": "docs/aims/session-handoff.md:33 docs/aims/session-handoff.md:35 docs/aims/session-handoff.md:37 docs/aims/session-handoff.md:39 docs/aims/session-handoff.md:181 docs/aims/session-handoff.md:182",
+  "status": "current",
+  "text": "handoff は aim から独立し、canon は skills/handoff/ に住んで aim の dir に間借りしない。hook は repo 内の path ではなく skill の同梱物を名指し、出力が aim の path を含まないことを回帰の門が見張る。"
+}

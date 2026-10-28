@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 2,
+  "source": "docs/aims/adoption-declaration.md:13 docs/aims/adoption-declaration.md:15 docs/aims/adoption-declaration.md:16 docs/aims/adoption-declaration.md:17 docs/aims/adoption-declaration.md:19",
+  "status": "current",
+  "text": "痕跡を残す側は aim-tree / purpose-drift（setup-aim が置く CLAUDE.md の法の block と .claude/skills/aim/）で宣言を要求し、痕跡を残さない側（ambient-display の 1 行目など）は何も要求しない。corpus docs/aims/ はその project 自身のものである。"
+}

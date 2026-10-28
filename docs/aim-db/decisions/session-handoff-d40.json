@@ -1,0 +1,14 @@
+{
+  "category": "handoff-experiment",
+  "date": "2026-09-10",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 40,
+  "source": "docs/aims/session-handoff.md:245",
+  "summary": "本 cwd で handoff を封印し /compact だけで続ける（例外は予定されたプロセス交替のみ、終端は人間が宣言する）。"
+}

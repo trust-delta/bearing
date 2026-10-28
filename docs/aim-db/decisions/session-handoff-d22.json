@@ -1,0 +1,14 @@
+{
+  "category": "handoff-experiment",
+  "date": "2026-09-11",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "コンパクトの利点と欠点、私がtmaiやbearingでhandoffを慣習にしていたせいで記憶の挙動から性質が変わっていたのも大きい",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 22,
+  "source": "docs/aims/session-handoff.md:109",
+  "summary": "handoff を慣習にしていたことが圧縮の観測される性質を変えていた、という実験の交絡。"
+}

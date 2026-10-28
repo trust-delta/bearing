@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 23,
+  "source": "docs/aims/session-handoff.md:144 docs/aims/session-handoff.md:168",
+  "status": "current",
+  "text": "セッションを閉じる hook（SessionEnd）は在るが、エージェントに baton を著す時間を与えず、「w されずに終わった」と印を付けるのが上限である。"
+}

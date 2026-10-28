@@ -51,6 +51,7 @@ import {
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { recordSession } from '../lib/unit-home.mjs'
+import { readStore, renderAimDbSection, summarizeStore, validateStore } from '../lib/aim-db.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -131,8 +132,11 @@ async function repoFacts(repo) {
   const dir = repo.aimsDir ?? DEFAULT_AIMS_DIR
   const slugs = await readAimSlugs(repo.root, dir)
   const head = (await runGit(repo.root, ['rev-parse', '--short', 'HEAD']))?.trim() ?? null
+  // ⚠ **人間の決定と解釈の記録は、`docs/aims/` の有無と独立に読む**（2026-10-29）—— 本文を退かせた
+  // repo でも、記録が在れば届けねばならない。
+  const aimDb = await readStore(repo.root).catch(() => null)
   if (slugs.length === 0) {
-    return { ...repo, head, slugs, corpus: false }
+    return { ...repo, head, slugs, corpus: false, aimDb }
   }
   const graph = await readAimGraph(repo.root, dir)
   const [drift, working, unpushed, aimCode] = await Promise.all([
@@ -142,7 +146,17 @@ async function repoFacts(repo) {
     gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
   ])
   const backlog = await gatherBacklog(repo.root, dir)
-  return { ...repo, head, slugs, corpus: true, drift, working, unpushed, aimCode, backlog }
+  return { ...repo, head, slugs, corpus: true, drift, working, unpushed, aimCode, backlog, aimDb }
+}
+
+/** 人間の決定と解釈の記録を、要約として述べる。記録の無い repo では何も言わない。 */
+function sayAimDb(r) {
+  if (!r.aimDb?.present) return
+  say('#### 人間の決定とエージェントの解釈（`docs/aim-db/`）', '')
+  say(renderAimDbSection(summarizeStore(r.aimDb.store), {
+    problems: validateStore(r.aimDb.store),
+    unreadable: r.aimDb.unreadable,
+  }).trimEnd(), '')
 }
 
 function renderRepo(r) {
@@ -153,6 +167,7 @@ function renderRepo(r) {
     // 誤りが健康証明として読まれる。**
     say(`*この repo に \`${r.aimsDir}/\` は無い —— corpus を採っていない。これは構造的に*`,
         '*正常な状態であって、欠陥ではない。*', '')
+    sayAimDb(r)
     return
   }
   if (r.drift === null) {
@@ -173,6 +188,7 @@ function renderRepo(r) {
   say(renderWorkingDeltaFence(r.working).trimEnd(), '')
   say(renderUnpushedFence(r.unpushed).trimEnd(), '')
   say(renderAimCodeFence(r.aimCode).trimEnd(), '')
+  sayAimDb(r)
 }
 
 async function main(input) {

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d18"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 4,
+  "source": "docs/aims/bearing.md:120 docs/aims/bearing.md:124 docs/aims/bearing.md:227",
+  "status": "superseded",
+  "text": "柱は「目的の保持・文脈の引き継ぎ・ズレの検知」の 3 点である。"
+}

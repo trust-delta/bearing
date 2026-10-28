@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-07",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 7,
+  "source": "docs/aims/adoption-declaration.md:65",
+  "summary": "setup-aim の実装が本文と食い違っていた（block だけが置き直され skill は動かず --check が current と述べた）ことを人間が見つけた"
+}

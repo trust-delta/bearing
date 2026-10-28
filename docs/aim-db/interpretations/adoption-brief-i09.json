@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "record-corpus",
+  "node": "adoption-brief",
+  "seq": 9,
+  "source": "docs/aims/adoption-brief.md:32",
+  "status": "current",
+  "text": "aim node の 6 節が分けているのは内容の種類ではなく「誰の番か」であると述べる。[todo] と # OBSERVATION は自力で確認できること／できないことの鏡像であり、[done] は「実装された」であって「満たされた」ではない。"
+}

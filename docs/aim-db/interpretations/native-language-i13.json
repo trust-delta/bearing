@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "make-writing",
+  "node": "native-language",
+  "seq": 13,
+  "source": "docs/aims/native-language.md:29",
+  "status": "current",
+  "text": "scripts/lang-report.mjs が層ごとの言語比率と、日本語が期待される .mjs の英語散文候補を CI で毎回報告する。前提が未実測なので門にはせず落とさない。heuristic であり引用された英語の術語と英語の散文を区別できないので、出るのは候補であって違反ではない。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-10",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "中途半端な記憶は時として弊害を呼ぶ。劣化した記憶を頼るくらいなら、いっそ忘れてしまって、必要タイミングで新たに引き直す方が正確だ。そして引き直すコストは、誤ったまま進むコストより遥かに安い",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 21,
+  "source": "docs/aims/session-handoff.md:95",
+  "summary": "baton の価値は覚えていることではなく、引き直せる形で置くことである。"
+}

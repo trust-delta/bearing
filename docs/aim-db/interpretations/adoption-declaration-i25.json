@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "adoption-declaration-d15",
+    "adoption-declaration-d16"
+  ],
+  "category": "law-placement",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 25,
+  "source": "docs/aims/adoption-declaration.md:99 docs/aims/adoption-declaration.md:101",
+  "status": "current",
+  "text": "aim を採らず statusline と handoff だけを使う repo が実在し、痕跡を残さない側が採っていない repo で回ることは設計上の理由から実例を持つ理由になった。ただし 1 標本・1 人・1 機体で、共同の場での抵抗については何も述べず、OBSERVATION の票は倒していない。"
+}

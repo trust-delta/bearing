@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 17,
+  "source": "docs/aims/observation-provenance.md:42",
+  "status": "current",
+  "text": "provenance-report の第 2 の類として、対象を持たない実測を挙げる。測るのはラベル「対象:」の有無ではなく、日付と数量を落として何も残らない刻印かどうかであり、数量（「1 台」など）は「何を」ではないので落とす。2 類は 1 本の早期脱出に相乗りさせない。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 19,
+  "source": "docs/aims/observation-provenance.md:47 docs/aims/observation-provenance.md:54 docs/aims/observation-provenance.md:56",
+  "status": "current",
+  "text": "機械は候補を挙げるだけで判定しない設計なので、候補が違反か偽陽性かの判定が行われない限り、その数は「読まれていない」を意味し続ける。この形は native-language の lang-report.mjs に倣う。"
+}

@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "consumer-evidence-d06",
+    "consumer-evidence-d07"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 12,
+  "source": "docs/aims/consumer-evidence.md:59",
+  "status": "current",
+  "text": "覆っていない 6 つを負えるのは、他 repo での使用で踏んだものがこの repo へ運び入れられるループが前提だからであり、ループが回らなければ「見ていない穴」に戻る。この前提は人間に訊く以外に再測できない。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "native-language-d05"
+  ],
+  "category": "language-line",
+  "feature": "output-dist",
+  "node": "native-language",
+  "seq": 8,
+  "source": "docs/aims/native-language.md:19",
+  "status": "current",
+  "text": "外向きの英語を従属物として残す法は読む面についてのものであり、加わる面には及ばない。開発・aim の木・canon・commit message が日本語なので、貢献の手引きだけを訳しても変更の意図は拾えず、参加できない人に参加できると告げる面になる。"
+}

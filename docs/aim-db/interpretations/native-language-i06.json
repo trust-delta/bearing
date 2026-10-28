@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "output-dist",
+  "node": "native-language",
+  "seq": 6,
+  "source": "docs/aims/native-language.md:17",
+  "status": "superseded",
+  "text": "外向きの英語は捨てず、README・貢献の面を区別せずすべて日本語正本の従属物として残す。"
+}

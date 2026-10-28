@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "observation-provenance-d01"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "observation-provenance",
+  "seq": 5,
+  "source": "docs/aims/observation-provenance.md:17 docs/aims/observation-provenance.md:37 docs/aims/observation-provenance.md:38",
+  "status": "current",
+  "text": "記録の作法は aim に限らず baton・PR・commit message・code コメント・doc など記録として残るものすべてに効くので、aim についてだけを持つ block の外に置く。block の外は生成で復元できないため CLAUDE.md を tracked にし、classify-paths の docs allowlist へ名指しで開け、machine-local な上書きは CLAUDE.local.md として ignore する。"
+}

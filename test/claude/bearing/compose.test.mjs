@@ -323,3 +323,27 @@ test('番を渡された node が、何を見ればよいかを持っている�
   assert.match(out, /1 件は `# OBSERVATION` の票を 1 枚も持たない.*blind/s)
   await rm(dir, { recursive: true, force: true })
 })
+
+// ── 人間の決定と解釈の記録（docs/aim-db/）—— 2026-10-29 ───────────────────────────
+
+test('docs/aim-db/ が在れば、facts は機能ごとの件数と直近の決定を述べる。無ければ何も言わない', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  const root = path.join(dir, 'proj')
+  await mkdir(root, { recursive: true })
+  await corpusRepo(root, ['alpha'])
+  // 陽性対照: 記録が無い間は、節そのものが出ない。
+  assert.doesNotMatch(compose(root), /bearing-aim-db v1/)
+  const put = async (c, id, body) => {
+    await mkdir(path.join(root, 'docs', 'aim-db', c), { recursive: true })
+    await writeFile(path.join(root, 'docs', 'aim-db', c, `${id}.json`), JSON.stringify(body))
+  }
+  await put('nodes', 'alpha', { aim: 'x', state: 'open' })
+  await put('features', 'whole-purpose', { frame: 'whole', label: '目的と範囲', order: 1 })
+  await put('decisions', 'alpha-d01', { node: 'alpha', form: 'verbatim', quote: 'こうしましょう', summary: 's', feature: 'whole-purpose', date: '2026-10-29' })
+  await put('interpretations', 'alpha-i01', { node: 'alpha', text: 't', basis: [], feature: 'whole-purpose' })
+  const out = compose(root)
+  assert.match(out, /bearing-aim-db v1/)
+  assert.match(out, /whole \| whole-purpose \| 目的と範囲 \| 1 \| 1 \| 1/)
+  assert.match(out, /2026-10-29 `alpha-d01` \[目的と範囲\] 「こうしましょう」/)
+  await rm(dir, { recursive: true, force: true })
+})

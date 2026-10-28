@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d41"
+  ],
+  "category": "main-path",
+  "feature": "output-surface",
+  "node": "bearing",
+  "seq": 30,
+  "source": "docs/aims/bearing.md:264",
+  "status": "current",
+  "text": "Desktop に常時の面を置けない前提で、aim を会話への注入だけで続ける案と Artifact を木を見る面にする案の組み合わせを推薦として置き、選択は人間に委ねている。"
+}

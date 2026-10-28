@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 12,
+  "source": "docs/aims/adoption-brief.md:27 docs/aims/adoption-brief.md:35",
+  "status": "current",
+  "text": "この面は読む面なので、native-language の判別線に従い英語版 docs/adoption.en.md を併置し、README.en.md からも導く。冒頭に「翻訳であり食い違えば日本語が正」と置き、statusline が描く日本語の label は訳さず英語の注釈を添える。"
+}

@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "bearing-d03",
+    "bearing-d23",
+    "bearing-d43"
+  ],
+  "category": "supply-scope",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 8,
+  "source": "docs/aims/bearing.md:57 docs/aims/bearing.md:145 docs/aims/bearing.md:147 docs/aims/bearing.md:290",
+  "status": "current",
+  "text": "plugin 本体は user スコープ 1 本で全 project に載せ、この repo は .claude/settings.json を持たない。project ごとの差は aim を採ったか（CLAUDE.md の marker）だけで、それは tracked に残る。"
+}

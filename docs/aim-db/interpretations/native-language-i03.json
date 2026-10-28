@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "native-language-d01",
+    "native-language-d02"
+  ],
+  "category": "language-line",
+  "feature": "make-writing",
+  "node": "native-language",
+  "seq": 3,
+  "source": "docs/aims/native-language.md:11",
+  "status": "current",
+  "text": "この aim の根拠は人間の推論であって実測ではなく、検証済みの事実として扱わない。反証は混在が無害だという核心の獲得であり、そのとき動くのは統一という手段であって、母語に合わせるという目的は残る。"
+}
