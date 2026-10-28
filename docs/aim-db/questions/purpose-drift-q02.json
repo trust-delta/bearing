@@ -1,0 +1,16 @@
+{
+  "date": null,
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "note": "「候補であって推薦ではない」で終わっていて、人間の答えが無い。2026-10-29 に本文を凍結すると決めたので、`検証:` の書き方そのものが変わり、この問いは消えるかもしれない。",
+  "options": [
+    "file 単位の承認にする",
+    "何もしない（転置で読む手間は下がり、書く手間だけが残る）"
+  ],
+  "recordedAt": "2026-10-28T15:39:07.252Z",
+  "recordedBy": "agent",
+  "seq": 2,
+  "source": "docs/aims/purpose-drift.md:41",
+  "status": "open",
+  "text": "承認の粒度を node 単位から file 単位（`検証: <path> @ <blob>`）に細かくするか、何もしないか。"
+}

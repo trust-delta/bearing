@@ -21,6 +21,7 @@ const good = () => ({
   categories: [{ id: 'c', label: '話題' }],
   decisions: [{ id: 'n-d01', node: 'n', form: 'verbatim', quote: 'こうしましょう', summary: 's', category: 'c', feature: 'f' }],
   interpretations: [{ id: 'n-i01', node: 'n', text: 't', basis: ['n-d01'], feature: 'f' }],
+  questions: [{ id: 'n-q01', node: 'n', text: 'どちらにするか', status: 'answered', answeredBy: ['n-d01'], feature: 'f' }],
 })
 
 test('formatRecord は key を並べ直し、id を本文から落とす —— 書き手ごとに差分が出ない', () => {
@@ -41,6 +42,8 @@ test('形の崩れを名指す —— 未定義の参照、言い換えの quote
   s.decisions.push({ id: 'n-d03', node: 'n', form: 'verbatim', summary: 's' })
   s.interpretations.push({ id: 'n-i02', node: 'n', text: 't', basis: ['n-d99'] })
   s.features.push({ id: '../up', frame: 'nowhere', label: 'x' })
+  s.questions.push({ id: 'n-q02', node: 'n', text: 'q', status: 'answered' })
+  s.questions.push({ id: 'n-q03', node: 'n', text: 'q', status: 'pending', answeredBy: ['n-d77'] })
   const p = validateStore(s).join('\n')
   assert.match(p, /n-d02: 未定義の node ghost/)
   assert.match(p, /n-d02: 言い換えが quote を持つ/)
@@ -48,6 +51,9 @@ test('形の崩れを名指す —— 未定義の参照、言い換えの quote
   assert.match(p, /n-i02: 実在しない決定を名指す n-d99/)
   assert.match(p, /features\/\.\.\/up: id の形が不正/)
   assert.match(p, /未定義の枠 nowhere/)
+  assert.match(p, /n-q02: answered なのに答えの決定を名指さない/)
+  assert.match(p, /n-q03: 未定義の status pending/)
+  assert.match(p, /n-q03: 実在しない決定を名指す n-d77/)
 })
 
 test('readStore は、在り処が無いことと読めない file を分けて返す', async (t) => {
@@ -103,4 +109,14 @@ test('描いた節は、読めない記録と形の崩れを要約より先に�
   assert.ok(text.indexOf('読めない記録') < text.indexOf('whole | f |'), '要約の後ろに埋もれている')
   assert.match(text, /# ⚠ 形の崩れ: decisions\/x/)
   assert.match(text, /whole \| f \| 目的 \| 1 \| 1 \| 0/)
+})
+
+test('開いた問いは要約に全件出る —— 答え済みと、撤回した目的の問いは出ない', () => {
+  const s = good()
+  s.nodes.push({ id: 'gone', aim: 'y', state: 'dead' })
+  s.questions.push({ id: 'n-q02', node: 'n', text: 'まだ決まっていない', status: 'open', feature: 'f' })
+  s.questions.push({ id: 'gone-q01', node: 'gone', text: '撤回済み', status: 'open' })
+  const sum = summarizeStore(s)
+  assert.deepEqual(sum.open.map((q) => q.id), ['n-q02'])
+  assert.match(renderAimDbSection(sum), /人間の判断を待っている問い（1 件）:[\s\S]*n-q02/)
 })

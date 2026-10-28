@@ -1,0 +1,14 @@
+{
+  "category": "release-cadence",
+  "date": "2026-10-29",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "配る前に本リポで効果確認や修正をしてからにしましょう",
+  "recordedAt": "2026-10-28T15:35:46.034Z",
+  "recordedBy": "agent",
+  "seq": 49,
+  "source": "会話 2026-10-29",
+  "summary": "aim-db への一本化と新しい運用の法は、まず bearing の repo だけで試し、効果を確かめて直してから他の repo へ配る。"
+}
