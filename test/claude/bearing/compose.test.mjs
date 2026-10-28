@@ -347,3 +347,19 @@ test('docs/aim-db/ が在れば、facts は機能ごとの件数と直近の決�
   assert.match(out, /2026-10-29 `alpha-d01` \[目的と範囲\] 「こうしましょう」/)
   await rm(dir, { recursive: true, force: true })
 })
+
+test('docs/aim-db/ を持つ repo では、本文から数える open-todo 等を出さず、問いを見よと述べる（試行 2026-10-29）', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  const root = path.join(dir, 'proj')
+  await mkdir(root, { recursive: true })
+  await corpusRepo(root, ['alpha'])
+  // 陽性対照: 記録が無い間は、本文の [todo] が open-todo として数えられる。
+  assert.match(compose(root), /\*\*open-todo: 1\*\*/)
+  await mkdir(path.join(root, 'docs', 'aim-db', 'nodes'), { recursive: true })
+  await writeFile(path.join(root, 'docs', 'aim-db', 'nodes', 'alpha.json'), JSON.stringify({ aim: 'x', state: 'open' }))
+  const out = compose(root)
+  assert.doesNotMatch(out, /\*\*open-todo:/)
+  assert.doesNotMatch(out, /\*\*escalation:/)
+  assert.match(out, /記録を `docs\/aim-db\/` に一本化している（試行）/)
+  await rm(dir, { recursive: true, force: true })
+})

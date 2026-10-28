@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import {
-  COLLECTIONS, formatRecord, readStore, renderAimDbSection, summarizeStore, validateStore,
+  COLLECTIONS, formatRecord, readOpenQuestions, readStore, renderAimDbSection, summarizeStore, validateStore,
 } from '../../../carriers/claude/bearing/lib/aim-db.mjs'
 
 const REPO = path.join(import.meta.dirname, '..', '..', '..')
@@ -119,4 +119,15 @@ test('開いた問いは要約に全件出る —— 答え済みと、撤回し
   const sum = summarizeStore(s)
   assert.deepEqual(sum.open.map((q) => q.id), ['n-q02'])
   assert.match(renderAimDbSection(sum), /人間の判断を待っている問い（1 件）:[\s\S]*n-q02/)
+})
+
+test('readOpenQuestions は開いた問いの id だけを返し、記録の無い repo では null', async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), 'aim-db-'))
+  t.after(() => rm(root, { recursive: true, force: true }))
+  assert.equal(await readOpenQuestions(root), null)
+  const q = path.join(root, 'docs', 'aim-db', 'questions')
+  await mkdir(q, { recursive: true })
+  await writeFile(path.join(q, 'n-q01.json'), JSON.stringify({ status: 'open' }))
+  await writeFile(path.join(q, 'n-q02.json'), JSON.stringify({ status: 'answered' }))
+  assert.deepEqual(await readOpenQuestions(root), ['n-q01'])
 })

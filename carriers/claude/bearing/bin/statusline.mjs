@@ -32,6 +32,7 @@ import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { gatherUnpushed } from '../lib/unpushed.mjs'
 import { gatherDrift } from '../lib/drift.mjs'
 import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
+import { readOpenQuestions } from '../lib/aim-db.mjs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
 // （`stdio: 'inherit'`）ので、親が一度でも stdin を読めばその分は永久に失われる。
@@ -427,7 +428,11 @@ async function gatherFacts(input) {
       gatherDrift(repo.root, dir).catch(() => null),
       gatherBacklog(repo.root, dir).catch(() => null),
     ])
-    return { slugs, working, unpushed, drift, backlog }
+    // 🔴 **`docs/aim-db/` を持つ repo は、本文の残務・宣言待ちを数えず、判断待ちを開いた問いから数える**
+    // （人間の決定 2026-10-29 —— facts の Forward backlog と同じ扱い）。持たない repo は今のまま。
+    const open = await readOpenQuestions(repo.root).catch(() => null)
+    const counted = open === null ? backlog : { ...backlog, openTodoNodes: 0, awaitingNodes: [], escalationNodes: open }
+    return { slugs, working, unpushed, drift, backlog: counted }
   }))).filter(Boolean)
 
   // ⚠ **「無い」だけでは足りない。** 在り処が宣言で動く以上、*本当に無い*のか

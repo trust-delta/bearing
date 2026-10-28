@@ -235,3 +235,34 @@ export function renderAimDbSection(summary, { dir = DEFAULT_AIM_DB_DIR, problems
   )
   return lines.join('\n')
 }
+
+/**
+ * 開いた問いの id だけを読む。記録を持たない repo では `null`。
+ *
+ * ⚠ **statusline のための軽い読み** —— statusline は描くたびに走る ∴ 全件（数百）を読まず、
+ * 問いの dir だけを読む。撤回した目的の問いは除かない（node を読まない軽さと引き換えである）。
+ */
+export async function readOpenQuestions(repoRoot, dir = DEFAULT_AIM_DB_DIR) {
+  const base = path.join(repoRoot, dir)
+  try {
+    await readdir(base)
+  } catch {
+    return null
+  }
+  let names = []
+  try {
+    names = (await readdir(path.join(base, 'questions'))).filter((n) => n.endsWith('.json'))
+  } catch {
+    return []
+  }
+  const open = []
+  for (const n of names) {
+    try {
+      const q = JSON.parse(await readFile(path.join(base, 'questions', n), 'utf8'))
+      if (q?.status === 'open') open.push(n.slice(0, -'.json'.length))
+    } catch {
+      // 読めない問いは数えない。⚠ facts の側（readStore）が読めないことを述べる。
+    }
+  }
+  return open.sort()
+}

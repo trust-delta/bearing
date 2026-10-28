@@ -230,27 +230,32 @@ async function main(input) {
   // 各 repo の事実の側が自分の在り処を述べる —— 法は 1 つ、事実は repo ごと。
   const f = await frame(repos[0]?.aimsDir ?? DEFAULT_AIMS_DIR)
   if (f) say(f.trimEnd(), '', '---', '')
-  const openTodo = withCorpus.reduce((n, r) => n + r.backlog.openTodoNodes, 0)
-  const escalation = withCorpus.reduce((n, r) => n + (r.backlog.escalationNodes?.length ?? 0), 0)
-  const anomalies = withCorpus.flatMap((r) =>
+  // 🔴 **`docs/aim-db/` を持つ repo は、本文から数える残務・宣言待ち・判断待ち・観測を出さない**（人間の
+  // 決定 2026-10-29: 記録を一本化し、`[todo]` と観測の票は持たない —— `bearing-x03`〜`x05`）。⚠ **持たない
+  // repo の数は今のまま** —— 試行はこの repo だけで行う（`bearing-x06`）∴ 挙動の変化を記録の有無で閉じる。
+  const legacy = withCorpus.filter((r) => !r.aimDb?.present)
+  const trial = withCorpus.filter((r) => r.aimDb?.present)
+  const openTodo = legacy.reduce((n, r) => n + r.backlog.openTodoNodes, 0)
+  const escalation = legacy.reduce((n, r) => n + (r.backlog.escalationNodes?.length ?? 0), 0)
+  const anomalies = legacy.flatMap((r) =>
     r.backlog.anomalies.map((a) => ({ repo: r.label, ...a })),
   )
-  const unknown = withCorpus.flatMap((r) =>
+  const unknown = legacy.flatMap((r) =>
     r.backlog.unknownNodes.map((slug) => `${r.label}/${slug}`),
   )
-  const emptyEscalation = withCorpus.flatMap((r) =>
+  const emptyEscalation = legacy.flatMap((r) =>
     (r.backlog.escalationEmptyNodes ?? []).map((slug) => `${r.label}/${slug}`),
   )
-  const observation = withCorpus.reduce((n, r) => n + (r.backlog.observationNodes?.length ?? 0), 0)
-  const emptyObservation = withCorpus.flatMap((r) =>
+  const observation = legacy.reduce((n, r) => n + (r.backlog.observationNodes?.length ?? 0), 0)
+  const emptyObservation = legacy.flatMap((r) =>
     (r.backlog.observationEmptyNodes ?? []).map((slug) => `${r.label}/${slug}`),
   )
   // ⚠ unit を横断して 1 枚に畳む。repo ごとに割ると、**番が渡っている node の総数**という
   // 唯一意味のある読み方が失われる —— 観測するのは人間であって、repo ではない。
-  const awaiting = withCorpus.flatMap((r) =>
+  const awaiting = legacy.flatMap((r) =>
     (r.backlog.awaitingNodes ?? []).map((a) => ({
       ...a,
-      slug: withCorpus.length > 1 ? `${r.label}/${a.slug}` : a.slug,
+      slug: legacy.length > 1 ? `${r.label}/${a.slug}` : a.slug,
     })),
   )
   say(`# aim facts —— unit: ${unit.name} —— 構成時刻 ${new Date().toISOString()}`)
@@ -335,7 +340,14 @@ async function main(input) {
   }
 
   // ── forward backlog ───────────────────────────────────────────────────────
-  if (withCorpus.length > 0) {
+  if (trial.length > 0) {
+    say(
+      `${trial.map((r) => r.label).join('、')} は記録を \`docs/aim-db/\` に一本化している（試行）∴ 本文から数える`,
+      'open-todo・宣言待ち・escalation・observation は出さない。**人間の判断待ちは、上の「問い」を見ること。**',
+      '',
+    )
+  }
+  if (legacy.length > 0) {
     say('## Forward backlog', '')
     say(
       `**open-todo: ${openTodo}** —— \`# PROCESS\` に \`[todo]\` mark を 1 つ以上持つ aim node`,

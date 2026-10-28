@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-x03"
+  ],
+  "category": "purpose",
+  "feature": "record-corpus",
+  "node": "bearing",
+  "seq": 34,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "人間の判断待ちは「問い」として記録に持ち、答えが出たら答えの決定を名指して answered にする。本文の ESCALATION の開いた 13 件を移した。"
+}
