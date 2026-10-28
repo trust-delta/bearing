@@ -131,3 +131,83 @@ export function validateStore(store) {
   }
   return problems
 }
+
+/**
+ * セッション開始時に注入する要約を作る —— 全件ではなく、機能ごとの件数と直近の決定だけ。
+ *
+ * ⚠ **全件を注入しない** —— 決定は増え続ける ∴ 全文を載せれば、文脈の予算を記録の量に
+ * 比例して食う。機能 A の今を読みたいエージェントは、要約が名指す dir を引けばよい。
+ *
+ * ⚠ **今の解釈からは、撤回した目的（`state: dead`）の node と置き換えられたもの
+ * （`status: superseded`）を除く** —— facts の他の数（open-todo 等）と同じ除外である。
+ * 決定は除かない: 撤回した目的についての決定も、人間がそう決めたという事実である。
+ *
+ * @param {Record<string, object[]>} store
+ * @param {{recent?: number}} opts
+ */
+export function summarizeStore(store, { recent = 5 } = {}) {
+  const dead = new Set(store.nodes.filter((n) => n.state === 'dead').map((n) => n.id))
+  const current = store.interpretations.filter((i) => i.status !== 'superseded' && !dead.has(i.node))
+  const count = (xs, f) => xs.filter((x) => (x.feature ?? null) === f).length
+  const order = new Map(FRAMES.map(([k], i) => [k, i]))
+  const features = store.features
+    .slice()
+    .sort((a, b) => (order.get(a.frame) ?? 99) - (order.get(b.frame) ?? 99) || (a.order ?? 0) - (b.order ?? 0))
+    .map((f) => ({
+      frame: f.frame, id: f.id, label: f.label,
+      decisions: count(store.decisions, f.id),
+      current: count(current, f.id),
+      choices: count(current.filter((i) => !(i.basis ?? []).length), f.id),
+    }))
+  const unassigned = {
+    decisions: count(store.decisions, null),
+    current: count(current, null),
+  }
+  // 日付の新しい順。日付の無い決定は、いつのものか言えない ∴ 直近には入れない。
+  const latest = store.decisions
+    .filter((d) => d.date)
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (b.seq ?? 0) - (a.seq ?? 0)))
+    .slice(0, recent)
+  return { features, unassigned, latest, totals: { decisions: store.decisions.length, current: current.length } }
+}
+
+/** 1 行に収める。⚠ 字数で切るのは表示のためだけで、記録そのものは切らない。 */
+const clip = (s, n = 70) => {
+  const t = String(s ?? '').replace(/\s+/g, ' ').trim()
+  return t.length > n ? t.slice(0, n) + '…' : t
+}
+
+/**
+ * 要約を facts の 1 節として描く。
+ *
+ * ⚠ **読めない file と形の崩れを、要約の前に述べる** —— 壊れた記録を黙って飛ばせば、
+ * 在る決定を無いと読ませる。
+ */
+export function renderAimDbSection(summary, { dir = DEFAULT_AIM_DB_DIR, problems = [], unreadable = [] } = {}) {
+  const featureLabel = new Map(summary.features.map((f) => [f.id, f.label]))
+  const lines = ['```bearing-aim-db v1', '# fields: frame | feature | label | decisions | current_interpretations | agent_choices']
+  for (const p of unreadable) lines.push(`# ⚠ 読めない記録: ${p}`)
+  for (const p of problems) lines.push(`# ⚠ 形の崩れ: ${p}`)
+  for (const f of summary.features) {
+    lines.push(`${f.frame} | ${f.id} | ${f.label} | ${f.decisions} | ${f.current} | ${f.choices}`)
+  }
+  if (summary.unassigned.decisions || summary.unassigned.current) {
+    lines.push(`- | - | 機能が未割り当て | ${summary.unassigned.decisions} | ${summary.unassigned.current} | -`)
+  }
+  lines.push('```', '')
+  if (summary.latest.length) {
+    lines.push(`直近の人間の決定（新しい順に ${summary.latest.length} 件）:`, '')
+    for (const d of summary.latest) {
+      const what = d.form === 'paraphrase' ? `${clip(d.summary)}（言い換え）` : `「${clip(d.quote)}」${d.form === 'pinned' ? '（目的の固定）' : ''}`
+      lines.push(`- ${d.date} \`${d.id}\` [${featureLabel.get(d.feature) ?? '機能なし'}] ${what}`)
+    }
+    lines.push('')
+  }
+  lines.push(
+    `⚠ **ここに在るのは要約である。** 機能ごとの決定と今の解釈は \`${dir}/decisions/\` と \`${dir}/interpretations/\` を`,
+    `機能で引くこと（例: \`grep -l '"feature": "<機能 id>"' ${dir}/decisions/*.json\`）。⚠ **\`agent_choices\` は、どの人間の`,
+    '決定にも依らない今の解釈の数である** —— 手段が人間に指示されたものか、エージェントが選んだものかは、ここで見分ける。',
+    '',
+  )
+  return lines.join('\n')
+}

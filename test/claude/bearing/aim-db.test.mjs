@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import {
-  COLLECTIONS, formatRecord, readStore, validateStore,
+  COLLECTIONS, formatRecord, readStore, renderAimDbSection, summarizeStore, validateStore,
 } from '../../../carriers/claude/bearing/lib/aim-db.mjs'
 
 const REPO = path.join(import.meta.dirname, '..', '..', '..')
@@ -72,4 +72,35 @@ test('この repo の記録は読めて、形が整っている', async () => {
   // 陽性対照: 0 件どうしの「問題なし」は検査ではない。
   for (const c of COLLECTIONS) assert.ok(r.store[c].length > 0, `${c} が 0 件`)
   assert.deepEqual(validateStore(r.store), [])
+})
+
+// ── セッション開始時の要約 ───────────────────────────────────────────────────
+
+test('要約の「今の解釈」は、撤回した目的と置き換えられた解釈を除く —— 決定は除かない', () => {
+  const s = good()
+  s.nodes.push({ id: 'gone', aim: 'y', state: 'dead' })
+  s.decisions.push({ id: 'gone-d01', node: 'gone', form: 'paraphrase', summary: 's', feature: 'f', date: '2026-10-01' })
+  s.interpretations.push({ id: 'gone-i01', node: 'gone', text: 't', basis: [], feature: 'f' })
+  s.interpretations.push({ id: 'n-i02', node: 'n', text: 't', basis: [], feature: 'f', status: 'superseded' })
+  s.interpretations.push({ id: 'n-i03', node: 'n', text: 't', basis: [], feature: 'f' })
+  const f = summarizeStore(s).features.find((x) => x.id === 'f')
+  assert.equal(f.decisions, 2, '撤回した目的についての決定も、人間がそう決めた事実である')
+  assert.equal(f.current, 2, '今の解釈は n-i01 と n-i03 だけ')
+  assert.equal(f.choices, 1, 'どの決定にも依らない今の解釈は n-i03 だけ')
+})
+
+test('直近の決定は日付の新しい順で、日付の無い決定は入れない', () => {
+  const s = good()
+  s.decisions[0].date = '2026-10-01'
+  s.decisions.push({ id: 'n-d02', node: 'n', form: 'paraphrase', summary: '新しい', feature: 'f', date: '2026-10-29' })
+  s.decisions.push({ id: 'n-d03', node: 'n', form: 'paraphrase', summary: '日付なし', feature: 'f' })
+  assert.deepEqual(summarizeStore(s).latest.map((d) => d.id), ['n-d02', 'n-d01'])
+})
+
+test('描いた節は、読めない記録と形の崩れを要約より先に述べる', () => {
+  const text = renderAimDbSection(summarizeStore(good()), { problems: ['decisions/x: 未定義の node y'], unreadable: ['decisions/z.json: 壊れている'] })
+  assert.match(text, /^\`\`\`bearing-aim-db v1/)
+  assert.ok(text.indexOf('読めない記録') < text.indexOf('whole | f |'), '要約の後ろに埋もれている')
+  assert.match(text, /# ⚠ 形の崩れ: decisions\/x/)
+  assert.match(text, /whole \| f \| 目的 \| 1 \| 1 \| 0/)
 })
