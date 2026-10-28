@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-x03"
+  ],
+  "category": "purpose",
+  "feature": "record-corpus",
+  "node": "bearing",
+  "seq": 36,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "docs/aims/ の各 node の本文の冒頭に凍結の印を 1 行置き、以後の記録は docs/aim-db/ に書くと示す。目的の木（frontmatter）には触れない。node の file を直接開いたエージェントが書き足さないため。"
+}

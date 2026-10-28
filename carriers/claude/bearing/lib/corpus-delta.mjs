@@ -45,6 +45,16 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
   }
 
   for (const r of repos) {
+    // 🔴 **`docs/aim-db/` を持つ repo（`trial`）の本文は凍結した** ∴ 本文から数える残務・判断待ち・観測を
+    // 合算しない（人間の決定 2026-10-29 —— facts の Forward backlog と同じ扱い）。
+    if (r.trial) {
+      lines.push(`### ${r.label}`, '')
+      const mt = movedBy.get(r.label)
+      if (mt) lines.push(`⚠ **\`docs/aims/\` の上で HEAD が動いた**: \`${short(mt.from)}\` → \`${short(mt.to)}\`。`, '')
+      lines.push(renderWorkingDeltaFence(r.working ?? null).trimEnd(), '')
+      for (const b of mt?.blocks ?? []) lines.push(b.trimEnd(), '')
+      continue
+    }
     openTodo += r.backlog?.openTodoNodes ?? 0
     escalation += r.backlog?.escalationNodes?.length ?? 0
     for (const s of r.backlog?.unknownNodes ?? []) unknown.push(`${r.label}/${s}`)
@@ -69,6 +79,15 @@ export function renderCorpusDelta({ repos, moved = [], hadBaseline = true }) {
     for (const b of m?.blocks ?? []) lines.push(b.trimEnd(), '')
   }
 
+  const trial = repos.filter((r) => r.trial).map((r) => r.label)
+  if (trial.length) {
+    lines.push(
+      `${trial.join('、')} は記録を \`docs/aim-db/\` に一本化している（試行）∴ 本文から数える open-todo・宣言待ち・`,
+      'escalation・observation は出さない。**人間の判断待ちは `docs/aim-db/questions/` を見ること。**',
+      '',
+    )
+  }
+  if (trial.length === repos.length) return lines.join('\n').trimEnd()
   lines.push(
     `**open-todo: ${openTodo}** —— \`# PROCESS\` に \`[todo]\` を 1 つ以上持つ aim node の数`,
     '（`state: dead` は除く）。**この数は surface せよ。triage も ranking も、どれをやるべきか',

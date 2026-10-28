@@ -61,6 +61,7 @@ import { gatherAimCodeStale, renderAimCodeFence } from '../lib/aim-code.mjs'
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { runGit } from '../lib/git.mjs'
 import { gatherBacklog } from '../lib/process.mjs'
+import { readOpenQuestions } from '../lib/aim-db.mjs'
 import { gatherUnpushed, renderUnpushedFence } from '../lib/unpushed.mjs'
 import { gatherWorkingDelta } from '../lib/working-delta.mjs'
 import { resolveCwd, resolveUnit } from '../lib/unit.mjs'
@@ -178,6 +179,8 @@ try {
       slugs,
       working: await gatherWorkingDelta(repo.root, slugs),
       backlog: await gatherBacklog(repo.root, repo.aimsDir ?? DEFAULT_AIMS_DIR),
+      // ⚠ **記録を持つ repo は試行中**（2026-10-29）—— 本文から数える数を出さない。
+      trial: (await readOpenQuestions(repo.root).catch(() => null)) !== null,
     })
   }
 
