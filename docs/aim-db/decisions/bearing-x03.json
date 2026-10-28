@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-10-29",
+  "feature": "record-corpus",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "aim-dbに一本化します",
+  "recordedAt": "2026-10-28T15:34:14.873Z",
+  "recordedBy": "agent",
+  "seq": 46,
+  "source": "会話 2026-10-29",
+  "summary": "aim の記録を docs/aim-db/ に一本化する。docs/aims/ の本文（IS・PROCESS・ESCALATION・OBSERVATION 等）は凍結し、以後の記録は docs/aim-db/ だけに書く。"
+}
