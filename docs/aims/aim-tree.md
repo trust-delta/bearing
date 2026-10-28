@@ -125,7 +125,8 @@ state: open
   ⚠ **版は 0.21.0**（minor。人間の決定 2026-09-06。前提「最重要の消費者は人間本人である」を再測したうえで）。🔴 **この bump では法の本文が 1 byte も動いていない** —— `frame.md` を触らないと決めたからである（節の定義は skill が持つ層であり、frame は既に「触れる前に skill を読め」と命じている）∴ **marker の sha は `6d8693bb3c91e20f` のまま、version だけが動いた** —— **この corpus で初めての形である。**
 
   ⚠ **再測は `node --test test/claude/bearing/process.test.mjs`（42 本）と、この repo の corpus に対する `observation: 10` ／ 宣言待ち fence の `observations` 列である**（実測 2026-09-06）
-- [todo] **worktree の `.git`（file）を repo として認める。** `resolveUnit` は `.git` を *directory として* 探し、worktree の `.git` は file である ∴ worktree で立ったセッションは corpus を見失い、facts・drift・statusline の 2 行目が空になる（実測 2026-10-27、使い捨て repo の worktree で `repos: []`。経緯は [[session-handoff]] の `# IS`）。⚠ **Desktop は worktree でセッションを立てうる**（本機の Claude の観測 2026-10-26〜27）∴ 主経路で踏みうる。⚠ **worktree を本体と同じ unit とみなすかは別の問いである** —— 直すのは「見失う」側だけ。
+- [done] **worktree の `.git`（file）を repo として認める。** `resolveUnit` は `.git` を *directory として* 探し、worktree の `.git` は file である ∴ worktree で立ったセッションは corpus を見失い、facts・drift・statusline の 2 行目が空になる（実測 2026-10-27、使い捨て repo の worktree で `repos: []`。経緯は [[session-handoff]] の `# IS`）。⚠ **Desktop は worktree でセッションを立てうる**（本機の Claude の観測 2026-10-26〜27）∴ 主経路で踏みうる。⚠ **worktree を本体と同じ unit とみなすかは別の問いである** —— 直すのは「見失う」側だけ。
+  ✅ **2026-10-28 に実地で踏んでから直した**（`lib/unit.mjs` の `isGitRoot`）—— hub の作業窓（`--spawn worktree`）へ別のセッションから会話を立てたところ、その会話の SessionStart で facts が「この cwd 以下に git repository が無い」「repo の walk が depth の上限で切り詰められた」と述べた（実測 2026-10-28、Claude Code 2.1.306）。∴ **作業窓で走る会話には、目的が 1 度も届いていなかった。** `.git` が `gitdir:` で始まる file のときも作業ツリーの根と読む。⚠ **`gitdir:` で始まらない file は認めない** —— 無関係な file で walk を誤って刈らないため。本物の `git worktree add` を含む 3 件の test を足し、判定を元に戻すと 2 件が赤になることを確かめた。⚠ **worktree を本体と同じ unit とみなすかは、引き続き別の問いである**（[[session-handoff]] の `# ESCALATION`。dead だが問いは残る）。
 
 # OBSERVATION
 
