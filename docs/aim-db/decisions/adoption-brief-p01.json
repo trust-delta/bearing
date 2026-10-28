@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-09",
+  "feature": "make-law",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "adoption-brief",
+  "quote": "bearingが何を目指し、どのような機構で達成しようとしているか。何を要求されてどのようなactが残されるのか。採用を検討する人に伝える面をもつ",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git f9c117c docs/aims/adoption-brief.md の aim:",
+  "summary": "adoption-brief の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

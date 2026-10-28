@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d03"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "consumer-evidence",
+  "seq": 4,
+  "source": "docs/aims/consumer-evidence.md:15",
+  "status": "current",
+  "text": "bearing 自身も setup-aim で置かれる側の消費者になり、置かれた skill は tracked で、templates/aim/ と byte 同一であることを test が見る。"
+}

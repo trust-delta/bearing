@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "output-facts",
+  "node": "aim-tree",
+  "seq": 21,
+  "source": "docs/aims/aim-tree.md:111",
+  "status": "current",
+  "text": "「corpus 無し」を述べる面（statusline・frame・corpus fence）は「どこを見たか」を持つ。statusline は既定のときは黙り、幅の確定しない在り処は名指さない。normalizeAimsDir は先頭の / を拒む。"
+}

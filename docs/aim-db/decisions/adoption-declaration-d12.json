@@ -1,0 +1,14 @@
+{
+  "category": "self-repo-policy",
+  "date": "2026-09-05",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 12,
+  "source": "docs/aims/adoption-declaration.md:89",
+  "summary": "bearing は置かれたものを track する側を選び、.gitignore から .claude/* を外して .claude/**/*.local.json だけを閉じる"
+}

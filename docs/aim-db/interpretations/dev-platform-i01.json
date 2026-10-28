@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d01"
+  ],
+  "category": "platform-axis",
+  "feature": "whole-env",
+  "node": "dev-platform",
+  "seq": 1,
+  "source": "docs/aims/dev-platform.md:11",
+  "status": "current",
+  "text": "本 node の手段は 2 つである: platform に依る差を名指した 1 箇所へ集めること、集めきれない差は黙らせずに述べること。両立を裁く規則はもう持たない。"
+}

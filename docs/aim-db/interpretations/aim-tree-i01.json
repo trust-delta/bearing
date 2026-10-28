@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "ownership",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 1,
+  "source": "docs/aims/aim-tree.md:9",
+  "status": "current",
+  "text": "分割は所有で引く。目的（aim: 1 文）は人間のものでエージェントは書き換えず、手段（body）はエージェントのもので人間は妥当性を確認する。この非対称が機構の全てである。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-06",
+  "feature": "make-law",
+  "form": "verbatim",
+  "kind": "指摘",
+  "node": "aim-tree",
+  "quote": "frame にあったとのこと、aim 機構以外に触れているのか",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 12,
+  "source": "docs/aims/aim-tree.md:100",
+  "summary": "不可逆条項が aim 機構以外に触れているのに frame に在ることを問い、置き場の問いを立てた。"
+}

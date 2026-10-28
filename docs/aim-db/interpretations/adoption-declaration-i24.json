@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "output-drift",
+  "node": "adoption-declaration",
+  "seq": 24,
+  "source": "docs/aims/adoption-declaration.md:97",
+  "status": "current",
+  "text": "非 aim の drift を構想するなら isEngaged（aim の述語）で gate してはならず、gate は機能ごとに「repo に痕跡を残すか」で決まる。"
+}

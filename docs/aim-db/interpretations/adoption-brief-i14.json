@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "output-drift",
+  "node": "adoption-brief",
+  "seq": 14,
+  "source": "docs/aims/adoption-brief.md:44",
+  "status": "current",
+  "text": "置いた門は版で腐る字しか見ず、置かれる先・command 名・数の label の変更といった内容のズレは見ていない。この面は他の面と同じ穴を持つ。"
+}

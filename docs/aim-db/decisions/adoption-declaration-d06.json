@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-07",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "確定",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 6,
+  "source": "docs/aims/adoption-declaration.md:61",
+  "summary": "「置いた後の古さは repo のもの」は「CLAUDE.md だけ更新する」とは意図が違い、block と skill は 1 組として更新するか維持するかで、それを決めるのは aim を使う側である（版の更新は保有 corpus の書き換えを伴いうるため）"
+}

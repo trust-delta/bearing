@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 21,
+  "source": "docs/aims/bearing.md:159 docs/aims/bearing.md:161 docs/aims/bearing.md:169 docs/aims/bearing.md:173",
+  "status": "superseded",
+  "text": "slash command の一覧はセッション開始時に固まり、skill も同じ registry に載る以上 command と同じ振る舞いをする。"
+}

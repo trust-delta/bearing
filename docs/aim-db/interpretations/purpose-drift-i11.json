@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 11,
+  "source": "docs/aims/purpose-drift.md:76",
+  "status": "current",
+  "text": "aim-code-stale の費用は node ごとの範囲問い合わせで corpus の大きさに比例させ、引数の上限を超えたら分割して全部問う。"
+}

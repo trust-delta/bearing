@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-bounds",
+  "feature": "output-facts",
+  "node": "surface-parity",
+  "seq": 12,
+  "source": "docs/aims/surface-parity.md:54",
+  "status": "current",
+  "text": "デスクトップ側から aim/baton/drift へ届く経路は /bearing:facts であり、SessionStart hook と同じ出力を出して別の記述を持たない。statusline と違い 1 度だけ喋る。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-03",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "確定",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/adoption-declaration.md:23",
+  "summary": "採用の宣言は文字通り選択できねばならず、aim を使っている project がこの plugin の aim 機能を有効にしない選択もありうる"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d12"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "record-machine",
+  "node": "consumer-evidence",
+  "seq": 18,
+  "source": "docs/aims/consumer-evidence.md:100",
+  "status": "current",
+  "text": "hook は CLAUDE_PROJECT_DIR を、CLI は hook が記録した session を手掛かりに unit の root を引き、セッション中の cd で下位 dir に unit が割れない。"
+}

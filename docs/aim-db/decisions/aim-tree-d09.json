@@ -1,0 +1,14 @@
+{
+  "category": "work-accounting",
+  "date": "2026-09-13",
+  "feature": "make-writing",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "aim-tree",
+  "quote": "自然言語なので、読み手によって解釈がずれるのも予想範囲です",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 9,
+  "source": "docs/aims/aim-tree.md:73",
+  "summary": "自然言語の判別線で読み手により解釈がずれることは想定の範囲として受け入れる。"
+}

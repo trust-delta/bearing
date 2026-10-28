@@ -1,0 +1,14 @@
+{
+  "category": "ownership",
+  "date": "2026-09-10",
+  "feature": "record-corpus",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "aim-tree",
+  "quote": "私が frontmatter に求めるのは『目的の一文・親を示す・満足と諦めの状態』のみ",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 3,
+  "source": "docs/aims/aim-tree.md:31",
+  "summary": "frontmatter は aim: / parent: / state: の 3 field とし、last-verified: を退役させる。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 16,
+  "source": "docs/aims/bearing.md:53 docs/aims/bearing.md:291 docs/aims/bearing.md:292 docs/aims/bearing.md:294",
+  "status": "current",
+  "text": "cache 側の複製は bearing の checkout の中では working tree 側へ委譲する。CLAUDE_PROJECT_DIR が在ればそこだけを見て、無ければ cwd から祖先を辿り、plugin.json の name が bearing であることを常に要する。"
+}

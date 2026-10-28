@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 18,
+  "source": "docs/aims/observation-provenance.md:43",
+  "status": "current",
+  "text": "provenance-report は inline code span を散文として測っており、再測コマンド中の literal が候補に混ざる。文言を変えて避けるのはセンサーの gaming なので、lib/process.mjs の stripInlineCode と同じ行単位の粒度でセンサー側を直す（scripts/ ゆえ PR が要る）。"
+}

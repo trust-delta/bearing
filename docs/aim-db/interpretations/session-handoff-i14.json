@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "session-handoff-d11",
+    "session-handoff-d12"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 14,
+  "source": "docs/aims/session-handoff.md:45 docs/aims/session-handoff.md:47 docs/aims/session-handoff.md:191",
+  "status": "current",
+  "text": "サジェストからそのまま打てる入口として、手順を 1 文字も持たず skill を引数つきで呼ぶだけの別名 command を 2 枚置く。拒むのは canon の複製であって入口の数ではなく、取り消せない w に合わせて両方ともモデルから起動できなくする。"
+}

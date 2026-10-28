@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d04"
+  ],
+  "category": "record-practice",
+  "feature": "whole-env",
+  "node": "dev-platform",
+  "seq": 8,
+  "source": "docs/aims/dev-platform.md:60 docs/aims/dev-platform.md:62 docs/aims/dev-platform.md:66",
+  "status": "current",
+  "text": "戻せず沈黙する削除の前には、1 ファイルの突き合わせで済ませず全 ref と git 外の file まで範囲を広げ、確認のために一時的に持ち込んだ state は残さない。"
+}

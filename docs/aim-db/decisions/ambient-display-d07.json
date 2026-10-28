@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-03",
+  "feature": "output-statusline",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "ambient-display",
+  "quote": "plugin 側は自分の実体が置かれているかを検査しない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 7,
+  "source": "docs/aims/ambient-display.md:49",
+  "summary": "plugin 側は自分の実体が置かれているかを検査しないことを通例とし、plugin の範囲ではない statusline だけを例外として検知対象に残した。"
+}

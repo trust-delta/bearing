@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "purpose-drift",
+  "seq": 16,
+  "source": "docs/aims/purpose-drift.md:105",
+  "status": "current",
+  "text": "canon が frontmatter の欄を名指すときは、その欄が parseAimRecord に実際に読まれるかを振る舞いで試験し、退役した欄を宛先として残さない。"
+}

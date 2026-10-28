@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 17,
+  "source": "docs/aims/bearing.md:57 docs/aims/bearing.md:59 docs/aims/bearing.md:61 docs/aims/bearing.md:63",
+  "status": "superseded",
+  "text": "cache 側の bin はすべて委譲を通るので、user スコープ 1 本でもこの repo の中では working tree が走る。"
+}

@@ -1,0 +1,6 @@
+{
+  "aim": "目的と、それを実装した手段や隣接する目的とのズレを、安く機械的に可視化する。判定はしない",
+  "feature": "output-drift",
+  "parent": "bearing",
+  "state": "open"
+}

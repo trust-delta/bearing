@@ -1,0 +1,5 @@
+{
+  "label": "手段の退役",
+  "note": "aim を dead にし、機構を外すときの判断と後始末。",
+  "origin": "agent"
+}

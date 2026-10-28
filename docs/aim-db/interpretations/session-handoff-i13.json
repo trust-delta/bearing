@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d10"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 13,
+  "source": "docs/aims/session-handoff.md:41 docs/aims/session-handoff.md:43",
+  "status": "current",
+  "text": "canon は 1 枚の skill（SKILL.md ＋ read.md / write.md）で r / w を引数で分け、分岐はエージェントが行う。$ARGUMENTS が展開されなくても問い返す形で壊れないようにしておく。"
+}

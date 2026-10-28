@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d01"
+  ],
+  "category": "platform-axis",
+  "feature": "output-dist",
+  "node": "dev-platform",
+  "seq": 11,
+  "source": "docs/aims/dev-platform.md:75",
+  "status": "current",
+  "text": "exec bit の判定を isExecMode 1 箇所へ寄せることは未了であり、その根拠は開発者の platform ではなく win32 の消費者の前で効く出荷物の mode に在る。"
+}

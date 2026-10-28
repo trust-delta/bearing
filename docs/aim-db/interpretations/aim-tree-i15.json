@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 15,
+  "source": "docs/aims/aim-tree.md:95",
+  "status": "current",
+  "text": "section の走査は 1 つに畳まれており、fenced block の中の見出しは引用として数えない。"
+}

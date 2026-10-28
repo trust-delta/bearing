@@ -1,0 +1,14 @@
+{
+  "category": "handoff-experiment",
+  "date": "2026-09-09",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 33,
+  "source": "docs/aims/session-handoff.md:195",
+  "summary": "比較は 1 セッション版（baton の無い unit で作業 → w → /compact → もう一度 w → 別セッションが 2 枚を並べる）を採る。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "body-parsing",
+  "feature": "record-corpus",
+  "node": "purpose-drift",
+  "seq": 15,
+  "source": "docs/aims/purpose-drift.md:95 docs/aims/purpose-drift.md:97 docs/aims/purpose-drift.md:99 docs/aims/purpose-drift.md:101 docs/aims/purpose-drift.md:103",
+  "status": "current",
+  "text": "票や節の構造の判定は raw の行で、内容の判定は inline code を剥いだ行で行う。lib と面（aim.html）の 2 実装は合成した形での一致と正しい値の両方で固定する。"
+}

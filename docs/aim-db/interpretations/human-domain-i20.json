@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "human-domain-d10",
+    "human-domain-d11"
+  ],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 20,
+  "source": "docs/aims/human-domain.md:101 docs/aims/human-domain.md:103 docs/aims/human-domain.md:105 docs/aims/human-domain.md:107 docs/aims/human-domain.md:109",
+  "status": "current",
+  "text": "字は読み手の browser 設定に従わせる —— body の絶対 px をやめて rem にし、pre（node の body と節の原文）と code に本文の family を明示する。contrast は AA を通っていて原因ではないので色は動かさない。門は CSS の字面を見る heuristic で、どの face が選ばれるかは測っていない。"
+}

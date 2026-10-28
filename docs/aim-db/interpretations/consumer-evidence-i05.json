@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 5,
+  "source": "docs/aims/consumer-evidence.md:19 docs/aims/consumer-evidence.md:53 docs/aims/consumer-evidence.md:112",
+  "status": "current",
+  "text": "消費者検査は scripts/consumer-check.mjs と CI の consumer job であり、carrier の tracked file だけを mode ごと checkout の外へ写した出荷 copy を、合成した消費者 5 形に対して走らせ、出力を突き合わせる。関数を検める node --test とは別の層である。"
+}

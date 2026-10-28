@@ -1,0 +1,5 @@
+{
+  "label": "機体側の置き場と unit の解決",
+  "note": "~/.bearing/units/ の配置・命名・衝突検出と、どの unit に属するかの引き方。",
+  "origin": "agent"
+}

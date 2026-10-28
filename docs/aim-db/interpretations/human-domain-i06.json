@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 6,
+  "source": "docs/aims/human-domain.md:44 docs/aims/human-domain.md:67 docs/aims/human-domain.md:69",
+  "status": "current",
+  "text": "file:// では相対 import・script src・fetch が塞がれるので、契約（frontmatter の往復、木の組み立て）は面の HTML 内の data-contract block に直に置き、test はそこから取り出して走らせる。生成物と正本の一致を見る門が要らず、契約が 2 箇所に住むことが構造的に起きない。"
+}

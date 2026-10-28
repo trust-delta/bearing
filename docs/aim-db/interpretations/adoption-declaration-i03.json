@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "supply-scope",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 3,
+  "source": "docs/aims/adoption-declaration.md:21 docs/aims/adoption-declaration.md:27 docs/aims/adoption-declaration.md:118",
+  "status": "current",
+  "text": "本 node が持つのは宣言の要求だけで、install の scope は install する人間のものである。供給の単位（どこへ配るか）と採用の宣言（この project が通すか）は別の層であり、全 project に配りながら採っていない project では 1 つも走らないのが正しい姿である。shim は載っていないと描くときも scope を勧めない。"
+}

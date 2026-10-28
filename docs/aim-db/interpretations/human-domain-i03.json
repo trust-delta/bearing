@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 3,
+  "source": "docs/aims/human-domain.md:15",
+  "status": "current",
+  "text": "手段は静的な HTML 1 枚と File System Access API であり、build・依存・server・常駐 process を持たない。corpus は browser 自身が読むので、面は生成物ではなく置いてある 1 枚でよい。"
+}

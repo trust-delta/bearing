@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "aim-tree",
+  "seq": 20,
+  "source": "docs/aims/aim-tree.md:109 docs/aims/aim-tree.md:110",
+  "status": "current",
+  "text": "法は宣言された dir= から組み立て、frame.md の path は placeholder にして埋め残しは throw する。書き出しは dir= を省略せず、dir= だけが手で書き換えられたら宣言を正として本文を追従させる。"
+}

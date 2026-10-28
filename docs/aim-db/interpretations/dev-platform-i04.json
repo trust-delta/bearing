@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "record-corpus",
+  "node": "dev-platform",
+  "seq": 4,
+  "source": "docs/aims/dev-platform.md:23 docs/aims/dev-platform.md:25",
+  "status": "current",
+  "text": "他 node に散らばった platform 由来の観測を引き剥がさず、それらが同じ軸の出来事だったという線だけを本 node が足す。"
+}

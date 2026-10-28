@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 15,
+  "source": "docs/aims/ambient-display.md:73 docs/aims/ambient-display.md:77",
+  "status": "current",
+  "text": "setup は書き先を user settings に限り、既存の statusline を上書きせず、描画時に解決できるかを述べる最後の場所として、CLAUDE_PROJECT_DIR が無ければ cwd へ落として判定する。"
+}

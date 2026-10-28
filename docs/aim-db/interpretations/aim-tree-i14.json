@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "work-accounting",
+  "feature": "output-facts",
+  "node": "aim-tree",
+  "seq": 14,
+  "source": "docs/aims/aim-tree.md:94",
+  "status": "current",
+  "text": "宣言待ちの caption は「残っているのは人間の観測と state: の宣言だけ」と述べるが、# ESCALATION を持つ node も宣言待ちに並ぶので、そこでは判断も残っている。機構はエージェントに残務が在る node を宣言待ちから外す。"
+}

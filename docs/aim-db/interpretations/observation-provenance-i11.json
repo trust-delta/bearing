@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "output-dist",
+  "node": "observation-provenance",
+  "seq": 11,
+  "source": "docs/aims/observation-provenance.md:39 docs/aims/observation-provenance.md:41",
+  "status": "current",
+  "text": "公開面（README.md / README.en.md）が harness の振る舞いを述べる箇所は、実測の日付と観測の対象を名指す形で書き、/clear では足りないことを install と update の両地点で述べ、道具自身の宣言（restart required to apply）を添える。"
+}

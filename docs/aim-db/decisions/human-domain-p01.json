@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-04",
+  "feature": "output-surface",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "human-domain",
+  "quote": "人間は自分の領域である目的の木を、構造のまま見て、エージェントを介さずに動かせる",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 586c5d8 docs/aims/human-domain.md の aim:",
+  "summary": "human-domain の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

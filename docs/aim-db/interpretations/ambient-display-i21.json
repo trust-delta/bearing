@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 21,
+  "source": "docs/aims/ambient-display.md:9",
+  "status": "superseded",
+  "text": "CLI は statusline が埋める情報を 1 つも持たない。"
+}

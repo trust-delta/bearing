@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 13,
+  "source": "docs/aims/adoption-brief.md:36",
+  "status": "current",
+  "text": "test/claude/bearing/adoption-doc-rot.test.mjs が版番号・面の例に混ざった実数・node の個数の 3 種だけを見張り、日付つき実測は腐らないので対象外とする。陽性対照と偽陽性の門を両方持ち、bearing 自身の checkout に居るなら doc の不在を skip せず落とす。"
+}

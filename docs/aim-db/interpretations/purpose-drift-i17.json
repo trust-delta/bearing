@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 17,
+  "source": "docs/aims/purpose-drift.md:106 docs/aims/purpose-drift.md:108 docs/aims/purpose-drift.md:110 docs/aims/purpose-drift.md:112",
+  "status": "current",
+  "text": "aim-code-stale の候補は path で転置して、その path が何 node を候補にしているかを多い順に並べる（bearing-aim-code-by-path）。判定を変えず並べ直すだけで、閾も除外も置かず、共有されていることは無関係を意味しない。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 19,
+  "source": "docs/aims/human-domain.md:75 docs/aims/human-domain.md:141",
+  "status": "superseded",
+  "text": "機構が主張できるのは parse と id の実在だけで、面の画面は 1 度も観測されていない。"
+}

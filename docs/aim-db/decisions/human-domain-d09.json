@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "human-domain",
+  "quote": "3タブとも正常な表示を確認しました",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 9,
+  "source": "docs/aims/human-domain.md:96",
+  "summary": "3 タブすべての表示が正常であることを人間が確認した"
+}

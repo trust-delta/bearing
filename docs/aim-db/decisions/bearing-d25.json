@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-04",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "bearing",
+  "quote": "",
+  "recordedAt": "2026-10-27T15:56:02.462Z",
+  "recordedBy": "agent",
+  "seq": 25,
+  "source": "docs/aims/bearing.md:163",
+  "summary": "起動後に cache へ置いた probe の command は、人間が / を打った面にも現れなかった。"
+}

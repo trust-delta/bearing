@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "platform-axis",
+  "feature": "output-dist",
+  "node": "dev-platform",
+  "seq": 5,
+  "source": "docs/aims/dev-platform.md:40 docs/aims/dev-platform.md:42 docs/aims/dev-platform.md:44 docs/aims/dev-platform.md:46",
+  "status": "current",
+  "text": "判定が 1 箇所に無ければ、法は 2 つ目の呼び出し元で黙って破れる。exec bit は git の index が両 platform で同じ答えを持つ唯一の場所であり、純関数 isExecMode を通すべきである。"
+}

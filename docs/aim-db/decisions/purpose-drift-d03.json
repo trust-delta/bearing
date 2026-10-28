@@ -1,0 +1,14 @@
+{
+  "category": "drift-mechanics",
+  "date": "2026-09-07",
+  "feature": "output-drift",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "purpose-drift",
+  "quote": "基本的に安く維持できるなら",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 3,
+  "source": "docs/aims/purpose-drift.md:35",
+  "summary": "払い続けるのは安く維持できる限りであり、その「安い」は token よりも人間が手間を掛けずに済むことを指すという条件を付けた。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 15,
+  "source": "docs/aims/observation-provenance.md:40",
+  "status": "superseded",
+  "text": "provenance-report の測る単位は空行区切りの段落である。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "consumer-stance",
+  "feature": "make-writing",
+  "node": "consumer-evidence",
+  "seq": 9,
+  "source": "docs/aims/consumer-evidence.md:27 docs/aims/consumer-evidence.md:29",
+  "status": "current",
+  "text": "正本の規則は異常系の観測から生まれており、保持の場であるこの repo は生成の源を再現できない。"
+}

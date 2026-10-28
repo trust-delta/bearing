@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-17",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "consumer-evidence",
+  "quote": "bearing は道具です。道具の更新のためだけに repo は動かしません。repo を動かす際に道具を更新して望む、という順序が自然だからです",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 15,
+  "source": "docs/aims/consumer-evidence.md:123",
+  "summary": "自浄でもスルーでもない「待機」という状態がある。repo は道具の更新のためだけには動かさない。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "aim-tree-d02"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "aim-tree",
+  "seq": 7,
+  "source": "docs/aims/aim-tree.md:29",
+  "status": "current",
+  "text": "「問うたなら書け」の規則はこの repo の corpus にだけ在り、配る canon で同じものを探しても無いのは漏れではなく決定である。"
+}

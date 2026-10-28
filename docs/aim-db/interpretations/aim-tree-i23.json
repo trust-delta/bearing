@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "aim-tree-d16"
+  ],
+  "category": "release-cadence",
+  "feature": "output-facts",
+  "node": "aim-tree",
+  "seq": 23,
+  "source": "docs/aims/aim-tree.md:123 docs/aims/aim-tree.md:125",
+  "status": "current",
+  "text": "宣言待ちの fence は bearing-awaiting-declaration で observations 列を持つ。この破壊的変更は、消費者が人間本人とその管理下の repo だけだという失効しうる前提に支えられている。"
+}

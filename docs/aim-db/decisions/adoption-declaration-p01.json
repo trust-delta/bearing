@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-05",
+  "feature": "make-law",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "adoption-declaration",
+  "quote": "plugin はリポジトリに痕跡を残す前に、その repo が宣言した採用を要求する。痕跡を残さないものには何も要求しない",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 654e7ae docs/aims/adoption-declaration.md の aim:",
+  "summary": "adoption-declaration の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

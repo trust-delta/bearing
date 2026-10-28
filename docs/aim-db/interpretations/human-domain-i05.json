@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-writeback",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 5,
+  "source": "docs/aims/human-domain.md:34 docs/aims/human-domain.md:36 docs/aims/human-domain.md:38 docs/aims/human-domain.md:39 docs/aims/human-domain.md:40 docs/aims/human-domain.md:42",
+  "status": "current",
+  "text": "前身 tmai から引き継ぐのは code ではなく設計判断 3 つ（3 欄だけを書き換え他を byte 単位で保存する書き戻し、YAML library を使わない単一行 scalar の往復、slug の律）である。同じ契約が 2 言語に住む形は引き継がない。"
+}

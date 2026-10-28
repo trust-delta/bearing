@@ -1,0 +1,14 @@
+{
+  "category": "record-practice",
+  "date": "2026-09-15",
+  "feature": "make-writing",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "purpose-drift",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 10,
+  "source": "docs/aims/purpose-drift.md:94",
+  "summary": "`検証:` を # DAG の慣例ラベルから外し、aim-code-stale の承認の予約語だけにすると決めた。"
+}

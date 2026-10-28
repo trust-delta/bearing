@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "aim-tree-d14",
+    "aim-tree-d15"
+  ],
+  "category": "work-accounting",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 22,
+  "source": "docs/aims/aim-tree.md:113 docs/aims/aim-tree.md:115 docs/aims/aim-tree.md:117 docs/aims/aim-tree.md:119",
+  "status": "current",
+  "text": "# OBSERVATION は body の 6 番目の節で、宣言待ちの面に何を見ればよいかを運ぶ。escalation は「進めない」、宣言待ちは「終われない」であり、観測待ちはどちらにも倒さない。完了はエージェントが書かず、節は票だけを持つ。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "handoff-experiment",
+  "date": "2026-09-10",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 41,
+  "source": "docs/aims/session-handoff.md:245",
+  "summary": "crash と再起動による喪失は /resume が塞ぐ。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 11,
+  "source": "docs/aims/adoption-declaration.md:103",
+  "status": "current",
+  "text": "handoff の機構が外れた今、採っていない repo で hook は例外なく黙り、gate の外に残るのは CI の表示と session の記録だけで、どちらも aim についての事実ではない。"
+}

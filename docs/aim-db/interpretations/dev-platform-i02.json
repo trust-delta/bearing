@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d01"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "dev-platform",
+  "seq": 2,
+  "source": "docs/aims/dev-platform.md:13 docs/aims/dev-platform.md:17 docs/aims/dev-platform.md:98 docs/aims/dev-platform.md:113",
+  "status": "current",
+  "text": "開発で Windows を捨てることは win32 を捨てることではない。配ったものが win32 の消費者の前で動くかは consumer-evidence が持ち、そこが win32 を主張する唯一の node だが、win32 を実機で踏む人間が居ないため測る手段を持たない。"
+}

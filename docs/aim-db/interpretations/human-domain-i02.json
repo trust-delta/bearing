@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-writeback",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 2,
+  "source": "docs/aims/human-domain.md:11 docs/aims/human-domain.md:70",
+  "status": "current",
+  "text": "面は木を構造のまま描き、人間の欄（aim / parent / state）だけを編集可能にする。body は読むだけで編集させない。人間には frontmatter しか触れない面、エージェントには法だけがある file として、同じ境界を両側から挟む。"
+}

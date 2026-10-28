@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 24,
+  "source": "docs/aims/surface-parity.md:134",
+  "status": "current",
+  "text": "偽の緑は揃っていないことより悪い。揃っていない面は人間に別の窓を開かせるが、偽の緑は開かせない。"
+}

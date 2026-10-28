@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-01",
+  "feature": "record-corpus",
+  "form": "pinned",
+  "kind": "目的",
+  "node": "aim-tree",
+  "quote": "開発を駆動する目的を、人間だけが動かせる不動点としてリポジトリに保持し、エージェントは達成手段だけを担う",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 0,
+  "source": "git 7b2aa74 docs/aims/aim-tree.md の aim:",
+  "summary": "aim-tree の目的を固定した（node の誕生）。文言を誰が打ったかは記録に無い。"
+}

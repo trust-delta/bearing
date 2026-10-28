@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 7,
+  "source": "docs/aims/adoption-brief.md:25 docs/aims/adoption-brief.md:32",
+  "status": "current",
+  "text": "実例は本文へ引き写さず、この repo 自身の corpus（docs/aims/ と root の bearing.md）を指す。canon の規則も複製せず、最小の node がどう見えるかという骨格だけを示す。"
+}

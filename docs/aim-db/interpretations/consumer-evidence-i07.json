@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "make-law",
+  "node": "consumer-evidence",
+  "seq": 7,
+  "source": "docs/aims/consumer-evidence.md:113",
+  "status": "current",
+  "text": "setup-aim を temp repo に打ち、置かれたものが出荷 template と byte 同一であること、2 度目は中身も mtime も動かないこと、足りない枚を補わないことを job が固定する。"
+}

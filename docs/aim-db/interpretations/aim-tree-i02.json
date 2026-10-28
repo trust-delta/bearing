@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 2,
+  "source": "docs/aims/aim-tree.md:11",
+  "status": "current",
+  "text": "目的は git artifact として repo に置かれ、vendor の memory にも会話にも住まない。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 18,
+  "source": "docs/aims/bearing.md:55 docs/aims/bearing.md:110 docs/aims/bearing.md:116 docs/aims/bearing.md:289 docs/aims/bearing.md:309 docs/aims/bearing.md:310",
+  "status": "current",
+  "text": "シェルへ載せる path は lib/shell.mjs を通し、win32 でだけ separator を / へ倒し、node を前置する形で出す。$・backtick・\" を含む path は原理的に塞げないと明記する。skill は CLI を ${CLAUDE_PLUGIN_ROOT}（波括弧つき）で名指し、hook の出力は import.meta.dirname で今走っている複製を名指す。"
+}

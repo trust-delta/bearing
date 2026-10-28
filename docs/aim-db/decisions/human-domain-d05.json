@@ -1,0 +1,14 @@
+{
+  "category": "surface-writeback",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "human-domain",
+  "quote": "実際の書き戻しは必要なタイミングで行います",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 5,
+  "source": "docs/aims/human-domain.md:74",
+  "summary": "面からの実際の書き戻しは必要なタイミングで行うとし、今は行わない"
+}

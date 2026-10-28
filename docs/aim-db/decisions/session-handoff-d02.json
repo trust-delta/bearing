@@ -1,0 +1,14 @@
+{
+  "category": "retirement",
+  "date": "2026-10-27",
+  "feature": "whole-env",
+  "form": "verbatim",
+  "kind": "判定",
+  "node": "session-handoff",
+  "quote": "引かせてみましょう（既に/compactの一定の優位性も本repoで確認済、今回セッション跨ぎも一定の解消を得ています）",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 2,
+  "source": "docs/aims/session-handoff.md:9",
+  "summary": "継続は /compact の優位が確認済みで、セッション跨ぎもハーネス側で一定解消したので、この手段を引かせる。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "aim-tree",
+  "seq": 5,
+  "source": "docs/aims/aim-tree.md:17 docs/aims/aim-tree.md:19 docs/aims/aim-tree.md:21",
+  "status": "current",
+  "text": "corpus の在り処は project が決め、既定は docs/aims/ のまま動かさない。在り処の宣言は CLAUDE.md の marker の dir= が運び、採用の宣言と同じ 1 つの宣言である。glob は許さず、明示的な dir を 1 つだけ許す。"
+}

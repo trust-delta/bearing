@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d07"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 23,
+  "source": "docs/aims/consumer-evidence.md:118 docs/aims/consumer-evidence.md:119 docs/aims/consumer-evidence.md:120 docs/aims/consumer-evidence.md:121 docs/aims/consumer-evidence.md:122",
+  "status": "current",
+  "text": "管理下の別 repo で実際に setup-aim を打つこと、win32 の実機、ループが回ったか、運び入れたものが向こうで効いたかは、合成消費者では答えられず人間の観測に残る。"
+}

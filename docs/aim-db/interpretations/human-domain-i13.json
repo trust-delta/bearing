@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-writeback",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 13,
+  "source": "docs/aims/human-domain.md:68",
+  "status": "superseded",
+  "text": "面に書き込みは置かず、各 node の 3 欄を読んで同じ値で書き戻すと 1 byte も動かないかを述べる読み取り専用の検分面を置き、往復の恒等を人間が観測できるようにする。"
+}

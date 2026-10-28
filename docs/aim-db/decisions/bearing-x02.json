@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-10-29",
+  "feature": "record-corpus",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "固定作業機版プロジェクトとしてaimの正本はrepoにあった方が良いでしょうね。",
+  "recordedAt": "2026-10-28T15:12:47.423Z",
+  "recordedBy": "agent",
+  "seq": 45,
+  "source": "会話 2026-10-29",
+  "summary": "aim の記録の正本は repo に置く（B 案）。Artifact の DB は正本ではなく、repo から作る人間向けの面とする。作業機（WSL）の hub が作業窓へ仕事を渡す「作業機版プロジェクト」の前提として決めた。"
+}

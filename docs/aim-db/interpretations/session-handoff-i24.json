@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "session-handoff-d32",
+    "session-handoff-d33",
+    "session-handoff-d40"
+  ],
+  "category": "handoff-experiment",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 24,
+  "source": "docs/aims/session-handoff.md:326 docs/aims/session-handoff.md:328",
+  "status": "current",
+  "text": "baton と圧縮の 1 セッション比較では baton 本文が圧縮の入力に入るため、handoff が勝つ向きしか読めない。人間が時間を跨いで両方式を順に走らせる封印なら両向きに読めるが、順序・新近性・素材の交絡を負う体感であって測定ではない。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d21"
+  ],
+  "category": "handoff-value",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 6,
+  "source": "docs/aims/session-handoff.md:95 docs/aims/session-handoff.md:103 docs/aims/session-handoff.md:105",
+  "status": "current",
+  "text": "baton の価値は覚えていることではなく、引き直せる形で置くことにある。ただし引き直せることは引き直すことではないので、baton に要るのは読み手が引き直さざるを得ない形である。"
+}

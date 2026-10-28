@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d17"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 23,
+  "source": "docs/aims/bearing.md:118 docs/aims/bearing.md:312",
+  "status": "current",
+  "text": "LICENSE は root の 1 枚が正本で、carrier も 1 枚持ち、その一致を CI の carrier-check.sh が検める。"
+}

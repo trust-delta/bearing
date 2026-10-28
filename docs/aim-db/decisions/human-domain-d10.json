@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-09-13",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "human-domain",
+  "quote": "1点、全体に言えることですが、フォントが読みにくいです",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 10,
+  "source": "docs/aims/human-domain.md:99",
+  "summary": "面のフォントが全体に読みにくいと人間が述べた"
+}

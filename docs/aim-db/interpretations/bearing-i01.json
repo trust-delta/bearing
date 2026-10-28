@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 1,
+  "source": "docs/aims/bearing.md:8",
+  "status": "current",
+  "text": "この repo は個人開発（1 人の人間が 1 つのセッションと対話する形）を前提にしており、それは機構が成り立つ条件である。escalate 先の人間を特定する必要が無いことに依存している。"
+}

@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "adoption-declaration-d08",
+    "adoption-declaration-d09"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "adoption-declaration",
+  "seq": 16,
+  "source": "docs/aims/adoption-declaration.md:77 docs/aims/adoption-declaration.md:79 docs/aims/adoption-declaration.md:132",
+  "status": "current",
+  "text": "破壊的変更が安いのは、気づく人間・直す人間・最も得をする人間が同一（最重要の消費者が人間本人＝この repo）だからであり、本人以外が最重要の消費者になった日に偽になる失効しうる前提である。採用は消費者側にしか残らないので、再測は人間に訊く以外に無い。"
+}

@@ -1,0 +1,8 @@
+{
+  "confirmedAt": "2026-10-28",
+  "frame": "output",
+  "label": "statusline と CI 表示",
+  "note": "bearing-statusline、/bearing:ci",
+  "order": 3,
+  "origin": "human-confirmed"
+}

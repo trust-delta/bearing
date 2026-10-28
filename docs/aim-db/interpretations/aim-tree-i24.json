@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "record-machine",
+  "node": "aim-tree",
+  "seq": 24,
+  "source": "docs/aims/aim-tree.md:128",
+  "status": "current",
+  "text": "resolveUnit は .git を directory としてしか探さないため、worktree で立ったセッションは corpus を見失い、Desktop の主経路で踏みうる。"
+}

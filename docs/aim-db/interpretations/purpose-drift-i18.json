@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "purpose-drift-d04"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 18,
+  "source": "docs/aims/purpose-drift.md:43 docs/aims/purpose-drift.md:45 docs/aims/purpose-drift.md:47 docs/aims/purpose-drift.md:49 docs/aims/purpose-drift.md:51 docs/aims/purpose-drift.md:55 docs/aims/purpose-drift.md:57 docs/aims/purpose-drift.md:59 docs/aims/purpose-drift.md:61",
+  "status": "current",
+  "text": "setup-aim が置く file（CLAUDE.md と置かれた skill）が code 集合に入るため、版を上げると検証: が失効するが、除外はしない。根は機構が置く file が code 集合に入ることであり、記録としては noise 比と転置の順位を再測できる基準として残す。"
+}

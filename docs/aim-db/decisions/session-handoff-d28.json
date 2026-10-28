@@ -1,0 +1,14 @@
+{
+  "category": "delivery-mechanics",
+  "date": "2026-09-17",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "session-handoff",
+  "quote": "それは私の手順がいけなかったかも　reload-plugin 前に setup-aim を行っていました",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 28,
+  "source": "docs/aims/session-handoff.md:154",
+  "summary": "古い版を掴んでいたのは /reload-plugins の前に setup-aim を打った手順の誤りだった。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-08",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "観測",
+  "node": "session-handoff",
+  "quote": "今のところ handoff の動作や内容に不満は見つけられません",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 19,
+  "source": "docs/aims/session-handoff.md:77",
+  "summary": "使用上、handoff の動作や内容に不満は見つかっていない。"
+}

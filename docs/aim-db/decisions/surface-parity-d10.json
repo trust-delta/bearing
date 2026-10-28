@@ -1,0 +1,14 @@
+{
+  "category": "ci-verdict",
+  "date": "2026-09-07",
+  "feature": "output-statusline",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "surface-parity",
+  "quote": "根治の手があるならそちらに切り替えましょう",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 10,
+  "source": "docs/aims/surface-parity.md:59",
+  "summary": "照合先の取り違えを根治できる形（push 済みの commit との照合）へ切り替える。"
+}

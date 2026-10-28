@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-bounds",
+  "feature": "whole-env",
+  "node": "surface-parity",
+  "seq": 5,
+  "source": "docs/aims/surface-parity.md:24 docs/aims/surface-parity.md:54",
+  "status": "current",
+  "text": "CLI 側の穴は token を食わない statusline で埋まるが、デスクトップ側の穴は会話注入か on-demand の command に頼るほかなく token を食う。揃えられるのは見えるかどうかであって費用ではない。"
+}

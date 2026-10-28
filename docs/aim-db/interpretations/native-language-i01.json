@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "make-writing",
+  "node": "native-language",
+  "seq": 1,
+  "source": "docs/aims/native-language.md:9",
+  "status": "current",
+  "text": "判別線は「人が読む文か、機械が parse する token か」であり、母語に寄せるのは前者だけである。hook の stdout 散文・fence のコメント・skill の description・canon・aim node・code 内コメントは読まれるための文として母語へ寄せる。"
+}

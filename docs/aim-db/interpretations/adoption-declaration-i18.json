@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "canon-location",
+  "feature": "make-writing",
+  "node": "adoption-declaration",
+  "seq": 18,
+  "source": "docs/aims/adoption-declaration.md:83 docs/aims/adoption-declaration.md:119",
+  "status": "superseded",
+  "text": "規律は corpus の中ではなく .claude/skills/aim/ に住み、docs/aims/_guide/ は廃される。carrier の skills/ と commands/ は original/<単位>/ の正本からの生成物になる。"
+}

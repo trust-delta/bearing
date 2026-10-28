@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d28"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "session-handoff",
+  "seq": 22,
+  "source": "docs/aims/session-handoff.md:154 docs/aims/session-handoff.md:156 docs/aims/session-handoff.md:158",
+  "status": "current",
+  "text": "その一件の原因はプロセスの凍結ではなく update → /reload-plugins → setup-aim の順序であり、handoff の証拠にはならない。残った欠陥は、走っている複製が自分より新しい複製の存在を述べないという供給の層の側にある。"
+}

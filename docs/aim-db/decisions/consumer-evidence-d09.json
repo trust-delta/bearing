@@ -1,0 +1,14 @@
+{
+  "category": "record-practice",
+  "date": "2026-09-23",
+  "feature": "record-corpus",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "consumer-evidence",
+  "quote": "aimの保守をしておきましょう。古い言及やescalationが正しくない部分、完了todo・未完了todoの漏れを洗い出して必要な修正を行います。必要なければ維持でもOK",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 9,
+  "source": "docs/aims/consumer-evidence.md:80",
+  "summary": "bearing 側の便を送らせず、汎用の aim 保守の指示文を消費者 repo のエージェントへ渡した。"
+}

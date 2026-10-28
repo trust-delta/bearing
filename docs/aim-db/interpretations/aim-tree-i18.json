@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "aim-tree",
+  "seq": 18,
+  "source": "docs/aims/aim-tree.md:107",
+  "status": "current",
+  "text": "frame の冒頭は条件形で書く。frame は全セッションへ無条件に注入されるため断定は corpus の無い repo で偽になり、opt-in の block でも採用と corpus の存在は別なので条件を落とさない。"
+}

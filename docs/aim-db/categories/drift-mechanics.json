@@ -1,0 +1,5 @@
+{
+  "label": "ズレ検知の機構",
+  "note": "intra / inter / aim-code-stale などの fence が何を候補にし、照合・承認で何を落とすかに関するものを集める。",
+  "origin": "agent"
+}

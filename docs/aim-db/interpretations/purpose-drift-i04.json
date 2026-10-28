@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "purpose-drift-d01"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 4,
+  "source": "docs/aims/purpose-drift.md:15 docs/aims/purpose-drift.md:17 docs/aims/purpose-drift.md:66",
+  "status": "current",
+  "text": "可視化は読む側の注意予算に課税するため、「検査したが変更不要だった」を書ける場所（照合: [[slug]] @ <digest>）を持ち、その対を候補から落とす。この行はエージェントが書き、機械は読むだけで書かない。"
+}

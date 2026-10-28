@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-08",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 18,
+  "source": "docs/aims/session-handoff.md:73",
+  "summary": "baton の仕事は全部を運ぶことではなく畳むことを安くすることである（と # IS に足す）。"
+}

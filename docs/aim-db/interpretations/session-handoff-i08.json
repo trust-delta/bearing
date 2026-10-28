@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d07"
+  ],
+  "category": "unit-home",
+  "feature": "record-machine",
+  "node": "session-handoff",
+  "seq": 8,
+  "source": "docs/aims/session-handoff.md:25 docs/aims/session-handoff.md:187",
+  "status": "current",
+  "text": "dir 名の衝突は名前ではなく検出で塞ぐ。書く側だけが unit-root の記録を wx で刻んで決して上書きせず、読む側が照合して absent・mismatch・unreadable を match に畳まず、食い違っても baton は隠さずに述べる。"
+}

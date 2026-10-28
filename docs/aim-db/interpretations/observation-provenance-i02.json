@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 2,
+  "source": "docs/aims/observation-provenance.md:11 docs/aims/observation-provenance.md:53",
+  "status": "current",
+  "text": "実測は外部の系が変わった瞬間に通知なく偽になり、purpose-drift の fence は docs/aims/ の git 履歴しか見ないため外部の変化を原理的に検知しない。ゆえに現在形で書かれた実測は踏むまで分からない地雷になる。"
+}

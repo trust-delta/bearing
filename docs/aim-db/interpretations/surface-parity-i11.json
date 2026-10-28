@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 11,
+  "source": "docs/aims/surface-parity.md:53",
+  "status": "current",
+  "text": "同じ事実を運ぶ statusline と hook は、CLAUDE.md の採用の marker という同じ述語で黙る。"
+}

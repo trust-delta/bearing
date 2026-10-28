@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-05",
+  "feature": "output-statusline",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "ambient-display",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 6,
+  "source": "docs/aims/ambient-display.md:45",
+  "summary": "実機で、aim を採っていない repo では 2 行目が出ず、採っている repo では出ることを観測した。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "surface-parity-d10"
+  ],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 18,
+  "source": "docs/aims/surface-parity.md:67 docs/aims/surface-parity.md:69 docs/aims/surface-parity.md:114",
+  "status": "current",
+  "text": "PR の無い場では gh run list --commit <@{u} の full sha> でその commit の run を直接引く。短縮 sha は在る run を黙って 0 件と返すため切り詰めず、test が切り詰めない・--branch で引かない形を固定する。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "output-dist",
+  "node": "observation-provenance",
+  "seq": 12,
+  "source": "docs/aims/observation-provenance.md:39",
+  "status": "superseded",
+  "text": "公開面の harness 記述は、実測の日付を足せば地雷でなくなる。"
+}

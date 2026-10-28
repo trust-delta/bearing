@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-05",
+  "feature": "whole-purpose",
+  "form": "paraphrase",
+  "kind": "言明",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 13,
+  "source": "docs/aims/adoption-declaration.md:91",
+  "summary": "bearing は aim / handoff / drift の検知でバイブコーディングの質と速度を上げ、人間の注意予算を真に価値のある判断点にだけ使わせるためにある"
+}

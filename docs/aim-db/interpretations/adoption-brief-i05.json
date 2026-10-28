@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 5,
+  "source": "docs/aims/adoption-brief.md:21 docs/aims/adoption-brief.md:31",
+  "status": "current",
+  "text": "契約の置き場は README ではなく別の 1 枚（docs/adoption.md）にする。README は毎回引かれる手順の面のままにし、そこから 1 行で導く。"
+}

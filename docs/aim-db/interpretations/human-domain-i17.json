@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 17,
+  "source": "docs/aims/human-domain.md:88",
+  "status": "current",
+  "text": "body の parse は lib/process.mjs と並ぶ 2 つ目の実装であることを認め、実 corpus 全枚で両者の出力を deepEqual で突き合わせる門で食い違いを捕まえる。両方が同じように取り落とす形は corpus に現れるまで検出されない。"
+}

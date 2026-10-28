@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "surface-parity-d02"
+  ],
+  "category": "supply-scope",
+  "feature": "output-dist",
+  "node": "surface-parity",
+  "seq": 6,
+  "source": "docs/aims/surface-parity.md:26",
+  "status": "current",
+  "text": "デスクトップには「bearing が載っていない」を描く面が無く、hook で埋める道も採らない。これは測ったうえで負った非対称である。"
+}

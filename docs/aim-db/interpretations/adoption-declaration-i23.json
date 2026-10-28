@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "output-statusline",
+  "node": "adoption-declaration",
+  "seq": 23,
+  "source": "docs/aims/adoption-declaration.md:95 docs/aims/adoption-declaration.md:111",
+  "status": "current",
+  "text": "採用するまで機構は完全に黙るので、ambient-display の 2 行目が corpus を見つけたときだけ「aim 未採用 / corpus N」と警告色なしで述べて発見面を埋める。corpus が無ければ何も述べない。"
+}

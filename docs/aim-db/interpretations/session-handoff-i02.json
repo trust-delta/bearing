@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "session-handoff-d15",
+    "session-handoff-d18"
+  ],
+  "category": "handoff-value",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 2,
+  "source": "docs/aims/session-handoff.md:65 docs/aims/session-handoff.md:75",
+  "status": "current",
+  "text": "要約と baton は目的関数が違う。要約はそのセッションを続けるために畳み、baton は新しいセッションへ運ぶために選ぶので、良い要約は良い baton の代わりにならない。baton の善は運んだ量ではなく、次が同じ道を歩き直さないことである。"
+}

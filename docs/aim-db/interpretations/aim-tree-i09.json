@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "ownership",
+  "feature": "record-corpus",
+  "node": "aim-tree",
+  "seq": 9,
+  "source": "docs/aims/aim-tree.md:119 docs/aims/aim-tree.md:121",
+  "status": "superseded",
+  "text": "人間が観測したという証言は frontmatter の last-verified: に置き、書く側の canon の frontmatter 節で書けと述べる。"
+}

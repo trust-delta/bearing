@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 1,
+  "source": "docs/aims/adoption-declaration.md:9",
+  "status": "current",
+  "text": "gate の軸は「repo に触れるか」ではなく「repo に痕跡が残るか」である。残るものだけがその project の持ち物になり、触れるだけで履歴に何も残さない機能は汎用の側に立つ。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "retirement",
+  "date": "2026-10-27",
+  "feature": "whole-env",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "deadにしましょう（必要になったら戻せるのがaimのいいところです）",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/session-handoff.md:9",
+  "summary": "この aim を dead にする（必要になれば戻せる前提で）。"
+}

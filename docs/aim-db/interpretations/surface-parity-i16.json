@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "surface-parity-d09",
+    "surface-parity-d10"
+  ],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 16,
+  "source": "docs/aims/surface-parity.md:57 docs/aims/surface-parity.md:59 docs/aims/surface-parity.md:61",
+  "status": "current",
+  "text": "照合先は手元の HEAD でも先頭 run でもなく @{u}（push 済みの commit）である。その commit の run が 0 本なら「CI 無し」とし前の結論を持ち越さない。HEAD が @{u} の先に居れば「未 push N」を添え、upstream の無い branch は「CI 無し」と note にする。"
+}

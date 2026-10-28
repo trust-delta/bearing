@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 15,
+  "source": "docs/aims/adoption-brief.md:40",
+  "status": "current",
+  "text": "この node の反証条件は、採用を検討する人がこの 2 枚を読んで採るかどうかを決められたかであり、書いた当人は初見になれないのでエージェントが標本を作ることはできない。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "ambient-display-d04"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 23,
+  "source": "docs/aims/ambient-display.md:39",
+  "status": "superseded",
+  "text": "bearing の repo の project settings に statusline の 1 行を置き、clone しただけで描けるようにする。"
+}

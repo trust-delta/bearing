@@ -1,0 +1,14 @@
+{
+  "category": "release-cadence",
+  "date": "2026-10-01",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "版を出して",
+  "recordedAt": "2026-10-27T15:56:02.462Z",
+  "recordedBy": "agent",
+  "seq": 16,
+  "source": "docs/aims/bearing.md:104",
+  "summary": "templates/ が動かない 0.34.0 を、消費者側で起きていた欠陥の修正を届けるために出す。"
+}

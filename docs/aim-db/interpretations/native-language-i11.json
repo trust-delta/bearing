@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "language-line",
+  "feature": "output-facts",
+  "node": "native-language",
+  "seq": 11,
+  "source": "docs/aims/native-language.md:25",
+  "status": "current",
+  "text": "実行時に注入される散文（bin/・lib/ が emit する文、fence の # none / # unavailable コメント、hooks.json の statusMessage、plugin.json・marketplace.json・aim skill の description）は日本語で書く。"
+}

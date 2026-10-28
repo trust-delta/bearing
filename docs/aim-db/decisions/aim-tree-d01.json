@@ -1,0 +1,14 @@
+{
+  "category": "ownership",
+  "date": "2026-09-08",
+  "feature": "make-writing",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "aim-tree",
+  "quote": "聞いてくれたことそのものが、書くことを指示します",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/aim-tree.md:23",
+  "summary": "エージェントが # IS に解釈を書いてよいかを問うたなら、その問い自体が「書け」を意味する。"
+}

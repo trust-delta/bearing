@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 24,
+  "source": "docs/aims/purpose-drift.md:78 docs/aims/purpose-drift.md:105",
+  "status": "superseded",
+  "text": "静かな node の再確認は frontmatter の last-verified: と bearing-checkpoint-stale が担う。"
+}

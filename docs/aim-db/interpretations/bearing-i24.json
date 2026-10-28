@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d17"
+  ],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 24,
+  "source": "docs/aims/bearing.md:118 docs/aims/bearing.md:312",
+  "status": "superseded",
+  "text": "carrier の LICENSE の複製は生成器が root から写す生成物にする。"
+}

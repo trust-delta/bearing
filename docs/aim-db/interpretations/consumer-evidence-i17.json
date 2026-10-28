@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d11"
+  ],
+  "category": "consumer-stance",
+  "feature": "record-machine",
+  "node": "consumer-evidence",
+  "seq": 17,
+  "source": "docs/aims/consumer-evidence.md:90 docs/aims/consumer-evidence.md:92 docs/aims/consumer-evidence.md:94 docs/aims/consumer-evidence.md:95 docs/aims/consumer-evidence.md:96 docs/aims/consumer-evidence.md:97 docs/aims/consumer-evidence.md:98 docs/aims/consumer-evidence.md:102",
+  "status": "current",
+  "text": "機体の上で aim を採らない消費者まで拾える手段は ~/.bearing/units/ の session 記録である。ただしこの一覧は国勢調査ではなく、~/works 配下で corpus を持つ repo の数は消費者の数ではない。"
+}

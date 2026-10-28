@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 25,
+  "source": "docs/aims/ambient-display.md:43 docs/aims/ambient-display.md:61 docs/aims/ambient-display.md:75",
+  "status": "superseded",
+  "text": "未読 baton は aim を採っていない project でも 2 行目に述べる例外とする。"
+}

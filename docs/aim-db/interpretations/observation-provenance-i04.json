@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "observation-provenance",
+  "seq": 4,
+  "source": "docs/aims/observation-provenance.md:15",
+  "status": "current",
+  "text": "手段は 3 つ: 実測を「いつ・何を・どう観測したか」の形で書く、確信の階級（実測／人間の決定／docs の読み）を字面に出す、再測できるなら再測の 1 行を添え、できないならそう明示する。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "work-accounting",
+  "feature": "output-facts",
+  "node": "aim-tree",
+  "seq": 13,
+  "source": "docs/aims/aim-tree.md:93",
+  "status": "current",
+  "text": "# ESCALATION を数えて frame と statusline に escalation: N として出す。見出しだけで中身の無い節は数に入れず別の行で名指し、色は todo・観測待ちと同じにして重さの ranking を面に持ち込まない。"
+}

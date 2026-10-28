@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "session-handoff-d45",
+    "session-handoff-d46"
+  ],
+  "category": "baton-format",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 17,
+  "source": "docs/aims/session-handoff.md:308 docs/aims/session-handoff.md:310",
+  "status": "current",
+  "text": "baton の transcript: の値は著者が自分の jsonl を導いて書き、機械の session 記録は出典ではなく対照に降りる。並走で外れれば path が実在せず欄が消えるので、落ち方は沈黙ではなく不在になり、記録と食い違えば write がそれを並走の証拠として述べる。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "surface-reach",
+  "date": "2026-09-05",
+  "feature": "output-surface",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "human-domain",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 6,
+  "source": "docs/aims/human-domain.md:76",
+  "summary": "setup-surface が ~/.claude/bearing-aim.html へ置いた複製を WSLg の Chrome で開き、corpus を選んで全 11 枚の往復一致が出た（置いてから開くまでが通った）"
+}

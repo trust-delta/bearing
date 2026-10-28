@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d14"
+  ],
+  "category": "release-cadence",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 14,
+  "source": "docs/aims/bearing.md:91 docs/aims/bearing.md:93 docs/aims/bearing.md:95",
+  "status": "current",
+  "text": "消費者は repo を動かす時点でその時の版との差に対して 1 度だけ費用を払うので、効くのは bump の回数ではなく間隔である、という導出を候補として置いている（規律の字面は変えていない）。"
+}

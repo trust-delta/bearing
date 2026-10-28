@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-30",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "consumer-evidence",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 11,
+  "source": "docs/aims/consumer-evidence.md:90",
+  "summary": "aim を使わない repo も出てきたと述べ、3DCG を挙げた。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-04",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 4,
+  "source": "docs/aims/adoption-declaration.md:55",
+  "summary": "別 repo への適用で、with-aim が marker を置きながら _guide/ に何も置かず、置かれた法の第 1 条が在らない file を指すことを人間が踏んだ"
+}

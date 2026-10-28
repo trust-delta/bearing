@@ -1,0 +1,14 @@
+{
+  "category": "supply-scope",
+  "date": "2026-09-02",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "",
+  "recordedAt": "2026-10-27T15:56:02.460Z",
+  "recordedBy": "agent",
+  "seq": 1,
+  "source": "docs/aims/bearing.md:14",
+  "summary": "plugin の供給を project スコープにし、user スコープを外す（user スコープは汎用的なものの置き場であり、bearing は docs/aims/ を前提にするうえ他人の repo で邪魔になるため）。"
+}

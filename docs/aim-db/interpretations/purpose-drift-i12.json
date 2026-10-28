@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "purpose-drift-d08",
+    "purpose-drift-d09"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 12,
+  "source": "docs/aims/purpose-drift.md:85 docs/aims/purpose-drift.md:87 docs/aims/purpose-drift.md:89 docs/aims/purpose-drift.md:91",
+  "status": "current",
+  "text": "照合の宛先は aim: 本文の sha-256 先頭 12 桁であり、判定は digest 一致 → aim 履歴の commit（旧い形として通し、書き換えを node 単位で促す）→ 読めない記録、の順に行う。読めない記録の文言は anchor の変化と host の sha 書き換えの両方を名指す。"
+}

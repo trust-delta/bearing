@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "dev-platform",
+  "seq": 15,
+  "source": "docs/aims/dev-platform.md:97 docs/aims/dev-platform.md:111 docs/aims/dev-platform.md:112",
+  "status": "current",
+  "text": "本 node は供給するものを増やさず 3 柱のどれにも触れない。purpose-drift が置いた法（index が両 platform で同じ答えを持つ）は借りる側であり、書き換えを要求しない。"
+}

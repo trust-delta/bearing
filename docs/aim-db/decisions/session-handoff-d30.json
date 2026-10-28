@@ -1,0 +1,14 @@
+{
+  "category": "main-path",
+  "date": "2026-10-27",
+  "feature": "whole-env",
+  "form": "paraphrase",
+  "kind": "整理",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 30,
+  "source": "docs/aims/session-handoff.md:175",
+  "summary": "repo の中の作業は remote に集まるので問題なく、問題は repo の外の作業の引き継ぎである（本機の Claude 経由で伝わった整理）。"
+}

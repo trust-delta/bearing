@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "surface-parity-d11",
+    "surface-parity-d12",
+    "surface-parity-d15"
+  ],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 21,
+  "source": "docs/aims/surface-parity.md:81 docs/aims/surface-parity.md:83 docs/aims/surface-parity.md:85 docs/aims/surface-parity.md:87 docs/aims/surface-parity.md:88 docs/aims/surface-parity.md:89 docs/aims/surface-parity.md:91 docs/aims/surface-parity.md:124",
+  "status": "current",
+  "text": "その commit で何本走るはずかは分からず、GitHub の外側の層（check-suites・combined status・branch protection）もこの repo では教えない。面が述べられるのは見えた範囲であって、全部かの宣言は別の層に属する。"
+}

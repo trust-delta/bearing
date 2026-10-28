@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "purpose-drift",
+  "seq": 6,
+  "source": "docs/aims/purpose-drift.md:21 docs/aims/purpose-drift.md:93",
+  "status": "current",
+  "text": "同じ法は statusline にも及び、採れなかったものを 0 と描かず判定もしない。ただし「噛む履歴が無い」は若い corpus に常駐するため statusline には描かない。"
+}

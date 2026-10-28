@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-05",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 10,
+  "source": "docs/aims/session-handoff.md:39",
+  "summary": "docs/aims/_guide/ を廃し、配る md の正本を単位ごとに分ける（∴ _guide/handoff.md の置き場という問いは消滅）。"
+}

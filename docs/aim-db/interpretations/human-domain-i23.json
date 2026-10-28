@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 23,
+  "source": "docs/aims/human-domain.md:121 docs/aims/human-domain.md:125",
+  "status": "current",
+  "text": "面の label の slug.md:NN は契約の bodyOffset で file 相対の行番号にし、実 corpus 全行で body の行と file の行の対応を突き合わせ、label が指す行に項目の 1 行目が実在することを assert する。"
+}

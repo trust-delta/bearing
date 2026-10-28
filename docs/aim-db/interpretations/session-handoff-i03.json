@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "session-handoff-d13",
+    "session-handoff-d14",
+    "session-handoff-d18"
+  ],
+  "category": "handoff-value",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 3,
+  "source": "docs/aims/session-handoff.md:49 docs/aims/session-handoff.md:51 docs/aims/session-handoff.md:53 docs/aims/session-handoff.md:57 docs/aims/session-handoff.md:59 docs/aims/session-handoff.md:73",
+  "status": "current",
+  "text": "baton の仕事は畳むことを安くすることであり、捨てることは許容ではなく要求である。入口と書く費用が安いほど人間は早めに（proactive に）畳み、劣化した context で働く時間の割合が下がり、新しいプロセスで plugin の更新にも追随できる。"
+}

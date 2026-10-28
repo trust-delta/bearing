@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 8,
+  "source": "docs/aims/adoption-brief.md:31",
+  "status": "current",
+  "text": "契約の doc では、リポジトリに残るのは CLAUDE.md の block・.claude/skills/aim/・corpus 自身の 3 つだけで残りは home の下だと表で述べ、その直後に外し方を置き、「何を要求されないか」の節も置く。置く手段だけを述べれば契約ではなく勧誘になり、要求の一覧だけでは要求されていないものまで要求と読まれる。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "session-handoff-d29"
+  ],
+  "category": "baton-format",
+  "feature": "output-facts",
+  "node": "session-handoff",
+  "seq": 15,
+  "source": "docs/aims/session-handoff.md:85 docs/aims/session-handoff.md:162 docs/aims/session-handoff.md:287",
+  "status": "current",
+  "text": "baton の様式には、他人の系についての主張を階級と射程ごと運ぶ（運べなければ corpus を指す）較正の規律と、言い換えを禁じた逐語の欄を持たせる。"
+}

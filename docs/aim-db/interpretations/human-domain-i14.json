@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 14,
+  "source": "docs/aims/human-domain.md:69",
+  "status": "current",
+  "text": "木の契約は壊れ方を self / missing-parent / cycle / unreachable の 4 つに名を分けて述べ、unreachable は原因と重ねて出す。root が複数あることは述べるが咎めず、親が空欄（root）と親が居ない（壊れ）を同じ顔にしない。"
+}

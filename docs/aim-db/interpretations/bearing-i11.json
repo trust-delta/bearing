@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "supply-scope",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 11,
+  "source": "docs/aims/bearing.md:31 docs/aims/bearing.md:35 docs/aims/bearing.md:37",
+  "status": "superseded",
+  "text": "/plugin update の沈黙は道具の側の破れであり我々には直せず、marketplace update だけでは届かない。"
+}

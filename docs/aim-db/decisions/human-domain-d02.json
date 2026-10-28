@@ -1,0 +1,14 @@
+{
+  "category": "surface-reach",
+  "date": "2026-09-04",
+  "feature": "output-surface",
+  "form": "paraphrase",
+  "kind": "観測",
+  "node": "human-domain",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 2,
+  "source": "docs/aims/human-domain.md:56",
+  "summary": "Windows の Chrome で \\\\wsl.localhost 越しに面を開き同じ share の corpus を選ぶと、Chrome が「システムフォルダが含まれている」と拒んだ"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-dist",
+  "node": "ambient-display",
+  "seq": 13,
+  "source": "docs/aims/ambient-display.md:51 docs/aims/ambient-display.md:78",
+  "status": "current",
+  "text": "shim は自分自身と載っている版が配る shim を byte 比較し、違えば「違う」までを 1 行述べ、比べられなければ黙る。委譲より前に描き、幅の規律は literal で守る。"
+}

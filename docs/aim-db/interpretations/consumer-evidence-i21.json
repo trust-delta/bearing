@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "release-cadence",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 21,
+  "source": "docs/aims/consumer-evidence.md:49",
+  "status": "current",
+  "text": "templates/ が動く bump は消費者に走査の費用を生み、書き換えが 0 で終わる走査も費用である。"
+}

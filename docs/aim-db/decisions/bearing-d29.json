@@ -1,0 +1,14 @@
+{
+  "category": "main-path",
+  "date": "2026-10-27",
+  "feature": "whole-env",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "bearing",
+  "quote": "bearingの意義は標準ハーネスでは足りない部分を補うことが命題でした。今回、CLI主体からデスクトップ（リモートコントロール）を主体に移行することで、補えなくなったもの・補う必要がなくなったものなどが出てきていると思います",
+  "recordedAt": "2026-10-27T15:56:02.462Z",
+  "recordedBy": "agent",
+  "seq": 29,
+  "source": "docs/aims/bearing.md:195",
+  "summary": "主経路が CLI から Desktop（Remote Control）へ移り、補えなくなったもの・補う必要がなくなったものが出てきている。"
+}

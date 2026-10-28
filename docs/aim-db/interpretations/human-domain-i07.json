@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-reach",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 7,
+  "source": "docs/aims/human-domain.md:46 docs/aims/human-domain.md:48 docs/aims/human-domain.md:50 docs/aims/human-domain.md:76 docs/aims/human-domain.md:78 docs/aims/human-domain.md:80",
+  "status": "current",
+  "text": "面へ辿り着く手段は shim ではなく複製で、/bearing:setup-surface が版を含まない ~/.claude/bearing-aim.html へ置き、人間はその path を bookmark する。複製は setup の間黙って古くなりうるので --check が byte 同一かを答えるが、古い版か人間の手かは分けられないと述べる。CLI は browser を開かず、開くのは人間である。"
+}

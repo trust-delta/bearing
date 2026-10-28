@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "bearing-d19",
+    "bearing-d20",
+    "bearing-d21"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 5,
+  "source": "docs/aims/bearing.md:130 docs/aims/bearing.md:132 docs/aims/bearing.md:134 docs/aims/bearing.md:136 docs/aims/bearing.md:138",
+  "status": "current",
+  "text": "前身 tmai からは概念を継承し履歴は継承しない。tmai とは排他で、tmai の canon はあちらに残し、tmai の復活条件（場を持つこと・harness の外へ届くこと）を本 repo が引き受けない制約・反証条件として扱う。"
+}

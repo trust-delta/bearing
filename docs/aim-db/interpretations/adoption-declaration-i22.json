@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d12"
+  ],
+  "category": "self-repo-policy",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 22,
+  "source": "docs/aims/adoption-declaration.md:89 docs/aims/adoption-declaration.md:120",
+  "status": "current",
+  "text": "bearing は .claude/ を tracked にし .claude/**/*.local.json だけを閉じる。閉じ忘れが公開になる危険を .gitignore の見出しに書き、置かれた 3 枚が templates/aim/ と byte 同一であることを test で見るのは plugin の義務ではなくこの repo の policy である。"
+}

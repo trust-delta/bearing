@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 16,
+  "source": "docs/aims/consumer-evidence.md:88 docs/aims/consumer-evidence.md:119",
+  "status": "current",
+  "text": "消費者の win32 は今もこの node の射程に在るが、証拠の出所だった人間の別マシンでの使用が無くなり、「まだ覆っていない」ではなく「覆う経路が無い」状態である。"
+}

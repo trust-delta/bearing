@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "platform-axis",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 7,
+  "source": "docs/aims/purpose-drift.md:23 docs/aims/purpose-drift.md:25 docs/aims/purpose-drift.md:67",
+  "status": "current",
+  "text": "「CI が緑」はその platform で通ったにすぎず、常時赤い門は門を持たないより悪い。分岐を持つ機構は、どちらの platform からも両方の分岐を検査できる形にし、検査できなかったときは skip して理由を述べる。"
+}

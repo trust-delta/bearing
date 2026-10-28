@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "adoption-declaration-d03"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 9,
+  "source": "docs/aims/adoption-declaration.md:35 docs/aims/adoption-declaration.md:37 docs/aims/adoption-declaration.md:39 docs/aims/adoption-declaration.md:41 docs/aims/adoption-declaration.md:51 docs/aims/adoption-declaration.md:110",
+  "status": "current",
+  "text": "降りる宣言は撤去され、旧い宣言行は既定（採用していない）と同じ意味になるが、anomaly に数えると採用へ反転するので marker 判定から除外する。撤去した --decline は素通りさせず述べて非 0 で終わり、--remove は「hook は黙るようになる」を真として述べられるようになった。"
+}

@@ -1,0 +1,8 @@
+{
+  "confirmedAt": "2026-10-28",
+  "frame": "record",
+  "label": "機体の記録",
+  "note": "session の記録、CI の結果（~/.bearing/units/）",
+  "order": 2,
+  "origin": "human-confirmed"
+}

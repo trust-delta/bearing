@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-writeback",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 8,
+  "source": "docs/aims/human-domain.md:52 docs/aims/human-domain.md:81",
+  "status": "current",
+  "text": "書き戻す前に必ず disk を読み直し、面が読んだ原文と 1 byte でも違えば書かずに述べて止まり、読み直した内容で面を組み直す。読み直せないとき・変更が無いときも書かない。"
+}

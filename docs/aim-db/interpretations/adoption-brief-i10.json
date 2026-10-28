@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "output-statusline",
+  "node": "adoption-brief",
+  "seq": 10,
+  "source": "docs/aims/adoption-brief.md:33",
+  "status": "current",
+  "text": "面の数の読み方は同じ「誰の番か」の軸で述べる: todo はエージェント、宣言待ちと escalation は人間であり 3 つは同時に読む。観測票なしは出たら機構側の欠陥、0 は描かれない、? は 0 ではなく採れなかった、面は重さの順位づけをしない。label は bin/statusline.mjs の counter と字で一致させる。"
+}

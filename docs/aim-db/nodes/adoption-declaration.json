@@ -1,0 +1,6 @@
+{
+  "aim": "plugin はリポジトリに痕跡を残す前に、その repo が宣言した採用を要求する。痕跡を残さないものには何も要求しない",
+  "feature": "make-law",
+  "parent": "bearing",
+  "state": "open"
+}

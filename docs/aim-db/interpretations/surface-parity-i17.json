@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "surface-parity-d10"
+  ],
+  "category": "ci-verdict",
+  "feature": "output-statusline",
+  "node": "surface-parity",
+  "seq": 17,
+  "source": "docs/aims/surface-parity.md:61 docs/aims/surface-parity.md:67",
+  "status": "superseded",
+  "text": "--branch で run を引いて手元で @{u} に絞り、20 本すべてが別 commit なら「CI 不明」へ倒す。"
+}

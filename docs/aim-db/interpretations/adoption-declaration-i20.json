@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 20,
+  "source": "docs/aims/adoption-declaration.md:85",
+  "status": "current",
+  "text": "置かれた project skill は同じプロセスの中で再起動なしに skill 一覧へ現れた（単一観測）。plugin の skill 一覧との対照は、起動後に置いた plugin skill が現れるかが未測なので立っても倒れてもいない。"
+}

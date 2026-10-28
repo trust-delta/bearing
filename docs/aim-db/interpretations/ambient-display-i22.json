@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "delivery-mechanics",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 22,
+  "source": "docs/aims/ambient-display.md:29",
+  "status": "superseded",
+  "text": "statusLine.command から絶対パスを捨て、裸のコマンド名で呼べば依存ごと消せる。"
+}

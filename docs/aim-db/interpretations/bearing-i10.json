@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d02"
+  ],
+  "category": "supply-scope",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 10,
+  "source": "docs/aims/bearing.md:35 docs/aims/bearing.md:37 docs/aims/bearing.md:39 docs/aims/bearing.md:47",
+  "status": "current",
+  "text": "record が在るとき marketplace update だけで cache・record の bump まで届く。record の不在が /plugin update の沈黙と「減っていない」の両方を生んでいた。"
+}

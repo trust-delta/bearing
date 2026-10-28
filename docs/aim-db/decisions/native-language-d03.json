@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-09-03",
+  "feature": "make-writing",
+  "form": "paraphrase",
+  "kind": "判定",
+  "node": "native-language",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 3,
+  "source": "docs/aims/native-language.md:13",
+  "summary": "人間が書かれたものが読めることを観測し、この node の state: done を宣言した。"
+}

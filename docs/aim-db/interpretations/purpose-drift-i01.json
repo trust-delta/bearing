@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 1,
+  "source": "docs/aims/purpose-drift.md:9",
+  "status": "current",
+  "text": "層は 3 つで、機械は可視化だけを担い、エージェントは検査と自明な保守、人間は判断を担う。可視化が判定に滑れば目的が満たされたかの宣言を機械が肩代わりするため、機械は判定しない。"
+}

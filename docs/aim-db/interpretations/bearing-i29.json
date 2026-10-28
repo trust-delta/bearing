@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "bearing-d36",
+    "bearing-d37",
+    "bearing-d38"
+  ],
+  "category": "main-path",
+  "feature": "whole-env",
+  "node": "bearing",
+  "seq": 29,
+  "source": "docs/aims/bearing.md:233 docs/aims/bearing.md:234 docs/aims/bearing.md:235 docs/aims/bearing.md:236",
+  "status": "current",
+  "text": "repo の外の作業の追跡性は bearing が持たず、ハーネスのセッション一覧で追う。30 日を超えた経緯は transcript から追えない前提で動き、決定は aim corpus と memory に残す。"
+}

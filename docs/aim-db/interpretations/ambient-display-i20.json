@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 20,
+  "source": "docs/aims/ambient-display.md:85 docs/aims/ambient-display.md:86 docs/aims/ambient-display.md:87",
+  "status": "current",
+  "text": "実機の画面で 2 行目が桁ずれ無く読めるか、観測票なしが必要なときだけ出るか、「載っていない」の行が人間の画面に出たかは、まだ観測されていない。"
+}

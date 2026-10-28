@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "bearing-d06",
+    "bearing-d15",
+    "bearing-d16"
+  ],
+  "category": "release-cadence",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 13,
+  "source": "docs/aims/bearing.md:78 docs/aims/bearing.md:95 docs/aims/bearing.md:100 docs/aims/bearing.md:104",
+  "status": "current",
+  "text": "「まとめて出す」は費用についての規則であり、配った先への合図・消費者側の欠陥修正・提起への回答のような目的を持つ release は在庫 1 件でも出す。"
+}

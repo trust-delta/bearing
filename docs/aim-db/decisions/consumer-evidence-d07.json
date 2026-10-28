@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-07",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "言明",
+  "node": "consumer-evidence",
+  "quote": "他 repo での使用時に、私が bearing の機構へ疑問を持ったら、それを運び入れて改善する",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 7,
+  "source": "docs/aims/consumer-evidence.md:59",
+  "summary": "受け入れの前提は、他 repo で使う人間が bearing の機構への疑問をこの repo へ運び入れて改善するループである。"
+}

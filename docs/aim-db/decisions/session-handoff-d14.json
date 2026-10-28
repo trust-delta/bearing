@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-08",
+  "feature": "output-facts",
+  "form": "verbatim",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "handoff が安いこと ＝ 新鮮な context の session に相対的に長く居るということ。それは経験上も仕組み上もエージェントの出力の質を上げる",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 14,
+  "source": "docs/aims/session-handoff.md:55",
+  "summary": "安い handoff の価値は書く瞬間の judgment だけでなく、新鮮な context に居る時間の割合を上げて出力の質全体を上げることにある（先の読みは狭い）。"
+}

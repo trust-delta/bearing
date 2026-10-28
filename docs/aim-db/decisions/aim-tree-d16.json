@@ -1,0 +1,14 @@
+{
+  "category": "release-cadence",
+  "date": "2026-09-06",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "aim-tree",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 16,
+  "source": "docs/aims/aim-tree.md:125",
+  "summary": "# OBSERVATION の導入（fence の改名を含む）を 0.21.0（minor）として出す。"
+}

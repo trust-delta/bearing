@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "surface-parity-d01"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "surface-parity",
+  "seq": 3,
+  "source": "docs/aims/surface-parity.md:13",
+  "status": "current",
+  "text": "揃えるのは表示だが、守っているのはどの経路から入っても同じ木を見ていられることである。"
+}

@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "display-design",
+  "feature": "output-statusline",
+  "node": "ambient-display",
+  "seq": 4,
+  "source": "docs/aims/ambient-display.md:17 docs/aims/ambient-display.md:41 docs/aims/ambient-display.md:69",
+  "status": "current",
+  "text": "不在を黙って消さない。corpus 未取得・git 未検知・detached HEAD を描き分け、消えたものと元から無いものを同じ声で述べない。"
+}

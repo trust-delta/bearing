@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "native-language-d03",
+    "native-language-d04"
+  ],
+  "category": "language-line",
+  "feature": "make-writing",
+  "node": "native-language",
+  "seq": 4,
+  "source": "docs/aims/native-language.md:13",
+  "status": "current",
+  "text": "done が閉じたのは到達（書かれたものが読めること）であって前提ではない。「混在より統一のほうが質が高い」は実測されておらず、done は反証を閉じない。"
+}

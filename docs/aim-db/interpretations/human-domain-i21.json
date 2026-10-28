@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "human-domain-d12"
+  ],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 21,
+  "source": "docs/aims/human-domain.md:114",
+  "status": "current",
+  "text": "人間の番とエージェントの残務の両面の card に aim: 文を出す。判断も todo の要否も目的に照らして決まるからであり、aim: を持たない record は空行ではなく壊れとして述べる。"
+}

@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "observation-provenance-d02"
+  ],
+  "category": "record-practice",
+  "feature": "record-corpus",
+  "node": "observation-provenance",
+  "seq": 6,
+  "source": "docs/aims/observation-provenance.md:19",
+  "status": "current",
+  "text": "大きな corpus の失敗様式は「見つけられない」ではなく「読んだという確信が得られてしまう」ことであり、その誤りの校正は人間の負荷へ転嫁される。"
+}

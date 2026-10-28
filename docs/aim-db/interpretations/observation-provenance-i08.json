@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "record-practice",
+  "feature": "whole-env",
+  "node": "observation-provenance",
+  "seq": 8,
+  "source": "docs/aims/observation-provenance.md:23",
+  "status": "current",
+  "text": "圧縮後に再注入される context では、gitStatus block は session 開始時の snapshot を凍結したまま運ばれ、repo root の CLAUDE.md は disk から読み直される。両者が並んで「今」の顔で届くことが鮮度の区別を消している。これは harness の欠陥ではなく、この aim が守ろうとする形が他人の系にも在るという観測として扱う。"
+}

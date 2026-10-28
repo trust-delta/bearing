@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-reach",
+  "feature": "output-surface",
+  "node": "human-domain",
+  "seq": 10,
+  "source": "docs/aims/human-domain.md:58 docs/aims/human-domain.md:82",
+  "status": "current",
+  "text": "picker の拒否は browser のダイアログにしか出ず面には AbortError として届くので、取り消しと区別できない。面は黙らず、どちらかに決めつけずに両方が来る欄だと述べる。FSA を持たない browser では空ではなく「開けない」と述べる。"
+}

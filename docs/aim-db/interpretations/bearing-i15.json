@@ -1,0 +1,17 @@
+{
+  "basis": [
+    "bearing-d08",
+    "bearing-d10",
+    "bearing-d11",
+    "bearing-d07",
+    "bearing-d09",
+    "bearing-d15"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 15,
+  "source": "docs/aims/bearing.md:78 docs/aims/bearing.md:79 docs/aims/bearing.md:81 docs/aims/bearing.md:83 docs/aims/bearing.md:100",
+  "status": "current",
+  "text": "配る側が見る軸は置かれた法とその repo の corpus が噛み合っているかであり、版の新旧ではない。消費者は法の改変・急場凌ぎ・無通知が自由で、こちらは催促せず、問題が起きたら対応する。観察は要求ではなく発展の参考としてそう述べたうえで続け、消費者の提起には個別の便ではなく配信で答える。"
+}

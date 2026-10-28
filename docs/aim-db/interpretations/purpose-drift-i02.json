@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 2,
+  "source": "docs/aims/purpose-drift.md:11",
+  "status": "current",
+  "text": "ズレは同じ目的の中（body が自らの aim: から離れる）と目的どうし（隣接が互いを反映しない）の 2 種で、trigger が違うため機構も分かれる。前者は anchor の変更、後者は作成も trigger になる。"
+}

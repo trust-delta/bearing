@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "adoption-declaration-d01",
+    "adoption-declaration-d02"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "adoption-declaration",
+  "seq": 4,
+  "source": "docs/aims/adoption-declaration.md:23 docs/aims/adoption-declaration.md:93 docs/aims/adoption-declaration.md:107 docs/aims/adoption-declaration.md:108 docs/aims/adoption-declaration.md:110",
+  "status": "current",
+  "text": "採用の宣言は CLAUDE.md の marker が担い /bearing:setup-aim が置く。corpus が在ることは使っている証拠であって機構を通したい宣言ではないので、述語は adopted だけを見る。"
+}

@@ -1,0 +1,14 @@
+{
+  "category": "handoff-value",
+  "date": "2026-09-07",
+  "feature": "output-facts",
+  "form": "paraphrase",
+  "kind": "指摘",
+  "node": "session-handoff",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 13,
+  "source": "docs/aims/session-handoff.md:49",
+  "summary": "handoff の入口を安くすることは効率の話ではない。"
+}

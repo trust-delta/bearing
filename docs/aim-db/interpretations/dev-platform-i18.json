@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "dev-platform-d01"
+  ],
+  "category": "platform-axis",
+  "feature": "whole-env",
+  "node": "dev-platform",
+  "seq": 18,
+  "source": "docs/aims/dev-platform.md:93",
+  "status": "superseded",
+  "text": "CI に win32 の leg を足し、同じ 3 門を win32 でも走らせる。"
+}

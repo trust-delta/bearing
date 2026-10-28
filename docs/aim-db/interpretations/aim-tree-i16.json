@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "aim-tree-d11",
+    "aim-tree-d12"
+  ],
+  "category": "law-placement",
+  "feature": "make-law",
+  "node": "aim-tree",
+  "seq": 16,
+  "source": "docs/aims/aim-tree.md:96 docs/aims/aim-tree.md:98 docs/aims/aim-tree.md:100 docs/aims/aim-tree.md:102",
+  "status": "current",
+  "text": "配られる法は aim 機構を名指す 5 条であり、git の安全則は射程が違うのでこの repo の CLAUDE.md の規律として置き、原理は「無い」の節を指して述べ直さない。"
+}

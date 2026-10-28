@@ -1,0 +1,14 @@
+{
+  "basis": [
+    "session-handoff-d05",
+    "session-handoff-d06",
+    "session-handoff-d07"
+  ],
+  "category": "unit-home",
+  "feature": "record-machine",
+  "node": "session-handoff",
+  "seq": 7,
+  "source": "docs/aims/session-handoff.md:23 docs/aims/session-handoff.md:25",
+  "status": "current",
+  "text": "baton は repo の外の ~/.bearing/units/<unit>/handoff/ に置き、どの使い方でも commit されえない。unit は repo 名ではなく unit root の path で引き、dir 名は Claude Code と同じ規則で平坦化する（単射でないことを承知で、馴染みを優先）。"
+}

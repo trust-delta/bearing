@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "aim-scope",
+  "feature": "output-drift",
+  "node": "purpose-drift",
+  "seq": 8,
+  "source": "docs/aims/purpose-drift.md:27 docs/aims/purpose-drift.md:117",
+  "status": "current",
+  "text": "この機構が見るのは git 履歴の中の docs/aims/ だけであり、README の正本と英語版の食い違い、言語の混在、外部の系の変化は構造的に映らない。それらは別のセンサーか書き方で扱い、ここの沈黙を向こうの沈黙と取り違えない。"
+}

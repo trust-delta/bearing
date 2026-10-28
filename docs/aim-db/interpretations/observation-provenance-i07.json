@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "observation-provenance-d03"
+  ],
+  "category": "record-practice",
+  "feature": "record-corpus",
+  "node": "observation-provenance",
+  "seq": 7,
+  "source": "docs/aims/observation-provenance.md:21",
+  "status": "current",
+  "text": "量への対処より先に述べ方を直す。述べ方が直れば膨らみ方自体が変わりうるので、置き場を先に作ると直っていない書き方のまま移設するだけになる。"
+}

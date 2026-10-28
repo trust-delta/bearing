@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "adoption-contract",
+  "feature": "make-law",
+  "node": "adoption-brief",
+  "seq": 11,
+  "source": "docs/aims/adoption-brief.md:34",
+  "status": "current",
+  "text": "README からの導線は「これが何ではないか」の直後、## 使い方の直前に、README が既に使う blockquote の形で置く。採るかどうかの判断は手順の前に来るので、使い方の中に置けば既に採ると決めた人しか通らない。"
+}

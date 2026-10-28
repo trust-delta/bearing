@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "main-path",
+  "feature": "whole-env",
+  "node": "surface-parity",
+  "seq": 8,
+  "source": "docs/aims/surface-parity.md:30 docs/aims/surface-parity.md:32 docs/aims/surface-parity.md:33",
+  "status": "current",
+  "text": "Remote Control の子セッションでは SessionStart と UserPromptSubmit の hook が発火して facts が会話へ注入されるが、statusline を描く端末が無い。"
+}

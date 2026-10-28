@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "consumer-evidence-d06"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "consumer-evidence",
+  "seq": 11,
+  "source": "docs/aims/consumer-evidence.md:57 docs/aims/consumer-evidence.md:114",
+  "status": "current",
+  "text": "job は覆っていない 6 つ（cache そのものではない・1 platform 1 node 版・シェル・ハーネスの登録・plugin 不在の場での読まれ方・browser の面）を同じ出力で述べる。browser・OS・ハーネスの変異は合成消費者では覆えない。"
+}

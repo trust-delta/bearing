@@ -1,0 +1,14 @@
+{
+  "category": "law-placement",
+  "date": "2026-09-05",
+  "feature": "make-law",
+  "form": "paraphrase",
+  "kind": "言明",
+  "node": "adoption-declaration",
+  "quote": "",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 14,
+  "source": "docs/aims/adoption-declaration.md:91",
+  "summary": "基本的にどの repo でも aim を使いたいが、user scope に載せると aim を使っていない repo（共同開発の場ではなおさら）に向くこと自体へ大きな抵抗が掛かる"
+}

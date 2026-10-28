@@ -1,0 +1,5 @@
+{
+  "label": "面からの書き戻し",
+  "note": "面が frontmatter をどう書き換え、何を書かずに止まるか。",
+  "origin": "agent"
+}

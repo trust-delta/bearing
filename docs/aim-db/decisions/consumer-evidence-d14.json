@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-09-15",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "consumer-evidence",
+  "quote": "版をあげて暫く（恐らく該当 aim をもう一度見るまで）経ってもスルーされるかどうか",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 14,
+  "source": "docs/aims/consumer-evidence.md:123",
+  "summary": "版を上げた後、該当 aim をもう一度見るまでの間にスルーされるかを観察の票とする。"
+}

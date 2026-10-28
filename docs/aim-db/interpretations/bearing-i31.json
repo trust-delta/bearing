@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-d40"
+  ],
+  "category": "record-practice",
+  "feature": "make-writing",
+  "node": "bearing",
+  "seq": 31,
+  "source": "docs/aims/bearing.md:39 docs/aims/bearing.md:59 docs/aims/bearing.md:197 docs/aims/bearing.md:260",
+  "status": "current",
+  "text": "観測には日付と確信の階級（実測・先方・型・読み・未）を付け、取り下げた主張は書き換えずに追記で訂正し、依拠していた観測が落ちたときは連鎖して取り下げる。判断待ちは # ESCALATION に置き、# OBSERVATION は人間が何を見れば満たされたと言えるかだけの欄として使う。"
+}

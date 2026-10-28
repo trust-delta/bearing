@@ -1,0 +1,14 @@
+{
+  "category": "surface-bounds",
+  "date": "2026-10-27",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "surface-parity",
+  "quote": "残しておいてみましょう　modで何ができるか不透明でaimの情報が見れるかどうかも今後のaimの動向を左右します",
+  "recordedAt": "2026-10-27T16:44:47.807Z",
+  "recordedBy": "agent",
+  "seq": 4,
+  "source": "docs/aims/surface-parity.md:40",
+  "summary": "mod という器で上界を引き直すかの escalation を開いたまま残し、mod で aim が見えるかを木全体の行き先の材料とする。"
+}
