@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-x08"
+  ],
+  "category": "drift-mechanics",
+  "feature": "output-drift",
+  "node": "bearing",
+  "seq": 38,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "記録を持つ repo（試行）では、facts と corpus の差分の通知で剥離の候補を引かない。fence は消さずに「stopped」と述べる —— 消せば、読む側が「候補なし」と取り違える。記録を持たない repo の挙動は変えない。"
+}

@@ -1,4 +1,8 @@
 {
+  "answeredBy": [
+    "bearing-x07",
+    "bearing-x03"
+  ],
   "date": "2026-09-13",
   "feature": "make-writing",
   "node": "aim-tree",
@@ -11,6 +15,6 @@
   "recordedBy": "agent",
   "seq": 3,
   "source": "docs/aims/aim-tree.md:79",
-  "status": "open",
+  "status": "answered",
   "text": "`# IS` が長すぎて判断の文脈として読めない。先頭の 1〜2 段落を「判断に要る現状」にすることを書き方の法で求めるか。求めるなら、既存の node にもさかのぼって当てはめるか。"
 }

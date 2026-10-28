@@ -117,7 +117,8 @@ async function historyFences(repo) {
   const [drift, unpushed, aimCode] = await Promise.all([
     gatherDrift(repo.root, dir),
     gatherUnpushed(repo.root, repo.slugs, dir),
-    gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
+    // ⚠ 試行の repo では回さない（`bin/aim-facts.mjs` と同じ。人間の決定 2026-10-29、`bearing-x08`）。
+    repo.trial ? null : gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
   ])
   const blocks = []
   if (drift === null) {
@@ -137,7 +138,7 @@ async function historyFences(repo) {
     )
   }
   blocks.push(renderUnpushedFence(unpushed).trimEnd())
-  blocks.push(renderAimCodeFence(aimCode).trimEnd())
+  blocks.push(renderAimCodeFence(aimCode, { stopped: Boolean(repo.trial) }).trimEnd())
   return blocks
 }
 

@@ -216,6 +216,16 @@ test('fence は測れなかったことを「剥離が無い」へ畳まない',
   assert.doesNotMatch(out, /# none/)
 })
 
+test('止めた repo（試行）でも fence は出し、止めたことを述べる —— 候補なしへ畳まない（人間の決定 2026-10-29）', () => {
+  const items = [{ slug: 'alpha', digest: 'abc123abc123', code: 1, moved: ['a'], commitsSince: 1 }]
+  const out = renderAimCodeFence(items, { stopped: true })
+  assert.match(out, new RegExp('^```' + AIM_CODE_FENCE_TAG, 'm'))
+  assert.match(out, /# stopped/)
+  assert.doesNotMatch(out, /# none/)
+  assert.doesNotMatch(out, /^alpha \|/m, '止めたのに候補を出した')
+  assert.doesNotMatch(out, new RegExp(AIM_CODE_BY_PATH_FENCE_TAG))
+})
+
 test('fence は出す列に sha を置かない —— 写させる値は digest だけ', () => {
   const out = renderAimCodeFence([
     { slug: 'alpha', digest: 'abc123abc123', code: 9, moved: ['a', 'b', 'c', 'd', 'e', 'f'], commitsSince: 3 },

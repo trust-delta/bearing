@@ -1,4 +1,8 @@
 {
+  "answeredBy": [
+    "bearing-x07",
+    "bearing-x05"
+  ],
   "date": "2026-10-27",
   "feature": "output-surface",
   "node": "surface-parity",
@@ -8,6 +12,6 @@
   "recordedBy": "agent",
   "seq": 2,
   "source": "docs/aims/surface-parity.md:47",
-  "status": "open",
+  "status": "answered",
   "text": "Artifact を aim の面にした試作（2026-10-27 に非公開で publish）を評価してほしい。エージェントが publish したときだけ更新され、常には表示されない。この形でよいか。"
 }
