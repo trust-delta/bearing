@@ -48,11 +48,35 @@ const SKIP = new Set([
   '.venv', 'venv', '__pycache__', '.next', '.turbo', '.cache',
 ])
 
-async function isDir(p) {
+/**
+ * その dir が git の作業ツリーの根か —— `.git` が directory か、git が書いた `gitdir:` file か。
+ *
+ * 🔴 **directory だけを見ていた間、worktree が repo として見えなかった。** worktree と
+ * submodule の `.git` は、本体の帳簿を指す 1 行の file である ∴ 作業窓が会話ごとに worktree
+ * を切る形（hub の `work-window` の `--spawn worktree`）では、**すべての会話で corpus を
+ * 見失い**、facts は「git repository が無い」と述べていた（実測 2026-10-28、作業窓へ立てた
+ * 会話の SessionStart。使い捨て repo での再現は 2026-10-27、`docs/aims/aim-tree.md`）。
+ *
+ * ⚠ **file なら何でも認めはしない** —— 先頭が `gitdir:` のものだけである。`.git` という名の
+ * 無関係な file を repo と読めば、その下の walk を誤って刈る。
+ *
+ * @param {string} dir
+ * @returns {Promise<boolean>}
+ */
+export async function isGitRoot(dir) {
+  const marker = path.join(dir, '.git')
+  let st
   try {
-    return (await stat(p)).isDirectory()
+    st = await stat(marker)
   } catch {
     return false
+  }
+  if (st.isDirectory()) return true
+  if (!st.isFile()) return false
+  try {
+    return (await readFile(marker, 'utf8')).startsWith('gitdir:')
+  } catch {
+    return false // 読めない marker は、repo だと主張する根拠にならない。
   }
 }
 
@@ -166,7 +190,7 @@ export async function resolveUnit(cwd) {
         truncated = 'count'
         break
       }
-      if (await isDir(path.join(dir, '.git'))) {
+      if (await isGitRoot(dir)) {
         // 当たり。刈る: この下に在るものは何であれ*この* repo に属する。
         found.push(dir)
         continue
