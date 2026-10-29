@@ -1,0 +1,14 @@
+{
+  "category": "surface-reach",
+  "date": "2026-10-29",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "これで目的の維持とズレの検知は一応保てたとしましょう",
+  "recordedAt": "2026-10-29T06:19:25.811Z",
+  "recordedBy": "agent",
+  "seq": 57,
+  "source": "会話 2026-10-29",
+  "summary": "Desktop を主経路にしたあとも、目的の保持とズレの検知は、aim-db の記録・頼めば出すページ・会話の冒頭と区切りでエージェントが伝える 1 行によって、ひとまず保てたと人間が判断した。"
+}

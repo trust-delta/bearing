@@ -136,6 +136,8 @@ test('git worktree add で作った作業ツリーは repo であり、その co
   assert.equal(u.repos[0].primary, true)
   assert.equal(u.repos[0].aimsDir, 'docs/aims')
   assert.equal(u.truncated, null, '見つからずに下へ降り続けている')
+  // ⚠ 名は本体の repo の名である —— 作業ツリーの dir 名（会話ごとに違う）ではない（実測 2026-10-29）。
+  assert.equal(u.repos[0].label, 'main')
 })
 
 test('gitdir: で始まる .git file は repo の印であり、その下は刈る', async (t) => {

@@ -22,3 +22,9 @@ node_modules/
 # （人間の決定 2026-09-04）。repo 共通の初期注入プロンプトは共有されるべきもので、
 # 個人の上書きだけがここへ来る。
 CLAUDE.local.md
+
+# ⚠ hub の作業窓（`claude remote-control --spawn worktree`）は、会話ごとに `.claude/worktrees/<名>` へ
+# worktree を切る —— 上の段落が言う「harness が持ち込んだ machine-local なもの」である。閉じ忘れて
+# いたため、2026-10-29 に `git add -A` が試験の会話の worktree を gitlink として commit した
+# （push 後、merge 前に気づいて外した）。
+.claude/worktrees/
