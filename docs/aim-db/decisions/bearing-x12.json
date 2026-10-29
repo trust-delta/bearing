@@ -1,0 +1,14 @@
+{
+  "category": "surface-reach",
+  "date": "2026-10-29",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "認識",
+  "node": "bearing",
+  "quote": "目的の維持・ズレの検知ですが、aim-dbとしてArtifactを通し、statuslineの変わりとして機能しかけている段階という認識です（リアルタイム性は劣るが、そもそもリアルタイムに見る必要があったかというと不明瞭な問いになります）",
+  "recordedAt": "2026-10-29T05:44:25.362Z",
+  "recordedBy": "agent",
+  "seq": 55,
+  "source": "会話 2026-10-29",
+  "summary": "人間の認識: 目的の保持とズレの検知を人間に見せる面は、statusline から、aim-db を写した Artifact のページへ移りかけている。即時性は劣るが、即時に見る必要があったかは分からない。"
+}

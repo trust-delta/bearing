@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-29",
+  "feature": "whole-env",
+  "node": "bearing",
+  "note": "2026-10-29 に本機で試しかけた。Desktop の設定画面の folder 指定からは、同じ機の WSL の folder が見えなかった（人間の観測）。作業機の hub は WSL の中で `claude remote-control --spawn worktree` を走らせる形なので、この観測は作業機の形には当たらない見込み（docs の読みであって実測ではない）。人間は作業機に戻ってから試すと決め、project はいったん畳んだ。",
+  "options": [
+    "Projects に乗る —— 束ね役（会話・thread の一覧・指示文）は Projects、実行は作業機の作業窓（Work locally）",
+    "作業機に project のようなものを自作する案を続ける"
+  ],
+  "recordedAt": "2026-10-29T05:40:13.523Z",
+  "recordedBy": "agent",
+  "seq": 4,
+  "source": "会話 2026-10-29",
+  "status": "open",
+  "text": "作業機で Projects の「thread を自分の computer で走らせる」（Work locally）を試し、bearing の hook が thread に届くか・カードと worktree の扱いを見たうえで、どちらに乗るかを決めてほしい（bearing-x11）。"
+}
