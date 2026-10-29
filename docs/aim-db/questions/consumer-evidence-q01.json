@@ -1,4 +1,8 @@
 {
+  "answeredBy": [
+    "bearing-x07",
+    "bearing-x03"
+  ],
   "date": "2026-09-23",
   "feature": "record-corpus",
   "node": "consumer-evidence",
@@ -12,6 +16,6 @@
   "recordedBy": "agent",
   "seq": 1,
   "source": "docs/aims/consumer-evidence.md:108",
-  "status": "open",
+  "status": "answered",
   "text": "aim の保守（本文に残った作業・問い・古い言及を洗い出すこと）を、bearing が配る手順として持つか。3 つの候補から選んでほしい。"
 }

@@ -1,4 +1,8 @@
 {
+  "answeredBy": [
+    "bearing-x07",
+    "bearing-x08"
+  ],
   "date": "2026-09-19",
   "feature": "output-drift",
   "node": "purpose-drift",
@@ -13,6 +17,6 @@
   "recordedBy": "agent",
   "seq": 1,
   "source": "docs/aims/purpose-drift.md:39",
-  "status": "open",
+  "status": "answered",
   "text": "`aim-code-stale` の承認（`検証: @digest`）が、置いてから 9 日経ってもこの repo に 1 件も無く、消費者も書くのをやめた。この 0 をどう読み、どう扱うかを決めてほしい。"
 }

@@ -243,13 +243,28 @@ export function prNumbers(body) {
 /** 一覧に出す path の上限。⚠ **超えた分は数で述べる —— 黙って落とさない。** */
 const SHOW = 4
 
-export function renderAimCodeFence(items) {
+/**
+ * @param {Array|null} items
+ * @param {{stopped?: boolean}} [opts] `stopped` —— 記録を `docs/aim-db/` に一本化した repo（試行）。
+ *   ⚠ **本文は凍結した ∴ `[done]` mark から引く join は、もう何も新しく結ばない**（人間の決定
+ *   2026-10-29: 機構では回さず、気になったときに人間が確かめを頼む）。⚠ **fence そのものは出す** ——
+ *   黙って消せば、消費者は「候補なし」と読む。
+ */
+export function renderAimCodeFence(items, { stopped = false } = {}) {
   // ⚠ **出す列に sha を置かない。** 🔴 **今日それを写させた設計が壊れた**（照合の commit sha）
   // ∴ **写すべき値は digest だけである。**
   const lines = [
     '```' + AIM_CODE_FENCE_TAG,
     '# fields: slug | code_digest | moved_paths | commits_since',
   ]
+  if (stopped) {
+    lines.push(
+      '# stopped — 記録を docs/aim-db/ に一本化した repo（試行）では、この検知を止めている',
+      '# ⚠ 剥離が無いとは読めない。目的と code のズレは、人間が気になったときに確かめを頼む',
+    )
+    lines.push('```', '')
+    return lines.join('\n') + '\n'
+  }
   if (items === null) {
     lines.push('# unavailable — git 履歴を読めなかった ∴ 剥離が無いとは読めない')
   } else if (items.length === 0) {

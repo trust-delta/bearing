@@ -139,14 +139,17 @@ async function repoFacts(repo) {
     return { ...repo, head, slugs, corpus: false, aimDb }
   }
   const graph = await readAimGraph(repo.root, dir)
+  // ⚠ **記録を持つ repo（試行）では、剥離の検知を回さない**（人間の決定 2026-10-29、`bearing-x08`）——
+  // 本文の `[done]` mark は凍結した ∴ 引いても意味を失った候補が増えるだけである。
+  const aimCodeStopped = Boolean(aimDb?.present)
   const [drift, working, unpushed, aimCode] = await Promise.all([
     gatherDrift(repo.root, dir),
     gatherWorkingDelta(repo.root, slugs, dir),
     gatherUnpushed(repo.root, slugs, dir),
-    gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
+    aimCodeStopped ? null : gatherAimCodeStale(repo.root, graph?.nodes ?? new Map(), dir),
   ])
   const backlog = await gatherBacklog(repo.root, dir)
-  return { ...repo, head, slugs, corpus: true, drift, working, unpushed, aimCode, backlog, aimDb }
+  return { ...repo, head, slugs, corpus: true, drift, working, unpushed, aimCode, aimCodeStopped, backlog, aimDb }
 }
 
 /** 人間の決定と解釈の記録を、要約として述べる。記録の無い repo では何も言わない。 */
@@ -187,7 +190,7 @@ function renderRepo(r) {
   }
   say(renderWorkingDeltaFence(r.working).trimEnd(), '')
   say(renderUnpushedFence(r.unpushed).trimEnd(), '')
-  say(renderAimCodeFence(r.aimCode).trimEnd(), '')
+  say(renderAimCodeFence(r.aimCode, { stopped: r.aimCodeStopped }).trimEnd(), '')
   sayAimDb(r)
 }
 

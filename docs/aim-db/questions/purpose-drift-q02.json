@@ -1,4 +1,8 @@
 {
+  "answeredBy": [
+    "bearing-x07",
+    "bearing-x08"
+  ],
   "date": null,
   "feature": "output-drift",
   "node": "purpose-drift",
@@ -11,6 +15,6 @@
   "recordedBy": "agent",
   "seq": 2,
   "source": "docs/aims/purpose-drift.md:41",
-  "status": "open",
+  "status": "answered",
   "text": "承認の粒度を node 単位から file 単位（`検証: <path> @ <blob>`）に細かくするか、何もしないか。"
 }

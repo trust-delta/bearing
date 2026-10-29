@@ -1,0 +1,14 @@
+{
+  "category": "drift-mechanics",
+  "date": "2026-10-29",
+  "feature": "output-drift",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "目的とコードの剥離検知ですが、機構ではなく(いずれにしてもエージェントのコード操作が必要なので)気になった時に操作を依頼するという形で当面停めてみましょう",
+  "recordedAt": "2026-10-28T23:20:31.912Z",
+  "recordedBy": "agent",
+  "seq": 51,
+  "source": "会話 2026-10-29",
+  "summary": "目的と code の剥離の検知（aim-code-stale）は、当面は機構で回さない。確かめるにはどのみちエージェントの code 操作が要る ∴ 人間が気になったときに依頼する。"
+}

@@ -1,4 +1,8 @@
 {
+  "answeredBy": [
+    "bearing-x07",
+    "bearing-x08"
+  ],
   "date": "2026-09-19",
   "feature": "output-drift",
   "node": "purpose-drift",
@@ -12,6 +16,6 @@
   "recordedBy": "agent",
   "seq": 3,
   "source": "docs/aims/purpose-drift.md:43",
-  "status": "open",
+  "status": "answered",
   "text": "`setup-aim` を打つと `CLAUDE.md` などが動いて `検証:` がまとめて失効する。2026-09-19 の「害は潰せている」という読みを「手を打たない」という決定として閉じるか、`sha=` を使って版番号だけの変更を区別する候補を採るか。"
 }
