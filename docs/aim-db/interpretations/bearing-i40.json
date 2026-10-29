@@ -1,0 +1,10 @@
+{
+  "basis": [],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "bearing",
+  "seq": 40,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "ページは全 node の記録を 1 枚に載せ、根の node 以外には node 名を添える。上に開いた問いを置き、決定と解釈は新しい順に並べる。撤回した目的の解釈は、置き換えられた解釈と一緒にたたむ。"
+}

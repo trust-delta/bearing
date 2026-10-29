@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-10-29",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "Aでいきましょう 作ってみて",
+  "recordedAt": "2026-10-29T03:14:12.927Z",
+  "recordedBy": "agent",
+  "seq": 52,
+  "source": "会話 2026-10-29",
+  "summary": "人間が aim を見たいと言ったら、エージェントが repo の docs/aim-db/ から静的なページを作り、同じ URL へ出し直す（A 案）。DB へ流してページが読む形（B 案）は採らない。"
+}
