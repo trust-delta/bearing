@@ -376,23 +376,23 @@ function composeHook(cwd) {
   return r.stdout
 }
 
-test('記録を持つ repo では、SessionStart の hook が人間に向けた 1 行を systemMessage で出す（試行 2026-10-29）', async () => {
+test('記録を持つ repo では、facts が人間に伝える 1 行を渡し、伝えよと課す（試行 2026-10-29）', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
   const root = path.join(dir, 'proj')
   await mkdir(root, { recursive: true })
   await corpusRepo(root, ['alpha'])
-  // 陽性対照: 記録が無い間は、今までどおり素の stdout である。
-  assert.match(composeHook(root), /^# aim frame/)
+  // 陽性対照: 記録が無い間は、伝える 1 行は無い。
+  assert.doesNotMatch(composeHook(root), /人間に伝えること/)
   const db = path.join(root, 'docs', 'aim-db')
   await mkdir(path.join(db, 'nodes'), { recursive: true })
   await mkdir(path.join(db, 'questions'), { recursive: true })
   await writeFile(path.join(db, 'nodes', 'alpha.json'), JSON.stringify({ aim: 'x', state: 'open' }))
   await writeFile(path.join(db, 'questions', 'alpha-q01.json'), JSON.stringify({ node: 'alpha', text: 'q', status: 'open' }))
-  const out = JSON.parse(composeHook(root))
-  assert.match(out.systemMessage, /人間の判断を待っている問い 1 件/)
-  assert.equal(out.hookSpecificOutput.hookEventName, 'SessionStart')
-  assert.match(out.hookSpecificOutput.additionalContext, /# aim frame/, 'エージェントへの facts が落ちた')
-  // ⚠ `/bearing:facts` から呼ばれたとき（hook でない）は包まない —— 会話に JSON が出てしまう。
-  assert.match(compose(root), /^# aim frame/)
+  const out = composeHook(root)
+  // ⚠ **hook の出力は素の stdout のまま** —— `systemMessage` は Desktop に表示されなかった（人間の観測
+  // 2026-10-29）∴ JSON で包まず、エージェントへ渡す。
+  assert.match(out, /^# aim frame/)
+  assert.match(out, /最初の返答で、次の 1 行をそのまま人間に伝えること/)
+  assert.match(out, /> aim（proj）: 人間の判断を待っている問い 1 件/)
   await rm(dir, { recursive: true, force: true })
 })

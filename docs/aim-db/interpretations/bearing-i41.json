@@ -8,6 +8,6 @@
   "node": "bearing",
   "seq": 41,
   "source": "会話 2026-10-29",
-  "status": "current",
+  "status": "superseded",
   "text": "記録を持つ repo では、SessionStart の hook が「開いた問いの件数・決定の件数と最新の決定」の 1 行を systemMessage で出す。作業中は、HEAD か corpus が動いたあとで 1 行が前に見せたものと違うときだけ、PostToolBatch の hook が言い直す。崩れた記録では件数を出さず、崩れていると言う。`/bearing:facts` から呼ばれたときは包まない。"
 }

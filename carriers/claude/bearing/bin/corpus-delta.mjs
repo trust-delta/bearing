@@ -188,7 +188,7 @@ try {
 
   const facts = factsDigest(repos)
 
-  // 人間に向けた 1 行（試行 2026-10-29、`bearing-x13`）。⚠ **前に見せた 1 行と違うときだけ言う** ——
+  // 人間に向けた 1 行（試行 2026-10-29、`bearing-x13`）。⚠ **前に伝えた 1 行と違うときだけ渡す** ——
   // 毎回言えば壁になる。ここへ来るのは HEAD か corpus が動いたときだけ ∴ 記録を読む費用もそのときだけ払う。
   const shown = (await Promise.all(repos.filter((r) => r.trial).map((r) => readHumanLine(r.root, { label: r.label }).catch(() => null))))
     .filter(Boolean).join('\n')
@@ -220,16 +220,25 @@ try {
     m.blocks = await historyFences(repos.find((r) => r.label === m.label))
   }
 
-  // ⚠ 事実が動かず 1 行だけが変わったなら、エージェントへは何も言い直さない。
-  const body = quiet ? '' : renderCorpusDelta({ repos, moved, hadBaseline: Boolean(prev) })
+  // ⚠ 事実が動かず 1 行だけが変わったなら、facts は言い直さず、1 行だけを渡す。
+  // ⚠ **渡し先はエージェントである** —— hook の `systemMessage` は Desktop に表示されなかった（人間の観測
+  // 2026-10-29）∴ 人間へ届くのは、エージェントが会話で言ったときだけである。
+  const relay = tellHuman ? `🔴 **aim の記録が動いた。次の返答で、この 1 行をそのまま人間に伝えること:**\n\n> ${shown.split('\n').join('\n> ')}` : ''
+  const body = [relay, quiet ? '' : renderCorpusDelta({ repos, moved, hadBaseline: Boolean(prev) })].filter(Boolean).join('\n\n')
 
   mkdirSync(path.dirname(file), { recursive: true })
   writeFileSync(file, JSON.stringify({ sig, heads, facts, shown: tellHuman ? shown : (prev?.shown ?? '') }), 'utf8')
 
-  const output = {}
-  if (tellHuman) output.systemMessage = `aim の記録が動いた —— ${shown}`
-  if (body) output.hookSpecificOutput = { hookEventName: 'PostToolBatch', additionalContext: body }
-  if (Object.keys(output).length) process.stdout.write(JSON.stringify(output) + '\n')
+  if (body) {
+    process.stdout.write(
+      JSON.stringify({
+        hookSpecificOutput: {
+          hookEventName: 'PostToolBatch',
+          additionalContext: body,
+        },
+      }) + '\n',
+    )
+  }
 } catch (err) {
   // ⚠ この hook の bug で turn を妨げることは決してしない。ここでの exit 2 は agentic loop
   // を丸ごと止めることになり、更新が 1 回落ちるより遥かに悪い。

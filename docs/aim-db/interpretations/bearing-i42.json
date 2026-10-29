@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-x12",
+    "bearing-x13"
+  ],
+  "category": "surface-reach",
+  "feature": "output-surface",
+  "node": "bearing",
+  "seq": 42,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "hook の systemMessage は Desktop に表示されなかった（人間の観測 2026-10-29。この会話の commit 967f34e の直後に PostToolBatch の hook が 1 行を出したことは delta の state で確かめたが、人間には「出ていません」）。∴ 渡し先をエージェントにする: SessionStart の facts と、記録が動いたあとの PostToolBatch の context に「この 1 行をそのまま人間に伝えること」と載せ、CLAUDE.md の試行の節でそれを課す。bearing-i41 を置き換える。SessionStart の systemMessage は別に測っていない。"
+}

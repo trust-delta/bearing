@@ -351,25 +351,30 @@ async function withAimDb(repo) {
   git(repo, ['commit', '-qm', 'aim-db'])
   return db
 }
-const said = (r) => (r.stdout.trim() ? JSON.parse(r.stdout).systemMessage ?? null : null)
+/** エージェントへ「人間に伝えよ」と渡された 1 行。渡されなければ null。 */
+const said = (r) => {
+  const body = context(r)
+  const m = body?.match(/人間に伝えること:\*\*\n\n> (.*)/)
+  return m ? m[1] : null
+}
 
-test('記録を持つ repo では、決定が足された commit の後に、人間へ 1 行で言う —— 変わらなければ黙る', async () => {
+test('記録を持つ repo では、決定が足された commit の後に、人間へ伝える 1 行を渡す —— 変わらなければ渡さない', async () => {
   const u = await unit()
   const db = await withAimDb(u.repo)
   const session = freshSession()
   try {
     run({ session_id: session, cwd: u.root })
-    // 記録に触れない commit では、1 行は変わらない ∴ 言わない。
+    // 記録に触れない commit では、1 行は変わらない ∴ 渡さない。
     await writeFile(path.join(u.repo, 'src.txt'), 'code\n')
     git(u.repo, ['add', '-A'])
     git(u.repo, ['commit', '-qm', 'unrelated'])
     assert.equal(said(run({ session_id: session, cwd: u.root })), null)
-    // 決定を足して commit すれば、言う。
+    // 決定を足して commit すれば、渡す。
     await writeFile(path.join(db, 'decisions', 'alpha-d02.json'), JSON.stringify({ node: 'alpha', form: 'verbatim', quote: '二', summary: 's', date: '2026-10-29' }))
     git(u.repo, ['add', '-A'])
     git(u.repo, ['commit', '-qm', 'decision'])
-    assert.match(said(run({ session_id: session, cwd: u.root })) ?? '', /aim の記録が動いた —— aim（repo）: .*決定 2 件（最新 alpha-d02・2026-10-29）/)
-    // 同じ 1 行を二度は言わない。
+    assert.match(said(run({ session_id: session, cwd: u.root })) ?? '', /^aim（repo）: .*決定 2 件（最新 alpha-d02・2026-10-29）/)
+    // 同じ 1 行を二度は渡さない。
     assert.equal(said(run({ session_id: session, cwd: u.root })), null)
   } finally {
     await rm(u.root, { recursive: true, force: true })

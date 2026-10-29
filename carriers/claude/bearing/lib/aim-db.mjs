@@ -237,10 +237,11 @@ export function renderAimDbSection(summary, { dir = DEFAULT_AIM_DB_DIR, problems
 }
 
 /**
- * 人間に向けた 1 行 —— hook の `systemMessage`（エージェントではなく人間に見せる欄）へ載せる。
+ * 人間に向けた 1 行 —— hook がエージェントへ渡し、エージェントが会話でそのまま人間に伝える。
  *
  * ⚠ **statusline の代わりである**（人間の決定 2026-10-29、`bearing-x13`）—— 主経路の Desktop には
  * statusline が届かない ∴ 数はエージェントの context にだけ在り、人間は頼まなければ見えなかった。
+ * ⚠ hook の `systemMessage` で人間へ直接見せる案は、Desktop に表示されなかった（人間の観測 2026-10-29）。
  * ⚠ **件数と最新の決定だけを載せる** —— 中身は会話かページ（Artifact）で見る。1 行を超えれば、
  * 毎回読まれる面ではなくなる。
  */

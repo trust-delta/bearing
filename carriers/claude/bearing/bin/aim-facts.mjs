@@ -156,6 +156,11 @@ async function repoFacts(repo) {
 function sayAimDb(r) {
   if (!r.aimDb?.present) return
   say('#### 人間の決定とエージェントの解釈（`docs/aim-db/`）', '')
+  // ⚠ **人間はこの context を見ない** ∴ 件数は、エージェントが会話で言わなければ人間に届かない（試行
+  // 2026-10-29、`bearing-x13`）。hook の `systemMessage` で直接見せる案は、Desktop に表示されなかった
+  // （人間の観測 2026-10-29、PostToolBatch で測った）∴ 渡し先をエージェントにして、伝えることを法で課す。
+  say(`🔴 **最初の返答で、次の 1 行をそのまま人間に伝えること**（中身は「aim を見たい」と頼まれたら、記録を写したページを出す）:`, '',
+      `> ${humanLineOf(r.aimDb, { label: r.label })}`, '')
   say(renderAimDbSection(summarizeStore(r.aimDb.store), {
     problems: validateStore(r.aimDb.store),
     unreadable: r.aimDb.unreadable,
@@ -465,7 +470,7 @@ async function main(input) {
   // ⚠ **canon の在否はもう述べない**（人間の決定 2026-09-05）。aim skill は `setup-aim` が
   // `.claude/skills/aim/` へ置き、置いた後はその repo のものである —— 在るか、直されたか、
   // 消されたかは repo の policy であって、hook が毎セッション検める対象ではない。
-  // 人間に向けた 1 行（`systemMessage`）。記録を持つ repo だけが出す（試行 2026-10-29、`bearing-x13`）。
+  // 人間に向けた 1 行。delta の hook が「前に伝えたものと違うか」を比べるために、baseline へ播く。
   const human = repos.map((r) => humanLineOf(r.aimDb, { label: r.label })).filter(Boolean)
   return { unit, repos: withCorpus, human }
 }
@@ -522,11 +527,6 @@ async function seedDeltaBaseline(unit, sessionId, repos, shown = '') {
   }
 }
 
-/** セッション開始時に人間へ見せる文。⚠ 一覧の在り処を 1 行だけ添える —— 数だけでは次の手が無い。 */
-function humanMessage(lines) {
-  return [...lines, '（中身は「aim を見たい」と頼めば、記録を写したページを出す）'].join('\n')
-}
-
 const hookInput = readHookInput()
 
 let composed = null
@@ -537,20 +537,7 @@ try {
   composed = await main(await hookInput)
   // ⚠ **空なら 1 byte も書かない。** 裸の改行 1 つでも、それは「aim を採っていない
   // project では黙る」を破っている —— 黙るとは、出力が短いことではない。
-  if (out.length > 0) {
-    const text = out.join('\n') + '\n'
-    // ⚠ **人間に向けた 1 行は、hook として呼ばれたときだけ JSON で包む** —— `/bearing:facts` から
-    // 呼ばれたときの stdout は会話にそのまま出る ∴ 包めば JSON が見える。⚠ 記録を持たない repo
-    // では今までどおり素の stdout である（context に入る中身は同じ。上限 10,000 字も同じ）。
-    if ((await hookInput).hook_event_name === 'SessionStart' && composed?.human?.length) {
-      process.stdout.write(JSON.stringify({
-        systemMessage: humanMessage(composed.human),
-        hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: text },
-      }) + '\n')
-    } else {
-      process.stdout.write(text)
-    }
-  }
+  if (out.length > 0) process.stdout.write(out.join('\n') + '\n')
 } catch (err) {
   // 規則 1。ここで何が起きようと、セッションは開始しなければならない。
   //
