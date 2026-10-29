@@ -81,6 +81,25 @@ export async function isGitRoot(dir) {
 }
 
 /**
+ * repo の表示名。⚠ **worktree では、作業ツリーの dir 名ではなく本体の repo の名を返す。**
+ *
+ * hub の作業窓は会話ごとに `.claude/worktrees/<session>` を切る ∴ dir 名で名乗れば、同じ repo が
+ * 会話ごとに別の名で出る（実測 2026-10-29: 人間に伝える aim の 1 行が `aim（bridge-cse_…）` と
+ * 名乗った）。`.git` file の `gitdir:` は本体の `.git/worktrees/<名>` を指す ∴ そこから本体を引く。
+ * ⚠ 形が読めなければ dir 名へ戻る —— 名は表示のためだけで、誤っても事実は変わらない。
+ */
+export async function repoLabel(dir) {
+  try {
+    const marker = (await readFile(path.join(dir, '.git'), 'utf8')).trim()
+    const m = marker.match(/^gitdir:\s*(.*)[\\/]\.git[\\/]worktrees[\\/][^\\/]+$/)
+    if (m) return path.basename(m[1])
+  } catch {
+    // `.git` が directory（通常の clone）か、読めない。
+  }
+  return path.basename(dir)
+}
+
+/**
  * その dir の `CLAUDE.md` が宣言している corpus の在り処。
  *
  * ⚠ **読めない file は「宣言が無い」である** —— そこに在ったかもしれない宣言を我々は
@@ -227,11 +246,11 @@ export async function resolveUnit(cwd) {
 
   const repos = await resolveAimsDirs(
     root,
-    found.map((r, i) => ({
+    await Promise.all(found.map(async (r, i) => ({
       root: r,
-      label: path.basename(r),
+      label: await repoLabel(r),
       primary: i === primaryIdx,
-    })),
+    }))),
   )
   // primary を先頭に。残りは発見順を保つ。
   repos.sort((a, b) => (a.primary === b.primary ? 0 : a.primary ? -1 : 1))
