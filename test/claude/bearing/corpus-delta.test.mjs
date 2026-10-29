@@ -338,3 +338,45 @@ test('記録を docs/aim-db/ に一本化した repo（trial）は、本文か�
   assert.doesNotMatch(trial, /\*\*escalation:/)
   assert.match(trial, /new は記録を `docs\/aim-db\/` に一本化している（試行）/)
 })
+
+// ── 人間に向けた 1 行（試行 2026-10-29、`bearing-x13`）────────────────────────────
+
+async function withAimDb(repo) {
+  const db = path.join(repo, 'docs', 'aim-db')
+  await mkdir(path.join(db, 'nodes'), { recursive: true })
+  await mkdir(path.join(db, 'decisions'), { recursive: true })
+  await writeFile(path.join(db, 'nodes', 'alpha.json'), JSON.stringify({ aim: 'alpha', state: 'open' }))
+  await writeFile(path.join(db, 'decisions', 'alpha-d01.json'), JSON.stringify({ node: 'alpha', form: 'verbatim', quote: '一', summary: 's', date: '2026-10-28' }))
+  git(repo, ['add', '-A'])
+  git(repo, ['commit', '-qm', 'aim-db'])
+  return db
+}
+/** エージェントへ「人間に伝えよ」と渡された 1 行。渡されなければ null。 */
+const said = (r) => {
+  const body = context(r)
+  const m = body?.match(/人間に伝えること:\*\*\n\n> (.*)/)
+  return m ? m[1] : null
+}
+
+test('記録を持つ repo では、決定が足された commit の後に、人間へ伝える 1 行を渡す —— 変わらなければ渡さない', async () => {
+  const u = await unit()
+  const db = await withAimDb(u.repo)
+  const session = freshSession()
+  try {
+    run({ session_id: session, cwd: u.root })
+    // 記録に触れない commit では、1 行は変わらない ∴ 渡さない。
+    await writeFile(path.join(u.repo, 'src.txt'), 'code\n')
+    git(u.repo, ['add', '-A'])
+    git(u.repo, ['commit', '-qm', 'unrelated'])
+    assert.equal(said(run({ session_id: session, cwd: u.root })), null)
+    // 決定を足して commit すれば、渡す。
+    await writeFile(path.join(db, 'decisions', 'alpha-d02.json'), JSON.stringify({ node: 'alpha', form: 'verbatim', quote: '二', summary: 's', date: '2026-10-29' }))
+    git(u.repo, ['add', '-A'])
+    git(u.repo, ['commit', '-qm', 'decision'])
+    assert.match(said(run({ session_id: session, cwd: u.root })) ?? '', /^aim（repo）: .*決定 2 件（最新 alpha-d02・2026-10-29）/)
+    // 同じ 1 行を二度は渡さない。
+    assert.equal(said(run({ session_id: session, cwd: u.root })), null)
+  } finally {
+    await rm(u.root, { recursive: true, force: true })
+  }
+})

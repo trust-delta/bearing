@@ -58,6 +58,7 @@ import { readDeclaration, isEngaged } from '../lib/claude-md.mjs'
 import { corpusSignature, deltaStatePath, factsDigest } from '../lib/corpus-signature.mjs'
 import { renderCorpusDelta } from '../lib/corpus-delta.mjs'
 import { gatherAimCodeStale, renderAimCodeFence } from '../lib/aim-code.mjs'
+import { readHumanLine } from '../lib/aim-db.mjs'
 import { gatherDrift, renderInterFence, renderIntraFence } from '../lib/drift.mjs'
 import { runGit } from '../lib/git.mjs'
 import { gatherBacklog } from '../lib/process.mjs'
@@ -187,6 +188,12 @@ try {
 
   const facts = factsDigest(repos)
 
+  // 人間に向けた 1 行（試行 2026-10-29、`bearing-x13`）。⚠ **前に伝えた 1 行と違うときだけ渡す** ——
+  // 毎回言えば壁になる。ここへ来るのは HEAD か corpus が動いたときだけ ∴ 記録を読む費用もそのときだけ払う。
+  const shown = (await Promise.all(repos.filter((r) => r.trial).map((r) => readHumanLine(r.root, { label: r.label }).catch(() => null))))
+    .filter(Boolean).join('\n')
+  const tellHuman = shown !== '' && shown !== (prev?.shown ?? '')
+
   // ── 第 3 の門。第 2 の門が short-circuit する前に評価する ∴ たまたま変化していないよう
   //    に見える working tree のせいで commit が飲み込まれることが決して無い ────────
   const moved = []
@@ -201,10 +208,11 @@ try {
   }
 
   // ── Gate 2 ────────────────────────────────────────────────────────────────
-  if (prev && facts === prev.facts && moved.length === 0) {
+  const quiet = prev && facts === prev.facts && moved.length === 0
+  if (quiet && !tellHuman) {
     // byte は動いたが、その意味は動かなかった。新しい signature を記録し、次の batch が
     // ここを再び払わずに第 1 の門で止まるようにする。
-    writeFileSync(file, JSON.stringify({ sig, heads, facts }), 'utf8')
+    writeFileSync(file, JSON.stringify({ sig, heads, facts, shown: prev.shown ?? '' }), 'utf8')
     process.exit(0)
   }
 
@@ -212,10 +220,14 @@ try {
     m.blocks = await historyFences(repos.find((r) => r.label === m.label))
   }
 
-  const body = renderCorpusDelta({ repos, moved, hadBaseline: Boolean(prev) })
+  // ⚠ 事実が動かず 1 行だけが変わったなら、facts は言い直さず、1 行だけを渡す。
+  // ⚠ **渡し先はエージェントである** —— hook の `systemMessage` は Desktop に表示されなかった（人間の観測
+  // 2026-10-29）∴ 人間へ届くのは、エージェントが会話で言ったときだけである。
+  const relay = tellHuman ? `🔴 **aim の記録が動いた。次の返答で、この 1 行をそのまま人間に伝えること:**\n\n> ${shown.split('\n').join('\n> ')}` : ''
+  const body = [relay, quiet ? '' : renderCorpusDelta({ repos, moved, hadBaseline: Boolean(prev) })].filter(Boolean).join('\n\n')
 
   mkdirSync(path.dirname(file), { recursive: true })
-  writeFileSync(file, JSON.stringify({ sig, heads, facts }), 'utf8')
+  writeFileSync(file, JSON.stringify({ sig, heads, facts, shown: tellHuman ? shown : (prev?.shown ?? '') }), 'utf8')
 
   if (body) {
     process.stdout.write(

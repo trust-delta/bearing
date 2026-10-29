@@ -8,7 +8,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { mkdtempSync } from 'node:fs'
@@ -365,5 +365,34 @@ test('docs/aim-db/ を持つ repo では、本文から数える open-todo 等�
   assert.match(out, /記録を `docs\/aim-db\/` に一本化している（試行）/)
   // 目的と code の剥離の検知は止める（`bearing-x08`）—— fence は残し、止めたと述べる。
   assert.match(out, /bearing-aim-code-stale v1\n# fields: [^\n]*\n# stopped/)
+  await rm(dir, { recursive: true, force: true })
+})
+
+/** SessionStart の hook として composer を走らせ、stdout を返す。 */
+function composeHook(cwd) {
+  const r = spawnSync(process.execPath, [COMPOSER], {
+    cwd, encoding: 'utf8', input: JSON.stringify({ hook_event_name: 'SessionStart', session_id: `compose-${process.pid}-${Date.now()}`, cwd }),
+  })
+  return r.stdout
+}
+
+test('記録を持つ repo では、facts が人間に伝える 1 行を渡し、伝えよと課す（試行 2026-10-29）', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'aim-compose-'))
+  const root = path.join(dir, 'proj')
+  await mkdir(root, { recursive: true })
+  await corpusRepo(root, ['alpha'])
+  // 陽性対照: 記録が無い間は、伝える 1 行は無い。
+  assert.doesNotMatch(composeHook(root), /人間に伝えること/)
+  const db = path.join(root, 'docs', 'aim-db')
+  await mkdir(path.join(db, 'nodes'), { recursive: true })
+  await mkdir(path.join(db, 'questions'), { recursive: true })
+  await writeFile(path.join(db, 'nodes', 'alpha.json'), JSON.stringify({ aim: 'x', state: 'open' }))
+  await writeFile(path.join(db, 'questions', 'alpha-q01.json'), JSON.stringify({ node: 'alpha', text: 'q', status: 'open' }))
+  const out = composeHook(root)
+  // ⚠ **hook の出力は素の stdout のまま** —— `systemMessage` は Desktop に表示されなかった（人間の観測
+  // 2026-10-29）∴ JSON で包まず、エージェントへ渡す。
+  assert.match(out, /^# aim frame/)
+  assert.match(out, /最初の返答で、次の 1 行をそのまま人間に伝えること/)
+  assert.match(out, /> aim（proj）: 人間の判断を待っている問い 1 件/)
   await rm(dir, { recursive: true, force: true })
 })

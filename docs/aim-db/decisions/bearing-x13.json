@@ -1,0 +1,14 @@
+{
+  "category": "surface-reach",
+  "date": "2026-10-29",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "ではBから試してみましょう",
+  "recordedAt": "2026-10-29T06:00:05.952Z",
+  "recordedBy": "agent",
+  "seq": 56,
+  "source": "会話 2026-10-29",
+  "summary": "人間が頼まなくても aim の件数が見えるよう、hook の systemMessage（人間に見せる欄）で 1 行を出す案（B）を先に試す。Desktop に出なければ、法で「エージェントが言う」案（A）に移る。"
+}
