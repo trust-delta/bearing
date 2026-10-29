@@ -1,0 +1,233 @@
+<title>bearing の決定と解釈</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* layout: 上に判断待ちの問い、その下に二段の照合表 —— 左に人間が決めたこと（追記だけの記録）、右にエージェントの解釈。線で結ぶ代わりに、解釈が決定を名指す */
+:root {
+  --bg: #f3f5f6;
+  --panel: #ffffff;
+  --ink: #1b2a33;
+  --muted: #5d6f7a;
+  --rule: #d6dee3;
+  --human: #7a4a12;
+  --human-soft: #fbf1e3;
+  --agent: #1d6a86;
+  --agent-soft: #e2f0f5;
+  --free: #5b4a8a;
+  --free-soft: #ece8f6;
+  --ask: #9a3b2c;
+  --ask-soft: #fbeae6;
+  --f-quote: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --f-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11181d; --panel: #18222a; --ink: #e3eaee; --muted: #93a4ae; --rule: #2a3843;
+    --human: #e6b071; --human-soft: #33271a; --agent: #6cc0dd; --agent-soft: #173341;
+    --free: #b7a6ee; --free-soft: #272238; --ask: #f09a86; --ask-soft: #3a2420; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11181d; --panel: #18222a; --ink: #e3eaee; --muted: #93a4ae; --rule: #2a3843;
+  --human: #e6b071; --human-soft: #33271a; --agent: #6cc0dd; --agent-soft: #173341;
+  --free: #b7a6ee; --free-soft: #272238; --ask: #f09a86; --ask-soft: #3a2420; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); line-height: 1.7;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+code { font-family: var(--f-mono); font-size: .88em; }
+.wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: grid; gap: 10px; }
+h1 { font-family: var(--f-quote); font-size: 1.55rem; margin: 0; text-wrap: balance; }
+.aim { font-family: var(--f-quote); font-size: 1.15rem; margin: 0; max-width: 70ch; }
+.aim small { display: block; font-family: var(--f-body); font-size: .75rem; color: var(--muted); letter-spacing: .04em; }
+.snap { font-size: .78rem; color: var(--muted); margin: 0; }
+.snap code { color: var(--ink); }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.stat { border: 1px solid var(--rule); background: var(--panel); border-radius: 6px; padding: 6px 12px; font-size: .82rem; display: flex; gap: 8px; align-items: baseline; }
+.stat b { font-family: var(--f-mono); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.stat.human b { color: var(--human); } .stat.agent b { color: var(--agent); } .stat.free b { color: var(--free); } .stat.ask b { color: var(--ask); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: .8rem; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); border-radius: 99px; padding: 2px 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip:focus-visible, .basis:focus-visible, .feat:focus-visible { outline: 2px solid var(--agent); outline-offset: 2px; }
+.chip .origin { font-size: .7rem; opacity: .7; margin-left: 4px; }
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.frame { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px; display: grid; gap: 4px; align-content: start; }
+.frame h3 { margin: 0 0 2px; font-size: .72rem; letter-spacing: .1em; color: var(--muted); font-weight: 700; }
+.feat { font: inherit; text-align: left; background: none; border: 0; color: var(--ink); cursor: pointer; border-radius: 5px; padding: 3px 6px; display: flex; justify-content: space-between; gap: 8px; font-size: .86rem; }
+.feat:hover { background: var(--agent-soft); }
+.feat[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.feat .n { font-family: var(--f-mono); font-size: .75rem; opacity: .75; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.feat.zero { color: var(--muted); }
+.allbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .82rem; color: var(--muted); }
+.asks { display: grid; gap: 10px; }
+.asks > h2, .col > h2 { margin: 0; font-size: .8rem; letter-spacing: .08em; color: var(--muted); }
+.asks > h2 span, .col > h2 span { display: block; letter-spacing: 0; font-weight: 400; font-size: .78rem; }
+.ask-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 820px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.col { display: grid; gap: 10px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; min-width: 0; scroll-margin-top: 16px; }
+.card.d { border-left: 3px solid var(--human); }
+.card.i { border-left: 3px solid var(--agent); }
+.card.i.free { border-left-color: var(--free); }
+.card.q { border-left: 3px solid var(--ask); background: var(--ask-soft); }
+.card.q.done { background: var(--panel); border-left-color: var(--rule); }
+.card.flash { box-shadow: 0 0 0 2px var(--human); }
+.row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; font-size: .75rem; color: var(--muted); }
+.row .id { font-family: var(--f-mono); }
+.tag { font-size: .7rem; border-radius: 99px; padding: 0 8px; border: 1px solid currentColor; }
+.tag.para { color: var(--muted); }
+.tag.pin { color: var(--human); }
+.tag.node { color: var(--agent); }
+.tag.dead { color: var(--muted); text-decoration: line-through; }
+.card.d:has(.quote.pin) { background: var(--human-soft); }
+.tag.free { color: var(--free); }
+.tag.old { color: var(--muted); }
+.quote { font-family: var(--f-quote); font-size: 1rem; margin: 0; overflow-wrap: anywhere; }
+.quote::before { content: "「"; } .quote::after { content: "」"; }
+.summary { margin: 0; font-size: .9rem; overflow-wrap: anywhere; }
+.options { margin: 0; padding-left: 1.3em; font-size: .85rem; display: grid; gap: 2px; }
+.basis-list { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; font-size: .75rem; color: var(--muted); }
+.basis { font: inherit; font-family: var(--f-mono); font-size: .75rem; border: 1px solid var(--human); color: var(--human); background: var(--human-soft); border-radius: 4px; padding: 0 6px; cursor: pointer; }
+details.old { font-size: .85rem; }
+details.old summary { cursor: pointer; color: var(--muted); }
+details.old .card { opacity: .85; margin-top: 8px; }
+.empty { color: var(--muted); font-size: .9rem; background: var(--panel); border: 1px dashed var(--rule); border-radius: 8px; padding: 16px; margin: 0; }
+.note { font-size: .8rem; color: var(--muted); max-width: 80ch; margin: 0; }
+@media (prefers-reduced-motion: no-preference) { .card { transition: box-shadow .2s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>bearing の決定と解釈</h1>
+    <p class="aim" id="aim"><small>目的（人間が書いた 1 文）</small></p>
+    <p class="snap" id="snap"></p>
+    <div class="stats" id="stats"></div>
+    <nav class="features" id="features" aria-label="機能で引く"></nav>
+    <div class="filters" id="filters" role="group" aria-label="話題の分類で絞る"></div>
+    <p class="note">左は人間が決めたことの記録で、エージェントは追記するだけで書き換えない。右はエージェントの今の解釈で、依って立つ決定を名指す。どの決定も名指さない解釈は「エージェントの選択」として紫で示す。手段が人間に指示されたものか、エージェントが選んだものかを、ここで見分ける。</p>
+  </header>
+  <section class="asks" aria-labelledby="h-q"><h2 id="h-q">人間の判断を待っている問い<span>答えが出たら、答えの決定を名指して閉じる</span></h2><div id="asks"></div></section>
+  <div class="cols">
+    <section class="col" aria-labelledby="h-d"><h2 id="h-d">人間が決めたこと<span>新しい順。逐語は人間の言葉そのもの、言い換えはエージェントの要約</span></h2><div class="col" id="decisions"></div></section>
+    <section class="col" aria-labelledby="h-i"><h2 id="h-i">エージェントの解釈<span>今の手段と理解。置き換えられたものは下にたたむ</span></h2><div class="col" id="interps"></div></section>
+  </div>
+</div>
+
+<script type="application/json" id="aim-db">__AIM_DB_DATA__</script>
+<script>
+// 記録は生成のときに repo の docs/aim-db/ から埋め込む（scripts/aim-db-page.mjs）。このページは写しであって、書き戻さない。
+const DATA = JSON.parse(document.getElementById('aim-db').textContent)
+const state = { filter: null, feature: null }
+const FRAMES = [['whole', '全体'], ['make', '作る'], ['record', '記録する'], ['output', '出力する']]
+const $ = (id) => document.getElementById(id)
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const inline = (s) => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+
+const nodes = new Map(DATA.nodes.map((n) => [n.id, n]))
+const root = DATA.nodes.find((n) => !n.parent) ?? DATA.nodes[0]
+const dead = (x) => nodes.get(x.node)?.state === 'dead'
+const catLabel = (id) => DATA.categories.find((c) => c.id === id)?.label ?? id ?? '未分類'
+const byId = new Map(DATA.decisions.map((d) => [d.id, d]))
+// seq は node ごとの通し番号 ∴ node を跨いでは比べられない。決定は日付で、同じ日の中は node と seq で並べる。
+const desc = (a, b) => (b.date ?? '').localeCompare(a.date ?? '') || (a.node === root.id ? -1 : b.node === root.id ? 1 : a.node.localeCompare(b.node)) || (b.seq ?? 0) - (a.seq ?? 0)
+const nodeTag = (x) => (x.node === root.id ? '' : `<span class="tag node">${esc(x.node)}</span>`) + (dead(x) ? '<span class="tag dead">撤回した目的</span>' : '')
+const basisList = (ids, label) => ids?.length ? `<div class="basis-list">${label ? `<span>${label}</span>` : ''}${ids.map((b) => `<button class="basis" type="button" data-goto="${esc(b)}" title="${esc(byId.get(b)?.summary ?? '')}">${esc(b)}</button>`).join('')}</div>` : ''
+
+function render() {
+  $('aim').innerHTML = `<small>目的（人間が書いた 1 文）</small>${inline(root?.aim)}`
+  const ds = DATA.decisions
+  const is = DATA.interpretations
+  const cur = is.filter((i) => i.status !== 'superseded' && !dead(i))
+  const open = DATA.questions.filter((q) => q.status === 'open' && !dead(q))
+  const verbatim = ds.filter((d) => d.form === 'verbatim').length
+  const pinned = ds.filter((d) => d.form === 'pinned').length
+  const free = cur.filter((i) => !(i.basis ?? []).length).length
+  $('stats').innerHTML = [
+    ['ask', '開いた問い', open.length, '人間の判断待ち'],
+    ['human', '人間の決定', ds.length, `目的の固定 ${pinned} / 逐語 ${verbatim} / 言い換え ${ds.length - verbatim - pinned}`],
+    ['agent', '今の解釈', cur.length, `決定に基づく ${cur.length - free}`],
+    ['free', 'エージェントの選択', free, '決定を名指さない解釈'],
+  ].map(([k, label, n, sub]) => `<div class="stat ${k}"><span>${label}</span><b>${n}</b><span>${sub}</span></div>`).join('')
+
+  // 0 件の機能も隠さない —— 記録が無いことも事実である。
+  const nOf = (f) => `${ds.filter((d) => d.feature === f).length} / ${cur.filter((i) => i.feature === f).length}`
+  const unassigned = ds.filter((d) => !d.feature).length + cur.filter((i) => !i.feature).length
+  $('features').innerHTML = FRAMES.map(([fr, label]) => {
+    const fs = DATA.features.filter((f) => f.frame === fr).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    return `<div class="frame"><h3>${label}</h3>${fs.map((f) => {
+      const n = nOf(f.id)
+      return `<button class="feat ${n === '0 / 0' ? 'zero' : ''}" type="button" data-feat="${esc(f.id)}" aria-pressed="${state.feature === f.id}" title="${esc(f.note ?? '')}"><span>${esc(f.label)}</span><span class="n">${n}</span></button>`
+    }).join('')}</div>`
+  }).join('') + `<div class="allbar"><button class="chip" type="button" data-feat="" aria-pressed="${state.feature === null}">機能を問わず全部</button>${unassigned ? `<span>機能が未割り当て: ${unassigned} 件</span>` : ''}<span>件数は「決定 / 今の解釈」</span></div>`
+
+  const cats = DATA.categories.filter((c) => ds.some((d) => d.category === c.id) || is.some((i) => i.category === c.id))
+  $('filters').innerHTML = [`<button class="chip" type="button" data-cat="" aria-pressed="${state.filter === null}">すべての話題</button>`]
+    .concat(cats.map((c) => `<button class="chip" type="button" data-cat="${esc(c.id)}" aria-pressed="${state.filter === c.id}" title="${esc(c.note ?? '')}">${esc(c.label)}<span class="origin">${c.origin === 'human' ? '人間' : 'エージェント'}が分類</span></button>`)).join('')
+
+  const keep = (x) => (state.filter === null || x.category === state.filter) && (state.feature === null || x.feature === state.feature)
+
+  const qCard = (q) => `
+    <article class="card q ${q.status === 'open' ? '' : 'done'}" id="${esc(q.id)}">
+      <div class="row"><span class="id">${esc(q.id)}</span><span>${esc(q.date ?? '')}</span>${nodeTag(q)}</div>
+      <p class="summary">${inline(q.text)}</p>
+      ${q.options?.length ? `<ol class="options">${q.options.map((o) => `<li>${inline(o)}</li>`).join('')}</ol>` : ''}
+      ${basisList(q.answeredBy, '答え:')}
+    </article>`
+  const qOpen = open.filter((q) => state.feature === null || q.feature === state.feature)
+  const qDone = DATA.questions.filter((q) => q.status === 'answered').filter((q) => state.feature === null || q.feature === state.feature)
+  $('asks').innerHTML = (qOpen.length ? `<div class="ask-list">${qOpen.map(qCard).join('')}</div>` : '<p class="empty">判断を待っている問いはありません。</p>')
+    + (qDone.length ? `<details class="old"><summary>答えの出た問い ${qDone.length} 件</summary><div class="ask-list">${qDone.map(qCard).join('')}</div></details>` : '')
+
+  const dShow = ds.filter(keep).sort(desc)
+  $('decisions').innerHTML = dShow.length ? dShow.map((d) => `
+    <article class="card d" id="${esc(d.id)}">
+      <div class="row"><span class="id">${esc(d.id)}</span><span>${esc(d.date ?? '日付なし')}</span>${nodeTag(d)}<span>${esc(catLabel(d.category))}</span>${d.form === 'verbatim' ? '' : d.form === 'pinned' ? '<span class="tag pin">目的として固定された文</span>' : '<span class="tag para">言い換え</span>'}</div>
+      ${(d.form === 'verbatim' || d.form === 'pinned') && d.quote ? `<p class="quote${d.form === 'pinned' ? ' pin' : ''}">${inline(d.quote)}</p>` : ''}
+      <p class="summary">${inline(d.summary)}</p>
+      ${d.source ? `<div class="row">出典: ${esc(d.source)}</div>` : ''}
+    </article>`).join('') : '<p class="empty">この条件に当たる決定はありません。</p>'
+
+  const iCard = (i) => `
+    <article class="card i ${(i.basis ?? []).length ? '' : 'free'}" id="${esc(i.id)}">
+      <div class="row"><span class="id">${esc(i.id)}</span>${nodeTag(i)}<span>${esc(catLabel(i.category))}</span>${(i.basis ?? []).length ? '' : '<span class="tag free">エージェントの選択</span>'}${i.status === 'superseded' ? '<span class="tag old">置き換え済み</span>' : ''}</div>
+      <p class="summary">${inline(i.text)}</p>
+      ${basisList(i.basis)}
+    </article>`
+  const iCur = cur.filter(keep).sort(desc)
+  const iOld = is.filter((i) => i.status === 'superseded' || dead(i)).filter(keep).sort(desc)
+  $('interps').innerHTML = (iCur.length ? iCur.map(iCard).join('') : '<p class="empty">この条件に当たる今の解釈はありません。</p>')
+    + (iOld.length ? `<details class="old"><summary>置き換えられた解釈と、撤回した目的の解釈 ${iOld.length} 件</summary>${iOld.map(iCard).join('')}</details>` : '')
+}
+
+function goto(id) {
+  let el = $(id)
+  if (!el || !el.offsetParent) { state.filter = null; state.feature = null; render(); el = $(id) }
+  if (!el) return
+  el.closest('details')?.setAttribute('open', '')
+  el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' })
+  el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600)
+}
+
+document.addEventListener('click', (e) => {
+  const feat = e.target.closest('[data-feat]')
+  if (feat) { state.feature = feat.dataset.feat || null; render(); return }
+  const chip = e.target.closest('[data-cat]')
+  if (chip) { state.filter = chip.dataset.cat || null; render(); return }
+  const go = e.target.closest('[data-goto]')
+  if (go) goto(go.dataset.goto)
+})
+
+$('snap').innerHTML = `repo の <code>docs/aim-db/</code> を commit <code>${esc(DATA.head ?? '不明')}</code> の時点で写したもの（生成 ${esc(DATA.generatedAt)}）。新しい記録は、ページを作り直すまで出ない。`
+render()
+if (location.hash.length > 1) goto(decodeURIComponent(location.hash.slice(1)))
+</script>

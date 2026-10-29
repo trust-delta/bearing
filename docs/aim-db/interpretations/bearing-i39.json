@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-x02",
+    "bearing-x09"
+  ],
+  "category": "surface-layout",
+  "feature": "output-surface",
+  "node": "bearing",
+  "seq": 39,
+  "source": "会話 2026-10-29",
+  "status": "current",
+  "text": "`scripts/aim-db-page.mjs` が記録をページへ埋め込み、どの commit をいつ写したかを出す。形の崩れた記録は写さずに止まる。publish はエージェントが Artifact の tool で行い、その URL は repo に書かない（repo は公開、ページは非公開）。"
+}
