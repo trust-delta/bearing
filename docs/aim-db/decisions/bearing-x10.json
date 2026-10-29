@@ -1,0 +1,14 @@
+{
+  "category": "surface-layout",
+  "date": "2026-10-29",
+  "feature": "output-surface",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "Artifactのdbは消してOK",
+  "recordedAt": "2026-10-29T03:59:57.207Z",
+  "recordedBy": "agent",
+  "seq": 53,
+  "source": "会話 2026-10-29",
+  "summary": "10-28 の試作で記録を置いていた Artifact の DB を消す。ページは repo から作る写しだけになる。"
+}

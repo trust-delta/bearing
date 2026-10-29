@@ -22,6 +22,6 @@
 
 **人間が見るページ** —— `node scripts/aim-db-page.mjs <出力する file>`。記録をページへ埋め込んだ HTML を書く（人間の決定 2026-10-29、`decisions/bearing-x09.json`）。ページは何も読みに行かない写しであり、どの commit をいつ写したかを出す。形の崩れた記録が在れば、書かずに止まる。publish はエージェントが行う。⚠ **その URL はここに書かない** —— この repo は公開であり、ページは非公開である。
 
-**DB からの取り込み** —— `node scripts/aim-db-import.mjs <読み出した dir>`。`ArtifactData` の `list` に `out_dir` を付けて読み出した dir（この dir と同じ形）から、**正本に無い記録だけを足す**。正本と中身が食い違う記録が 1 件でも在れば、何も書かずに止まる。
+**DB からの取り込み**（⚠ 2026-10-29 に DB を消した —— `decisions/bearing-x10.json` ∴ 今は取り込む元が無い）—— `node scripts/aim-db-import.mjs <読み出した dir>`。`ArtifactData` の `list` に `out_dir` を付けて読み出した dir（この dir と同じ形）から、**正本に無い記録だけを足す**。正本と中身が食い違う記録が 1 件でも在れば、何も書かずに止まる。
 
 ⚠ **2026-10-29 の時点で、`docs/aims/` の本文はまだ並存している** —— どちらをどう退かせるかは決まっていない。
