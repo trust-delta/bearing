@@ -51,7 +51,7 @@ import {
 } from '../lib/claude-md.mjs'
 import { DEFAULT_AIMS_DIR } from '../lib/corpus.mjs'
 import { recordSession } from '../lib/unit-home.mjs'
-import { readStore, renderAimDbSection, summarizeStore, validateStore } from '../lib/aim-db.mjs'
+import { humanLineOf, readStore, renderAimDbSection, summarizeStore, validateStore } from '../lib/aim-db.mjs'
 import { mkdirSync, writeFileSync } from 'node:fs'
 
 // ⚠ **stdin を読む前に、ここが最初に走らねばならない。** 委譲は fd をそのまま子へ渡す
@@ -465,7 +465,9 @@ async function main(input) {
   // ⚠ **canon の在否はもう述べない**（人間の決定 2026-09-05）。aim skill は `setup-aim` が
   // `.claude/skills/aim/` へ置き、置いた後はその repo のものである —— 在るか、直されたか、
   // 消されたかは repo の policy であって、hook が毎セッション検める対象ではない。
-  return { unit, repos: withCorpus }
+  // 人間に向けた 1 行（`systemMessage`）。記録を持つ repo だけが出す（試行 2026-10-29、`bearing-x13`）。
+  const human = repos.map((r) => humanLineOf(r.aimDb, { label: r.label })).filter(Boolean)
+  return { unit, repos: withCorpus, human }
 }
 
 /**
@@ -504,7 +506,7 @@ function readHookInput(ms = 1000) {
  * ∴ **ここでの失敗は雑音の方へ degrade するのであって、陳腐化した数を信じるセッションの方へ
  * degrade することは決して無い。**
  */
-async function seedDeltaBaseline(unit, sessionId, repos) {
+async function seedDeltaBaseline(unit, sessionId, repos, shown = '') {
   if (!unit || !sessionId) return
   try {
     const { sig, heads } = await corpusSignature(unit)
@@ -513,10 +515,16 @@ async function seedDeltaBaseline(unit, sessionId, repos) {
     mkdirSync(path.dirname(file), { recursive: true })
     // digest は `main()` が既に集めた事実から作る —— ⚠ **composer は二度払ってはならず、
     // 両側が「事実」の意味について一致していなければならない。**
-    writeFileSync(file, JSON.stringify({ sig, heads, facts: factsDigest(repos ?? []) }), 'utf8')
+    // ⚠ `shown` は人間に見せた 1 行である —— delta の hook は、これと違うときだけ人間へ言い直す。
+    writeFileSync(file, JSON.stringify({ sig, heads, facts: factsDigest(repos ?? []), shown }), 'utf8')
   } catch (err) {
     process.stderr.write(`bearing: delta の baseline を播けなかった: ${err?.message ?? err}\n`)
   }
+}
+
+/** セッション開始時に人間へ見せる文。⚠ 一覧の在り処を 1 行だけ添える —— 数だけでは次の手が無い。 */
+function humanMessage(lines) {
+  return [...lines, '（中身は「aim を見たい」と頼めば、記録を写したページを出す）'].join('\n')
 }
 
 const hookInput = readHookInput()
@@ -529,7 +537,20 @@ try {
   composed = await main(await hookInput)
   // ⚠ **空なら 1 byte も書かない。** 裸の改行 1 つでも、それは「aim を採っていない
   // project では黙る」を破っている —— 黙るとは、出力が短いことではない。
-  if (out.length > 0) process.stdout.write(out.join('\n') + '\n')
+  if (out.length > 0) {
+    const text = out.join('\n') + '\n'
+    // ⚠ **人間に向けた 1 行は、hook として呼ばれたときだけ JSON で包む** —— `/bearing:facts` から
+    // 呼ばれたときの stdout は会話にそのまま出る ∴ 包めば JSON が見える。⚠ 記録を持たない repo
+    // では今までどおり素の stdout である（context に入る中身は同じ。上限 10,000 字も同じ）。
+    if ((await hookInput).hook_event_name === 'SessionStart' && composed?.human?.length) {
+      process.stdout.write(JSON.stringify({
+        systemMessage: humanMessage(composed.human),
+        hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: text },
+      }) + '\n')
+    } else {
+      process.stdout.write(text)
+    }
+  }
 } catch (err) {
   // 規則 1。ここで何が起きようと、セッションは開始しなければならない。
   //
@@ -547,5 +568,5 @@ try {
   }
   process.stderr.write(`bearing: composer が失敗した: ${err?.stack ?? err}\n`)
 }
-await seedDeltaBaseline(composed?.unit, (await hookInput).session_id, composed?.repos)
+await seedDeltaBaseline(composed?.unit, (await hookInput).session_id, composed?.repos, (composed?.human ?? []).join('\n'))
 process.exit(0)

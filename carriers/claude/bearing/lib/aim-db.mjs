@@ -237,6 +237,35 @@ export function renderAimDbSection(summary, { dir = DEFAULT_AIM_DB_DIR, problems
 }
 
 /**
+ * 人間に向けた 1 行 —— hook の `systemMessage`（エージェントではなく人間に見せる欄）へ載せる。
+ *
+ * ⚠ **statusline の代わりである**（人間の決定 2026-10-29、`bearing-x13`）—— 主経路の Desktop には
+ * statusline が届かない ∴ 数はエージェントの context にだけ在り、人間は頼まなければ見えなかった。
+ * ⚠ **件数と最新の決定だけを載せる** —— 中身は会話かページ（Artifact）で見る。1 行を超えれば、
+ * 毎回読まれる面ではなくなる。
+ */
+export function renderHumanLine(summary, { label }) {
+  const latest = summary.latest[0]
+  const decisions = `決定 ${summary.totals.decisions} 件` + (latest ? `（最新 ${latest.id}・${latest.date}）` : '')
+  return `aim（${label}）: 人間の判断を待っている問い ${summary.open.length} 件 ・ ${decisions}`
+}
+
+/** 読めた記録の一揃いから 1 行を作る。記録を持たない repo では `null`。 */
+export function humanLineOf(read, { label }) {
+  if (!read?.present) return null
+  // ⚠ 読めない・崩れた記録が在るときに数を出せば、欠けた数が正しく見える ∴ 数を出さずに崩れを言う。
+  if (read.unreadable.length || validateStore(read.store).length) {
+    return `aim（${label}）: ⚠ 記録に読めない・形の崩れたものが在る —— 件数は出さない`
+  }
+  return renderHumanLine(summarizeStore(read.store), { label })
+}
+
+/** 記録を読み、人間に向けた 1 行を返す。記録を持たない repo では `null`。 */
+export async function readHumanLine(repoRoot, { label, dir = DEFAULT_AIM_DB_DIR } = {}) {
+  return humanLineOf(await readStore(repoRoot, dir), { label })
+}
+
+/**
  * 開いた問いの id だけを読む。記録を持たない repo では `null`。
  *
  * ⚠ **statusline のための軽い読み** —— statusline は描くたびに走る ∴ 全件（数百）を読まず、

@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 import {
-  COLLECTIONS, formatRecord, readOpenQuestions, readStore, renderAimDbSection, summarizeStore, validateStore,
+  COLLECTIONS, formatRecord, humanLineOf, readOpenQuestions, readStore, renderAimDbSection, summarizeStore, validateStore,
 } from '../../../carriers/claude/bearing/lib/aim-db.mjs'
 
 const REPO = path.join(import.meta.dirname, '..', '..', '..')
@@ -130,4 +130,22 @@ test('readOpenQuestions は開いた問いの id だけを返し、記録の無�
   await writeFile(path.join(q, 'n-q01.json'), JSON.stringify({ status: 'open' }))
   await writeFile(path.join(q, 'n-q02.json'), JSON.stringify({ status: 'answered' }))
   assert.deepEqual(await readOpenQuestions(root), ['n-q01'])
+})
+
+// ── 人間に向けた 1 行（試行 2026-10-29、`bearing-x13`）────────────────────────────
+
+test('人間に向けた 1 行は、開いた問いの数と最新の決定を述べる。記録が無ければ null', () => {
+  assert.equal(humanLineOf({ present: false }, { label: 'r' }), null)
+  const s = good()
+  s.decisions[0].date = '2026-10-29'
+  s.questions.push({ id: 'n-q02', node: 'n', text: 'まだ', status: 'open' })
+  const line = humanLineOf({ present: true, store: s, unreadable: [] }, { label: 'r' })
+  assert.equal(line, 'aim（r）: 人間の判断を待っている問い 1 件 ・ 決定 1 件（最新 n-d01・2026-10-29）')
+})
+
+test('🔴 崩れた記録では数を出さず、崩れていると言う —— 欠けた数を正しく見せない', () => {
+  const s = good()
+  s.decisions.push({ id: 'n-d02', node: 'ghost', form: 'paraphrase', summary: 's' })
+  assert.match(humanLineOf({ present: true, store: s, unreadable: [] }, { label: 'r' }), /⚠ 記録に読めない・形の崩れたものが在る/)
+  assert.match(humanLineOf({ present: true, store: good(), unreadable: ['x.json: 壊れている'] }, { label: 'r' }), /件数は出さない/)
 })
