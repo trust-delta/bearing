@@ -1,0 +1,14 @@
+{
+  "category": "purpose",
+  "date": "2026-10-30",
+  "feature": "whole-env",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "プロジェクトに乗るかどうかの見極めは「標準harnessに不足する分を補う」という本リポの観点から、メタ的視点で本リポの仕事の一部です　実際に動いてもらうのはtrust-deltaのプロジェクトのエージェントとしても、その方針はここで決めてしまうのが良い　その上で不足した分を補えるか（補えないなら使わず、補えるなら使う）という話だと思います",
+  "recordedAt": "2026-10-30T13:15:53.269Z",
+  "recordedBy": "agent",
+  "seq": 58,
+  "source": "会話 2026-10-30",
+  "summary": "標準ハーネスの機能（Projects など）に乗るかの見極めは bearing の仕事であり、方針は bearing で決める。実際に動かすのは trust-delta の project でもよい。基準は「不足を補えるなら使い、補えないなら使わない」。"
+}

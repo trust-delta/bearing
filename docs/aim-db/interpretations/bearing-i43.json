@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-x15",
+    "bearing-x16"
+  ],
+  "category": "platform-axis",
+  "feature": "whole-env",
+  "node": "bearing",
+  "seq": 43,
+  "source": "会話 2026-10-30〜31",
+  "status": "current",
+  "text": "Projects の Work locally は、作業機の WSL で hub が開く受付役（`claude remote-control --spawn worktree`）を行き先にでき、bearing の hook も届いた（実測 2026-10-30）。project に repo を足さなくても動いた。受付役の無い repo は、project から hub に頼めば窓を開ける（人間の実測 2026-10-31、vr-flat-viewer）。ただし今の形（hub に頼んで窓を開き、サイドバーから窓に新しい会話を作る）と比べ、Projects にしか無いのは coordinator による並行作業のとりまとめだけだった。worktree は窓に直接立てた会話でも切られる（実測 2026-10-29）∴ Work locally の選択とカードの Allow once の手間に見合わない。見直す条件: 並行作業のとりまとめが欲しくなったとき、または Projects がこの手間を減らす機能を持ったとき。"
+}

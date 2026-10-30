@@ -1,4 +1,8 @@
 {
+  "answeredBy": [
+    "bearing-x15",
+    "bearing-x16"
+  ],
   "date": "2026-10-29",
   "feature": "whole-env",
   "node": "bearing",
@@ -11,6 +15,6 @@
   "recordedBy": "agent",
   "seq": 4,
   "source": "会話 2026-10-29",
-  "status": "open",
+  "status": "answered",
   "text": "作業機で Projects の「thread を自分の computer で走らせる」（Work locally）を試し、bearing の hook が thread に届くか・カードと worktree の扱いを見たうえで、どちらに乗るかを決めてほしい（bearing-x11）。"
 }
