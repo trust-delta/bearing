@@ -1,0 +1,14 @@
+{
+  "category": "platform-axis",
+  "date": "2026-10-31",
+  "feature": "whole-env",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "ではProject機能は現時点において私の個人活動においては不採用とします（会社での活動では有意に使えています、自宅PCのWSLでローカル動作という制約がないため）",
+  "recordedAt": "2026-10-30T23:46:43.955Z",
+  "recordedBy": "agent",
+  "seq": 59,
+  "source": "会話 2026-10-31",
+  "summary": "個人活動では、Projects は現時点で使わない。作業機の WSL で動かす制約があるためで、その制約の無い会社の活動では有用に使えている。"
+}
