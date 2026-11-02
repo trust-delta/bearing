@@ -1,0 +1,14 @@
+{
+  "category": "release-cadence",
+  "date": "2026-11-02",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "6repoのうち4repoは窓があいていますね ここから１を各スレッドに依頼しましょう",
+  "recordedAt": "2026-11-02T05:41:06.463Z",
+  "recordedBy": "agent",
+  "seq": 60,
+  "source": "会話 2026-11-02",
+  "summary": "配布先 6 repo のうち窓の開いている 4 repo（trust-delta・last-visit・td-apps-site・vr-flat-viewer）に、置かれた法の block と aim skill を今の版（v0.37.0）へ揃え直すよう、各 repo の会話へ依頼する。aim-db の配布とは切り離す。"
+}
