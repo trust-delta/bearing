@@ -1,0 +1,14 @@
+{
+  "category": "release-cadence",
+  "date": "2026-11-02",
+  "feature": "output-dist",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "残りの2repoは動きがないこともあり、こちらからsetup-aimを行いコミットしておいてください。プッシュは当該リポがローカルで動き出したらaim-db構築とともに行えばいいと思います",
+  "recordedAt": "2026-11-02T05:42:59.750Z",
+  "recordedBy": "agent",
+  "seq": 61,
+  "source": "会話 2026-11-02",
+  "summary": "窓の開いていない 2 repo（AutoPlayNotes・trust-delta-site）は、bearing の会話から setup-aim で揃え直して local に commit する。push は、その repo が動き出したときに aim-db の構築と一緒に行う。"
+}
