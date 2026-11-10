@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": "2026-11-10",
+  "feature": "whole-purpose",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "air-fryer-cheet-sheetというrepoを新しく立てました。実験の意味から敢えてaimを入れずにやってみます。「記録すべきと判断したことだけ場所を作って記録して」と伝えただけです。repoはandroidやios向けのアプリを作る目的のものです。\nこれでもし私の開発スタイルに不都合なく完走できるなら、また話が変わってくるかと思うので観察対象にしてください",
+  "recordedAt": "2026-11-10T07:08:32.000Z",
+  "recordedBy": "agent",
+  "seq": 63,
+  "source": "会話 2026-11-10",
+  "summary": "新しい repo air-fryer-cheat-sheet（Android・iOS のアプリ）は、実験として aim を入れずに進める。エージェントへの指示は「記録すべきと判断したことだけ場所を作って記録して」だけ。人間の開発スタイルに不都合なく完走できるなら話が変わる ∴ bearing はこれを観察する。"
+}

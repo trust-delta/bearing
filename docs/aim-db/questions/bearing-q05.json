@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-10",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "note": "完走したかと不都合が無かったかは、人間にしか言えない。bearing の側は、air-fryer-cheat-sheet の記録（docs/）が、人間の決定とエージェントの解釈を見分けて辿れる形になっているかを、区切りごとに読んで解釈として足す（bearing-i44）。",
+  "options": [
+    "不都合なく完走した —— aim の何を降ろせるかを見直す",
+    "不都合があった —— 何が足りなかったかを aim の側へ持ち帰る",
+    "途中で aim を入れた"
+  ],
+  "recordedAt": "2026-11-10T07:08:32.000Z",
+  "recordedBy": "agent",
+  "seq": 5,
+  "source": "会話 2026-11-10",
+  "status": "open",
+  "text": "aim を入れていない air-fryer-cheat-sheet は、人間の開発スタイルに不都合なく完走できたか。"
+}
