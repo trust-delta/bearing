@@ -7,6 +7,6 @@
   "node": "bearing",
   "seq": 44,
   "source": "会話 2026-11-10、air-fryer-cheat-sheet の 78deed8 を読んだ",
-  "status": "current",
+  "status": "superseded",
   "text": "観察は、air-fryer-cheat-sheet の記録を区切りごとに読み、aim の本質（人間が決めたこととエージェントが解釈したことを見分けて辿れるか）を満たしているかを見る形で行う。手は出さない。最初の読み（2026-11-10、78deed8）: bearing の hook は何も出していない（installed 0.37.0 の aim-facts をその repo で走らせて 0 byte、陽性対照の vr-flat-viewer では 5,134 byte）∴ 汚染は無い。エージェントは自分で docs/ に decisions・org・research・data の置き場を作り、決定ごとに「決めた人」を operator と「実装の窓（operator の決定の範囲内で）」に分けていた。覆したら新しい決定を書いて古い方に印を足す（消さない）、ほかの案を残す、operator に決めてもらうことを並べる（再開の手順）、という形も自分で選んでいた —— aim-db の決定・解釈・問いと追記だけの規律に近い。違う点: 人間の言葉は逐語ではなく要約、決定は 1 件 1 file ではなく 1 file に表で並ぶ、窓を開き直すための引き継ぎ文書（再開の手順）が在る。再測: その repo の docs/README.md と docs/decisions/ を読む。"
 }

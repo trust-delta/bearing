@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-x20",
+    "bearing-x22"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 46,
+  "source": "会話 2026-11-13（bearing-i44 を置き換える）",
+  "status": "current",
+  "text": "観察は、air-fryer-cheat-sheet の記録を区切りごとに読み、人間が決めたこととエージェントが解釈したことを見分けて辿れるかを見る形で行う。手は出さない。⚠ 実験の射程を言い直す（bearing-i44 は「汚染は無い」と書いたが、見たのは bearing の hook だけだった）: その repo のセッションに bearing の hook は何も出していない（実測 2026-11-10、0 byte）。だが企画・守る線・続ける基準は、aim で動く td-apps-site から便で届いている（docs/org/受領_LP側から_企画.md・受領_LP側から_環境基準.md）。App Store で EU を外す理由も td-apps-site の docs/aims/ios-reach.md を引いている。∴ 実験で外れているのは「この repo の中の aim（法・本文・記録・hook）」であって、上流で目的を決めて渡す側には aim が在る。完走や継続開発の結果を「aim が要らない」と読むなら、上流が目的を保っていた分を差し引く必要がある。再測: その repo で git grep -n td-apps-site -- docs。"
+}
