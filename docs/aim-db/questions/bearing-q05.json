@@ -1,8 +1,11 @@
 {
+  "answeredBy": [
+    "bearing-x21"
+  ],
   "date": "2026-11-10",
   "feature": "whole-purpose",
   "node": "bearing",
-  "note": "完走したかと不都合が無かったかは、人間にしか言えない。bearing の側は、air-fryer-cheat-sheet の記録（docs/）が、人間の決定とエージェントの解釈を見分けて辿れる形になっているかを、区切りごとに読んで解釈として足す（bearing-i44）。",
+  "note": "完走したかと不都合が無かったかは、人間にしか言えない。bearing の側は、air-fryer-cheat-sheet の記録（docs/）が、人間の決定とエージェントの解釈を見分けて辿れる形になっているかを、区切りごとに読んで解釈として足す（bearing-i44）。 2026-11-13、人間が「aim なしで有料付きで Play・App Store ともに配信まで完了できた」と答えた（bearing-x21）。不都合の有無は言われていない。継続的な開発ができるかは別の問いとして開いた（bearing-q06）。",
   "options": [
     "不都合なく完走した —— aim の何を降ろせるかを見直す",
     "不都合があった —— 何が足りなかったかを aim の側へ持ち帰る",
@@ -12,6 +15,6 @@
   "recordedBy": "agent",
   "seq": 5,
   "source": "会話 2026-11-10",
-  "status": "open",
+  "status": "answered",
   "text": "aim を入れていない air-fryer-cheat-sheet は、人間の開発スタイルに不都合なく完走できたか。"
 }

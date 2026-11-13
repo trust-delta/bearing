@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-x20",
+    "bearing-x21"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 45,
+  "source": "会話 2026-11-13、air-fryer-cheat-sheet の origin/main 413e0ba を読んだ",
+  "status": "current",
+  "text": "2 回目の読み（2026-11-13、413e0ba、commit 42 本・PR 16 本）。decisions/ は 2026-11-10 の 3 file のまま増えていない。配信までの人間の決定（bundle ID の確定・書き手の名乗り・EU で非トレーダーのままにする・173 か国で公開する指示）は、decisions/ ではなく docs/store/ の 4 file と org/送信記録.md の中に「（operator の決定）」「（operator の指示）」と添え書きする形で散っていた。∴ 「誰が決めたか」の区別は保たれているが、決定の一覧はもう docs/README.md から辿れない。区別があいまいな箇所もあった: App Store で EU 27 か国を外したことは、operator の決定（非トレーダーの申告）に続けて「有料アプリを非トレーダーのまま EU に出すのは筋が悪い」とあり、外すこと自体を人間が決めたのか、エージェントが導いたのかを字面から見分けられない。人間の言葉は今回も逐語では残っていない。次に見ること: 配信後の改修で、エージェントがこれらの散った決定を見つけて従えるか。再測: その repo で git grep -n operator -- docs。"
+}
