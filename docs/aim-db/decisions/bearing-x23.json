@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": "2026-11-22",
+  "feature": "whole-purpose",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "最近の活動を見て欲しいですが、今日は特に重要なことがありました。td-apps-siteでアプリリポの状態を一元で見通せるように各repoに自身の記録を1ファイルもってもらうようにしました。しかし、そこでaimと実装の食い違いが見つかりました（複数repoで）。このことからaimがあれば長期開発が安定するかというと、必ずしもそうでないと判断できます",
+  "recordedAt": "2026-11-22T14:36:40.000Z",
+  "recordedBy": "agent",
+  "seq": 66,
+  "source": "会話 2026-11-22",
+  "summary": "td-apps-site がアプリの repo ごとに自身の記録を 1 file（docs/capabilities.md）持たせたところ、複数の repo で aim と実装の食い違いが見つかった。∴ aim があれば長期の開発が安定する、とは必ずしも言えないと人間は判断した。"
+}
