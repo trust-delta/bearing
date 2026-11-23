@@ -1,0 +1,14 @@
+{
+  "category": "consumer-stance",
+  "date": "2026-11-24",
+  "feature": "output-dist",
+  "form": "paraphrase",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "",
+  "recordedAt": "2026-11-23T19:12:26.000Z",
+  "recordedBy": "agent",
+  "seq": 68,
+  "source": "td-apps-site のセッション（work-td-apps-site）からの便 2026-11-24、同 repo の commit 60bec7d",
+  "summary": "td-apps-site は aim に頼らない形へ移る（人間の決定 2026-11-24、別のセッション経由）。便が写した人間の言葉は「先日 aim と各リポの剥離がありましたので、本件に限らず aim に頼らない方向に向かいたい」「範囲は暫定で本リポだけで OK・順に進めてください」。その repo では待ちと判断待ちを司令塔の文書へ移し、docs/aims/ を凍結し、正本を「次にすること＝司令塔・事実＝機械が縛る宣言・aim＝経緯」に書き換えた。bearing の仕組み（法の block・置いた skill・注入）は、外し方を bearing に尋ねてから外す。"
+}

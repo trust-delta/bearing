@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-x23",
+    "bearing-x25"
+  ],
+  "category": "consumer-stance",
+  "feature": "output-dist",
+  "node": "bearing",
+  "seq": 49,
+  "source": "会話 2026-11-24、bearing の code（lib/claude-md.mjs・bin/aim-facts.mjs・bin/corpus-delta.mjs・bin/statusline.mjs・bin/bearing-setup-aim.mjs）を読んだ",
+  "status": "current",
+  "text": "td-apps-site への答え: 外すのは bearing-setup-aim.mjs --remove で、CLAUDE.md の法の block だけを外す。hook（起動時の facts・PostToolBatch の通知）と statusline は、どれも同じ 1 つの述語（lib/claude-md.mjs の isEngaged ＝ CLAUDE.md に block か壊れた marker が在るか）で口を開く ∴ block が無くなればそろって黙る。⚠ 手で消すなら開始と閉じの marker を両方消す —— 片方だけ残ると「壊れた marker」として採用の側に数えられ、hook は喋り続ける。--remove は本文が marker の sha と合わないとき（人間が手を入れたとき）は消さずに止まる。置いた skill（.claude/skills/aim/）は --remove が消さない（置いた後はその repo のもの）∴ 要らなければその repo が自分で消す。setup-aim は誰かが走らせない限り置き直さない。⚠ ∴ bearing の側が今後、配布先を揃える作業（bearing-x17・x18 のような --update）をするとき、td-apps-site を対象から外す必要がある。残るもの: 起動時の session の帳簿（unit-home の recordSession、aim の gate より前）は動き続けるが何も注入しない。statusline は利用者の設定にある別の script で、2 行目が「aim 未採用」と corpus の数を出す（主経路の Desktop では statusline 自体が見えない）。plugin を project 単位で切る道（.claude/settings.json の enabledPlugins）もあるが、bearing では試していない。反転は材料として要る: bearing-q06 と bearing-x23 の線上にあり、aim を持っていた側の人間が「aim に頼らない」を選んだ最初の例である。"
+}
