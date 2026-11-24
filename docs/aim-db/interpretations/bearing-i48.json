@@ -1,0 +1,13 @@
+{
+  "basis": [
+    "bearing-x23",
+    "bearing-x24"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 48,
+  "source": "会話 2026-11-23、vr-flat-viewer 858bfbe を読み、858bfbe~1 を手元に clone して installed 0.37.0 の aim-facts を走らせた",
+  "status": "current",
+  "text": "bearing-i47 で特定できなかったもう 1 つは vr-flat-viewer だった（bearing-x24）。中身（実測 2026-11-23）: tools/build_ffmpeg.sh の頭の註が「H.264 のソフトウェア decoder だけを持つ ffmpeg を焼く」のままで、aim（2026-09-22 に decoder を外した）と third_party.txt に食い違っていた。この file を最後に触ったのは 2026-09-23 で、約 2 か月そのままだった。目録づくりで指摘され、2026-11-22 に註を直した（858bfbe）。last-visit と向きが逆である: last-visit では aim が古く、vr-flat-viewer では aim が正しく code の註が古かった。∴ aim を持つことは、aim と code のどちらかが黙って古くなることを防いでいない。bearing の検知: 直す前の commit で facts を組むと、aim-code-stale に 10 node 中 9 node が並んだ。しかもこの検知は「aim の後に code が動いた」を見るもので、code の註が aim より古いまま残る向きは原理的に拾えない。その repo の人間は「以降はどちらかというとaimよりも目録に記載ミスがないようにしましょう」と言い、窓は CapabilitiesTest（目録の見出し・列・状態の語と、書いた場所が実在するかを試験で縛る）を足した。2 repo に共通するのは、食い違いを見つけたのが、今ある機能をコードから書き起こして、場所の実在を機械で確かめる作業だったことである。再測: 手元に clone した vr-flat-viewer で git checkout 858bfbe~1 し、tools/build_ffmpeg.sh の 1〜3 行目と aim-facts の bearing-aim-code-stale を見る。"
+}

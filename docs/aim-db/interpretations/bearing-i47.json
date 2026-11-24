@@ -1,0 +1,12 @@
+{
+  "basis": [
+    "bearing-x23"
+  ],
+  "category": "aim-scope",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "seq": 47,
+  "source": "会話 2026-11-22、td-apps-site 3b648bd・last-visit 909017e を読み、last-visit の 909017e~1 を手元に clone して installed 0.37.0 の aim-facts を走らせた",
+  "status": "current",
+  "text": "last-visit で確かめた食い違い（実測 2026-11-22）: 6 つの aim（free-core・ios-appstore・offline-capability・paid-bundle・play-distribution・sustainable-operation）の IS 冒頭が「2026-10-30 operator 決定・未実装」のままだった。実装は 2026-11-15 までに済んでいた。機能の目録（docs/capabilities.md）を書く窓がコードを読んで気づき、同じ日に aim を「切り替え済み」へ直した。人間はその repo で「aim よりも目録の正しさを優先する」と決めた（last-visit の CLAUDE.md、operator 2026-11-22）。bearing の検知は鳴っていた: 直す前の commit（e71dbd9）で facts を組むと、aim-code-stale に 34 node 中 30 node が並び、6 つのうち 5 つが入っていた（sustainable-operation は 91 commit 前から）。∴ 検知は無かったのではなく、ほぼ全部の node を挙げていて、どれが本当に古いかを見分ける手がかりにならなかった。食い違いを見つけたのは aim の機構ではなく、コードから今ある機能を書き起こす作業だった。もう 1 つの repo は、git の記録からは特定できなかった。air-fryer-cheat-sheet は 2026-11-13 の読みから 2 commit（Expo のパッチ版・目録）だけで、配信後の改修はまだ始まっていない。docs/README.md は目録とストアの記録を索引に戻していた。再測: 手元に clone した last-visit で git checkout e71dbd9 し、aim-facts を走らせて bearing-aim-code-stale を数える。"
+}
