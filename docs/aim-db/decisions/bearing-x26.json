@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": "2026-11-25",
+  "feature": "whole-purpose",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "air-fryerですが現状td-apps-siteがアプリ系リポを司令塔として統括していてaimなしで問題なく進められていると見えます　そのtd-apps-siteもaimなしでの駆動に切り替わっています\naim-dbについて、上記を顧みるに、aimもaim-dbも少なくとも短期においては不要と判断できます\n観測は中長期においてaimの有無が有用かとなってきました",
+  "recordedAt": "2026-11-25T14:17:08.000Z",
+  "recordedBy": "agent",
+  "seq": 69,
+  "source": "会話 2026-11-25",
+  "summary": "air-fryer-cheat-sheet は、司令塔の td-apps-site に統括されて aim なしで問題なく進んでいる（人間の観測）。その td-apps-site も aim なしの駆動に切り替わった。∴ aim も aim-db も、少なくとも短期では不要と人間は判断した。観測の問いは「中長期で aim の有無が有用か」に移る。"
+}

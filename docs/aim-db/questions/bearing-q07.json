@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-25",
+  "feature": "whole-purpose",
+  "node": "bearing",
+  "note": "短期では aim も aim-db も不要と人間は判断した（bearing-x26）。aim を持たない側（air-fryer-cheat-sheet、2026-11-24 から td-apps-site）と、まだ aim を持つ側（last-visit・vr-flat-viewer など）を、時間をかけて見比べる。aim を持っていても aim と code は食い違った（bearing-x23・i47・i48）。判断は人間が下す。",
+  "options": [
+    "中長期でも要らない —— aim の機構を畳む",
+    "中長期では要る —— 何が効いたかを残し、形を見直す",
+    "まだ分からない —— 観測を続ける"
+  ],
+  "recordedAt": "2026-11-25T14:17:08.000Z",
+  "recordedBy": "agent",
+  "seq": 7,
+  "source": "会話 2026-11-25",
+  "status": "open",
+  "text": "中長期において、aim の有無は開発の役に立つか。"
+}
