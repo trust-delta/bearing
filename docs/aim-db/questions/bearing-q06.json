@@ -1,8 +1,11 @@
 {
+  "answeredBy": [
+    "bearing-x26"
+  ],
   "date": "2026-11-13",
   "feature": "whole-purpose",
   "node": "bearing",
-  "note": "最初の配信までは aim なしで走りきれた（bearing-x21）。人間は、走りきれたことと継続的に開発できることを別の問題と見ている。bearing の側は、配信後の改修（不具合の修正・後に回した機能・窓の開き直し）で、過去の決定を辿れているかを区切りごとに読む（bearing-i45・bearing-i46）。",
+  "note": "最初の配信までは aim なしで走りきれた（bearing-x21）。人間は、走りきれたことと継続的に開発できることを別の問題と見ている。bearing の側は、配信後の改修（不具合の修正・後に回した機能・窓の開き直し）で、過去の決定を辿れているかを区切りごとに読む（bearing-i45・bearing-i46）。 2026-11-25、人間が「td-apps-site が司令塔として統括していて aim なしで問題なく進められていると見える」と答えた（bearing-x26）。中長期の問いは bearing-q07 へ移した。",
   "options": [
     "継続的に開発できた —— aim の何を降ろせるかを見直す",
     "続けるうちに不都合が出た —— 何が足りなかったかを aim の側へ持ち帰る",
@@ -12,6 +15,6 @@
   "recordedBy": "agent",
   "seq": 6,
   "source": "会話 2026-11-13",
-  "status": "open",
+  "status": "answered",
   "text": "aim を入れていない air-fryer-cheat-sheet で、配信の後も継続的に開発できるか。"
 }
