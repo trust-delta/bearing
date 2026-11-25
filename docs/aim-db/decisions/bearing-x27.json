@@ -1,0 +1,14 @@
+{
+  "category": "aim-scope",
+  "date": "2026-11-25",
+  "feature": "whole-purpose",
+  "form": "verbatim",
+  "kind": "決定",
+  "node": "bearing",
+  "quote": "mergeしてOK\nもう少し様子を見ましょう",
+  "recordedAt": "2026-11-25T14:24:56.000Z",
+  "recordedBy": "agent",
+  "seq": 70,
+  "source": "会話 2026-11-25",
+  "summary": "bearing 自身の aim-db の試行・aim を持つ配布先・注入の hook は、すぐには動かさず、もう少し様子を見る（エージェントが「中長期の観測に任せるか、畳み始めるか」と尋ねたことへの答え）。"
+}
